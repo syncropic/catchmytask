@@ -22,10 +22,17 @@ import {
 } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { NotificationsProvider } from "@mantine/notifications";
-import dataProvider from "@refinedev/simple-rest";
+// import dataProvider from "@refinedev/simple-rest";
 import { authProvider } from "src/authProvider";
+import { dataProvider } from "../src/surrealdb-provider";
+import { initializeDb } from "src/db";
+import '../styles/globals.css';
+
+// ... rest of your _app.js or _app.tsx file
+
 
 const API_URL = "https://api.fake-rest.refine.dev";
+const db = initializeDb("dp.wanjala@gmail.com", "WAjfTzs0MOgxHWj49y4iMoBvQhC3");
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   noLayout?: boolean;
@@ -57,7 +64,6 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout): JSX.Element {
     setColorScheme(value || (colorScheme === "dark" ? "light" : "dark"));
   return (
     <>
-      <GitHubBanner />
       <RefineKbarProvider>
         <ColorSchemeProvider
           colorScheme={colorScheme}
@@ -78,32 +84,51 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout): JSX.Element {
                   notificationProvider={notificationProvider}
                   authProvider={authProvider}
                   resources={[
+                    // {
+                    //   name: "blog_posts",
+                    //   list: "/blog-posts",
+                    //   create: "/blog-posts/create",
+                    //   edit: "/blog-posts/edit/:id",
+                    //   show: "/blog-posts/show/:id",
+                    //   meta: {
+                    //     canDelete: true,
+                    //   },
+                    // },
+                    // {
+                    //   name: "categories",
+                    //   list: "/categories",
+                    //   create: "/categories/create",
+                    //   edit: "/categories/edit/:id",
+                    //   show: "/categories/show/:id",
+                    //   meta: {
+                    //     canDelete: true,
+                    //   },
+                    // },
                     {
-                      name: "blog_posts",
-                      list: "/blog-posts",
-                      create: "/blog-posts/create",
-                      edit: "/blog-posts/edit/:id",
-                      show: "/blog-posts/show/:id",
+                      name: "task",
+                      list: "/tasks",
+                      create: "/tasks/create",
+                      edit: "/tasks/edit/:id",
+                      show: "/tasks/show/:id",
                       meta: {
                         canDelete: true,
                       },
                     },
-                    {
-                      name: "categories",
-                      list: "/categories",
-                      create: "/categories/create",
-                      edit: "/categories/edit/:id",
-                      show: "/categories/show/:id",
-                      meta: {
-                        canDelete: true,
-                      },
-                    },
+                    // {
+                    //   name: "showcase",
+                    //   list: "/showcases",
+                    //   create: "/showcases/create",
+                    //   edit: "/showcases/edit/:id",
+                    //   show: "/showcases/show/:id",
+                    //   meta: {
+                    //     canDelete: true,
+                    //   },
+                    // },
                   ]}
                   options={{
                     syncWithLocation: true,
                     warnWhenUnsavedChanges: true,
-                    useNewQueryKeys: true,
-                    projectId: "sWJMYD-eBKzgJ-nIvtbb",
+                    projectId: "OpGcqe-gAGTnn-eW9pDg",
                   }}
                 >
                   {renderComponent()}

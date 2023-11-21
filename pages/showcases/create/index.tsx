@@ -2,8 +2,9 @@ import { MantineCreateInferencer } from "@refinedev/inferencer/mantine";
 import { GetServerSideProps } from "next";
 import { authProvider } from "src/authProvider";
 
-export default function BlogPostCreate() {
-  return <MantineCreateInferencer />;
+export default function ShowcaseCreate() {
+  // return <MantineCreateInferencer />;
+  return <>Showcase Create</>;
 }
 
 export const getServerSideProps: GetServerSideProps<{}> = async (context) => {
@@ -13,7 +14,7 @@ export const getServerSideProps: GetServerSideProps<{}> = async (context) => {
     return {
       props: {},
       redirect: {
-        destination: `${redirectTo}?to=${encodeURIComponent("/blog-posts")}`,
+        destination: `${redirectTo}?to=${encodeURIComponent("/showcases")}`,
         permanent: false,
       },
     };

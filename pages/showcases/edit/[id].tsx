@@ -1,9 +1,9 @@
-import { MantineShowInferencer } from "@refinedev/inferencer/mantine";
+import { MantineEditInferencer } from "@refinedev/inferencer/mantine";
 import { GetServerSideProps } from "next";
 import { authProvider } from "src/authProvider";
 
-export default function BlogPostShow() {
-  return <MantineShowInferencer />;
+export default function ShowcaseEdit() {
+  return <>Showcase edit</>;
 }
 
 export const getServerSideProps: GetServerSideProps<{}> = async (context) => {
