@@ -46,43 +46,11 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         accessorKey: "name",
         header: "Name",
       },
-      // {
-      //   id: "name",
-      //   header: "Name",
-      //   accessorKey: "name",
-      //   cell: function render({ getValue, table }) {
-      //     const meta = table.options.meta as {
-      //       nameData: GetManyResponse;
-      //     };
-
-      //     const name = meta.nameData?.data?.find(
-      //       (item) => item.id == getValue<any>()
-      //     );
-
-      //     return name?.name ?? "Loading...";
-      //   },
-      // },
       {
         id: "published",
         accessorKey: "published",
         header: "Published",
       },
-      // {
-      //   id: "status",
-      //   header: "Status",
-      //   accessorKey: "status",
-      //   cell: function render({ getValue, table }) {
-      //     const meta = table.options.meta as {
-      //       statusData: GetManyResponse;
-      //     };
-
-      //     const status = meta.statusData?.data?.find(
-      //       (item) => item.id == getValue<any>()
-      //     );
-
-      //     return status?.name ?? "Loading...";
-      //   },
-      // },
       {
         id: "actions",
         accessorKey: "id",
@@ -114,31 +82,6 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   } = useTable({
     columns,
   });
-
-  // const { data: nameData } = useMany({
-  //   resource: "names",
-  //   ids: tableData?.data?.map((item) => item?.name) ?? [],
-  //   queryOptions: {
-  //     enabled: !!tableData?.data,
-  //   },
-  // });
-
-  // const { data: statusData } = useMany({
-  //   resource: "statuses",
-  //   ids: tableData?.data?.map((item) => item?.status) ?? [],
-  //   queryOptions: {
-  //     enabled: !!tableData?.data,
-  //   },
-  // });
-
-  // setOptions((prev) => ({
-  //   ...prev,
-  //   meta: {
-  //     ...prev.meta,
-  //     nameData,
-  //     statusData,
-  //   },
-  // }));
 
   return (
     <List>
