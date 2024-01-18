@@ -1,0 +1,33 @@
+version: "3"
+services:
+  catchmytask:
+    container_name: catchmytask
+    # hostname: redis-commander
+    # image: ghcr.io/joeferner/redis-commander:latest
+    # # restart: always
+    # environment:
+    #   - REDIS_HOSTS=redis:dpwanjala.com:6379
+    # ports:
+    #   - "8081:8081"
+  # sst-tools:
+  #   image: devspace:latest
+  # image: us-central1-docker.pkg.dev/dpwanjala-app/images/catchmyvibe-api:latest
+  # build: .
+  #     labels:
+  #       - 'traefik.enable=true'
+  #       - 'traefik.http.routers.catchmyvibe-api.rule=Host(`catchmyvibe-api.dpwanjala.com`)'
+  #       - 'traefik.http.routers.catchmyvibe-api.entrypoints=websecure'
+  #       - 'traefik.http.services.catchmyvibe-api.loadbalancer.server.port=80'
+  #       - 'traefik.http.routers.catchmyvibe-api.tls=true'
+  #       - 'traefik.http.routers.catchmyvibe-api.tls.certresolver=letsencrypt'
+  # ports:
+  #   - 81:80
+  #     networks:
+  #       - web
+  # command: streamlit run main-generate-schedule-change-email.py --server.port 8501
+  # command: python main.py
+  # environment:
+  #   - PORT=80
+# networks:
+#   web:
+#     external: true
