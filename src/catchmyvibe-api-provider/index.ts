@@ -4,6 +4,7 @@ import { AxiosInstance } from "axios";
 import { stringify } from "query-string";
 import { getDb } from "./db";
 import { removeSeparator, addSeparator } from "src/utils";
+import { add } from "date-fns";
 
 type MethodTypes = "get" | "delete" | "head" | "options";
 type MethodTypesWithBody = "post" | "put" | "patch";
@@ -17,6 +18,12 @@ export const dataProvider = (
   "createMany" | "updateMany" | "deleteMany"
 > => ({
   getList: async ({ resource, pagination, filters, sorters, meta }) => {
+    // console.log("resource", resource);
+    // console.log("pagination", pagination);
+    // console.log("filters", filters);
+    // console.log("sorters", sorters);
+    // console.log("meta", meta);
+
     const url = `${apiUrl}/${resource}`;
 
     const { current = 1, pageSize = 10, mode = "server" } = pagination ?? {};
@@ -62,25 +69,78 @@ export const dataProvider = (
     // Select all records from a table
     // const data = await db.select(resource);
     const queryFiltersString = null;
-    let queryString = null;
-
-    // Check if the object has at least one key
-    if (Object.keys(queryFilters).length > 0) {
-      // console.log(queryFilters);
-      // create a string of the filters i.e key = value
-      const queryFiltersString = Object.keys(queryFilters)
-        .map((key) => `${key} = '${queryFilters[key]}'`)
-        .join(" AND ");
-      // console.log(queryFiltersString);
-      queryString = `SELECT * FROM ${resource} WHERE ${queryFiltersString}`;
+    // let queryString = null;
+    let fields = meta?.fields;
+    // if fields is not null, then let us create a string of the fields
+    let fieldsString = null;
+    if (fields) {
+      const quotedArray = fields.map((element) => `${element}`);
+      fieldsString = quotedArray.join(", ");
     } else {
-      queryString = `SELECT * FROM ${resource}`;
+      fieldsString = "*";
     }
 
+    // view
+    // let view = meta?.view;
+    // let viewId = addSeparator(view, "views");
+
+    // Modular function to create a query string for filters
+    function createFilterString(queryFilters: any): string {
+      return Object.keys(queryFilters)
+        .map((key) => `${key} = '${queryFilters[key]}'`)
+        .join(" AND ");
+    }
+
+    // Function to create the query string based on conditions
+    function createQueryString(
+      fieldsString: string,
+      resource: string,
+      viewId: string,
+      queryFilters: any
+    ): string {
+      if (Object.keys(queryFilters).length > 0) {
+        const queryFiltersString = createFilterString(queryFilters);
+        return `SELECT ${fieldsString} FROM ${resource} WHERE ${queryFiltersString}`;
+      } else if (viewId) {
+        return `
+          RETURN {
+            LET $${resource} = SELECT ->displays.out.* AS ${resource} FROM ${viewId};
+            RETURN array::at($${resource}.${resource}, 0)
+          }`;
+      } else {
+        return `SELECT ${fieldsString} FROM ${resource}`;
+      }
+    }
+
+    let viewId = meta?.view ? addSeparator(meta.view, "views") : null;
+
+    const queryString = createQueryString(
+      fieldsString,
+      resource,
+      viewId,
+      queryFilters
+    );
+
+    // // Check if the object has at least one key
+    // if (Object.keys(queryFilters).length > 0) {
+    //   // console.log(queryFilters);
+    //   // create a string of the filters i.e key = value
+    //   const queryFiltersString = Object.keys(queryFilters)
+    //     .map((key) => `${key} = '${queryFilters[key]}'`)
+    //     .join(" AND ");
+    //   // console.log(queryFiltersString);
+    //   queryString = `SELECT ${fieldsString} FROM ${resource} WHERE ${queryFiltersString}`;
+    // } else {
+    //   // queryString = `SELECT ${fieldsString} FROM ${resource}`;
+    //   // queryString = `SELECT ->displays.out.name AS music FROM ${viewId}`;
+    //   queryString = `
+    //   RETURN {
+    //     LET $music = SELECT ->displays.out.* AS music FROM ${viewId};
+    //     RETURN array::at($music.music, 0)
+    //   }`;
+    // }
+
     const dataResult = await db.query(queryString);
-    // console.log(data[0]);
-    // console.log(data);
-    // console.log(dataResult[0][1]);
     const data = dataResult[0];
     // remove prefix from the id of the record in data
     data.map((record: any) => {
@@ -186,54 +246,58 @@ export const dataProvider = (
     query,
     headers,
   }) => {
-    let requestUrl = `${url}?`;
+    // let requestUrl = `${url}?`;
 
-    if (sorters) {
-      const generatedSort = generateSort(sorters);
-      if (generatedSort) {
-        const { _sort, _order } = generatedSort;
-        const sortQuery = {
-          _sort: _sort.join(","),
-          _order: _order.join(","),
-        };
-        requestUrl = `${requestUrl}&${stringify(sortQuery)}`;
-      }
-    }
+    // if (sorters) {
+    //   const generatedSort = generateSort(sorters);
+    //   if (generatedSort) {
+    //     const { _sort, _order } = generatedSort;
+    //     const sortQuery = {
+    //       _sort: _sort.join(","),
+    //       _order: _order.join(","),
+    //     };
+    //     requestUrl = `${requestUrl}&${stringify(sortQuery)}`;
+    //   }
+    // }
 
-    if (filters) {
-      const filterQuery = generateFilter(filters);
-      requestUrl = `${requestUrl}&${stringify(filterQuery)}`;
-    }
+    // if (filters) {
+    //   const filterQuery = generateFilter(filters);
+    //   requestUrl = `${requestUrl}&${stringify(filterQuery)}`;
+    // }
 
-    if (query) {
-      requestUrl = `${requestUrl}&${stringify(query)}`;
-    }
+    // if (query) {
+    //   requestUrl = `${requestUrl}&${stringify(query)}`;
+    // }
 
-    let axiosResponse;
-    switch (method) {
-      case "put":
-      case "post":
-      case "patch":
-        axiosResponse = await httpClient[method](url, payload, {
-          headers,
-        });
-        break;
-      case "delete":
-        axiosResponse = await httpClient.delete(url, {
-          data: payload,
-          headers: headers,
-        });
-        break;
-      default:
-        axiosResponse = await httpClient.get(requestUrl, {
-          headers,
-        });
-        break;
-    }
+    // let axiosResponse;
+    // switch (method) {
+    //   case "put":
+    //   case "post":
+    //   case "patch":
+    //     axiosResponse = await httpClient[method](url, payload, {
+    //       headers,
+    //     });
+    //     break;
+    //   case "delete":
+    //     axiosResponse = await httpClient.delete(url, {
+    //       data: payload,
+    //       headers: headers,
+    //     });
+    //     break;
+    //   default:
+    //     axiosResponse = await httpClient.get(requestUrl, {
+    //       headers,
+    //     });
+    //     break;
+    // }
 
-    const { data } = axiosResponse;
+    // const { data } = axiosResponse;
 
-    return Promise.resolve({ data });
+    // return Promise.resolve({ data });
+    // const [data] = await db.query(query);
+    // return Promise.resolve({ data });
+    console.log(query);
+    return await db.query(query);
   },
 });
 

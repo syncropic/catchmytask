@@ -4,12 +4,20 @@ import {
   GetManyResponse,
   useMany,
   useGo,
-  HttpError,
+  useCustomMutation,
   useList,
+  HttpError,
 } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { ColumnDef, flexRender } from "@tanstack/react-table";
-import { IconEdit, IconSend, IconTrash } from "@tabler/icons-react";
+import {
+  IconCirclePlus,
+  IconEdit,
+  IconMessageCircle,
+  IconRefresh,
+  IconSend,
+  IconTrash,
+} from "@tabler/icons-react";
 import {
   ScrollArea,
   Table,
@@ -20,9 +28,12 @@ import {
   Box,
   ActionIcon,
   Text,
-  Flex,
   Button,
+  Flex,
   Anchor,
+  Tooltip,
+  Drawer,
+  rem,
 } from "@mantine/core";
 import {
   List,
@@ -30,6 +41,7 @@ import {
   ShowButton,
   DeleteButton,
   DateField,
+  CreateButton,
 } from "@refinedev/mantine";
 import {
   MantineReactTable,
@@ -38,27 +50,100 @@ import {
   MRT_GlobalFilterTextInput,
   MRT_ToggleFiltersButton,
 } from "mantine-react-table";
-import { useCustomMutation, useApiUrl } from "@refinedev/core";
 import { addSeparator } from "src/utils";
-import { useNotification } from "@refinedev/core";
+import AddTo from "./AddTo";
+import Chat from "./Chat";
+import { useDisclosure } from "@mantine/hooks";
+import { useAppStore } from "src/store";
+import { parseISO, format } from "date-fns";
 
 // Define the data structure
-interface ITask {
+interface IReport {
   id: string;
   name: string;
-  published: boolean;
-  created_at: Date;
-  updated_at: Date;
-  description: string;
-  status: string;
+  created_at: string;
+  updated_at: string;
+  executing_record: string;
+  action_option: string;
+  // start_date: string;
+  // end_date: string;
+  // date_type: string;
+  // description: string;
+  // tags: string;
+  // mail_list: string;
+  // custom_message: string;
+  author: string;
 }
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const go = useGo();
-  // Define columns
-  const { mutate, isLoading, isError } = useCustomMutation();
-  const columns = useMemo<MRT_ColumnDef<ITask>[]>(
+  const [opened, { open, close }] = useDisclosure(false);
+  const actionType = useAppStore((state) => state.actionType);
+  const setActionType = useAppStore((state) => state.setActionType);
+  const {
+    mutate,
+    isLoading: mutationIsLoading,
+    isError: mutationIsError,
+  } = useCustomMutation();
+
+  // Define the object with the specified keys and values
+  const refreshReportRequestData = {
+    task: {
+      author: "user:TYvGonCb3nVDfdvfxfUvSQh0Zv93",
+      description: "generate_schedule_change_email",
+      status: "active",
+      id: "task:⟨4eab1ed2-13a3-4781-b2ba-3f1694805cc5⟩",
+    },
+    source: {
+      location: "database",
+      id: "task:⟨40c4a2ca-c35d-4ea7-bd33-084a6a5212dd⟩",
+    },
+    destination: {
+      location: "database",
+      record: "",
+      id: "",
+    },
+    options: {
+      sync_from_source_to_destination: true,
+      delete_source_from_destination: false,
+      plan_with_llm: false,
+      rerun_execution_orders: [],
+      execution_orders_range: [11, 20],
+      execute_by: "execution_orders_range",
+      user_feedback: "continue",
+    },
+    task_input: {
+      generate_sql_query_01: {
+        text_query:
+          "Retrieve all onewurld bookings from cyDashBoardSetupTable where reporting date is >= 2024-01-16 and <= 2024-01-16. The collection is onewurld",
+      },
+      create_email_message_01: {
+        email_type: "personal",
+        personal_message: "",
+        internal_message: "",
+      },
+      send_email_message_01: {
+        mail_list: "personal",
+      },
+    },
+  };
+
+  const columns = useMemo<MRT_ColumnDef<IReport>[]>(
     () => [
+      {
+        id: "actions",
+        accessorKey: "id",
+        enableColumnFilter: false,
+        header: "quick actions",
+        Cell: ({ renderedCellValue, row }) => (
+          <Group spacing="xs" noWrap>
+            <EditButton size="xs" recordItemId={row.original.id} />
+            {/* <Button size="xs" onClick={handleComingSoon}>
+              Download
+            </Button> */}
+          </Group>
+        ),
+      },
       {
         accessorKey: "id",
         header: "id",
@@ -82,9 +167,10 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           </Anchor>
         ),
       },
+      { accessorKey: "executing_record", header: "executing_record" },
       {
         accessorKey: "name",
-        header: "Name",
+        header: "name",
         Cell: ({ row }) => (
           <Anchor component={Text}>
             <Text
@@ -105,43 +191,65 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           </Anchor>
         ),
       },
+      { accessorKey: "action_option", header: "action_option" },
+
       // {
-      //   accessorKey: "published",
-      //   header: "Published",
-      //   cellProps: ({row}) => ({ children: row.published ? "Yes" : "No" }),
+      //   accessorKey: "description",
+      //   header: "tags",
+      //   Cell: ({ row }) => <Text size="sm">{row.original.tags}</Text>,
       // },
       {
+        accessorFn: (row) => {
+          const sDay = new Date(row.updated_at);
+          sDay.setHours(0, 0, 0, 0); // remove time from date (useful if filter by equals exact date)
+          return sDay;
+        },
+        header: "updated_at",
+        sortingFn: "datetime",
+        Cell: ({ row }) => (
+          <Text size="sm">
+            {format(parseISO(row.original.updated_at), "yyyy-MM-dd hh:mm a")}
+          </Text>
+        ),
+      },
+      // {
+      //   accessorFn: (row) => {
+      //     const sDay = new Date(row.start_date);
+      //     sDay.setHours(0, 0, 0, 0); // remove time from date (useful if filter by equals exact date)
+      //     return sDay;
+      //   },
+      //   header: "start_date",
+      //   sortingFn: "datetime",
+      //   Cell: ({ row }) => (
+      //     <Text size="sm">
+      //       {format(parseISO(row.original.start_date), "yyyy-MM-dd hh:mm a")}
+      //     </Text>
+      //   ),
+      // },
+      // {
+      //   accessorFn: (row) => {
+      //     const sDay = new Date(row.end_date);
+      //     sDay.setHours(0, 0, 0, 0); // remove time from date (useful if filter by equals exact date)
+      //     return sDay;
+      //   },
+      //   header: "end_date",
+      //   sortingFn: "datetime",
+      //   Cell: ({ row }) => (
+      //     <Text size="sm">
+      //       {format(parseISO(row.original.end_date), "yyyy-MM-dd hh:mm a")}
+      //     </Text>
+      //   ),
+      // },
+      // { accessorKey: "date_type", header: "date_type" },
+      { accessorKey: "author", header: "author" },
+      // { accessorKey: "tags", header: "tags" },
+      {
         accessorKey: "created_at",
-        header: "Created At",
-        Cell: ({ renderedCellValue, row }) => (
-          <DateField
-            value={row.original.created_at}
-            format="YYYY-MM-DD HH:mm:ss"
-          />
-        ),
-        // cellProps: (row) => ({ children: row.updated_at.toLocaleString() }),
-      },
-      {
-        accessorKey: "updated_at",
-        header: "Updated At",
-        Cell: ({ renderedCellValue, row }) => (
-          <DateField
-            value={row.original.updated_at}
-            format="YYYY-MM-DD HH:mm:ss"
-          />
-        ),
-        // cellProps: (row) => ({ children: row.updated_at.toLocaleString() }),
-      },
-      {
-        id: "actions",
-        accessorKey: "id",
-        header: "Row Actions",
-        Cell: ({ renderedCellValue, row }) => (
-          <Group spacing="xs" noWrap>
-            <ShowButton hideText recordItemId={row.original.id} />
-            <EditButton hideText recordItemId={row.original.id} />
-            <DeleteButton hideText recordItemId={row.original.id} />
-          </Group>
+        header: "created_at",
+        Cell: ({ row }) => (
+          <Text size="sm">
+            {format(parseISO(row.original.created_at), "yyyy-MM-dd hh:mm a")}
+          </Text>
         ),
       },
     ],
@@ -150,60 +258,11 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
 
   const {
     data,
-    isLoading: isLoadingTasks,
-    isError: isErrorTasks,
-  } = useList<ITask, HttpError>();
+    isLoading,
+    isError: isErrorReports,
+  } = useList<IReport, HttpError>();
 
   const data_items = data?.data ?? [];
-
-  // Define the object with the specified keys and values
-  const requestData = {
-    task: {
-      author: "user:TYvGonCb3nVDfdvfxfUvSQh0Zv93",
-      description: "",
-      name: "",
-      status: "",
-    },
-    source: {
-      location: "database",
-      id: "task:⟨40c4a2ca-c35d-4ea7-bd33-084a6a5212dd⟩",
-    },
-    destination: {
-      location: "database",
-      id: "",
-    },
-    options: {
-      sync_from_source_to_destination: true,
-      delete_source_from_destination: false,
-      plan_with_llm: false,
-    },
-  };
-
-  const executeRequestData = {
-    task: {
-      id: "task:⟨4eab1ed2-13a3-4781-b2ba-3f1694805cc5⟩",
-    },
-    options: {
-      rerun_execution_orders: [],
-      execution_orders_range: [11, 20],
-      execute_by: "execution_orders_range",
-      user_feedback: "continue",
-    },
-    task_input: {
-      generate_sql_query_01: {
-        text_query:
-          "Retrieve all onewurld bookings from cyDashBoardSetupTable where reporting date is >= 2024-01-16 and <= 2024-01-16. The collection is onewurld",
-      },
-      create_email_message_01: {
-        email_type: "personal",
-        personal_message: "",
-        internal_message: "",
-      },
-      send_email_message_01: {
-        mail_list: "personal",
-      },
-    },
-  };
 
   // useMantineReactTable hook
   const table = useMantineReactTable({
@@ -226,8 +285,8 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       pagination: { pageSize: 30, pageIndex: 0 },
       sorting: [
         {
-          id: "created_at", // Column ID to sort by
-          desc: true, // false for ascending, true for descending
+          id: "updated_at",
+          desc: true,
         },
       ],
     },
@@ -238,76 +297,81 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       size: "lg",
     },
     mantineSearchTextInputProps: {
-      placeholder: "Search Bookings",
+      placeholder: "Search Reports",
     },
     mantineTableContainerProps: { sx: { maxHeight: "500px" } },
     renderRowActionMenuItems: ({ row }) => (
       <>
         <Menu.Item
-          onClick={() =>
-            mutate({
-              url: `http://localhost/initialize-plan`,
-              method: "post",
-              values: {
-                ...requestData,
-                task: {
-                  ...requestData.task,
-                  description: row.original.description,
-                  id: addSeparator(row.original.id, "task"),
-                  name: row.original.name,
-                  status: "active",
-                },
-              },
-              successNotification: (data, values) => {
-                return {
-                  message: `${row.original.id} Successfully fetched.`,
-                  description: "Success with no errors",
-                  type: "success",
-                };
-              },
-              errorNotification: (data, values) => {
-                return {
-                  message: `Something went wrong when getting ${row.original.id}`,
-                  description: "Error",
-                  type: "error",
-                };
-              },
-            })
-          }
+          onClick={() => {
+            setActionType("add_to");
+            open();
+          }}
+          icon={<IconCirclePlus style={{ width: rem(14), height: rem(14) }} />}
         >
-          {isLoading ? "Loading..." : "Initialize"}
+          {isLoading ? "Loading..." : "Add To"}
         </Menu.Item>
         <Menu.Item
-          onClick={() =>
-            mutate({
-              url: `http://localhost/execute`,
-              method: "post",
-              values: {
-                ...executeRequestData,
-                task: {
-                  id: addSeparator(row.original.id, "task"),
-                },
-              },
-              successNotification: (data, values) => {
-                return {
-                  message: `${row.original.id} Successfully fetched.`,
-                  description: "Success with no errors",
-                  type: "success",
-                };
-              },
-              errorNotification: (data, values) => {
-                return {
-                  message: `Something went wrong when getting ${row.original.id}`,
-                  description: "Error",
-                  type: "error",
-                };
-              },
-            })
+          onClick={() => {
+            setActionType("chat");
+            open();
+          }}
+          icon={
+            <IconMessageCircle style={{ width: rem(14), height: rem(14) }} />
           }
         >
-          {isLoading ? "Loading..." : "Execute"}
+          {isLoading ? "Loading..." : "Chat"}
+        </Menu.Item>
+        <Menu.Item
+          icon={<IconRefresh style={{ width: rem(14), height: rem(14) }} />}
+          onClick={handleComingSoon}
+          // onClick={() =>
+          //   mutate({
+          //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/create`,
+          //     method: "post",
+          //     values: {
+          //       ...refreshReportRequestData,
+          //       task: {
+          //         ...refreshReportRequestData.task,
+          //         name: row.original.id,
+          //       },
+          //       destination: {
+          //         ...refreshReportRequestData.destination,
+          //         record: addSeparator(row.original.id, "caesars_bookings"),
+          //       },
+          //     },
+          //     successNotification: (data, values) => {
+          //       return {
+          //         message: `${row.original.id} Successfully fetched.`,
+          //         description: "Success with no errors",
+          //         type: "success",
+          //       };
+          //     },
+          //     errorNotification: (data, values) => {
+          //       return {
+          //         message: `Something went wrong when getting ${row.original.id}`,
+          //         description: "Error",
+          //         type: "error",
+          //       };
+          //     },
+          //   })
+        >
+          {mutationIsLoading ? "Loading..." : "Refresh Report"}
         </Menu.Item>
       </>
+    ),
+    renderDetailPanel: ({ row }) => (
+      <div>
+        {/* <Text>
+          <b>Mail List :</b> {row.original.mail_list}
+        </Text>
+        <Text>
+          <b>Custom Message :</b> {row.original.custom_message}
+        </Text>
+        <Text>
+          <b>Description :</b> {row.original.description}
+        </Text> */}
+      </div>
     ),
     renderTopToolbar: ({ table }) => {
       const handleDeactivate = () => {
@@ -334,38 +398,68 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
             {/* import MRT sub-components */}
             <MRT_GlobalFilterTextInput table={table} />
             <MRT_ToggleFiltersButton table={table} />
+            <CreateButton></CreateButton>
           </Flex>
           <Flex sx={{ gap: "8px" }}>
             <Button
               color="red"
               disabled={!table.getIsSomeRowsSelected()}
-              onClick={handleDeactivate}
+              // onClick={handleDelete}
+              onClick={handleComingSoon}
               variant="filled"
             >
               Delete
             </Button>
-            <Button
-              color="green"
-              disabled={!table.getIsSomeRowsSelected()}
-              onClick={handleActivate}
-              variant="filled"
-            >
-              Run
-            </Button>
+            {/* <Tooltip label="Allowed file types: .xlsx, .json, .xml">
+              <Button
+                // color="green"
+                // disabled={!table.getIsSomeRowsSelected()}
+                // onClick={handleGenerateScheduleChangeEmail}
+                onClick={handleComingSoon}
+                variant="filled"
+              >
+                Import
+              </Button>
+            </Tooltip> */}
+            <Tooltip label="Export file types: .xlsx, .json">
+              <Button
+                // color="green"
+                // disabled={!table.getIsSomeRowsSelected()}
+                // onClick={handleGenerateScheduleChangeEmail}
+                onClick={handleComingSoon}
+                variant="filled"
+              >
+                Export
+              </Button>
+            </Tooltip>
           </Flex>
         </Flex>
       );
     },
   });
+  const handleComingSoon = () => {
+    alert("Coming Soon");
+  };
   return (
-    <MantineProvider
-      theme={{
-        colorScheme: "light",
-        primaryColor: "blue",
-      }}
-    >
-      <MantineReactTable table={table} />
-    </MantineProvider>
+    <div className="w-max-screen">
+      <Drawer
+        opened={opened}
+        onClose={close}
+        title={actionType}
+        position="right"
+      >
+        {actionType === "add_to" && <AddTo />}
+        {actionType === "chat" && <Chat />}
+      </Drawer>
+      <MantineProvider
+        theme={{
+          colorScheme: "light",
+          primaryColor: "blue",
+        }}
+      >
+        <MantineReactTable table={table} />
+      </MantineProvider>
+    </div>
   );
 };
 export default PageList;

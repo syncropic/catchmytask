@@ -1,7 +1,7 @@
 import { GitHubBanner, Refine } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
-import { Container } from "@mantine/core";
+import { Container, Modal } from "@mantine/core";
 import {
   RefineThemes,
   ThemedLayoutV2,
@@ -18,6 +18,7 @@ import type { NextPage } from "next";
 import { AppProps } from "next/app";
 import { SessionProvider, useSession, signOut, signIn } from "next-auth/react";
 import BaseLayout from "src/components/layout";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import { Header } from "@components/header";
 import {
@@ -28,7 +29,7 @@ import {
   Global,
   MantineProvider,
 } from "@mantine/core";
-import { useLocalStorage } from "@mantine/hooks";
+import { useDisclosure, useLocalStorage } from "@mantine/hooks";
 import { NotificationsProvider } from "@mantine/notifications";
 // import dataProvider from "@refinedev/simple-rest";
 // import { authProvider } from "src/authProvider";
@@ -47,12 +48,22 @@ import { CustomSider } from "@components/sider";
 import { CustomTitle } from "@components/title";
 import { accessControlProvider } from "src/access-control-provider";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import ViewList from "./views";
+import MessageCreate from "./messages/create";
+import { IconMail } from "@tabler/icons";
+import {
+  IconDashboard,
+  IconListCheck,
+  IconRefresh,
+  IconTestPipe,
+} from "@tabler/icons-react";
+import { useAppStore } from "src/store";
 
 // ... rest of your _app.js or _app.tsx file
 
 const API_URL = "https://api.fake-rest.refine.dev";
-const ONEWURLD_API_URL = "http://localhost";
-const CATCHMYTASK_API_URL = "http://localhost";
+// const ONEWURLD_API_URL = "http://localhost";
+// const CATCHMYTASK_API_URL = "http://localhost";
 
 const initializeDefaultDbInstance = initializeDefaultDb({
   namespace: "catchmytask",
@@ -247,6 +258,8 @@ const App = (props: React.PropsWithChildren) => {
         return {
           name: user.name,
           avatar: user.image,
+          email: user.email,
+          // ...user,
         };
       }
 
@@ -255,201 +268,316 @@ const App = (props: React.PropsWithChildren) => {
   };
   return (
     <>
-      <NotificationsProvider position="top-right">
-        <Refine
-          routerProvider={routerProvider}
-          dataProvider={{
-            default: defaultApiDataProvider(API_URL),
-            catchmyvibeApiDataProvider: catchmyvibeApiDataProvider(API_URL),
-            onewurldProvider: onewurldDataProvider(ONEWURLD_API_URL),
-            catchmytaskApiDataProvider:
-              catchmytaskApiDataProvider(CATCHMYTASK_API_URL),
-          }}
-          notificationProvider={notificationProvider}
-          authProvider={authProvider}
-          accessControlProvider={accessControlProvider}
-          resources={[
-            {
-              name: "dashboard",
-              list: "/dashboards",
-              create: "/dashboards/create",
-              edit: "/dashboards/edit/:id",
-              show: "/dashboards/show/:id",
-              meta: {
-                canDelete: true,
+      <DevtoolsProvider>
+        <NotificationsProvider position="top-right">
+          <Refine
+            routerProvider={routerProvider}
+            dataProvider={{
+              default: defaultApiDataProvider(API_URL),
+              catchmyvibeApiDataProvider: catchmyvibeApiDataProvider(API_URL),
+              onewurldProvider: onewurldDataProvider(
+                `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}`
+              ),
+              catchmytaskApiDataProvider: catchmytaskApiDataProvider(
+                `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}`
+              ),
+            }}
+            notificationProvider={notificationProvider}
+            authProvider={authProvider}
+            accessControlProvider={accessControlProvider}
+            resources={[
+              {
+                name: "dashboard",
+                list: "/dashboards",
+                create: "/dashboards/create",
+                edit: "/dashboards/edit/:id",
+                show: "/dashboards/show/:id",
+                meta: {
+                  canDelete: true,
+                  icon: <IconDashboard />,
+                },
               },
-            },
-            {
-              name: "task",
-              list: "/tasks",
-              create: "/tasks/create",
-              edit: "/tasks/edit/:id",
-              show: "/tasks/show/:id",
-              meta: {
-                canDelete: true,
-                dataProviderName: "default",
+              {
+                name: "messages",
+                list: "/messages",
+                create: "/messages/create",
+                edit: "/messages/edit/:id",
+                show: "/messages/show/:id",
+                meta: {
+                  canDelete: true,
+                  icon: <IconMail />,
+                  // hide: true,
+                  // dataProviderName: "catchmyvibeApiDataProvider",
+                },
               },
-            },
-            // {
-            //   name: "automations",
-            //   list: "/automations",
-            //   create: "/automations/create",
-            //   edit: "/automations/edit/:id",
-            //   show: "/automations/show/:id",
-            //   meta: {
-            //     canDelete: true,
-            //   },
-            // },
-            // {
-            //   name: "schedule_changes",
-            //   list: "/schedule_changes",
-            //   create: "/schedule_changes/create",
-            //   edit: "/schedule_changes/edit/:id",
-            //   show: "/schedule_changes/show/:id",
-            //   meta: {
-            //     canDelete: true,
-            //   },
-            // },
-            {
-              name: "onewurld_bookings",
-              list: "/onewurld_bookings",
-              create: "/onewurld_bookings/create",
-              edit: "/onewurld_bookings/edit/:id",
-              show: "/onewurld_bookings/show/:id",
-              meta: {
-                canDelete: true,
-                dataProviderName: "onewurldProvider",
+              {
+                name: "task",
+                list: "/tasks",
+                create: "/tasks/create",
+                edit: "/tasks/edit/:id",
+                show: "/tasks/show/:id",
+                meta: {
+                  canDelete: true,
+                  icon: <IconListCheck />,
+
+                  // dataProviderName: "default",
+                },
               },
-            },
-            // {
-            //   name: "onewurld_subscriptions",
-            //   list: "/onewurld_subscriptions",
-            //   create: "/onewurld_subscriptions/create",
-            //   edit: "/onewurld_subscriptions/edit/:id",
-            //   show: "/onewurld_subscriptions/show/:id",
-            //   meta: {
-            //     canDelete: true,
-            //     dataProviderName: "onewurldProvider",
-            //   },
-            // },
-            {
-              name: "caesars_bookings",
-              list: "/caesars_bookings",
-              create: "/caesars_bookings/create",
-              edit: "/caesars_bookings/edit/:id",
-              show: "/caesars_bookings/show/:id",
-              meta: {
-                canDelete: true,
-                dataProviderName: "default",
+              {
+                name: "automations",
+                list: "/automations",
+                create: "/automations/create",
+                edit: "/automations/edit/:id",
+                show: "/automations/show/:id",
+                meta: {
+                  canDelete: true,
+                  icon: <IconRefresh />,
+                },
               },
-            },
-            // {
-            //   name: "knowledge_items",
-            //   list: "/knowledge_items",
-            //   create: "/knowledge_items/create",
-            //   edit: "/knowledge_items/edit/:id",
-            //   show: "/knowledge_items/show/:id",
-            //   meta: {
-            //     canDelete: true,
-            //   },
-            // },
-            // {
-            //   name: "summaries",
-            //   list: "/summaries",
-            //   create: "/summaries/create",
-            //   edit: "/summaries/edit/:id",
-            //   show: "/summaries/show/:id",
-            //   meta: {
-            //     canDelete: true,
-            //   },
-            // },
-            {
-              name: "reports",
-              list: "/reports",
-              create: "/reports/create",
-              edit: "/reports/edit/:id",
-              show: "/reports/show/:id",
-              meta: {
-                canDelete: true,
-                dataProviderName: "default",
+              // {
+              //   name: "schedule_changes",
+              //   list: "/schedule_changes",
+              //   create: "/schedule_changes/create",
+              //   edit: "/schedule_changes/edit/:id",
+              //   show: "/schedule_changes/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //   },
+              // },
+              {
+                name: "onewurld_bookings",
+                list: "/onewurld_bookings",
+                create: "/onewurld_bookings/create",
+                edit: "/onewurld_bookings/edit/:id",
+                show: "/onewurld_bookings/show/:id",
+                meta: {
+                  canDelete: true,
+                  hide: true,
+                  dataProviderName: "catchmytaskApiDataProvider",
+                },
               },
-            },
-            // {
-            //   name: "functions",
-            //   list: "/functions",
-            //   create: "/functions/create",
-            //   edit: "/functions/edit/:id",
-            //   show: "/functions/show/:id",
-            //   meta: {
-            //     canDelete: true,
-            //     dataProviderName: "default",
-            //   },
-            // },
-            // {
-            //   name: "sets",
-            //   list: "/sets",
-            //   create: "/sets/create",
-            //   edit: "/sets/edit/:id",
-            //   show: "/sets/show/:id",
-            //   meta: {
-            //     canDelete: true,
-            //     dataProviderName: "catchmyvibeApiDataProvider",
-            //   },
-            // },
-            // {
-            //   name: "calculators",
-            //   list: "/calculators",
-            //   create: "/calculators/create",
-            //   edit: "/calculators/edit/:id",
-            //   show: "/calculators/show/:id",
-            //   meta: {
-            //     canDelete: true,
-            //   },
-            // },
-            // {
-            //   name: "execute",
-            //   list: "/executes",
-            //   create: "/executes/create",
-            //   edit: "/executes/edit/:id",
-            //   show: "/executes/show/:id",
-            //   meta: {
-            //     canDelete: true,
-            //   },
-            // },
-            {
-              name: "music",
-              list: "/music",
-              create: "/music/create",
-              edit: "/music/edit/:id",
-              show: "/music/show/:id",
-              meta: {
-                canDelete: true,
-                dataProviderName: "catchmyvibeApiDataProvider",
+              // {
+              //   name: "onewurld_subscriptions",
+              //   list: "/onewurld_subscriptions",
+              //   create: "/onewurld_subscriptions/create",
+              //   edit: "/onewurld_subscriptions/edit/:id",
+              //   show: "/onewurld_subscriptions/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "catchmytaskApiDataProvider",
+              //   },
+              // },
+              // {
+              //   name: "caesars_bookings",
+              //   list: "/caesars_bookings",
+              //   create: "/caesars_bookings/create",
+              //   edit: "/caesars_bookings/edit/:id",
+              //   show: "/caesars_bookings/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "default",
+              //   },
+              // },
+              // {
+              //   name: "knowledge_items",
+              //   list: "/knowledge_items",
+              //   create: "/knowledge_items/create",
+              //   edit: "/knowledge_items/edit/:id",
+              //   show: "/knowledge_items/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //   },
+              // },
+              // {
+              //   name: "summaries",
+              //   list: "/summaries",
+              //   create: "/summaries/create",
+              //   edit: "/summaries/edit/:id",
+              //   show: "/summaries/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //   },
+              // },
+              // {
+              //   name: "reports",
+              //   list: "/reports",
+              //   create: "/reports/create",
+              //   edit: "/reports/edit/:id",
+              //   show: "/reports/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "default",
+              //   },
+              // },
+              {
+                name: "tests",
+                list: "/tests",
+                create: "/tests/create",
+                edit: "/tests/edit/:id",
+                show: "/tests/show/:id",
+                meta: {
+                  canDelete: true,
+                  icon: <IconTestPipe />,
+
+                  // dataProviderName: "default",
+                },
               },
-            },
-            // {
-            //   name: "artist",
-            //   list: "/artist",
-            //   create: "/artist/create",
-            //   edit: "/artist/edit/:id",
-            //   show: "/artist/show/:id",
-            //   meta: {
-            //     canDelete: true,
-            //     dataProviderName: "catchmyvibeApiDataProvider",
-            //   },
-            // },
-          ]}
-          options={{
-            syncWithLocation: true,
-            warnWhenUnsavedChanges: true,
-            projectId: "OpGcqe-gAGTnn-eW9pDg",
-          }}
-        >
-          <BaseLayout>{props.children}</BaseLayout>
-          <UnsavedChangesNotifier />
-          <DocumentTitleHandler />
-        </Refine>
-      </NotificationsProvider>
+              // {
+              //   name: "test_cases",
+              //   list: "/test_cases",
+              //   create: "/test_cases/create",
+              //   edit: "/test_cases/edit/:id",
+              //   show: "/test_cases/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "default",
+              //   },
+              // },
+              // {
+              //   name: "issues",
+              //   list: "/issues",
+              //   create: "/issues/create",
+              //   edit: "/issues/edit/:id",
+              //   show: "/issues/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "default",
+              //   },
+              // },
+              // {
+              //   name: "ui_elements",
+              //   list: "/ui_elements",
+              //   create: "/ui_elements/create",
+              //   edit: "/ui_elements/edit/:id",
+              //   show: "/ui_elements/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "default",
+              //   },
+              // },
+              // {
+              //   name: "execute",
+              //   list: "/executes",
+              //   create: "/executes/create",
+              //   edit: "/executes/edit/:id",
+              //   show: "/executes/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "default",
+              //   },
+              // },
+              // {
+              //   name: "functions",
+              //   list: "/functions",
+              //   create: "/functions/create",
+              //   edit: "/functions/edit/:id",
+              //   show: "/functions/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "default",
+              //   },
+              // },
+              // {
+              //   name: "sets",
+              //   list: "/sets",
+              //   create: "/sets/create",
+              //   edit: "/sets/edit/:id",
+              //   show: "/sets/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "catchmyvibeApiDataProvider",
+              //   },
+              // },
+              // {
+              //   name: "calculators",
+              //   list: "/calculators",
+              //   create: "/calculators/create",
+              //   edit: "/calculators/edit/:id",
+              //   show: "/calculators/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //   },
+              // },
+              // {
+              //   name: "execute",
+              //   list: "/executes",
+              //   create: "/executes/create",
+              //   edit: "/executes/edit/:id",
+              //   show: "/executes/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //   },
+              // },
+              // {
+              //   name: "music",
+              //   list: "/music",
+              //   create: "/music/create",
+              //   edit: "/music/edit/:id",
+              //   show: "/music/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "catchmyvibeApiDataProvider",
+              //   },
+              // },
+              // {
+              //   name: "artist",
+              //   list: "/artist",
+              //   create: "/artist/create",
+              //   edit: "/artist/edit/:id",
+              //   show: "/artist/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "catchmyvibeApiDataProvider",
+              //   },
+              // },
+              // {
+              //   name: "callbacks",
+              //   list: "/callbacks",
+              //   create: "/callbacks/create",
+              //   edit: "/callbacks/edit/:id",
+              //   show: "/callbacks/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     // dataProviderName: "catchmyvibeApiDataProvider",
+              //   },
+              // },
+              {
+                name: "views",
+                list: "/views",
+                create: "/views/create",
+                edit: "/views/edit/:id",
+                show: "/views/show/:id",
+                meta: {
+                  canDelete: true,
+                  hide: true,
+                  // dataProviderName: "catchmyvibeApiDataProvider",
+                },
+              },
+              // {
+              //   name: "mail_lists",
+              //   list: "/mail_lists",
+              //   create: "/mail_lists/create",
+              //   edit: "/mail_lists/edit/:id",
+              //   show: "/mail_lists/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "default",
+              //   },
+              // },
+            ]}
+            options={{
+              syncWithLocation: true,
+              warnWhenUnsavedChanges: true,
+              projectId: "OpGcqe-gAGTnn-eW9pDg",
+            }}
+          >
+            <BaseLayout>{props.children}</BaseLayout>
+            {/* <UnsavedChangesNotifier /> */}
+            <DocumentTitleHandler />
+            <DevtoolsPanel />
+          </Refine>
+        </NotificationsProvider>
+      </DevtoolsProvider>
     </>
   );
 };
@@ -458,6 +586,8 @@ function MyApp({
   Component,
   pageProps: { session, ...pageProps },
 }: ExtendedAppProps): JSX.Element {
+  // const [opened, { open, close }] = useDisclosure(false);
+
   const renderComponent = () => {
     if (Component.noLayout) {
       return <Component {...pageProps} />;
@@ -487,6 +617,7 @@ function MyApp({
             render={({ items, logout, collapsed }) => {
               return (
                 <>
+                  <ViewList />
                   {items}
                   {logout}
                 </>
@@ -554,88 +685,3 @@ function MyApp({
 }
 
 export default MyApp;
-
-// return (
-//   <>
-//     <SessionProvider session={session}>
-//       <RefineKbarProvider>
-//         <ColorSchemeProvider
-//           colorScheme={colorScheme}
-//           toggleColorScheme={toggleColorScheme}
-//         >
-//           {/* You can change the theme colors here. example: theme={{ ...RefineThemes.Magenta, colorScheme:colorScheme }} */}
-//           <MantineProvider
-//             theme={{ ...RefineThemes.Blue, colorScheme: colorScheme }}
-//             withNormalizeCSS
-//             withGlobalStyles
-//           >
-//             <Global styles={{ body: { WebkitFontSmoothing: "auto" } }} />
-//             <NotificationsProvider position="top-right">
-//               <DevtoolsProvider>
-//                 <Refine
-//                   routerProvider={routerProvider}
-//                   dataProvider={dataProvider(API_URL)}
-//                   notificationProvider={notificationProvider}
-//                   authProvider={authProvider}
-//                   resources={[
-//                     {
-//                       name: "task",
-//                       list: "/tasks",
-//                       create: "/tasks/create",
-//                       edit: "/tasks/edit/:id",
-//                       show: "/tasks/show/:id",
-//                       meta: {
-//                         canDelete: true,
-//                       },
-//                     },
-//                     {
-//                       name: "schedule_change",
-//                       list: "/schedule_changes",
-//                       create: "/schedule_changes/create",
-//                       edit: "/schedule_changes/edit/:id",
-//                       show: "/schedule_changes/show/:id",
-//                       meta: {
-//                         canDelete: true,
-//                       },
-//                     },
-//                     {
-//                       name: "report",
-//                       list: "/reports",
-//                       create: "/reports/create",
-//                       edit: "/reports/edit/:id",
-//                       show: "/reports/show/:id",
-//                       meta: {
-//                         canDelete: true,
-//                       },
-//                     },
-//                     {
-//                       name: "dashboard",
-//                       list: "/dashboards",
-//                       create: "/dashboards/create",
-//                       edit: "/dashboards/edit/:id",
-//                       show: "/dashboards/show/:id",
-//                       meta: {
-//                         canDelete: true,
-//                       },
-//                     },
-//                   ]}
-//                   options={{
-//                     syncWithLocation: true,
-//                     warnWhenUnsavedChanges: true,
-//                     projectId: "OpGcqe-gAGTnn-eW9pDg",
-//                   }}
-//                 >
-//                   {renderComponent()}
-//                   <RefineKbar />
-//                   <UnsavedChangesNotifier />
-//                   <DocumentTitleHandler />
-//                 </Refine>
-//                 <DevtoolsPanel />
-//               </DevtoolsProvider>
-//             </NotificationsProvider>
-//           </MantineProvider>
-//         </ColorSchemeProvider>
-//       </RefineKbarProvider>
-//     </SessionProvider>
-//   </>
-// );

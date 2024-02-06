@@ -8,6 +8,29 @@ const useAppStore = create(
       deck2Track: null,
       setDeck1Track: (track) => set((state) => ({ deck1Track: track })),
       setDeck2Track: (track) => set((state) => ({ deck2Track: track })),
+      actionType: null,
+      setActionType: (actionType) => set((state) => ({ actionType })),
+      activeItem: null,
+      setActiveItem: (activeItem) => set((state) => ({ activeItem })),
+      opened: false,
+      setOpened: (opened) => set((state) => ({ opened })),
+      activeItem_2: null,
+      setActiveItem_2: (activeItem_2) => set((state) => ({ activeItem_2 })),
+      syncFiles: [],
+      setSyncFiles: (syncFiles) => set((state) => ({ syncFiles })),
+      text: "",
+      dynamicSections: [], // { id, type, value, position }
+      setText: (text) => set((state) => ({ ...state, text })),
+      setDynamicSections: (sections) =>
+        set((state) => ({ ...state, dynamicSections: sections })),
+      selectedColumnType: "textinput", // default value
+      setSelectedColumnType: (type) => set({ selectedColumnType: type }),
+      selectedColumns: [], // { id, type, value, position }
+      setSelectedColumns: (columns) =>
+        set((state) => ({ ...state, selectedColumns: columns })),
+      activeViews: [],
+      setActiveViews: (view) =>
+        set((state) => ({ ...state, activeViews: view })),
     }),
     {
       name: "catchmytask-store",

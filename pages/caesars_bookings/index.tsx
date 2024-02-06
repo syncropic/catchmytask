@@ -7,10 +7,19 @@ import {
   useCustomMutation,
   HttpError,
   useList,
+  useInvalidate,
+  useGetIdentity,
 } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { ColumnDef, flexRender } from "@tanstack/react-table";
-import { IconEdit, IconSend, IconTrash } from "@tabler/icons-react";
+import {
+  IconCirclePlus,
+  IconEdit,
+  IconMail,
+  IconMessageCircle,
+  IconSend,
+  IconTrash,
+} from "@tabler/icons-react";
 
 import {
   ScrollArea,
@@ -25,6 +34,12 @@ import {
   Button,
   Flex,
   Anchor,
+  rem,
+  Drawer,
+  Tooltip,
+  Popover,
+  Select,
+  MultiSelect,
 } from "@mantine/core";
 import {
   List,
@@ -40,7 +55,13 @@ import {
   MRT_GlobalFilterTextInput,
   MRT_ToggleFiltersButton,
 } from "mantine-react-table";
-import { addSeparator } from "src/utils";
+import { addSeparator, formatDateTimeAsDateTime } from "src/utils";
+import { useDisclosure } from "@mantine/hooks";
+import { useAppStore } from "src/store";
+import AddTo from "./AddTo";
+import Chat from "./Chat";
+import { useOne } from "@refinedev/core";
+import { DatePickerInput } from "@mantine/dates";
 
 // Define the data structure
 interface ICaesarsBooking {
@@ -60,52 +81,182 @@ interface ICaesarsBooking {
   schedule_change_freshdesk_ticket_number: string;
 }
 
+interface ITask {
+  [key: string]: any;
+}
+
+type IIdentity = {
+  [key: string]: any;
+};
+
+const handleComingSoon = () => {
+  alert("Coming Soon");
+};
+
 export const PageList: React.FC<IResourceComponentsProps> = () => {
-  const go = useGo();
+  // TASK_OPTIONS
+  // let task_options = [];
   const {
-    mutate,
+    data: taskOption_1,
+    isLoading: isLoadingTask,
+    isError: isErrorTask,
+  } = useOne<ITask, HttpError>({
+    resource: "",
+    id: "report_options:6fm9bs048ug9swq2us7o",
+  });
+  const generate_schedule_change_task_option = taskOption_1?.data;
+  // task_options.push(task_option);
+  // console.log(task_options);
+
+  // IDENTITY
+  const { data: identity } = useGetIdentity<IIdentity>();
+
+  // OTHER
+  const go = useGo();
+  const [opened, { open, close }] = useDisclosure(false);
+  const actionType = useAppStore((state) => state.actionType);
+  const setActionType = useAppStore((state) => state.setActionType);
+
+  // INVALIDATE
+  const invalidate = useInvalidate();
+
+  // CUSTOM MUTATION FUNCTION
+  const {
+    mutate: customMutate,
     isLoading: mutationIsLoading,
     isError: mutationIsError,
   } = useCustomMutation();
 
-  // Define the object with the specified keys and values
-  const createScheduleChangeEmailRequestData = {
-    task: {
-      author: "user:TYvGonCb3nVDfdvfxfUvSQh0Zv93",
-      description: "generate_schedule_change_email",
-      status: "active",
+  // HANDLE EXECUTE
+  const handleCreate = (task: any, action_step: any, record: any) => {
+    let request_data = {
+      ...task,
+      task_input: {
+        ...task?.task_input,
+        get_collection_info_1: {
+          ...task?.task_input?.get_collection_info_1,
+          end_date: formatDateTimeAsDateTime(new Date()),
+          start_date: formatDateTimeAsDateTime(new Date()),
+        },
+        create_email_message_1: {
+          email_type: record?.email_type,
+          personal_message: record?.custom_message,
+          internal_message: record?.custom_message,
+          custom_message: record?.custom_message,
+        },
+        send_email_message_1: {
+          mail_list: record?.mail_list,
+        },
+      },
+      task: {
+        ...task?.task,
+        id: action_step?.in,
+      },
+      destination: {
+        ...task?.destination,
+        record: addSeparator(record?.id, "caesars_bookings"),
+      },
+    };
+
+    // Conditionally adding execution_orders_range
+    if (action_step) {
+      request_data.options = {
+        ...task?.options,
+        execution_orders_range: [
+          action_step.execution_order,
+          action_step.execution_order,
+        ],
+      };
+      request_data.values = {
+        action_step_id: addSeparator(action_step?.id, "execute"),
+        task_id: action_step?.in,
+        resource: "caesars_bookings",
+        author: identity?.email,
+        record: addSeparator(record?.id, "caesars_bookings"),
+      };
+      request_data.task = {
+        ...task?.task,
+        id: action_step?.in, // this is already known if running an action_step on an existing task
+      };
+    } else {
+      request_data.options = {
+        ...task?.options,
+      };
+      request_data.values = {
+        // action_step_id: addSeparator(action_step?.id, "execute"),
+        // task_id: action_step?.in,
+        resource: "caesars_bookings",
+        author: identity?.email,
+        record: addSeparator(record?.id, "caesars_bookings"),
+      };
+      request_data.task = {
+        ...task?.task,
+        // id: will fill in when task is generated
+      };
+    }
+    console.log(request_data);
+    customMutate({
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/create`,
+      method: "post",
+      values: request_data,
+      successNotification: (data, values) => {
+        invalidate({
+          resource: "caesars_bookings",
+          invalidates: ["list"],
+        });
+        return {
+          message: `successfully executed.`,
+          description: "Success with no errors",
+          type: "success",
+        };
+      },
+      errorNotification: (data, values) => {
+        return {
+          message: `Something went wrong when executing`,
+          description: "Error",
+          type: "error",
+        };
+      },
+    });
+  };
+  // ACTION LIST
+  const actionsList = [
+    {
+      text: "Generate Schedule Change Email",
+      action_type: "generate_schedule_change_email",
+      icon: <IconMail size={14} />,
+      use_open: false,
+      task_option: generate_schedule_change_task_option,
+      onClick: handleCreate,
     },
-    source: {
-      location: "database",
-      id: "task:⟨208e713a-158c-4153-b09e-5808c486a6f2⟩",
-    },
-    destination: {
-      location: "database",
-      record: "",
-      id: "",
-    },
-    options: {
-      sync_from_source_to_destination: true,
-      delete_source_from_destination: false,
-      plan_with_llm: false,
-      update_record: true,
-      record_task_field_name: "generate_schedule_change_email_task",
-      rerun_execution_orders: [],
-      execution_orders_range: [1, 7],
-      execute_by: "execution_orders_range",
-      user_feedback: "continue",
-    },
-    task_input: {
-      get_collection_info_01: {
-        collection: "schedule_changes",
-        filename: "schedule_changes",
-        start_date: "2024-01-17",
-        end_date: "2024-01-17",
-        date_types: ["analysis_date"],
+    {
+      text: "Chat",
+      action_type: "chat",
+      use_open: true,
+      task_option: null,
+      icon: <IconMessageCircle size={14} />,
+      onClick: () => {
+        console.log("Starting Chat");
       },
     },
-  };
+    {
+      text: "Add To",
+      action_type: "add_to",
+      use_open: true,
+      task_option: null,
+      icon: <IconCirclePlus size={14} />,
+      onClick: () => {
+        console.log("Adding to...");
+      },
+    },
+  ];
 
+  // LIST
+  // LIST DATA
+  const { data, isLoading, isError } = useList<ICaesarsBooking, HttpError>();
+  const data_items = data?.data ?? [];
+
+  // LIST TABLE COLUMNS
   const columns = useMemo<MRT_ColumnDef<ICaesarsBooking>[]>(
     () => [
       {
@@ -128,7 +279,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
               onClick={() => {
                 go({
                   to: {
-                    resource: "caesars_bookings", // resource name or identifier
+                    resource: "caesars_bookings",
                     action: "show",
                     id: row.original.id,
                   },
@@ -151,7 +302,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
               onClick={() => {
                 go({
                   to: {
-                    resource: "caesars_bookings", // resource name or identifier
+                    resource: "caesars_bookings",
                     action: "show",
                     id: row.original.id,
                   },
@@ -165,16 +316,6 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         ),
       },
       {
-        accessorFn: (row) => new Date(row.depart_at), //convert to Date for sorting and filtering
-        header: "depart_at",
-        filterVariant: "date",
-        filterFn: "equals",
-        sortingFn: "datetime",
-        Cell: ({ cell }) => cell.getValue<Date>()?.toLocaleDateString(), //render Date as a string
-      },
-
-      { accessorKey: "schedule_change_agent_name", header: "agent" },
-      {
         accessorKey: "schedule_change_freshdesk_ticket_number",
         header: "freshdesk_ticket",
         Cell: ({ row }) => {
@@ -185,31 +326,40 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
             row.original.schedule_change_freshdesk_ticket_number;
           let url = baseURL + ticketNumber;
           return (
-            <Anchor href={url}>
+            <Anchor href={url} target="_blank">
               {row.original.schedule_change_freshdesk_ticket_number}
             </Anchor>
           );
         },
       },
+      {
+        accessorKey: "updated_at",
+        header: "updated_at",
+        Cell: ({ row }) => (
+          <Text size="sm">
+            {formatDateTimeAsDateTime(row.original.updated_at)}
+          </Text>
+        ),
+      },
+      {
+        accessorKey: "depart_at",
+        header: "depart_at",
+        Cell: ({ row }) => (
+          <Text size="sm">
+            {formatDateTimeAsDateTime(row.original.depart_at)}
+          </Text>
+        ),
+      },
+
+      { accessorKey: "schedule_change_agent_name", header: "agent" },
+
       { accessorKey: "schedule_change_type", header: "type" },
       { accessorKey: "schedule_change_hkd", header: "hkd" },
-      {
-        accessorFn: (row) => new Date(row.updated_at), //convert to Date for sorting and filtering
-        header: "updated_at",
-        filterVariant: "date",
-        filterFn: "equals",
-        sortingFn: "datetime",
-        Cell: ({ cell }) => cell.getValue<Date>()?.toLocaleDateString(), //render Date as a string
-      },
     ],
     []
   );
 
-  const { data, isLoading, isError } = useList<ICaesarsBooking, HttpError>();
-
-  const data_items = data?.data ?? [];
-
-  // useMantineReactTable hook
+  // LIST TABLE INSTANCE
   const table = useMantineReactTable({
     columns,
     data: data_items,
@@ -228,6 +378,12 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       showGlobalFilter: true,
       showColumnFilters: true,
       pagination: { pageSize: 30, pageIndex: 0 },
+      sorting: [
+        {
+          id: "updated_at",
+          desc: false,
+        },
+      ],
     },
     paginationDisplayMode: "pages",
     positionToolbarAlertBanner: "bottom",
@@ -240,43 +396,15 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     },
     mantineTableContainerProps: { sx: { maxHeight: "500px" } },
     state: { isLoading: mutationIsLoading },
-    renderRowActionMenuItems: ({ row }) => (
+    renderRowActions: ({ row }) => (
       <>
-        <Menu.Item
-          onClick={() =>
-            mutate({
-              url: `http://localhost/create`,
-              method: "post",
-              values: {
-                ...createScheduleChangeEmailRequestData,
-                task: {
-                  ...createScheduleChangeEmailRequestData.task,
-                  name: row.original.pnr,
-                },
-                destination: {
-                  ...createScheduleChangeEmailRequestData.destination,
-                  record: addSeparator(row.original.id, "caesars_bookings"),
-                },
-              },
-              successNotification: (data, values) => {
-                return {
-                  message: `${row.original.id} Successfully fetched.`,
-                  description: "Success with no errors",
-                  type: "success",
-                };
-              },
-              errorNotification: (data, values) => {
-                return {
-                  message: `Something went wrong when getting ${row.original.id}`,
-                  description: "Error",
-                  type: "error",
-                };
-              },
-            })
-          }
-        >
-          {mutationIsLoading ? "Loading..." : "Generate Schedule Change Email"}
-        </Menu.Item>
+        <SelectTaskComponent
+          actionsList={actionsList}
+          setActionType={setActionType}
+          open={open}
+          action_step={null}
+          record={row.original}
+        />
       </>
     ),
     renderDetailPanel: ({ row }) => (
@@ -323,7 +451,8 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
             <Button
               color="red"
               disabled={!table.getIsSomeRowsSelected()}
-              onClick={handleDelete}
+              // onClick={handleDelete}
+              onClick={handleComingSoon}
               variant="filled"
             >
               Delete
@@ -331,25 +460,119 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
             <Button
               color="green"
               disabled={!table.getIsSomeRowsSelected()}
-              onClick={handleGenerateScheduleChangeEmail}
+              // onClick={handleGenerateScheduleChangeEmail}
+              onClick={handleComingSoon}
               variant="filled"
             >
-              Gegerate Schedule Change Email
+              Gegerate Schedule Change Emails
             </Button>
+            <Tooltip label="Allowed file types: .xlsx, .json, .xml">
+              <Button
+                // color="green"
+                // disabled={!table.getIsSomeRowsSelected()}
+                // onClick={handleGenerateScheduleChangeEmail}
+                onClick={handleComingSoon}
+                variant="filled"
+              >
+                Import
+              </Button>
+            </Tooltip>
+            <Tooltip label="Export file types: .xlsx, .json">
+              <Button
+                // color="green"
+                // disabled={!table.getIsSomeRowsSelected()}
+                // onClick={handleGenerateScheduleChangeEmail}
+                onClick={handleComingSoon}
+                variant="filled"
+              >
+                Export
+              </Button>
+            </Tooltip>
           </Flex>
         </Flex>
       );
     },
   });
+
   return (
-    <MantineProvider
-      theme={{
-        colorScheme: "light",
-        primaryColor: "blue",
-      }}
-    >
-      <MantineReactTable table={table} />
-    </MantineProvider>
+    <div className="w-max-screen">
+      <Drawer
+        opened={opened}
+        onClose={close}
+        title={actionType}
+        position="right"
+      >
+        {actionType === "add_to" && <AddTo />}
+        {actionType === "chat" && <Chat />}
+      </Drawer>
+      <MantineProvider
+        theme={{
+          colorScheme: "light",
+          primaryColor: "blue",
+        }}
+      >
+        <MantineReactTable table={table} />
+      </MantineProvider>
+    </div>
   );
 };
 export default PageList;
+
+function SelectTaskComponent({
+  setActionType,
+  actionsList,
+  open,
+  action_step,
+  record,
+}: {
+  setActionType: any;
+  actionsList: any;
+  open: any;
+  action_step: any;
+  record: any;
+}) {
+  return (
+    <Popover width={300} position="bottom" withArrow shadow="xl">
+      <Popover.Target>
+        <Button size="xs">Action</Button>
+      </Popover.Target>
+      <Popover.Dropdown>
+        <div className="flex items-end space-x-2">
+          <MultiSelect
+            className="flex-1"
+            label="actions"
+            searchable={true}
+            data={actionsList.map((action: any) => action.text)}
+            withinPortal={true}
+          />
+          <Button size="xs">Run</Button>
+        </div>
+        <div className="mt-4">
+          <div className="grid grid-cols-1 gap-2">
+            {actionsList.map((action: any, index: any) => (
+              <Button
+                key={index}
+                className="justify-start"
+                size="xs"
+                variant="outline"
+                leftIcon={action.icon}
+                onClick={() => {
+                  // set action type
+                  setActionType(action.action_type);
+                  // open window to configure that action
+                  if (action.use_open) {
+                    open();
+                  }
+                  // execute the action function. (move this to the configure action window later for items that are configurable)
+                  action.onClick(action.task_option, action_step, record);
+                }}
+              >
+                {action.text}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </Popover.Dropdown>
+    </Popover>
+  );
+}

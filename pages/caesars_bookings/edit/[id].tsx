@@ -26,10 +26,15 @@ export const PageEdit: React.FC<IResourceComponentsProps> = () => {
       old_pnr_text: "",
       new_pnr_text: "",
       lead_passenger_name: "",
+      lead_passenger_email: "",
       package_id: "",
       schedule_change_remarks: "",
       schedule_change_freshdesk_ticket_number: "",
     },
+    // transformValues: (values) => ({
+    //   ...values,
+    //   updated_at: new Date(),
+    // }),
   });
 
   const pagesData = queryResult?.data?.data;
@@ -77,6 +82,11 @@ export const PageEdit: React.FC<IResourceComponentsProps> = () => {
         mt="sm"
         label="lead passenger name"
         {...getInputProps("lead_passenger_name")}
+      />
+      <TextInput
+        mt="sm"
+        label="lead passenger email"
+        {...getInputProps("lead_passenger_email")}
       />
       <Textarea
         autosize

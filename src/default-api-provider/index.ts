@@ -145,7 +145,7 @@ export const dataProvider = (
     // });
     // console.log(variables);
     const idWithSeparator = addSeparator(id, resource);
-    const [data] = await db.update(idWithSeparator, variables);
+    const [data] = await db.merge(idWithSeparator, variables);
     return {
       data,
     };
@@ -158,7 +158,13 @@ export const dataProvider = (
     // const requestMethod = (method as MethodTypes) ?? "get";
 
     // const { data } = await httpClient[requestMethod](url, { headers });
-    const idWithSeparator = addSeparator(id, resource);
+    // check if the id containes : if so that is the idwith separator otherwise add the separator
+    let idWithSeparator = null;
+    if (typeof id === "string" && id.includes(":")) {
+      idWithSeparator = id;
+    } else {
+      idWithSeparator = addSeparator(id, resource);
+    }
     const [data] = await db.select(`${idWithSeparator}`);
 
     return {
@@ -177,6 +183,7 @@ export const dataProvider = (
     //   headers,
     // });
     const idWithSeparator = addSeparator(id, resource);
+    console.log(idWithSeparator);
     const [data] = await db.delete(`${idWithSeparator}`);
 
     return {

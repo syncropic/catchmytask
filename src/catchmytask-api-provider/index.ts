@@ -19,7 +19,7 @@ export const dataProvider = (
   getList: async ({ resource, pagination, filters, sorters, meta }) => {
     const url = `${apiUrl}/${resource}`;
 
-    const { current = 1, pageSize = 10, mode = "server" } = pagination ?? {};
+    // const { current = 1, pageSize = 10, mode = "server" } = pagination ?? {};
 
     const { headers: headersFromMeta, method } = meta ?? {};
     const requestMethod = (method as MethodTypes) ?? "get";
@@ -33,10 +33,10 @@ export const dataProvider = (
       _order?: string;
     } = {};
 
-    if (mode === "server") {
-      query._start = (current - 1) * pageSize;
-      query._end = current * pageSize;
-    }
+    // if (mode === "server") {
+    //   query._start = (current - 1) * pageSize;
+    //   query._end = current * pageSize;
+    // }
 
     const generatedSort = generateSort(sorters);
     if (generatedSort) {
@@ -98,13 +98,13 @@ export const dataProvider = (
     const { headers, method } = meta ?? {};
     const requestMethod = (method as MethodTypes) ?? "get";
 
-    // const { data } = await httpClient[requestMethod](
-    //   `${apiUrl}/${resource}?${stringify({ id: ids })}`,
-    //   { headers }
-    // );
+    const { data } = await httpClient[requestMethod](
+      `${apiUrl}/${resource}?${stringify({ id: ids })}`,
+      { headers }
+    );
     // const data = await db.select("page");
     // console.log(resource);
-    const data: never[] = [];
+    // const data: never[] = [];
 
     return {
       data,
@@ -117,11 +117,11 @@ export const dataProvider = (
     const { headers, method } = meta ?? {};
     const requestMethod = (method as MethodTypesWithBody) ?? "post";
 
-    // const { data } = await httpClient[requestMethod](url, variables, {
-    //   headers,
-    // });
+    const { data } = await httpClient[requestMethod](url, variables, {
+      headers,
+    });
     // const [data] = await db.select("page:3u4ta9099ikeg0cgy4dm");
-    const [data]: never[] = [];
+    // const [data]: never[] = [];
 
     return {
       data,
@@ -134,29 +134,28 @@ export const dataProvider = (
     const { headers, method } = meta ?? {};
     const requestMethod = (method as MethodTypesWithBody) ?? "patch";
 
-    // const { data } = await httpClient[requestMethod](url, variables, {
-    //   headers,
-    // });
+    const { data } = await httpClient[requestMethod](url, variables, {
+      headers,
+    });
     // console.log(variables);
     // const idWithSeparator = addSeparator(id, resource);
     // const [data] = await db.update(idWithSeparator, variables);
-    const [data]: never[] = [];
+    // const [data]: never[] = [];
     return {
       data,
     };
   },
 
   getOne: async ({ resource, id, meta }) => {
-    // const url = `${apiUrl}/${resource}/${id}`;
+    const url = `${apiUrl}/${resource}/${id}`;
 
-    // const { headers, method } = meta ?? {};
-    // const requestMethod = (method as MethodTypes) ?? "get";
+    const { headers, method } = meta ?? {};
+    const requestMethod = (method as MethodTypes) ?? "get";
 
-    // const { data } = await httpClient[requestMethod](url, { headers });
+    const { data } = await httpClient[requestMethod](url, { headers });
     // const idWithSeparator = addSeparator(id, resource);
     // const [data] = await db.select(`${idWithSeparator}`);
-    const [data]: never[] = [];
-
+    // const [data]: never[] = [];
     return {
       data,
     };
@@ -168,12 +167,12 @@ export const dataProvider = (
     const { headers, method } = meta ?? {};
     const requestMethod = (method as MethodTypesWithBody) ?? "delete";
 
-    // const { data } = await httpClient[requestMethod](url, {
-    //   data: variables,
-    //   headers,
-    // });
+    const { data } = await httpClient[requestMethod](url, {
+      data: variables,
+      headers,
+    });
     // const [data] = await db.select("page:3u4ta9099ikeg0cgy4dm");
-    const [data]: never[] = [];
+    // const [data]: never[] = [];
 
     return {
       data,
