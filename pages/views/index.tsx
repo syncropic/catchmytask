@@ -47,22 +47,9 @@ import {
 import { addSeparator } from "src/utils";
 import { useAppStore } from "src/store";
 import MessageCreate from "../messages/create";
-
-// Define the data structure
-interface IView {
-  id: string;
-  name: string;
-  resource: string;
-  // in: string;
-  // out: string;
-  // kind: string;
-  // execution_order: number;
-  // // published: boolean;
-  // created_at: Date;
-  // updated_at: Date;
-  // // description: string;
-  // status: string;
-}
+import DownloadCreate from "../downloads/create";
+import { IconDownload } from "@tabler/icons";
+import { IView } from "./interfaces";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const go = useGo();
@@ -244,6 +231,10 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   });
 
   const data_items = data?.data ?? [];
+  // filter data_items for only items where key view_status = "published"
+  // const published_data_items = data_items.filter((item) => {
+  //   return item?.view_status === "published";
+  // });
 
   // useMantineReactTable hook
   const table = useMantineReactTable({
@@ -366,11 +357,37 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
             <CreateButton size="xs" resource="views">
               Create View
             </CreateButton>
-            <Button
+            <Tooltip label="Send Views">
+              <ActionIcon variant="filled" aria-label="Send" size="sm">
+                <IconMail
+                  // size={20}
+                  // style={{ width: "70%", height: "70%" }}
+                  // stroke={1.5}
+                  onClick={() => {
+                    setActionType("open_send");
+                    setOpened(true);
+                  }}
+                />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Download Views">
+              <ActionIcon variant="filled" aria-label="Dowload" size="sm">
+                <IconDownload
+                  // size={20}
+                  // style={{ width: "70%", height: "70%" }}
+                  // stroke={1.5}
+                  onClick={() => {
+                    setActionType("open_download");
+                    setOpened(true);
+                  }}
+                />
+              </ActionIcon>
+            </Tooltip>
+            {/* <Button
               size="xs"
               leftIcon={<IconMail size={18} />}
-              onClick={() => setOpened(true)}
-            ></Button>
+             
+            ></Button> */}
           </Flex>
           <Flex sx={{ gap: "8px" }}>
             {/* <Button
@@ -399,10 +416,11 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       <Modal
         opened={opened}
         onClose={() => setOpened(false)}
-        title="Send Message"
+        title={actionType === "open_send" ? "Send Message" : "Download"}
         size="xl"
       >
-        <MessageCreate />
+        {actionType === "open_send" && <MessageCreate />}
+        {actionType === "open_download" && <DownloadCreate />}
       </Modal>
       <MantineProvider
         theme={{

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   IResourceComponentsProps,
   GetManyResponse,
@@ -7,20 +7,22 @@ import {
   useCustomMutation,
   HttpError,
   useList,
-  useInvalidate,
   useGetIdentity,
+  useInvalidate,
 } from "@refinedev/core";
-import { useTable } from "@refinedev/react-table";
-import { ColumnDef, flexRender } from "@tanstack/react-table";
 import {
+  IconChartAreaFilled,
   IconCirclePlus,
   IconEdit,
+  IconFilterCheck,
+  IconList,
   IconMail,
   IconMessageCircle,
+  IconPlus,
   IconSend,
+  IconSettings,
   IconTrash,
 } from "@tabler/icons-react";
-
 import {
   ScrollArea,
   Table,
@@ -34,176 +36,517 @@ import {
   Button,
   Flex,
   Anchor,
-  rem,
-  Drawer,
-  Tooltip,
-  Popover,
-  Select,
-  MultiSelect,
 } from "@mantine/core";
-import {
-  List,
-  EditButton,
-  ShowButton,
-  DeleteButton,
-  DateField,
-} from "@refinedev/mantine";
+import ReactDOM from "react-dom";
 import {
   MantineReactTable,
   useMantineReactTable,
   type MRT_ColumnDef,
   MRT_GlobalFilterTextInput,
   MRT_ToggleFiltersButton,
+  MRT_TableInstance,
 } from "mantine-react-table";
-import { addSeparator, formatDateTimeAsDateTime } from "src/utils";
+import {
+  addSeparator,
+  formatDateTimeAsDate,
+  formatDateTimeAsDateTime,
+} from "src/utils";
 import { useDisclosure } from "@mantine/hooks";
-import { useAppStore } from "src/store";
 import AddTo from "./AddTo";
 import Chat from "./Chat";
-import { useOne } from "@refinedev/core";
-import { DatePickerInput } from "@mantine/dates";
-
-// Define the data structure
-interface ICaesarsBooking {
-  id: string;
-  package_id: string;
-  pnr: string;
-  schedule_change_agent_name: string;
-  schedule_change_hkd: string;
-  schedule_change_type: string;
-  depart_at: Date;
-  updated_at: Date;
-  old_pnr_text: string;
-  new_pnr_text: string;
-  schedule_change_remarks: string;
-  lead_passenger_name: string;
-  generate_schedule_change_email_task: string;
-  schedule_change_freshdesk_ticket_number: string;
-}
-
-interface ITask {
-  [key: string]: any;
-}
-
-type IIdentity = {
-  [key: string]: any;
-};
-
-const handleComingSoon = () => {
-  alert("Coming Soon");
-};
+import { useAppStore } from "src/store";
+import { DateInput, DatePicker } from "@mantine/dates";
+import { IBooking, IView, IIdentity, ColumnConfig, Column } from "./interfaces";
+import dynamic from "next/dynamic";
+import { IconDownload } from "@tabler/icons";
+import CodeBlock from "@components/codeblock/codeblock";
+import SelectTaskComponent from "@components/selecttask";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
-  // TASK_OPTIONS
-  // let task_options = [];
-  const {
-    data: taskOption_1,
-    isLoading: isLoadingTask,
-    isError: isErrorTask,
-  } = useOne<ITask, HttpError>({
-    resource: "",
-    id: "report_options:6fm9bs048ug9swq2us7o",
-  });
-  const generate_schedule_change_task_option = taskOption_1?.data;
-  // task_options.push(task_option);
-  // console.log(task_options);
+  const invalidate = useInvalidate();
 
   // IDENTITY
   const { data: identity } = useGetIdentity<IIdentity>();
+  // ACTION OPTIONS
+  const {
+    data: actionOptionsData,
+    isLoading: isLoadingActionOptionsData,
+    isError: isErrorActionOptionsData,
+  } = useList({
+    resource: "action_options",
+  });
 
-  // OTHER
+  const action_options = actionOptionsData?.data
+    ? actionOptionsData?.data
+        .map((option) => ({
+          ...option,
+          value: option.display_name,
+          label: option.display_name,
+          metadata: option.metadata,
+        }))
+        .filter((option) =>
+          option?.metadata?.resources?.includes("caesars_bookings")
+        )
+    : [];
+
   const go = useGo();
   const [opened, { open, close }] = useDisclosure(false);
-  const actionType = useAppStore((state) => state.actionType);
-  const setActionType = useAppStore((state) => state.setActionType);
+  const {
+    actionType,
+    setActionType,
+    activeViews,
+    setActiveViews,
+    opened: global_opened,
+    setOpened,
+    activeViewStats,
+    setActiveViewStats,
+    activeActionOption,
+    setActiveActionOption,
+  } = useAppStore();
 
-  // INVALIDATE
-  const invalidate = useInvalidate();
-
-  // CUSTOM MUTATION FUNCTION
+  // custom mutation
   const {
     mutate: customMutate,
     isLoading: mutationIsLoading,
     isError: mutationIsError,
   } = useCustomMutation();
 
-  // HANDLE EXECUTE
-  const handleCreate = (task: any, action_step: any, record: any) => {
-    let request_data = {
-      ...task,
-      task_input: {
-        ...task?.task_input,
-        get_collection_info_1: {
-          ...task?.task_input?.get_collection_info_1,
-          end_date: formatDateTimeAsDateTime(new Date()),
-          start_date: formatDateTimeAsDateTime(new Date()),
-        },
-        create_email_message_1: {
-          email_type: record?.email_type,
-          personal_message: record?.custom_message,
-          internal_message: record?.custom_message,
-          custom_message: record?.custom_message,
-        },
-        send_email_message_1: {
-          mail_list: record?.mail_list,
-        },
-      },
-      task: {
-        ...task?.task,
-        id: action_step?.in,
-      },
-      destination: {
-        ...task?.destination,
-        record: addSeparator(record?.id, "caesars_bookings"),
-      },
-    };
+  // additions
+  const {
+    data: views_data,
+    isLoading: isLoadingViewsData,
+    isError: isErrorViewsData,
+  } = useList<IView, HttpError>({
+    resource: "views",
+  });
 
-    // Conditionally adding execution_orders_range
-    if (action_step) {
-      request_data.options = {
-        ...task?.options,
-        execution_orders_range: [
-          action_step.execution_order,
-          action_step.execution_order,
-        ],
-      };
-      request_data.values = {
-        action_step_id: addSeparator(action_step?.id, "execute"),
-        task_id: action_step?.in,
-        resource: "caesars_bookings",
-        author: identity?.email,
-        record: addSeparator(record?.id, "caesars_bookings"),
-      };
-      request_data.task = {
-        ...task?.task,
-        id: action_step?.in, // this is already known if running an action_step on an existing task
-      };
+  const views = views_data?.data ?? [];
+
+  // Example function where the code snippet might be used
+  function updateTableVisibility(
+    tableInstance: MRT_TableInstance<IBooking>,
+    columnsConfig: ColumnConfig[] | null
+  ) {
+    let visibility: Record<string, boolean> = {};
+    let pinning: Record<"left" | "right", string[]> = { left: [], right: [] };
+
+    // Reset logic when columnsConfig is null
+    if (columnsConfig === null) {
+      tableInstance.resetColumnVisibility();
     } else {
-      request_data.options = {
-        ...task?.options,
-      };
-      request_data.values = {
-        // action_step_id: addSeparator(action_step?.id, "execute"),
-        // task_id: action_step?.in,
-        resource: "caesars_bookings",
-        author: identity?.email,
-        record: addSeparator(record?.id, "caesars_bookings"),
-      };
-      request_data.task = {
-        ...task?.task,
-        // id: will fill in when task is generated
-      };
+      visibility = tableInstance
+        .getAllLeafColumns()
+        .reduce<Record<string, boolean>>((acc, column) => {
+          acc[column.id] = false;
+          return acc;
+        }, {});
+
+      // Update visibility and construct pinning object based on config
+      columnsConfig?.forEach((columnConfig) => {
+        const { field_name, visible, pin } = columnConfig;
+        visibility[field_name] = !!visible;
+
+        // Only add to pinning if 'pin' key exists and it's set to 'left' or 'right'
+        if (pin === "left" || pin === "right") {
+          pinning[pin].push(field_name);
+        }
+      });
+
+      // Update the table instance with the new visibility and pinning state
+      tableInstance.setColumnVisibility(visibility);
+      tableInstance.setColumnPinning(pinning);
     }
-    console.log(request_data);
+  }
+
+  const booking_columns = useMemo<MRT_ColumnDef<IBooking>[]>(
+    () => [
+      {
+        accessorKey: "sst_internal_id",
+        header: "sst_internal_id",
+        Cell: ({ row }) => (
+          <Anchor component={Text}>
+            <Text
+              size="sm"
+              onClick={() => {
+                go({
+                  to: {
+                    resource: "caesars_bookings",
+                    action: "show",
+                    id: row.original.related_record,
+                  },
+                  type: "push",
+                });
+              }}
+            >
+              {row.original.sst_internal_id}
+            </Text>
+          </Anchor>
+        ),
+      },
+      {
+        accessorKey: "sst_booking_full_name",
+        header: "sst_booking_full_name",
+        Cell: ({ row }) => (
+          <div>{row.original.sst_booking_full_name ?? ""}</div>
+        ),
+      },
+      {
+        accessorFn: (row) => {
+          const sDay = new Date(row?.sst_created_date_pst ?? "");
+          sDay.setHours(0, 0, 0, 0); // remove time from date (useful if filter by equals exact date)
+          return sDay;
+        },
+        header: "sst_created_date_pst",
+        filterVariant: "date-range",
+        sortingFn: "datetime",
+        Cell: ({ row }) => (
+          <Text size="sm">
+            {formatDateTimeAsDate(row.original?.sst_created_date_pst)}
+          </Text>
+        ),
+      },
+      {
+        accessorFn: (row) => {
+          const sDay = new Date(row?.sst_departure_date_pst ?? "");
+          sDay.setHours(0, 0, 0, 0); // remove time from date (useful if filter by equals exact date)
+          return sDay;
+        },
+        header: "sst_departure_date_pst",
+        filterVariant: "date-range",
+        sortingFn: "datetime",
+        Cell: ({ row }) => (
+          <Text size="sm">
+            {formatDateTimeAsDate(row.original?.sst_departure_date_pst)}
+          </Text>
+        ),
+      },
+      {
+        accessorKey: "flight_pnr",
+        header: "flight_pnr",
+        Cell: ({ row }) => <div>{row.original.flight_pnr ?? ""}</div>,
+      },
+      {
+        accessorKey: "flight_airline_reference_code",
+        header: "flight_airline_reference_code",
+        // filterVariant: "multi-select",
+        Cell: ({ row }) => (
+          <div>{row.original.flight_airline_reference_code ?? ""}</div>
+        ),
+      },
+      {
+        accessorKey: "flight_confirmation_message",
+        header: "flight_confirmation_message",
+        Cell: ({ row }) => {
+          return (
+            <Anchor
+              href={row.original.flight_confirmation_message_url}
+              target="_blank"
+            >
+              {row.original.flight_confirmation_message ?? ""}
+            </Anchor>
+          );
+        },
+      },
+    ],
+    [activeViews]
+  );
+
+  const {
+    data,
+    isLoading: isLoadingOnewurldBooking,
+    isError: isErrorOnewurldBooking,
+  } = useList<IBooking, HttpError>();
+
+  const data_items = data?.data ?? [];
+
+  // const data_items = data?.data.map((item) => defaultStringValues(item)) ?? [];
+
+  const [filteredDataItems, setFilteredDataItems] = useState(data_items);
+
+  // useMantineReactTable hook
+  const booking_table = useMantineReactTable({
+    columns: booking_columns,
+    data: filteredDataItems,
+    enableRowSelection: true,
+    enableColumnOrdering: true,
+    enableGlobalFilter: true,
+    enableColumnFilters: true,
+    enableRowActions: true,
+    enableStickyHeader: true,
+    enableColumnFilterModes: true,
+    enableFacetedValues: true,
+    enableGrouping: true,
+    enablePinning: true,
+    enableEditing: true,
+    editDisplayMode: "cell",
+    enableStickyFooter: true,
+    state: { isLoading: mutationIsLoading || isLoadingOnewurldBooking },
+    mantineEditTextInputProps: ({ cell }) => ({
+      //onBlur is more efficient, but could use onChange instead
+      onBlur: (event) => {
+        // console.log(cell.getValue());
+        // console.log(cell, event.target.value);
+        handleSaveCell(cell, event.target.value);
+        // console.log(cell, event.target.value);
+      },
+    }),
+    initialState: {
+      density: "xs",
+      showGlobalFilter: true,
+      showColumnFilters: true,
+      pagination: { pageSize: 30, pageIndex: 0 },
+      columnPinning: { left: ["sst_booking_number"] },
+      // grouping: ["sst_status_and_supplier_status_comparison"], //group by location and department by default and expand grouped rows
+      // expanded: true, //show grouped rows by default
+    },
+    paginationDisplayMode: "pages",
+    positionToolbarAlertBanner: "bottom",
+    mantinePaginationProps: {
+      radius: "xl",
+      size: "lg",
+    },
+    mantineSearchTextInputProps: {
+      placeholder: "Search Bookings",
+    },
+    mantineTableContainerProps: { sx: { maxHeight: "500px" } },
+
+    renderRowActions: ({ row }) => (
+      <>
+        <SelectTaskComponent
+          action_options={action_options}
+          identity={identity}
+          action_step={null}
+          record={row.original}
+          open={open}
+          close={close}
+          opened={opened}
+          data_items={[]}
+          setActionType={setActionType}
+          variant="inline"
+          activeActionOption={activeActionOption}
+          setActiveActionOption={setActiveActionOption}
+        />
+      </>
+    ),
+    renderTopToolbar: ({ table }) => {
+      const handleDelete = () => {
+        table.getSelectedRowModel().flatRows.map((row) => {
+          console.log("deleting " + row.getValue("pnr"));
+        });
+      };
+
+      return (
+        <Flex p="md" justify="space-between">
+          <Flex gap="xs">
+            <MRT_GlobalFilterTextInput table={table} />
+            <MRT_ToggleFiltersButton table={table} />
+          </Flex>
+          <Flex sx={{ gap: "8px" }}>
+            <Button
+              // color="red"
+              // disabled={!table.getIsSomeRowsSelected()}
+              // onClick={handleDelete}
+              onClick={() => {
+                // invalidate({
+                //   resource: "views",
+                //   invalidates: ["list"],
+                // });
+                setActionType("open_send");
+                setOpened(true);
+                // open();
+              }}
+              // disabled
+              variant="outline"
+              leftIcon={<IconMail />}
+            >
+              Send
+            </Button>
+            <Button
+              // color="red"
+              // disabled={!table.getIsSomeRowsSelected()}
+              // onClick={handleDelete}
+              onClick={() => {
+                // invalidate({
+                //   resource: "views",
+                //   invalidates: ["list"],
+                // });
+                setActionType("open_download");
+                setOpened(true);
+                // open();
+              }}
+              // disabled
+              variant="outline"
+              leftIcon={<IconDownload />}
+            >
+              Download
+            </Button>
+            <Button
+              // color="red"
+              // disabled={!table.getIsSomeRowsSelected()}
+              // onClick={handleDelete}
+              onClick={() => {
+                // setActionType("open_views");
+                // open();
+                setActionType("set_view");
+                setActiveViews(null);
+              }}
+              // disabled
+              variant="outline"
+            >
+              Clear Views
+            </Button>
+            <Button
+              // color="red"
+              // disabled={!table.getIsSomeRowsSelected()}
+              // onClick={handleDelete}
+              onClick={() => {
+                setActionType("chat");
+                open();
+              }}
+              // disabled
+              variant="outline"
+            >
+              Chat
+            </Button>
+            <Button
+              color="red"
+              disabled={!table.getIsSomeRowsSelected()}
+              // onClick={handleDelete}
+              onClick={handleComingSoon}
+              variant="filled"
+            >
+              Delete
+            </Button>
+          </Flex>
+        </Flex>
+      );
+    },
+    renderDetailPanel: ({ row }) => (
+      <div>
+        <CodeBlock jsonData={row.original} />
+      </div>
+    ),
+  });
+
+  const handleComingSoon = () => {
+    alert("Coming Soon");
+  };
+
+  // FILTERING WITH VIEWS
+  interface FilterCondition {
+    field_name: string; // Correct placement
+    type: "exclude" | "include" | "not_equals" | "range";
+    values?: string[]; // Assuming values are strings; adjust as necessary
+    range_start?: string;
+    range_end?: string;
+  }
+
+  interface ConditionGroup {
+    group_operator?: "AND" | "OR";
+    conditions: FilterCondition[];
+  }
+
+  interface ActiveView {
+    filters_configuration: ConditionGroup[];
+  }
+
+  const applyFilters = (activeView: ActiveView, data: any[]): any[] => {
+    let filteredData = [...data];
+
+    activeView.filters_configuration.forEach((group) => {
+      if (group.group_operator === "OR") {
+        // For 'OR' logic, ensure at least one condition within the group matches
+        filteredData = filteredData.filter((item) =>
+          group.conditions.some((condition) => {
+            return evaluateCondition(item, condition);
+          })
+        );
+      } else {
+        // Default to 'AND' logic if no group_operator is specified
+        group.conditions.forEach((condition) => {
+          filteredData = filteredData.filter((item) => {
+            return evaluateCondition(item, condition);
+          });
+        });
+      }
+    });
+
+    return filteredData;
+  };
+
+  function evaluateCondition(item: any, condition: FilterCondition): boolean {
+    switch (condition.type) {
+      case "exclude":
+        // If condition.values is undefined, default to false to indicate the item does not match the exclusion criteria
+        return condition.values
+          ? !condition.values.includes(item[condition.field_name])
+          : false;
+      case "include":
+        // If condition.values is undefined, default to false as there are no values to include the item by
+        return condition.values
+          ? condition.values.includes(item[condition.field_name])
+          : false;
+      case "not_equals":
+        // Similar logic as "exclude"
+        return condition.values
+          ? !condition.values.includes(item[condition.field_name])
+          : false;
+      case "range":
+        const value = new Date(item[condition.field_name]);
+        const start = new Date(condition.range_start!); // Assuming range_start and range_end are always provided for "range" type
+        const end = new Date(condition.range_end!);
+        return value >= start && value <= end;
+      default:
+        return true; // Default case to include the item if condition type is unknown
+    }
+  }
+
+  // When activeViews changes, apply filters
+  useEffect(() => {
+    // Reset filtered data and column visibility when activeViews is null
+    if (activeViews === null) {
+      // let activeViewStats = {
+      //   totalItems: data_items.length,
+      // };
+      // setActiveViewStats(activeViewStats);
+      // console.log("activeViewStats", activeViewStats);
+
+      setFilteredDataItems(data_items);
+      updateTableVisibility(booking_table, null); // Reset column visibility to default
+    } else {
+      // Existing logic for when activeViews is not null
+      const newFilteredData = activeViews?.filters_configuration
+        ? applyFilters(activeViews, data_items)
+        : data_items;
+      setFilteredDataItems(newFilteredData);
+      updateTableVisibility(booking_table, activeViews?.fields_configuration);
+
+      let activeViewStats = {
+        totalItems: filteredDataItems.length,
+      };
+      // console.log("activeViewStats", activeViewStats);
+      // setActiveViewStats(activeViewStats);
+    }
+  }, [activeViews, data_items]);
+
+  const handleSaveCell = (cell: any, event: any) => {
+    let update_values = {
+      id: cell.row.original.related_record,
+      [cell.column.id]: event,
+    };
+    // console.log("update_values", update_values);
+    let id = cell.row.original.related_record;
     customMutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/create`,
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/caesars_bookings/${id}`,
       method: "post",
-      values: request_data,
+      values: update_values,
       successNotification: (data, values) => {
+        // invalidate list
         invalidate({
           resource: "caesars_bookings",
           invalidates: ["list"],
         });
+
         return {
           message: `successfully executed.`,
           description: "Success with no errors",
@@ -219,360 +562,42 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       },
     });
   };
-  // ACTION LIST
-  const actionsList = [
-    {
-      text: "Generate Schedule Change Email",
-      action_type: "generate_schedule_change_email",
-      icon: <IconMail size={14} />,
-      use_open: false,
-      task_option: generate_schedule_change_task_option,
-      onClick: handleCreate,
-    },
-    {
-      text: "Chat",
-      action_type: "chat",
-      use_open: true,
-      task_option: null,
-      icon: <IconMessageCircle size={14} />,
-      onClick: () => {
-        console.log("Starting Chat");
-      },
-    },
-    {
-      text: "Add To",
-      action_type: "add_to",
-      use_open: true,
-      task_option: null,
-      icon: <IconCirclePlus size={14} />,
-      onClick: () => {
-        console.log("Adding to...");
-      },
-    },
-  ];
-
-  // LIST
-  // LIST DATA
-  const { data, isLoading, isError } = useList<ICaesarsBooking, HttpError>();
-  const data_items = data?.data ?? [];
-
-  // LIST TABLE COLUMNS
-  const columns = useMemo<MRT_ColumnDef<ICaesarsBooking>[]>(
-    () => [
-      {
-        id: "actions",
-        accessorKey: "id",
-        header: "quick actions",
-        Cell: ({ renderedCellValue, row }) => (
-          <Group spacing="xs" noWrap>
-            <EditButton size="xs" recordItemId={row.original.id} />
-          </Group>
-        ),
-      },
-      {
-        accessorKey: "package_id",
-        header: "package_id",
-        Cell: ({ row }) => (
-          <Anchor component={Text}>
-            <Text
-              size="sm"
-              onClick={() => {
-                go({
-                  to: {
-                    resource: "caesars_bookings",
-                    action: "show",
-                    id: row.original.id,
-                  },
-                  type: "push",
-                });
-              }}
-            >
-              {row.original.package_id}
-            </Text>
-          </Anchor>
-        ),
-      },
-      {
-        accessorKey: "pnr",
-        header: "pnr",
-        Cell: ({ row }) => (
-          <Anchor component={Text}>
-            <Text
-              size="sm"
-              onClick={() => {
-                go({
-                  to: {
-                    resource: "caesars_bookings",
-                    action: "show",
-                    id: row.original.id,
-                  },
-                  type: "push",
-                });
-              }}
-            >
-              {row.original.pnr}
-            </Text>
-          </Anchor>
-        ),
-      },
-      {
-        accessorKey: "schedule_change_freshdesk_ticket_number",
-        header: "freshdesk_ticket",
-        Cell: ({ row }) => {
-          // dymamic link
-          let baseURL =
-            "https://snowstormtechnologyukltd.freshdesk.com/a/tickets/";
-          let ticketNumber =
-            row.original.schedule_change_freshdesk_ticket_number;
-          let url = baseURL + ticketNumber;
-          return (
-            <Anchor href={url} target="_blank">
-              {row.original.schedule_change_freshdesk_ticket_number}
-            </Anchor>
-          );
-        },
-      },
-      {
-        accessorKey: "updated_at",
-        header: "updated_at",
-        Cell: ({ row }) => (
-          <Text size="sm">
-            {formatDateTimeAsDateTime(row.original.updated_at)}
-          </Text>
-        ),
-      },
-      {
-        accessorKey: "depart_at",
-        header: "depart_at",
-        Cell: ({ row }) => (
-          <Text size="sm">
-            {formatDateTimeAsDateTime(row.original.depart_at)}
-          </Text>
-        ),
-      },
-
-      { accessorKey: "schedule_change_agent_name", header: "agent" },
-
-      { accessorKey: "schedule_change_type", header: "type" },
-      { accessorKey: "schedule_change_hkd", header: "hkd" },
-    ],
-    []
-  );
-
-  // LIST TABLE INSTANCE
-  const table = useMantineReactTable({
-    columns,
-    data: data_items,
-    enableRowSelection: true,
-    enableColumnOrdering: true,
-    enableGlobalFilter: true,
-    enableColumnFilters: true,
-    enableRowActions: true,
-    enableStickyHeader: true,
-    enableColumnFilterModes: true,
-    enableFacetedValues: true,
-    enableGrouping: true,
-    enablePinning: true,
-    initialState: {
-      density: "xs",
-      showGlobalFilter: true,
-      showColumnFilters: true,
-      pagination: { pageSize: 30, pageIndex: 0 },
-      sorting: [
-        {
-          id: "updated_at",
-          desc: false,
-        },
-      ],
-    },
-    paginationDisplayMode: "pages",
-    positionToolbarAlertBanner: "bottom",
-    mantinePaginationProps: {
-      radius: "xl",
-      size: "lg",
-    },
-    mantineSearchTextInputProps: {
-      placeholder: "Search Bookings",
-    },
-    mantineTableContainerProps: { sx: { maxHeight: "500px" } },
-    state: { isLoading: mutationIsLoading },
-    renderRowActions: ({ row }) => (
-      <>
-        <SelectTaskComponent
-          actionsList={actionsList}
-          setActionType={setActionType}
-          open={open}
-          action_step={null}
-          record={row.original}
-        />
-      </>
-    ),
-    renderDetailPanel: ({ row }) => (
-      <div>
-        <Text>
-          <b>Lead Passenger Name:</b> {row.original.lead_passenger_name}
-        </Text>
-        <Text>
-          <b>Schedule Change Remarks:</b> {row.original.schedule_change_remarks}
-        </Text>
-        <p>
-          <b>Old PNR text:</b>
-          <pre>{row.original.old_pnr_text}</pre>
-        </p>
-        <p>
-          <b>New PNR Text:</b>
-          <pre>{row.original.new_pnr_text}</pre>
-        </p>
-      </div>
-    ),
-    renderTopToolbar: ({ table }) => {
-      const handleDelete = () => {
-        table.getSelectedRowModel().flatRows.map((row) => {
-          console.log("deleting " + row.getValue("pnr"));
-        });
-      };
-
-      const handleGenerateScheduleChangeEmail = () => {
-        table.getSelectedRowModel().flatRows.map((row) => {
-          console.log(
-            "generating schedule change email " + row.getValue("pnr")
-          );
-        });
-      };
-
-      return (
-        <Flex p="md" justify="space-between">
-          <Flex gap="xs">
-            {/* import MRT sub-components */}
-            <MRT_GlobalFilterTextInput table={table} />
-            <MRT_ToggleFiltersButton table={table} />
-          </Flex>
-          <Flex sx={{ gap: "8px" }}>
-            <Button
-              color="red"
-              disabled={!table.getIsSomeRowsSelected()}
-              // onClick={handleDelete}
-              onClick={handleComingSoon}
-              variant="filled"
-            >
-              Delete
-            </Button>
-            <Button
-              color="green"
-              disabled={!table.getIsSomeRowsSelected()}
-              // onClick={handleGenerateScheduleChangeEmail}
-              onClick={handleComingSoon}
-              variant="filled"
-            >
-              Gegerate Schedule Change Emails
-            </Button>
-            <Tooltip label="Allowed file types: .xlsx, .json, .xml">
-              <Button
-                // color="green"
-                // disabled={!table.getIsSomeRowsSelected()}
-                // onClick={handleGenerateScheduleChangeEmail}
-                onClick={handleComingSoon}
-                variant="filled"
-              >
-                Import
-              </Button>
-            </Tooltip>
-            <Tooltip label="Export file types: .xlsx, .json">
-              <Button
-                // color="green"
-                // disabled={!table.getIsSomeRowsSelected()}
-                // onClick={handleGenerateScheduleChangeEmail}
-                onClick={handleComingSoon}
-                variant="filled"
-              >
-                Export
-              </Button>
-            </Tooltip>
-          </Flex>
-        </Flex>
-      );
-    },
-  });
 
   return (
-    <div className="w-max-screen">
-      <Drawer
-        opened={opened}
-        onClose={close}
-        title={actionType}
-        position="right"
-      >
-        {actionType === "add_to" && <AddTo />}
-        {actionType === "chat" && <Chat />}
-      </Drawer>
-      <MantineProvider
-        theme={{
-          colorScheme: "light",
-          primaryColor: "blue",
-        }}
-      >
-        <MantineReactTable table={table} />
-      </MantineProvider>
-    </div>
+    <>
+      <div>{/* <DynamicTextInput /> */}</div>
+      <div className="w-max-screen">
+        <div className="grid grid-cols-1 md:grid-cols-3 items-center p-4 gap-4">
+          <div className="hidden md:block"></div>{" "}
+          {/* Empty div for spacing on medium and large screens */}
+          <SelectTaskComponent
+            action_options={action_options}
+            identity={identity}
+            action_step={null}
+            record={null}
+            open={open}
+            close={close}
+            opened={opened}
+            data_items={[]}
+            setActionType={setActionType}
+            activeActionOption={activeActionOption}
+            setActiveActionOption={setActiveActionOption}
+            // className="col-span-1 md:col-span-3 lg:col-span-1" // This ensures full width on small screens and centers on larger screens
+          />
+          <div className="hidden md:block"></div>{" "}
+          {/* Empty div for spacing on medium and large screens */}
+        </div>
+
+        <MantineProvider
+          theme={{
+            colorScheme: "light",
+            primaryColor: "blue",
+          }}
+        >
+          <MantineReactTable table={booking_table} />
+        </MantineProvider>
+      </div>
+    </>
   );
 };
 export default PageList;
-
-function SelectTaskComponent({
-  setActionType,
-  actionsList,
-  open,
-  action_step,
-  record,
-}: {
-  setActionType: any;
-  actionsList: any;
-  open: any;
-  action_step: any;
-  record: any;
-}) {
-  return (
-    <Popover width={300} position="bottom" withArrow shadow="xl">
-      <Popover.Target>
-        <Button size="xs">Action</Button>
-      </Popover.Target>
-      <Popover.Dropdown>
-        <div className="flex items-end space-x-2">
-          <MultiSelect
-            className="flex-1"
-            label="actions"
-            searchable={true}
-            data={actionsList.map((action: any) => action.text)}
-            withinPortal={true}
-          />
-          <Button size="xs">Run</Button>
-        </div>
-        <div className="mt-4">
-          <div className="grid grid-cols-1 gap-2">
-            {actionsList.map((action: any, index: any) => (
-              <Button
-                key={index}
-                className="justify-start"
-                size="xs"
-                variant="outline"
-                leftIcon={action.icon}
-                onClick={() => {
-                  // set action type
-                  setActionType(action.action_type);
-                  // open window to configure that action
-                  if (action.use_open) {
-                    open();
-                  }
-                  // execute the action function. (move this to the configure action window later for items that are configurable)
-                  action.onClick(action.task_option, action_step, record);
-                }}
-              >
-                {action.text}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </Popover.Dropdown>
-    </Popover>
-  );
-}

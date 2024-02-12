@@ -1,6 +1,7 @@
 import {
   HttpError,
   IResourceComponentsProps,
+  useCustomMutation,
   useGetIdentity,
   useGo,
   useInvalidate,
@@ -49,7 +50,7 @@ import { IconSend, IconTrash } from "@tabler/icons";
 import { useDisclosure } from "@mantine/hooks";
 import { IActionStep, IIdentity } from "../interfaces";
 import { useCreate } from "@refinedev/core";
-import { removeSeparator } from "src/utils";
+import { addSeparator, removeSeparator } from "src/utils";
 
 const emailTypeOptions = [
   {
@@ -72,6 +73,12 @@ const emailTypeOptions = [
 
 export const PageCreate: React.FC<IResourceComponentsProps> = () => {
   const { mutate: mutateCreate } = useCreate();
+  // custom mutation
+  const {
+    mutate,
+    isLoading: mutationIsLoading,
+    isError: mutationIsError,
+  } = useCustomMutation();
   // other
   const go = useGo();
   const { show } = useNavigation();
@@ -85,6 +92,24 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
   const activeItem = useAppStore((state) => state.activeItem);
   const setActiveItem_2 = useAppStore((state) => state.setActiveItem_2);
   const activeItem_2 = useAppStore((state) => state.activeItem_2);
+
+  // ACTION OPTIONS
+  const {
+    data: actionOptionsData,
+    isLoading: isLoadingActionOptionsData,
+    isError: isErrorActionOptionsData,
+  } = useList({
+    resource: "action_options",
+  });
+
+  const action_options = actionOptionsData?.data
+    ? actionOptionsData?.data.map((option) => ({
+        ...option,
+        value: option.display_name,
+        label: option.display_name,
+        metadata: option.metadata,
+      }))
+    : [];
 
   const {
     getInputProps,
@@ -100,7 +125,8 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
       status: "active",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      action_steps: [] as any[],
+      // action_steps: [] as any[],
+      action_options: ["General Query"] as string[],
       // start_date: "",
       // end_date: "",
       // date_type: [] as string[],
@@ -352,7 +378,7 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
               onClick={() => {
                 // setActionType("add_action_step");
                 // open();
-                handleAddActionStep();
+                // handleAddActionStep();
               }}
             >
               Add Action Step
@@ -396,57 +422,111 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
     },
   });
 
-  const handleAddActionStep = () => {
-    // setActionType("add_action_step");
-    // open();
-    length = values.action_steps.length;
-    let execution_order = length + 1;
-    let empty_action_step = {
-      name: "",
-      execution_order: execution_order,
-      status: ["pending"],
-      async: false,
-      callback: false,
-      kind: "default",
-      dependencies: [],
-      context: "",
-      func_definition: [],
-    };
-    // append empty action step to values action_steps
-    setFieldValue("action_steps", [...values.action_steps, empty_action_step]);
-    // console.log("add action step");
-    console.log("values", values);
-  };
+  // const handleAddActionStep = () => {
+  //   // setActionType("add_action_step");
+  //   // open();
+  //   length = values.action_steps.length;
+  //   let execution_order = length + 1;
+  //   let empty_action_step = {
+  //     name: "",
+  //     execution_order: execution_order,
+  //     status: ["pending"],
+  //     async: false,
+  //     callback: false,
+  //     kind: "default",
+  //     dependencies: [],
+  //     context: "",
+  //     func_definition: [],
+  //   };
+  //   // append empty action step to values action_steps
+  //   setFieldValue("action_steps", [...values.action_steps, empty_action_step]);
+  //   // console.log("add action step");
+  //   console.log("values", values);
+  // };
 
   // HANDLE SUBMIT
   const handleSubmit = (e: any) => {
-    mutateCreate({
-      resource: "task",
-      values: values,
+    const action_option = action_options.find(
+      (item) => item.value === values?.action_options[0]
+    );
+    // console.log("running inline");
+    // console.log("action_option", action_option);
+    // console.log("record", record);
+    // console.log("running inline");
+    // console.log("values", values);
+    // let request_data = action_option ?? {};
+    mutate({
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/create`,
+      method: "post",
+      values: {
+        ...action_option,
+        // task: {
+        //   author: "user:TYvGonCb3nVDfdvfxfUvSQh0Zv93",
+        //   description: "general_query",
+        //   name: "general_query",
+        //   status: "active",
+        // },
+        // source: {
+        //   location: "database",
+        //   id: "general_query_plan",
+        // },
+        // destination: {
+        //   location: "database",
+        //   id: "",
+        // },
+        // options: {
+        //   sync_from_source_to_destination: true,
+        //   delete_source_from_destination: false,
+        //   plan_with_llm: false,
+        // },
+        // values: {
+        //   action_options: ["action_options:eqtleyp8zpzi3l5ohgip"],
+        // },
+      },
       successNotification: (data, values) => {
-        invalidate({
-          resource: "task",
-          invalidates: ["list"],
-        });
-        // list("reports"); // It navigates to list page
-        // console.log("data", data);
-        // console.log("values", values);
+        // invalidateCallback();
         show("task", removeSeparator(data?.data?.id));
-
         return {
-          message: `successfully created.`,
+          message: `successfully executed.`,
           description: "Success with no errors",
           type: "success",
         };
       },
       errorNotification: (data, values) => {
         return {
-          message: `Something went wrong`,
+          message: `Something went wrong when executing`,
           description: "Error",
           type: "error",
         };
       },
     });
+    // mutateCreate({
+    //   resource: "task",
+    //   values: values,
+    //   successNotification: (data, values) => {
+    //     // invalidate({
+    //     //   resource: "task",
+    //     //   invalidates: ["list"],
+    //     // });
+    //     // list("reports"); // It navigates to list page
+    //     // console.log("data", data);
+    //     // console.log("values", values);
+    //     show("task", removeSeparator(data?.data?.id));
+
+    //     return {
+    //       message: `successfully created.`,
+    //       description: "Success with no errors",
+    //       type: "success",
+    //     };
+    //   },
+    //   errorNotification: (data, values) => {
+    //     return {
+    //       message: `Something went wrong`,
+    //       description: "Error",
+    //       type: "error",
+    //     };
+    //   },
+    // });
     // console.log("values", values);
     // invalidate({
     //   resource: "reports",
@@ -460,7 +540,7 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
 
   return (
     <Create
-      isLoading={formLoading}
+      isLoading={formLoading || mutationIsLoading}
       saveButtonProps={{
         disabled: saveButtonProps?.disabled,
         onClick: handleSubmit,
@@ -498,13 +578,26 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
         {...getInputProps("name")}
         // disabled
       />
-      <TextInput
+      <Textarea
         mt="sm"
         label="description"
         placeholder="description"
         // value="david.wanjala@snowstormtech.com"
         {...getInputProps("description")}
         // disabled
+      />
+      <MultiSelect
+        className="flex-1"
+        label="action option"
+        placeholder="select optional seed action"
+        searchable={true}
+        required={true}
+        // data={action_options.map((action) => action.display_name)}
+        data={action_options}
+        // value={getInputProps("action").value}
+        // onChange={handleActionChange}
+        withinPortal={true}
+        // style={{ option: { whiteSpace: "normal" } }} // Adjust this line based on your component's API
       />
       {/* <div className="mt-4">
         <Button fullWidth size="xs">

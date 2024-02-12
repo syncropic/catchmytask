@@ -2,6 +2,7 @@ export interface IView {
   id: string;
   name: string;
   resource: string;
+  view_status: string;
 }
 
 export interface IFilter {

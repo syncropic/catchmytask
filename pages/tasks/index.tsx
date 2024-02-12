@@ -7,6 +7,7 @@ import {
   useCustomMutation,
   useList,
   HttpError,
+  useGetIdentity,
 } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { ColumnDef, flexRender } from "@tanstack/react-table";
@@ -56,6 +57,9 @@ import Chat from "./Chat";
 import { useDisclosure } from "@mantine/hooks";
 import { useAppStore } from "src/store";
 import { parseISO, format } from "date-fns";
+import SelectTaskComponent from "@components/selecttask";
+import { CompleteActionComponentProps } from "@components/interfaces";
+import { IIdentity } from "@components/interfaces";
 
 // Define the data structure
 interface IReport {
@@ -76,57 +80,38 @@ interface IReport {
 }
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
+  // ACTION OPTIONS
+  const {
+    data: actionOptionsData,
+    isLoading: isLoadingActionOptionsData,
+    isError: isErrorActionOptionsData,
+  } = useList({
+    resource: "action_options",
+  });
+
+  const action_options = actionOptionsData?.data
+    ? actionOptionsData?.data.map((option) => ({
+        ...option,
+        value: option.display_name,
+        label: option.display_name,
+        metadata: option.metadata,
+      }))
+    : [];
+  // IDENTITY
+  const { data: identity } = useGetIdentity<IIdentity>();
   const go = useGo();
   const [opened, { open, close }] = useDisclosure(false);
-  const actionType = useAppStore((state) => state.actionType);
-  const setActionType = useAppStore((state) => state.setActionType);
+  const {
+    actionType,
+    setActionType,
+    activeActionOption,
+    setActiveActionOption,
+  } = useAppStore();
   const {
     mutate,
     isLoading: mutationIsLoading,
     isError: mutationIsError,
   } = useCustomMutation();
-
-  // Define the object with the specified keys and values
-  const refreshReportRequestData = {
-    task: {
-      author: "user:TYvGonCb3nVDfdvfxfUvSQh0Zv93",
-      description: "generate_schedule_change_email",
-      status: "active",
-      id: "task:⟨4eab1ed2-13a3-4781-b2ba-3f1694805cc5⟩",
-    },
-    source: {
-      location: "database",
-      id: "task:⟨40c4a2ca-c35d-4ea7-bd33-084a6a5212dd⟩",
-    },
-    destination: {
-      location: "database",
-      record: "",
-      id: "",
-    },
-    options: {
-      sync_from_source_to_destination: true,
-      delete_source_from_destination: false,
-      plan_with_llm: false,
-      rerun_execution_orders: [],
-      execution_orders_range: [11, 20],
-      execute_by: "execution_orders_range",
-      user_feedback: "continue",
-    },
-    task_input: {
-      generate_sql_query_01: {
-        text_query:
-          "Retrieve all onewurld bookings from cyDashBoardSetupTable where reporting date is >= 2024-01-16 and <= 2024-01-16. The collection is onewurld",
-      },
-      create_email_message_01: {
-        email_type: "personal",
-        personal_message: "",
-        internal_message: "",
-      },
-      send_email_message_01: {
-        mail_list: "personal",
-      },
-    },
-  };
 
   const columns = useMemo<MRT_ColumnDef<IReport>[]>(
     () => [
@@ -137,9 +122,26 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         header: "quick actions",
         Cell: ({ renderedCellValue, row }) => (
           <Group spacing="xs" noWrap>
-            <EditButton size="xs" recordItemId={row.original.id} />
-            {/* <Button size="xs" onClick={handleComingSoon}>
-              Download
+            <Button
+              size="xs"
+              variant="outline"
+              // color={row.original.status === "complete" ? "green" : "blue"}
+              onClick={() =>
+                handleRun(
+                  // executing_record && "request_object" in executing_record
+                  //   ? executing_record.request_object
+                  //   : null,
+                  row.original,
+                  row.original,
+                  null
+                )
+              }
+            >
+              Run
+            </Button>
+
+            {/* <Button onClick={handleComingSoon} size="xs" variant="outline">
+              Configure
             </Button> */}
           </Group>
         ),
@@ -191,8 +193,6 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           </Anchor>
         ),
       },
-      { accessorKey: "action_option", header: "action_option" },
-
       // {
       //   accessorKey: "description",
       //   header: "tags",
@@ -200,17 +200,30 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       // },
       {
         accessorFn: (row) => {
+          if (row.updated_at === null || row.updated_at === undefined) {
+            // Return null or a similar placeholder if updated_at is not available
+            return null;
+          }
           const sDay = new Date(row.updated_at);
           sDay.setHours(0, 0, 0, 0); // remove time from date (useful if filter by equals exact date)
           return sDay;
         },
         header: "updated_at",
         sortingFn: "datetime",
-        Cell: ({ row }) => (
-          <Text size="sm">
-            {format(parseISO(row.original.updated_at), "yyyy-MM-dd hh:mm a")}
-          </Text>
-        ),
+        Cell: ({ row }) => {
+          // Check if updated_at is null or undefined before attempting to format
+          if (
+            row.original?.updated_at === null ||
+            row.original?.updated_at === undefined
+          ) {
+            return <Text size="sm">N/A</Text>; // Display "N/A" or any placeholder text
+          }
+          return (
+            <Text size="sm">
+              {format(parseISO(row.original.updated_at), "yyyy-MM-dd hh:mm a")}
+            </Text>
+          );
+        },
       },
       // {
       //   accessorFn: (row) => {
@@ -246,11 +259,21 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       {
         accessorKey: "created_at",
         header: "created_at",
-        Cell: ({ row }) => (
-          <Text size="sm">
-            {format(parseISO(row.original.created_at), "yyyy-MM-dd hh:mm a")}
-          </Text>
-        ),
+        Cell: ({ row }) => {
+          // Check if created_at is null or undefined before attempting to format
+          if (
+            row.original?.created_at === null ||
+            row.original?.created_at === undefined
+          ) {
+            return <Text size="sm">N/A</Text>; // Display "N/A" or any placeholder text
+          }
+          // Safely format the date since we now know it's not null or undefined
+          return (
+            <Text size="sm">
+              {format(parseISO(row.original.created_at), "yyyy-MM-dd hh:mm a")}
+            </Text>
+          );
+        },
       },
     ],
     []
@@ -300,64 +323,21 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       placeholder: "Search Reports",
     },
     mantineTableContainerProps: { sx: { maxHeight: "500px" } },
-    renderRowActionMenuItems: ({ row }) => (
+    renderRowActions: ({ row }) => (
       <>
-        <Menu.Item
-          onClick={() => {
-            setActionType("add_to");
-            open();
-          }}
-          icon={<IconCirclePlus style={{ width: rem(14), height: rem(14) }} />}
-        >
-          {isLoading ? "Loading..." : "Add To"}
-        </Menu.Item>
-        <Menu.Item
-          onClick={() => {
-            setActionType("chat");
-            open();
-          }}
-          icon={
-            <IconMessageCircle style={{ width: rem(14), height: rem(14) }} />
-          }
-        >
-          {isLoading ? "Loading..." : "Chat"}
-        </Menu.Item>
-        <Menu.Item
-          icon={<IconRefresh style={{ width: rem(14), height: rem(14) }} />}
-          onClick={handleComingSoon}
-          // onClick={() =>
-          //   mutate({
-          //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/create`,
-          //     method: "post",
-          //     values: {
-          //       ...refreshReportRequestData,
-          //       task: {
-          //         ...refreshReportRequestData.task,
-          //         name: row.original.id,
-          //       },
-          //       destination: {
-          //         ...refreshReportRequestData.destination,
-          //         record: addSeparator(row.original.id, "caesars_bookings"),
-          //       },
-          //     },
-          //     successNotification: (data, values) => {
-          //       return {
-          //         message: `${row.original.id} Successfully fetched.`,
-          //         description: "Success with no errors",
-          //         type: "success",
-          //       };
-          //     },
-          //     errorNotification: (data, values) => {
-          //       return {
-          //         message: `Something went wrong when getting ${row.original.id}`,
-          //         description: "Error",
-          //         type: "error",
-          //       };
-          //     },
-          //   })
-        >
-          {mutationIsLoading ? "Loading..." : "Refresh Report"}
-        </Menu.Item>
+        <SelectTaskComponent
+          action_options={action_options}
+          identity={identity}
+          action_step={null}
+          // mutate={customMutate}
+          record={row.original}
+          open={open}
+          setActionType={setActionType}
+          variant="inline"
+          activeActionOption={activeActionOption}
+          setActiveActionOption={setActiveActionOption}
+          // className="col-span-1 md:col-span-3 lg:col-span-1" // This ensures full width on small screens and centers on larger screens
+        />
       </>
     ),
     renderDetailPanel: ({ row }) => (
@@ -439,6 +419,46 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   });
   const handleComingSoon = () => {
     alert("Coming Soon");
+  };
+
+  const handleRun = (task: any, action_step: any, record: any) => {
+    mutate({
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
+      method: "post",
+      values: {
+        ...task,
+        // options: {
+        //   ...task?.options,
+        //   create_database_record: false,
+        //   execution_orders_range: [
+        //     action_step?.execution_order,
+        //     action_step?.execution_order,
+        //   ],
+        // },
+        // task: {
+        //   ...task?.task,
+        //   id: action_step?.in,
+        // },
+      },
+      successNotification: (data, values) => {
+        // invalidate({
+        //   resource: "execute",
+        //   invalidates: ["list"],
+        // });
+        return {
+          message: `successfully run.`,
+          description: "Success with no errors",
+          type: "success",
+        };
+      },
+      errorNotification: (data, values) => {
+        return {
+          message: `Something went wrong when running`,
+          description: "Error",
+          type: "error",
+        };
+      },
+    });
   };
   return (
     <div className="w-max-screen">

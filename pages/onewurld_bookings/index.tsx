@@ -13,9 +13,11 @@ import {
 import { useTable } from "@refinedev/react-table";
 import { ColumnDef, flexRender } from "@tanstack/react-table";
 import {
+  IconChartAreaFilled,
   IconCirclePlus,
   IconEdit,
   IconFilterCheck,
+  IconList,
   IconMail,
   IconMessageCircle,
   IconPlus,
@@ -88,7 +90,7 @@ import DateInputTool from "./DateInputTool";
 import ColumnOptionsTool from "./ColumnOptionsTool";
 import { handleRun } from "src/utils";
 import { dateTypeOptions } from "src/utils";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, set } from "date-fns";
 import {
   IOnewurldBooking,
   IView,
@@ -96,23 +98,16 @@ import {
   ColumnConfig,
   Column,
 } from "./interfaces";
-
-// function defaultStringValues<T>(obj: T): T {
-//   const keys = Object.keys(obj) as Array<keyof T>;
-//   keys.forEach((key) => {
-//     if (
-//       typeof obj[key] === "string" &&
-//       (obj[key] === null || obj[key] === undefined)
-//     ) {
-//       obj[key] = "" as any;
-//     }
-//   });
-//   return obj;
-// }
+import dynamic from "next/dynamic";
+import { IconDownload } from "@tabler/icons";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
+import { RetrieveDatasets } from "@components/completeaction";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const invalidate = useInvalidate();
 
+  const { activeActionOption, setActiveActionOption } = useAppStore();
   // IDENTITY
   const { data: identity } = useGetIdentity<IIdentity>();
   // ACTION OPTIONS
@@ -155,6 +150,8 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     setActiveViews,
     opened: global_opened,
     setOpened,
+    activeViewStats,
+    setActiveViewStats,
   } = useAppStore();
 
   // custom mutation
@@ -361,27 +358,6 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     },
   };
 
-  const executeRequestData = {
-    task: {
-      id: "",
-    },
-    options: {
-      rerun_execution_orders: [],
-      execution_orders_range: [2, 7],
-      execute_by: "execution_orders_range",
-      user_feedback: "continue",
-    },
-    task_input: {
-      get_collection_info_01: {
-        collection: "schedule_changes",
-        filename: "schedule_changes",
-        start_date: "2024-01-11",
-        end_date: "2024-01-11",
-        date_types: ["analysis_date"],
-      },
-    },
-  };
-
   const columns = useMemo<MRT_ColumnDef<IOnewurldBooking>[]>(
     () => [
       {
@@ -434,14 +410,27 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         Cell: ({ row }) => <div>{row.original.sst_supplier_name ?? ""}</div>,
       },
       {
+        accessorKey: "sst_booking_type",
+        header: "sst_booking_type",
+        filterVariant: "multi-select",
+        Cell: ({ row }) => <div>{row.original.sst_booking_type ?? ""}</div>,
+      },
+      {
         accessorKey: "sst_status",
         header: "sst_status",
         filterVariant: "multi-select",
         Cell: ({ row }) => {
+          let comparison_column = "";
+          if (activeViews?.name === "supplier_issues_onewurld_bookings") {
+            comparison_column = "sst_status_and_supplier_status_comparison";
+          }
+          if (activeViews?.name === "finance_issues_onewurld_bookings") {
+            comparison_column = "sst_status_and_payment_status_comparison";
+          }
           const style = getCellStyleInline(
             row.original.sst_status_and_supplier_status_comparison ?? "",
             activeViews,
-            "sst_status_and_supplier_status_comparison"
+            comparison_column
           );
           return <div style={style}>{row.original.sst_status ?? ""}</div>;
         },
@@ -472,11 +461,68 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
             {row.original.sst_status_and_supplier_status_comparison ?? ""}
           </div>
         ),
+        // aggregationFn: "count", //calc total points for each team by adding up all the points for each player on the team
+        Footer: ({ table }) => {
+          let filteredRows = table.getFilteredRowModel().rows;
+          let total = filteredRows.length;
+          // where cell value is match
+          let match = filteredRows.filter(
+            (row) =>
+              row.original.sst_status_and_supplier_status_comparison === "match"
+          ).length;
+          // where cell value is mismatch
+          let mismatch = filteredRows.filter(
+            (row) =>
+              row.original.sst_status_and_supplier_status_comparison ===
+              "mismatch"
+          ).length;
+          // where cell is check_manually
+          let check_manually = filteredRows.filter(
+            (row) =>
+              row.original.sst_status_and_supplier_status_comparison ===
+              "check_manually"
+          ).length;
+          return (
+            <div>
+              Total: {total}. Match: {match}. Mismatch: {mismatch}. Check
+              Manually: {check_manually}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "payment_status",
+        header: "payment_status",
+        Cell: ({ row }) => {
+          let comparison_column = "";
+          if (activeViews?.name === "finance_issues_onewurld_bookings") {
+            comparison_column = "sst_status_and_payment_status_comparison";
+          }
+          const style = getCellStyleInline(
+            row.original.sst_status_and_payment_status_comparison ?? "",
+            activeViews,
+            comparison_column
+          );
+          return <div style={style}>{row.original.payment_status ?? ""}</div>;
+        },
+      },
+      {
+        accessorKey: "sst_status_and_payment_status_comparison",
+        header: "sst_status_and_payment_status_comparison",
+        Cell: ({ row }) => (
+          <div>
+            {row.original.sst_status_and_payment_status_comparison ?? ""}
+          </div>
+        ),
       },
       {
         accessorKey: "sst_supplier_cost_usd",
         header: "sst_supplier_cost_usd",
         Cell: ({ row }) => {
+          let comparison_column = "";
+          if (activeViews?.name === "supplier_issues_onewurld_bookings") {
+            comparison_column = "supplier_cost_comparison";
+          }
           const style = getCellStyleInline(
             row.original.supplier_cost_comparison ?? "",
             activeViews,
@@ -491,6 +537,10 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         accessorKey: "analysis_supplier_cost_usd",
         header: "supplier_cost_usd",
         Cell: ({ row }) => {
+          let comparison_column = "";
+          if (activeViews?.name === "supplier_issues_onewurld_bookings") {
+            comparison_column = "supplier_cost_comparison";
+          }
           const style = getCellStyleInline(
             row.original.supplier_cost_comparison ?? "",
             activeViews,
@@ -517,6 +567,40 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         Cell: ({ row }) => (
           <div>{row.original.supplier_cost_comparison ?? ""}</div>
         ),
+        Footer: ({ table }) => {
+          let filteredRows = table.getFilteredRowModel().rows;
+          let total = filteredRows.length;
+          // where cell value is match
+          let match = filteredRows.filter(
+            (row) => row.original.supplier_cost_comparison === "match"
+          ).length;
+          // // where cell value is mismatch
+          let low_negative_difference = filteredRows.filter(
+            (row) =>
+              row.original.supplier_cost_comparison ===
+              "low_negative_difference"
+          ).length;
+          let medium_negative_difference = filteredRows.filter(
+            (row) =>
+              row.original.supplier_cost_comparison ===
+              "medium_negative_difference"
+          ).length;
+          // // where cell value is mismatch
+          let high_negative_difference = filteredRows.filter(
+            (row) =>
+              row.original.supplier_cost_comparison ===
+              "high_negative_difference"
+          ).length;
+
+          return (
+            <div>
+              Total: {total}. Match: {match}. Low (-) Diff:{" "}
+              {low_negative_difference}. Medium (-) Diff:{" "}
+              {low_negative_difference}. High (-) Diff:{" "}
+              {high_negative_difference}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "analysis_supplier_currency",
@@ -532,17 +616,80 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       //   header: "supplier_currency",
       //   Cell: ({ row }) => <div>{row.original.supplier_currency ?? ""}</div>,
       // },
-      {
-        accessorKey: "sst_booking_type",
-        header: "sst_booking_type",
-        filterVariant: "multi-select",
-        Cell: ({ row }) => <div>{row.original.sst_booking_type ?? ""}</div>,
-      },
+
       {
         accessorKey: "sst_final_selling_price_usd",
         header: "sst_final_selling_price_usd",
+        Cell: ({ row }) => {
+          let comparison_column = "";
+          if (activeViews?.name === "finance_issues_onewurld_bookings") {
+            comparison_column = "paid_vs_selling_amount_usd_comparison";
+          }
+          const style = getCellStyleInline(
+            row.original.paid_vs_selling_amount_usd_comparison ?? "",
+            activeViews,
+            "paid_vs_selling_amount_usd_comparison"
+          );
+          return (
+            <div style={style}>
+              {row.original.sst_final_selling_price_usd ?? ""}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "payment_amount_captured_usd_total",
+        header: "payment_amount_captured_usd_total",
+        Cell: ({ row }) => {
+          let comparison_column = "";
+          if (activeViews?.name === "finance_issues_onewurld_bookings") {
+            comparison_column = "paid_vs_selling_amount_usd_comparison";
+          }
+          const style = getCellStyleInline(
+            row.original.paid_vs_selling_amount_usd_comparison ?? "",
+            activeViews,
+            comparison_column
+          );
+          return (
+            <div style={style}>
+              {row.original.payment_amount_captured_usd_total ?? ""}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "paid_vs_selling_amount_usd_difference",
+        header: "paid_vs_selling_amount_usd_difference",
         Cell: ({ row }) => (
-          <div>{row.original.sst_final_selling_price_usd ?? ""}</div>
+          <div>{row.original.paid_vs_selling_amount_usd_difference ?? ""}</div>
+        ),
+      },
+      {
+        accessorKey: "paid_vs_selling_amount_usd_comparison",
+        header: "paid_vs_selling_amount_usd_comparison",
+        Cell: ({ row }) => (
+          <div>{row.original.paid_vs_selling_amount_usd_comparison ?? ""}</div>
+        ),
+      },
+      {
+        accessorKey: "payment_succeeded_count",
+        header: "payment_succeeded_count",
+        Cell: ({ row }) => (
+          <div>{row.original.payment_succeeded_count ?? ""}</div>
+        ),
+      },
+      {
+        accessorKey: "original_payment_currencies",
+        header: "original_payment_currencies",
+        Cell: ({ row }) => (
+          <div>{row.original.original_payment_currencies ?? ""}</div>
+        ),
+      },
+      {
+        accessorKey: "payment_amount_to_usd_rate",
+        header: "payment_amount_to_usd_rate",
+        Cell: ({ row }) => (
+          <div>{row.original.payment_amount_to_usd_rate ?? ""}</div>
         ),
       },
       {
@@ -803,55 +950,6 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           </div>
         ),
       },
-      {
-        accessorKey: "analysis_payment_succeeded_count",
-        header: "analysis_payment_succeeded_count",
-        Cell: ({ row }) => (
-          <div>{row.original.analysis_payment_succeeded_count ?? ""}</div>
-        ),
-      },
-      {
-        accessorKey: "analysis_payment_amount_captured_usd_sum",
-        header: "analysis_payment_amount_captured_usd_sum",
-        Cell: ({ row }) => (
-          <div>
-            {row.original.analysis_payment_amount_captured_usd_sum ?? ""}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "analysis_payment_status",
-        header: "analysis_payment_status",
-        Cell: ({ row }) => (
-          <div>{row.original.analysis_payment_status ?? ""}</div>
-        ),
-      },
-      {
-        accessorKey:
-          "analysis_sst_final_selling_price_usd_and_analysis_payment_amount_captured_usd_sum_difference",
-        header:
-          "analysis_sst_final_selling_price_usd_and_analysis_payment_amount_captured_usd_sum_difference",
-        Cell: ({ row }) => (
-          <div>
-            {row.original
-              .analysis_sst_final_selling_price_usd_and_analysis_payment_amount_captured_usd_sum_difference ??
-              ""}
-          </div>
-        ),
-      },
-      {
-        accessorKey:
-          "analysis_sst_final_selling_price_usd_and_analysis_payment_amount_captured_usd_sum_comparison",
-        header:
-          "analysis_sst_final_selling_price_usd_and_analysis_payment_amount_captured_usd_sum_comparison",
-        Cell: ({ row }) => (
-          <div>
-            {row.original
-              .analysis_sst_final_selling_price_usd_and_analysis_payment_amount_captured_usd_sum_comparison ??
-              ""}
-          </div>
-        ),
-      },
     ],
     [activeViews]
   );
@@ -884,6 +982,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     enablePinning: true,
     enableEditing: true,
     editDisplayMode: "cell",
+    enableStickyFooter: true,
     state: { isLoading: mutationIsLoading || isLoadingOnewurldBooking },
     mantineEditTextInputProps: ({ cell }) => ({
       //onBlur is more efficient, but could use onChange instead
@@ -900,6 +999,8 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       showColumnFilters: true,
       pagination: { pageSize: 30, pageIndex: 0 },
       columnPinning: { left: ["sst_booking_number"] },
+      // grouping: ["sst_status_and_supplier_status_comparison"], //group by location and department by default and expand grouped rows
+      // expanded: true, //show grouped rows by default
     },
     paginationDisplayMode: "pages",
     positionToolbarAlertBanner: "bottom",
@@ -981,6 +1082,26 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
               // disabled={!table.getIsSomeRowsSelected()}
               // onClick={handleDelete}
               onClick={() => {
+                // invalidate({
+                //   resource: "views",
+                //   invalidates: ["list"],
+                // });
+                // setActionType("open_download");
+                // setOpened(true);
+                handleDownload(table.getFilteredRowModel().flatRows);
+                // open();
+              }}
+              // disabled
+              variant="outline"
+              leftIcon={<IconDownload />}
+            >
+              Download
+            </Button>
+            <Button
+              // color="red"
+              // disabled={!table.getIsSomeRowsSelected()}
+              // onClick={handleDelete}
+              onClick={() => {
                 // setActionType("open_views");
                 // open();
                 setActionType("set_view");
@@ -1050,39 +1171,80 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       </div>
     ),
   });
+
   const handleComingSoon = () => {
     alert("Coming Soon");
   };
 
   // FILTERING WITH VIEWS
-  const applyFilters = (activeView: any, data: any) => {
+  interface FilterCondition {
+    field_name: string; // Correct placement
+    type: "exclude" | "include" | "not_equals" | "range";
+    values?: string[]; // Assuming values are strings; adjust as necessary
+    range_start?: string;
+    range_end?: string;
+  }
+
+  interface ConditionGroup {
+    group_operator?: "AND" | "OR";
+    conditions: FilterCondition[];
+  }
+
+  interface ActiveView {
+    filters_configuration: ConditionGroup[];
+  }
+
+  const applyFilters = (activeView: ActiveView, data: any[]): any[] => {
     let filteredData = [...data];
 
-    activeView?.filters_configuration?.forEach((filter: any) => {
-      if (filter.exclude && filter.exclude.length > 0) {
-        // Apply exclusion filter
-        // console.log("exclude", filter.exclude);
-        filteredData = filteredData.filter(
-          (item) => !filter.exclude.includes(item[filter.field_name])
-        );
-      }
-
-      if (filter.include && filter.include.length > 0) {
-        // only apply this with the include filter > 0 otherwise it will return no data
-        // Apply inclusion filter
+    activeView.filters_configuration.forEach((group) => {
+      if (group.group_operator === "OR") {
+        // For 'OR' logic, ensure at least one condition within the group matches
         filteredData = filteredData.filter((item) =>
-          filter.include.includes(item[filter.field_name])
+          group.conditions.some((condition) => {
+            return evaluateCondition(item, condition);
+          })
         );
+      } else {
+        // Default to 'AND' logic if no group_operator is specified
+        group.conditions.forEach((condition) => {
+          filteredData = filteredData.filter((item) => {
+            return evaluateCondition(item, condition);
+          });
+        });
       }
-
-      // Additional filter logic (e.g., for range_start, range_end) can be added here if necessary
     });
-    // console.log("filtered data", filteredData);
 
     return filteredData;
   };
 
-  // // When activeViews changes, apply filters
+  function evaluateCondition(item: any, condition: FilterCondition): boolean {
+    switch (condition.type) {
+      case "exclude":
+        // If condition.values is undefined, default to false to indicate the item does not match the exclusion criteria
+        return condition.values
+          ? !condition.values.includes(item[condition.field_name])
+          : false;
+      case "include":
+        // If condition.values is undefined, default to false as there are no values to include the item by
+        return condition.values
+          ? condition.values.includes(item[condition.field_name])
+          : false;
+      case "not_equals":
+        // Similar logic as "exclude"
+        return condition.values
+          ? !condition.values.includes(item[condition.field_name])
+          : false;
+      case "range":
+        const value = new Date(item[condition.field_name]);
+        const start = new Date(condition.range_start!); // Assuming range_start and range_end are always provided for "range" type
+        const end = new Date(condition.range_end!);
+        return value >= start && value <= end;
+      default:
+        return true; // Default case to include the item if condition type is unknown
+    }
+  }
+  // When activeViews changes, apply filters
   // useEffect(() => {
   //   if (activeViews) {
   //     const filteredData = applyFilters(activeViews, data_items);
@@ -1097,8 +1259,26 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   useEffect(() => {
     // Reset filtered data and column visibility when activeViews is null
     if (activeViews === null) {
+      // let activeViewStats = {
+      //   totalItems: data_items.length,
+      // };
+      // setActiveViewStats(activeViewStats);
+      // console.log("activeViewStats", activeViewStats);
+
       setFilteredDataItems(data_items);
       updateTableVisibility(table, null); // Reset column visibility to default
+      // update stats
+      //calculate the total points for all players in the table in a useMemo hook
+      // const activeViewStats = useMemo(() => {
+      //   // let data = data_items;
+      //   // const totalPoints = data.reduce((acc, row) => acc + row.points, 0);
+      //   // const totalPlayers = data.length;
+      //   // return totalPoints / totalPlayers;
+      //   let activeViewStats = {
+      //     totalItems: data_items.length,
+      //   };
+      //   setActiveViewStats(activeViewStats);
+      // }, [data_items, activeViews]);
     } else {
       // Existing logic for when activeViews is not null
       const newFilteredData = activeViews?.filters_configuration
@@ -1106,8 +1286,75 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         : data_items;
       setFilteredDataItems(newFilteredData);
       updateTableVisibility(table, activeViews?.fields_configuration);
+      // const activeViewStats = useMemo(() => {
+      //   // let data = data_items;
+      //   // const totalPoints = data.reduce((acc, row) => acc + row.points, 0);
+      //   // const totalPlayers = data.length;
+      //   // return totalPoints / totalPlayers;
+      //   let activeViewStats = {
+      //     totalItems: filteredDataItems.length,
+      //   };
+      //   setActiveViewStats(activeViewStats);
+      // }, [data_items, activeViews]);
+      let activeViewStats = {
+        totalItems: filteredDataItems.length,
+      };
+      // console.log("activeViewStats", activeViewStats);
+      // setActiveViewStats(activeViewStats);
     }
-  }, [activeViews, data_items, table]);
+  }, [activeViews, data_items]);
+
+  //calculate the total points for all players in the table in a useMemo hook
+  const activeViewStatistics = useMemo(() => {
+    // const totalPoints = data.reduce((acc, row) => acc + row.points, 0);
+    // const totalPlayers = data.length;
+    // return totalPoints / totalPlayers;
+    if (filteredDataItems.length > 0) {
+      let total_items = filteredDataItems.length;
+      // items where sst_status_and_supplier_status_comparison is "match"
+      let sst_status_match_items = filteredDataItems.filter(
+        (item) => item.sst_status_and_supplier_status_comparison === "match"
+      ).length;
+      // check_manually
+      let sst_status_check_manually_items = filteredDataItems.filter(
+        (item) =>
+          item.sst_status_and_supplier_status_comparison === "check_manually"
+      ).length;
+      // mismatch
+      let sst_status_mismatch_items = filteredDataItems.filter(
+        (item) => item.sst_status_and_supplier_status_comparison === "mismatch"
+      ).length;
+      let activeViewStats = {
+        total_items,
+        sst_status_match_items,
+        sst_status_mismatch_items,
+        sst_status_check_manually_items,
+      };
+      return activeViewStats;
+    } else {
+      let total_items = data_items.length;
+      // items where sst_status_and_supplier_status_comparison is "match"
+      let sst_status_match_items = data_items.filter(
+        (item) => item.sst_status_and_supplier_status_comparison === "match"
+      ).length;
+      // check_manually
+      let sst_status_check_manually_items = data_items.filter(
+        (item) =>
+          item.sst_status_and_supplier_status_comparison === "check_manually"
+      ).length;
+      // mismatch
+      let sst_status_mismatch_items = data_items.filter(
+        (item) => item.sst_status_and_supplier_status_comparison === "mismatch"
+      ).length;
+      let activeViewStats = {
+        total_items,
+        sst_status_match_items,
+        sst_status_mismatch_items,
+        sst_status_check_manually_items,
+      };
+      return activeViewStats;
+    }
+  }, [data_items, filteredDataItems]);
 
   const getCellStyle = (value: any, activeViews: any) => {
     // console.log(value);
@@ -1196,10 +1443,95 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     });
   };
 
+  // HANDLE DOWNLOAD
+  const handleDownload = async (items: any[]) => {
+    let view_items = items.map((row: any) => ({
+      ...row.original,
+      id: addSeparator(row.original.id, "views"),
+      author: identity?.email,
+    }));
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sheet 1");
+
+    // Check if view_items is not empty and prepare columns
+    if (view_items.length > 0) {
+      // Extract keys from the first item to use as column headers
+      const columns = Object.keys(view_items[0]).map((key) => ({
+        header: key,
+        key: key,
+        width: 20, // You can adjust the width as needed
+      }));
+      worksheet.columns = columns;
+    }
+
+    // Add rows using the transformed items
+    view_items.forEach((item) => {
+      worksheet.addRow(item);
+    });
+
+    // Use ExcelJS to write the workbook
+    const buffer = await workbook.xlsx.writeBuffer();
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    const fileExtension = ".xlsx";
+
+    // Use FileSaver to save the file
+    const blob = new Blob([buffer], { type: fileType });
+    saveAs(blob, activeViews?.name + fileExtension);
+  };
+
   return (
     <>
       <div>{/* <DynamicTextInput /> */}</div>
       <div className="w-max-screen">
+        {/* <div className="container mx-auto">
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="font-bold">Status Comparison</div>
+              <div>Total Items: {activeViewStatistics?.total_items}</div>
+              <div>Match: {activeViewStatistics?.sst_status_match_items}</div>
+              <div>
+                Mismatch: {activeViewStatistics?.sst_status_mismatch_items}
+              </div>
+              <div>
+                Check Manually:{" "}
+                {activeViewStatistics?.sst_status_check_manually_items}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <div className="font-bold">Price Comparison</div>
+              <div>Total Items: {activeViewStatistics?.total_price_items}</div>
+              <div>Match: {activeViewStatistics?.price_status_match_items}</div>
+              <div>
+                Mismatch: {activeViewStatistics?.price_status_mismatch_items}
+              </div>
+              <div>
+                Check Manually:{" "}
+                {activeViewStatistics?.price_status_check_manually_items}
+              </div>
+            </div>
+          </div>
+        </div> */}
+
+        {/* <Accordion defaultValue="details">
+          <Accordion.Item key="details" value="details">
+            <Accordion.Control icon={<IconChartAreaFilled />}>
+              <div>Visualizations</div>
+            </Accordion.Control>
+            <Accordion.Panel>
+              <CodeBlock jsonData={data} />
+              <div className="h-16">
+                <MyResponsiveBar data={sample_data} />
+              </div>
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion> */}
+        {/* <div className="h-36"> */}
+        {/* <MyResponsiveBar data={sample_data} /> */}
+        {/* <MyResponsivePie data={sample_data} /> */}
+        {/* </div> */}
         <div className="grid grid-cols-1 md:grid-cols-3 items-center p-4 gap-4">
           <div className="hidden md:block"></div>{" "}
           {/* Empty div for spacing on medium and large screens */}
@@ -1218,10 +1550,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         </div>
         {/* <DynamicInput></DynamicInput> */}
         {/* <div>LIST ACTIONS PANEL</div> */}
-        <Modal opened={opened_2} onClose={close_2} title="Send">
-          {/* Modal content */}
-          <div>Send Form</div>
-        </Modal>
+
         <Drawer
           opened={opened}
           onClose={close}
@@ -1241,14 +1570,16 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
             </MantineProvider>
           )}
           {actionType === "run" && (
-            <CompleteActionComponent
+            <RetrieveDatasets
+              setActionType={setActionType}
               action_options={action_options}
               identity={identity}
-              // mutate={customMutate}
-              action_step={null}
-              record={null}
               open={open}
-              setActionType={setActionType}
+              record={null}
+              action_step={null}
+              variant="default"
+              activeActionOption={activeActionOption}
+              setActiveActionOption={setActiveActionOption}
             />
           )}
         </Drawer>
@@ -1463,11 +1794,10 @@ function SelectTaskComponent({
         RUN
       </Button>
       {/* Changed size to 'sm' for a slightly larger button */}
-      <Button size="xs" variant="subtle">
-        {" "}
-        {/* Make the button subtle */}
-        <IconPlus size={16} /> {/* Plus icon from Tabler Icons */}
-      </Button>
+      {/* <Button size="xs" variant="subtle">
+      
+        <IconPlus size={16} />
+      </Button> */}
     </div>
   );
 }
@@ -1487,258 +1817,4 @@ interface FormValues {
   end_date: string;
   date_type: string[];
   // Add other form fields here as needed
-}
-
-function CompleteActionComponent({
-  setActionType,
-  action_options,
-  identity,
-  action_step,
-  open,
-  record,
-}: CompleteActionComponentProps) {
-  const invalidate = useInvalidate();
-
-  const setActiveItem = useAppStore((state) => state.setActiveItem);
-  const activeItem = useAppStore((state) => state.activeItem); // this is the selected action configure and send for run already configured
-  const {
-    mutate,
-    isLoading: mutationIsLoading,
-    isError: mutationIsError,
-  } = useCustomMutation();
-  const {
-    getInputProps,
-    saveButtonProps,
-    setFieldValue,
-    values,
-    refineCore: { formLoading, onFinish },
-    onSubmit,
-  } = useForm({
-    initialValues: {
-      // author: "user:TYvGonCb3nVDfdvfxfUvSQh0Zv93",
-      // description: "",
-      // action: [] as string[],
-      start_date: "",
-      end_date: "",
-      date_type: [] as string[],
-      email_type: [] as string[],
-      custom_message: "",
-      mail_list: [] as string[],
-      id: "",
-      // to_email_list: ["dp.wanjala@gmail.com"] as string[],
-      // cc_email_list: [] as string[],
-      // tags: "",
-      // from: "david.wanjala@snowstormtech.com",
-      // email_type: ["default"] as string[],
-    },
-  });
-
-  const handleActionChange = (value: string[]) => {
-    const item = action_options.find((item) => item.value === value[0]);
-    setActiveItem(item);
-    // setActionType("create");
-    setFieldValue("action", value);
-  };
-
-  const handleSubmit = (e: any) => {
-    // console.log("values", values);
-    let start_date: string = values?.start_date;
-    let end_date: string = values?.end_date;
-
-    // Function to format date, handling both string and Date types
-    const formatDate = (date: string | Date): string => {
-      // if (!date) {
-      //     return undefined;
-      // }
-      if (typeof date === "string") {
-        // Handle as string
-        return format(parseISO(date), "yyyy-MM-dd");
-      } else {
-        // Handle as Date object
-        return format(date, "yyyy-MM-dd");
-      }
-    };
-
-    // Convert dates to 'yyyy-MM-dd' format
-    start_date = formatDate(start_date);
-    end_date = formatDate(end_date);
-
-    if (!start_date || !end_date) {
-      console.error("Invalid date format");
-      return; // or handle error appropriately
-    }
-
-    // console.log("start_date", start_date);
-    // console.log(activeItem);
-
-    const task = activeItem;
-    // const action_step = null;
-    const resource = "onewurld_bookings";
-    const record = {
-      ...values,
-      start_date: start_date,
-      end_date: end_date,
-    };
-
-    let request_data = {
-      ...task,
-      task_input: {
-        ...task?.task_input,
-        get_collection_info_1: {
-          ...task?.task_input?.get_collection_info_1,
-          end_date: formatDateTimeAsDateTime(new Date()),
-          start_date: formatDateTimeAsDateTime(new Date()),
-        },
-        create_email_message_1: {
-          email_type: record?.email_type,
-          personal_message: record?.custom_message,
-          internal_message: record?.custom_message,
-          custom_message: record?.custom_message,
-        },
-        send_email_message_1: {
-          mail_list: record?.mail_list,
-        },
-        generate_sql_query_1: {
-          text_query: task?.task_input?.generate_sql_query_1?.text_query
-            ?.replace("${start_date}", record?.start_date)
-            .replace("${end_date}", record?.end_date),
-        },
-        generate_sql_query_2: {
-          text_query: task?.task_input?.generate_sql_query_2?.text_query
-            ?.replace("${start_date}", record?.start_date)
-            .replace("${end_date}", record?.end_date),
-        },
-      },
-      task: {
-        ...task?.task,
-        id: action_step?.in,
-      },
-      destination: {
-        ...task?.destination,
-        record: addSeparator(record?.id, resource),
-      },
-    };
-
-    // Conditionally adding execution_orders_range
-    if (action_step) {
-      request_data.options = {
-        ...task?.options,
-        execution_orders_range: [
-          action_step?.execution_order,
-          action_step?.execution_order,
-        ],
-      };
-      request_data.values = {
-        action_step_id: addSeparator(action_step?.id, "execute"),
-        task_id: action_step?.in,
-        resource: resource,
-        author: identity?.email,
-        record: addSeparator(record?.id, resource),
-      };
-      request_data.task = {
-        ...task?.task,
-        id: action_step?.in, // this is already known if running an action_step on an existing task
-      };
-    } else {
-      request_data.options = {
-        ...task?.options,
-      };
-      request_data.values = {
-        // action_step_id: addSeparator(action_step?.id, "execute"),
-        // task_id: action_step?.in,
-        ...record,
-        resource: "action_runs",
-        author: identity?.email,
-        record: addSeparator(record?.id, resource),
-        action_option: addSeparator(task?.id, "action_options"),
-      };
-      request_data.task = {
-        ...task?.task,
-        // id: will fill in when task is generated
-      };
-    }
-    // console.log(request_data);
-
-    // setActionType("run");
-    // open();
-    // handleRun({
-    //   identity: identity,
-    //   resource: "onewurld_bookings",
-    //   record: record,
-    //   mutate: mutate,
-    //   task: activeItem,
-    //   invalidateCallback: () => {
-    //     invalidate({
-    //       resource: "onewurld_bookings",
-    //       invalidates: ["list"],
-    //     });
-    //   },
-    // })
-    mutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/create`,
-      method: "post",
-      values: request_data,
-      successNotification: (data, values) => {
-        // invalidateCallback();
-        return {
-          message: `successfully executed.`,
-          description: "Success with no errors",
-          type: "success",
-        };
-      },
-      errorNotification: (data, values) => {
-        return {
-          message: `Something went wrong when executing`,
-          description: "Error",
-          type: "error",
-        };
-      },
-    });
-  };
-  return (
-    <Create
-      // isLoading={formLoading}
-      isLoading={mutationIsLoading}
-      saveButtonProps={{
-        disabled: saveButtonProps?.disabled,
-        onClick: handleSubmit,
-        size: "xs",
-      }}
-      contentProps={{
-        style: {
-          // backgroundColor: "cornflowerblue",
-          padding: "16px",
-          height: "420px",
-        },
-      }}
-      title={<Title order={3}>Configure and Execute Action</Title>}
-      goBack={false}
-    >
-      <MultiSelect
-        required
-        mt="sm"
-        label="date_type"
-        placeholder="Select date type"
-        data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("date_type")}
-        // required
-      />
-      <DateInput
-        required
-        valueFormat="DD/MM/YYYY HH:mm:ss"
-        label="start_date"
-        placeholder="Start date"
-        {...getInputProps("start_date")}
-      />
-      <DateInput
-        required
-        valueFormat="DD/MM/YYYY HH:mm:ss"
-        label="end_date"
-        placeholder="End date"
-        {...getInputProps("end_date")}
-      />
-    </Create>
-  );
 }

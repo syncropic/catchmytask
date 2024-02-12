@@ -47,11 +47,14 @@ export interface IOnewurldBooking {
   analysis_supplier_updated_date: Date;
   supplier_cost_difference: number; // numeric
   supplier_cost_comparison: string;
-  analysis_payment_succeeded_count: number; // int
-  analysis_payment_amount_captured_usd_sum: number; // numeric
-  analysis_payment_status: string; // nvarchar changed to string for TypeScript compatibility
-  analysis_sst_final_selling_price_usd_and_analysis_payment_amount_captured_usd_sum_difference: number; // numeric
-  analysis_sst_final_selling_price_usd_and_analysis_payment_amount_captured_usd_sum_comparison: string;
+  payment_succeeded_count: number; // int
+  payment_amount_captured_usd_total: number; // numeric
+  payment_status: string; // nvarchar changed to string for TypeScript compatibility
+  sst_status_and_payment_status_comparison: string;
+  paid_vs_selling_amount_usd_difference: number; // numeric
+  paid_vs_selling_amount_usd_comparison: string;
+  original_payment_currencies: string;
+  payment_amount_to_usd_rate: number; // numeric
 }
 
 export interface IOnewurldBookingFilteredFields {
@@ -100,11 +103,14 @@ export interface IOnewurldBookingFilteredFields {
   analysis_supplier_updated_date: Date;
   supplier_cost_difference: number;
   supplier_cost_comparison: string;
-  analysis_payment_succeeded_count: number;
-  analysis_payment_amount_captured_usd_sum: number;
-  analysis_payment_status: string;
-  analysis_sst_final_selling_price_usd_and_analysis_payment_amount_captured_usd_sum_difference: number;
-  analysis_sst_final_selling_price_usd_and_analysis_payment_amount_captured_usd_sum_comparison: string;
+  payment_succeeded_count: number;
+  payment_amount_captured_usd_total: number;
+  payment_status: string;
+  sst_status_and_payment_status_comparison: string;
+  paid_vs_selling_amount_usd_difference: number; // numeric
+  paid_vs_selling_amount_usd_comparison: string;
+  original_payment_currencies: string;
+  payment_amount_to_usd_rate: number; // numeric
 }
 
 export interface IView {

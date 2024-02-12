@@ -130,6 +130,7 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
   const execute_data = executeData?.data ?? [];
 
   const handleRun = (task: any, action_step: any, record: any) => {
+    // console.log("task", task);
     mutate({
       url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
       method: "post",
@@ -138,6 +139,7 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
         options: {
           ...task?.options,
           create_database_record: false,
+          execution_type: "action_step",
           execution_orders_range: [
             action_step?.execution_order,
             action_step?.execution_order,
@@ -185,9 +187,10 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
               color={row.original.status === "complete" ? "green" : "blue"}
               onClick={() =>
                 handleRun(
-                  executing_record && "request_object" in executing_record
-                    ? executing_record.request_object
-                    : null,
+                  // executing_record && "request_object" in executing_record
+                  //   ? executing_record.request_object
+                  //   : null,
+                  record?.request_object,
                   row.original,
                   record
                 )
@@ -394,7 +397,7 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
           <b>Author:</b> {record?.author}
         </Text>
         <Text>
-          <b>Updated At:</b> {record?.author}
+          <b>Updated At:</b> {record?.updated_at}
         </Text>
         {/* <Text>
           Summary and reports results links will be available here.

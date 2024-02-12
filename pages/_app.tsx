@@ -54,6 +54,7 @@ import { IconMail } from "@tabler/icons";
 import {
   IconDashboard,
   IconListCheck,
+  IconMusic,
   IconRefresh,
   IconTestPipe,
 } from "@tabler/icons-react";
@@ -356,6 +357,30 @@ const App = (props: React.PropsWithChildren) => {
                   dataProviderName: "catchmytaskApiDataProvider",
                 },
               },
+              {
+                name: "caesars_bookings",
+                list: "/caesars_bookings",
+                create: "/caesars_bookings/create",
+                edit: "/caesars_bookings/edit/:id",
+                show: "/caesars_bookings/show/:id",
+                meta: {
+                  canDelete: true,
+                  hide: true,
+                  dataProviderName: "catchmytaskApiDataProvider",
+                },
+              },
+              {
+                name: "onewurld_payments",
+                list: "/onewurld_payments",
+                create: "/onewurld_payments/create",
+                edit: "/onewurld_payments/edit/:id",
+                show: "/onewurld_payments/show/:id",
+                meta: {
+                  canDelete: true,
+                  hide: true,
+                  dataProviderName: "catchmytaskApiDataProvider",
+                },
+              },
               // {
               //   name: "onewurld_subscriptions",
               //   list: "/onewurld_subscriptions",
@@ -509,16 +534,29 @@ const App = (props: React.PropsWithChildren) => {
               //   },
               // },
               // {
-              //   name: "music",
-              //   list: "/music",
-              //   create: "/music/create",
-              //   edit: "/music/edit/:id",
-              //   show: "/music/show/:id",
-              //   meta: {
-              //     canDelete: true,
-              //     dataProviderName: "catchmyvibeApiDataProvider",
-              //   },
+              //   name: "syncs",
+              //   list: "/syncs",
+              //   create: "/syncs/create",
+              //   edit: "/syncs/edit/:id",
+              //   show: "/syncs/show/:id",
+              //   // meta: {
+              //   //   canDelete: true,
+              //   //   dataProviderName: "catchmyvibeApiDataProvider",
+              //   // },
               // },
+              {
+                name: "tracks",
+                list: "/tracks",
+                create: "/tracks/create",
+                edit: "/tracks/edit/:id",
+                show: "/tracks/show/:id",
+                meta: {
+                  canDelete: true,
+                  dataProviderName: "catchmyvibeApiDataProvider",
+                  // icon: <IconMusic />,
+                  // hide: true,
+                },
+              },
               // {
               //   name: "artist",
               //   list: "/artist",

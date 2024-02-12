@@ -171,6 +171,7 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
       data_models: [] as string[],
       name: "name your view",
       description: "describe this view briefly",
+      resource: "",
       fields_configuration: [] as IField[],
       filters_configuration: [] as IFilter[],
     },
@@ -471,6 +472,16 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
             // disabled={true}
             {...getInputProps("data_models")}
             onChange={handleDataModelChange}
+          />
+          <MultiSelect
+            className="md:col-span-1"
+            label="Resource"
+            maxSelectedValues={1}
+            data={["onewurld_payments", "onewurld_bookings"]}
+            required={true}
+            // disabled={true}
+            {...getInputProps("resource")}
+            // onChange={handleDataModelChange}
           />
         </div>
       </div>

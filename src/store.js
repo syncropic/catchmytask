@@ -12,6 +12,9 @@ const useAppStore = create(
       setActionType: (actionType) => set((state) => ({ actionType })),
       activeItem: null,
       setActiveItem: (activeItem) => set((state) => ({ activeItem })),
+      activeActionOption: null,
+      setActiveActionOption: (activeActionOption) =>
+        set((state) => ({ activeActionOption })),
       opened: false,
       setOpened: (opened) => set((state) => ({ opened })),
       activeItem_2: null,
@@ -31,6 +34,9 @@ const useAppStore = create(
       activeViews: [],
       setActiveViews: (view) =>
         set((state) => ({ ...state, activeViews: view })),
+      activeViewStats: {},
+      setActiveViewStats: (stats) =>
+        set((state) => ({ ...state, activeViewStats: stats })),
     }),
     {
       name: "catchmytask-store",
