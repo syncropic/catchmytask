@@ -114,12 +114,12 @@ export function SendFlightConfirmation({
         required
         mt="sm"
         label="flight_airline_reference_code"
-        // placeholder="Select date type"
+        placeholder="flight_airline_reference_code"
         // data={dateTypeOptions} // Replace with your options source
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
         {...getInputProps("flight_airline_reference_code")}
-        value={record?.flight_airline_reference_code}
+        // value={record?.flight_airline_reference_code}
         // disabled
         // required
       />
@@ -127,12 +127,12 @@ export function SendFlightConfirmation({
         required
         mt="sm"
         label="contact_email"
-        // placeholder="Select date type"
+        placeholder="contact_email"
         // data={dateTypeOptions} // Replace with your options source
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
         {...getInputProps("contact_email")}
-        value={record?.contact_email}
+        // value={record?.contact_email}
         // disabled
         // required
       />
@@ -140,12 +140,12 @@ export function SendFlightConfirmation({
         required
         mt="sm"
         label="contact_name"
-        // placeholder="Select date type"
+        placeholder="contact_name"
         // data={dateTypeOptions} // Replace with your options source
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
         {...getInputProps("contact_name")}
-        value={record?.contact_email}
+        // value={record?.contact_email}
         // disabled
         // required
       />

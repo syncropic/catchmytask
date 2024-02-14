@@ -95,7 +95,7 @@ export const dataProvider = (
     function createQueryString(
       fieldsString: string,
       resource: string,
-      viewId: string,
+      viewId: string | null,
       queryFilters: any
     ): string {
       if (Object.keys(queryFilters).length > 0) {

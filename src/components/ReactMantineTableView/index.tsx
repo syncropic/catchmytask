@@ -1,70 +1,45 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import CodeBlock from "@components/codeblock/codeblock";
 import {
-  IResourceComponentsProps,
-  GetManyResponse,
-  useMany,
-  useGo,
-  useCustomMutation,
-  HttpError,
-  useList,
-  useGetIdentity,
-  useInvalidate,
-} from "@refinedev/core";
-import { useTable } from "@refinedev/react-table";
-import { ColumnDef, flexRender } from "@tanstack/react-table";
-import {
-  IconBrandSpotify,
-  IconChartAreaFilled,
-  IconCirclePlus,
-  IconEdit,
-  IconExternalLink,
-  IconFilterCheck,
-  IconList,
-  IconMail,
-} from "@tabler/icons-react";
-import {
-  MantineProvider,
-  Menu,
-  Box,
-  ActionIcon,
-  Text,
-  Button,
-  Flex,
-  Anchor,
-  Tooltip,
-  Drawer,
-  rem,
-} from "@mantine/core";
-
-import {
-  MantineReactTable,
-  useMantineReactTable,
-  type MRT_ColumnDef,
-  MRT_GlobalFilterTextInput,
-  MRT_ToggleFiltersButton,
-  MRT_TableInstance,
-} from "mantine-react-table";
-import { useAppStore } from "src/store";
-import { ITrack } from "./interfaces";
-import {
+  TabularViewComponentProps,
   IIdentity,
-  IView,
-  ColumnConfig,
   FilterCondition,
   ActiveView,
+  ColumnConfig,
 } from "@components/interfaces";
-import dynamic from "next/dynamic";
-import { IconDownload } from "@tabler/icons";
-import CodeBlock from "@components/codeblock/codeblock";
 import SelectTaskComponent from "@components/selecttask";
+import { Button, Flex, MantineProvider, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import {
+  useCustomMutation,
+  useGetIdentity,
+  useGo,
+  useInvalidate,
+  useList,
+} from "@refinedev/core";
+import { IconDownload, IconMail } from "@tabler/icons";
+import {
+  MRT_GlobalFilterTextInput,
+  MRT_TableInstance,
+  MRT_ToggleFiltersButton,
+  MantineReactTable,
+  useMantineReactTable,
+} from "mantine-react-table";
+import { useEffect, useState } from "react";
+import { useAppStore } from "src/store";
+import { addSeparator, evaluateCondition } from "src/utils";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
-import AudioPlayer from "@components/audioplayer";
-import { handleComingSoon } from "src/utils";
-import { evaluateCondition } from "src/utils";
-
-export const PageList: React.FC<IResourceComponentsProps> = () => {
+export function ReactMantineTableView<T extends Record<string, any>>({
+  data_columns,
+  resource,
+  data_items,
+  isLoadingDataItems,
+  updateTableVisibility,
+  initialStateColumnPinningLeft,
+}: TabularViewComponentProps<T>) {
+  // VALIDATE
   const invalidate = useInvalidate();
-
   // IDENTITY
   const { data: identity } = useGetIdentity<IIdentity>();
   // ACTION OPTIONS
@@ -84,15 +59,11 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           label: option.display_name,
           metadata: option.metadata,
         }))
-        .filter((option) =>
-          option?.metadata?.resources?.some((resource: string) =>
-            ["general", "tasks"].includes(resource)
-          )
-        )
+        .filter((option) => option?.metadata?.resources?.includes(resource))
     : [];
 
   const go = useGo();
-
+  const [opened, { open, close }] = useDisclosure(false);
   const {
     actionType,
     setActionType,
@@ -113,140 +84,11 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     isError: mutationIsError,
   } = useCustomMutation();
 
-  // Example function where the code snippet might be used
-  function updateTableVisibility(
-    tableInstance: MRT_TableInstance<ITrack>,
-    columnsConfig: ColumnConfig[] | null
-  ) {
-    let visibility: Record<string, boolean> = {};
-    let pinning: Record<"left" | "right", string[]> = { left: [], right: [] };
-
-    // Reset logic when columnsConfig is null
-    if (columnsConfig === null) {
-      tableInstance.resetColumnVisibility();
-    } else {
-      visibility = tableInstance
-        .getAllLeafColumns()
-        .reduce<Record<string, boolean>>((acc, column) => {
-          acc[column.id] = false;
-          return acc;
-        }, {});
-
-      // Update visibility and construct pinning object based on config
-      columnsConfig?.forEach((columnConfig) => {
-        const { field_name, visible, pin } = columnConfig;
-        visibility[field_name] = !!visible;
-
-        // Only add to pinning if 'pin' key exists and it's set to 'left' or 'right'
-        if (pin === "left" || pin === "right") {
-          pinning[pin].push(field_name);
-        }
-      });
-
-      // Update the table instance with the new visibility and pinning state
-      tableInstance.setColumnVisibility(visibility);
-      tableInstance.setColumnPinning(pinning);
-    }
-  }
-
-  const track_columns = useMemo<MRT_ColumnDef<ITrack>[]>(
-    () => [
-      {
-        accessorKey: "spotify_preview_url",
-        header: "preview",
-        enableColumnFilters: false,
-        Cell: ({ row }) => (
-          <AudioPlayer url={row.original.spotify_preview_url} />
-        ),
-      },
-      {
-        // accessorKey: "spotify_preview_url",
-        header: "open_in",
-        enableColumnFilters: false,
-        Cell: ({ row }) => (
-          <Menu shadow="md" width={200}>
-            <Menu.Target>
-              <ActionIcon variant="filled" aria-label="Settings">
-                <IconExternalLink
-                  style={{ width: "70%", height: "70%" }}
-                  stroke={1.5}
-                />
-              </ActionIcon>
-            </Menu.Target>
-
-            <Menu.Dropdown>
-              <Menu.Label>External</Menu.Label>
-              <Menu.Item
-                icon={
-                  <IconBrandSpotify
-                    style={{ width: rem(14), height: rem(14) }}
-                  />
-                }
-                component="a"
-                href={row.original.spotify_external_url}
-                target="_blank"
-              >
-                Spotify
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-        ),
-      },
-      {
-        accessorKey: "name",
-        header: "name",
-        Cell: ({ row }) => (
-          <Anchor component={Text}>
-            <Text
-              size="sm"
-              onClick={() => {
-                go({
-                  to: {
-                    resource: "tracks",
-                    action: "show",
-                    id: row.original.id,
-                  },
-                  type: "push",
-                });
-              }}
-            >
-              {row.original.name}
-            </Text>
-          </Anchor>
-        ),
-      },
-      {
-        accessorKey: "tempo",
-        header: "tempo",
-        Cell: ({ row }) => <div>{row.original.tempo ?? ""}</div>,
-      },
-      {
-        accessorKey: "genre",
-        header: "genre",
-        Cell: ({ row }) => <div>{row.original.genre ?? ""}</div>,
-      },
-      {
-        accessorKey: "goes_well_with",
-        header: "goes_well_with",
-        Cell: ({ row }) => <div>{row.original.goes_well_with ?? ""}</div>,
-      },
-    ],
-    [activeViews]
-  );
-
-  const {
-    data,
-    isLoading: isLoadingOnewurldBooking,
-    isError: isErrorOnewurldBooking,
-  } = useList<ITrack, HttpError>();
-
-  const data_items = data?.data ?? [];
-
   const [filteredDataItems, setFilteredDataItems] = useState(data_items);
 
   // useMantineReactTable hook
-  const track_table = useMantineReactTable({
-    columns: track_columns,
+  const data_table = useMantineReactTable<T>({
+    columns: data_columns,
     data: filteredDataItems,
     enableRowSelection: true,
     enableColumnOrdering: true,
@@ -261,9 +103,8 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     enableEditing: true,
     editDisplayMode: "cell",
     enableStickyFooter: true,
-    state: { isLoading: mutationIsLoading || isLoadingOnewurldBooking },
+    state: { isLoading: mutationIsLoading || isLoadingDataItems },
     mantineEditTextInputProps: ({ cell }) => ({
-      //onBlur is more efficient, but could use onChange instead
       onBlur: (event) => {
         handleSaveCell(cell, event.target.value);
       },
@@ -273,7 +114,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       showGlobalFilter: true,
       showColumnFilters: true,
       pagination: { pageSize: 30, pageIndex: 0 },
-      columnPinning: { left: ["sst_booking_number"] },
+      columnPinning: { left: initialStateColumnPinningLeft },
     },
     paginationDisplayMode: "pages",
     positionToolbarAlertBanner: "bottom",
@@ -282,7 +123,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       size: "lg",
     },
     mantineSearchTextInputProps: {
-      placeholder: "Search Bookings",
+      placeholder: "Search Items",
     },
     mantineTableContainerProps: { sx: { maxHeight: "500px" } },
 
@@ -293,7 +134,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           identity={identity}
           action_step={null}
           record={row.original}
-          data_items={filteredDataItems}
+          data_items={[]}
           setActionType={setActionType}
           variant="inline"
           activeActionOption={activeActionOption}
@@ -307,6 +148,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           console.log("deleting " + row.getValue("pnr"));
         });
       };
+
       return (
         <Flex p="md" justify="space-between">
           <Flex gap="xs">
@@ -315,13 +157,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           </Flex>
           <Flex sx={{ gap: "8px" }}>
             <Button
-              // color="red"
-              // disabled={!table.getIsSomeRowsSelected()}
               onClick={() => {
-                // invalidate({
-                //   resource: "views",
-                //   invalidates: ["list"],
-                // });
                 setActionType("open_send");
                 setOpened(true);
                 // open();
@@ -333,17 +169,11 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
               Send
             </Button>
             <Button
-              // color="red"
-              // disabled={!table.getIsSomeRowsSelected()}
-              // onClick={handleDelete}
               onClick={() => {
-                // invalidate({
-                //   resource: "views",
-                //   invalidates: ["list"],
-                // });
-                setActionType("open_download");
-                setOpened(true);
+                // setActionType("open_download");
+                // setOpened(true);
                 // open();
+                handleDownload(table.getFilteredRowModel().flatRows);
               }}
               // disabled
               variant="outline"
@@ -352,9 +182,6 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
               Download
             </Button>
             <Button
-              // color="red"
-              // disabled={!table.getIsSomeRowsSelected()}
-              // onClick={handleDelete}
               onClick={() => {
                 // setActionType("open_views");
                 // open();
@@ -362,9 +189,23 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
                 setActiveViews(null);
               }}
               // disabled
-              variant="outline"
+              variant={activeViews?.name ? "light" : "outline"}
             >
-              Clear Views
+              {activeViews?.name ? "Clear View" : "No View Selected"}
+            </Button>
+            <Button
+              onClick={() => {
+                table.setColumnFilters([]);
+              }}
+              // disabled
+              variant={
+                table.getState().columnFilters.length > 0 ? "light" : "outline"
+              }
+            >
+              {table.getState().columnFilters.length > 0
+                ? `Clear ${table.getState().columnFilters.length} Filters`
+                : "No Filters Applied"}
+              {/* {JSON.stringify(table.getState().columnFilters)} */}
             </Button>
             <Button
               onClick={() => {
@@ -380,7 +221,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
               color="red"
               disabled={!table.getIsSomeRowsSelected()}
               // onClick={handleDelete}
-              onClick={handleComingSoon}
+              //   onClick={handleComingSoon}
               variant="filled"
             >
               Delete
@@ -391,6 +232,19 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     },
     renderDetailPanel: ({ row }) => (
       <div>
+        <div>
+          <Text>
+            <b>Flight Change Remarks:</b> {row.original.flight_change_remarks}
+          </Text>
+          <p>
+            <b>Old PNR text:</b>
+            <pre>{row.original.flight_change_pnr_old_text}</pre>
+          </p>
+          <p>
+            <b>New PNR Text:</b>
+            <pre>{row.original.flight_change_pnr_new_text}</pre>
+          </p>
+        </div>
         <CodeBlock jsonData={row.original} />
       </div>
     ),
@@ -422,40 +276,39 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
 
   // When activeViews changes, apply filters
   useEffect(() => {
-    // Listen for changes in the table's filter state
-    const { columnFilters } = track_table.getState(); // if this is greater than 1 then apply it
-    // console.log("columnFilters", columnFilters);
+    // Reset filtered data and column visibility when activeViews is null
     if (activeViews === null) {
       setFilteredDataItems(data_items);
-      updateTableVisibility(track_table, null); // Reset column visibility to default
+      updateTableVisibility(data_table, null); // Reset column visibility to default
     } else {
       // Existing logic for when activeViews is not null
       const newFilteredData = activeViews?.filters_configuration
         ? applyFilters(activeViews, data_items)
         : data_items;
       setFilteredDataItems(newFilteredData);
-      updateTableVisibility(track_table, activeViews?.fields_configuration);
+      updateTableVisibility(data_table, activeViews?.fields_configuration);
 
       let activeViewStats = {
         totalItems: filteredDataItems.length,
       };
     }
-  }, [activeViews, data_items, track_table.getState().columnFilters]);
+  }, [activeViews, data_items]);
 
   const handleSaveCell = (cell: any, event: any) => {
     let update_values = {
       id: cell.row.original.related_record,
       [cell.column.id]: event,
     };
+    // console.log("update_values", update_values);
     let id = cell.row.original.related_record;
     customMutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/caesars_bookings/${id}`,
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/${resource}/${id}`,
       method: "post",
       values: update_values,
       successNotification: (data, values) => {
         // invalidate list
         invalidate({
-          resource: "caesars_bookings",
+          resource: resource,
           invalidates: ["list"],
         });
 
@@ -475,36 +328,76 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     });
   };
 
+  // HANDLE DOWNLOAD
+  const handleDownload = async (items: any[]) => {
+    let view_items = items.map((row: any) => ({
+      ...row.original,
+      id: addSeparator(row.original.id, "views"),
+      author: identity?.email,
+    }));
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sheet 1");
+
+    // Check if view_items is not empty and prepare columns
+    if (view_items.length > 0) {
+      // Extract keys from the first item to use as column headers
+      const columns = Object.keys(view_items[0]).map((key) => ({
+        header: key,
+        key: key,
+        width: 20, // You can adjust the width as needed
+      }));
+      worksheet.columns = columns;
+    }
+
+    // Add rows using the transformed items
+    view_items.forEach((item) => {
+      worksheet.addRow(item);
+    });
+
+    // Use ExcelJS to write the workbook
+    const buffer = await workbook.xlsx.writeBuffer();
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    const fileExtension = ".xlsx";
+
+    // Use FileSaver to save the file
+    const blob = new Blob([buffer], { type: fileType });
+    saveAs(blob, activeViews?.name + fileExtension);
+  };
+
   return (
     <>
-      <div>{/* <DynamicTextInput /> */}</div>
       <div className="w-max-screen">
+        <div className="flex justify-center">
+          <div>{activeViews?.name}</div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 items-center p-4 gap-4">
           <div className="hidden md:block"></div>{" "}
           {/* Empty div for spacing on medium and large screens */}
           <SelectTaskComponent
-            data_items={filteredDataItems}
             action_options={action_options}
             identity={identity}
             action_step={null}
             record={null}
+            data_items={[]}
             setActionType={setActionType}
             activeActionOption={activeActionOption}
             setActiveActionOption={setActiveActionOption}
           />
           <div className="hidden md:block"></div>{" "}
-          {/* Empty div for spacing on medium and large screens */}
         </div>
+
         <MantineProvider
           theme={{
             colorScheme: "light",
             primaryColor: "blue",
           }}
         >
-          <MantineReactTable table={track_table} />
+          <MantineReactTable table={data_table} />
         </MantineProvider>
       </div>
     </>
   );
-};
-export default PageList;
+}
+export default ReactMantineTableView;

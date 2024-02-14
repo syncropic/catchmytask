@@ -1,73 +1,91 @@
-import { FilterCondition } from "@components/interfaces";
-import { format, parseISO, set } from "date-fns";
+import { ColumnConfig, FilterCondition } from "@components/interfaces";
+import { format, parseISO } from "date-fns";
+import { MRT_TableInstance } from "mantine-react-table";
 
-export function removeSeparator(id) {
+export function removeSeparator(id: string | number | undefined): string {
   const separator = ":";
-  const separatorIndex = id.indexOf(separator);
+  // Return undefined immediately if id is undefined
+  if (id === undefined) {
+    return "undefined";
+  }
+
+  // Ensure id is treated as a string
+  const idStr = id.toString();
+  const separatorIndex = idStr.indexOf(separator);
 
   if (separatorIndex !== -1) {
-    return id.slice(0, separatorIndex) + id.slice(separatorIndex + 1);
+    return idStr.slice(0, separatorIndex) + idStr.slice(separatorIndex + 1);
   }
 
   // Return original ID if separator is not found
-  return id;
+  return idStr;
 }
 
-export function addSeparator(id, prefix) {
+export function addSeparator(
+  id: string | number | undefined,
+  prefix: string
+): string {
   const separator = ":";
 
-  if (id?.startsWith(prefix)) {
-    return id.slice(0, prefix.length) + separator + id.slice(prefix.length);
+  // Return undefined immediately if id is undefined
+  if (id === undefined) {
+    return "undefined";
+  }
+
+  // Ensure id is a string (if it's a number, convert it)
+  const idStr = id.toString();
+
+  if (idStr.startsWith(prefix)) {
+    return (
+      idStr.slice(0, prefix.length) + separator + idStr.slice(prefix.length)
+    );
   }
 
   // Return original ID if prefix does not match
-  return id;
+  return idStr;
 }
 
-export function removePrefix(id, prefix) {
+export function removePrefix(id: string, prefix: string): string {
   const separator = ":";
   const prefixWithSeparator = `${prefix}${separator}`;
 
   if (id?.startsWith(prefixWithSeparator)) {
-    return id?.substring(prefixWithSeparator.length);
+    return id.substring(prefixWithSeparator.length);
   }
 
   // Return original ID if prefix does not match
   return id;
 }
 
-export function addPrefix(id, prefix) {
+export function addPrefix(id: string, prefix: string): string {
   const separator = ":";
   return `${prefix}${separator}${id}`;
 }
 
-export function formatDateTimeAsDate(date) {
+export function formatDateTimeAsDate(date: string | Date): string | undefined {
   if (!date) {
     return undefined;
   }
   if (typeof date === "string") {
-    // Handle as string
     return format(parseISO(date), "yyyy-MM-dd");
   } else {
-    // Handle as Date object
     return format(date, "yyyy-MM-dd");
   }
 }
 
-export function formatDateTimeAsDateTime(date) {
+export function formatDateTimeAsDateTime(
+  date: string | Date
+): string | undefined {
   if (!date) {
     return undefined;
   }
   if (typeof date === "string") {
-    // Handle as string
     return format(parseISO(date), "yyyy-MM-dd hh:mm a");
   } else {
-    // Handle as Date object
     return format(date, "yyyy-MM-dd hh:mm a");
   }
 }
 
-// Example options for the select, replace with actual data source
 export const dateTypeOptions = [
   {
     value: "reporting_date",
@@ -102,89 +120,186 @@ export const emailTypeOptions = [
   },
 ];
 
-export const handleComingSoon = () => {
+export const handleComingSoon = (): void => {
   alert("Coming Soon");
 };
 
-export const getCellStyle = (value: any, activeViews: any) => {
-  // console.log(value);
-  // Ensure that activeViews and activeViews.conditional_formatting are defined
+interface ActiveView {
+  conditional_formatting: Array<{
+    column: string;
+    rules: Array<{
+      value: string;
+      class: string;
+    }>;
+  }>;
+}
+
+export const getCellStyle = (
+  value: string,
+  activeViews: ActiveView
+): string => {
   if (!activeViews || !activeViews.conditional_formatting) {
     return "";
   }
 
-  // Find the formatting rule for the column
   const columnRule = activeViews.conditional_formatting.find(
-    (r: any) => r.column === "sst_status_and_supplier_status_comparison"
+    (r) => r.column === "sst_status_and_supplier_status_comparison"
   );
-  // console.log(columnRule);
 
-  // If columnRule is found, search for the specific rule based on value
   if (columnRule) {
-    const rule = columnRule.rules.find((r: any) => r.value === value);
+    const rule = columnRule.rules.find((r) => r.value === value);
     return rule ? rule.class : "";
   }
 
   return "";
 };
 
-// Updated version to accept column name dynamically
 export const getCellStyleInline = (
-  value: any,
-  activeViews: any,
+  value: string,
+  activeViews: ActiveView,
   columnName: string
-) => {
+): Record<string, string> => {
   if (!activeViews || !activeViews.conditional_formatting) {
     return {};
   }
   const columnRule = activeViews.conditional_formatting.find(
-    (r: any) => r.column === columnName
+    (r) => r.column === columnName
   );
   if (columnRule) {
-    const rule = columnRule.rules.find((r: any) => r.value === value);
-    // Assuming you have a mapping from class names to actual styles
+    const rule = columnRule.rules.find((r) => r.value === value);
     return rule ? mapClassNameToStyle(rule.class) : {};
   }
   return {};
 };
 
-// Example mapping function (you need to define the actual CSS properties)
-export const mapClassNameToStyle = (className: any) => {
+export const mapClassNameToStyle = (
+  className: string
+): Record<string, string> => {
   const styles: { [key: string]: { backgroundColor: string } } = {
-    "bg-green-500": { backgroundColor: "#10B981" }, // Tailwind Green 500
-    "bg-red-500": { backgroundColor: "#EF4444" }, // Tailwind Red 500
-    "bg-gray-500": { backgroundColor: "#6B7280" }, // Tailwind Gray 500
-    "bg-orange-500": { backgroundColor: "#F59E0B" }, // Tailwind Orange 500
+    "bg-green-500": { backgroundColor: "#10B981" },
+    "bg-red-500": { backgroundColor: "#EF4444" },
+    "bg-gray-500": { backgroundColor: "#6B7280" },
+    "bg-orange-500": { backgroundColor: "#F59E0B" },
   };
   return styles[className] || {};
 };
 
 export function evaluateCondition(
-  item: any,
+  item: Record<string, any>,
   condition: FilterCondition
 ): boolean {
   switch (condition.type) {
     case "exclude":
-      // If condition.values is undefined, default to false to indicate the item does not match the exclusion criteria
       return condition.values
         ? !condition.values.includes(item[condition.field_name])
         : false;
     case "include":
-      // If condition.values is undefined, default to false as there are no values to include the item by
       return condition.values
         ? condition.values.includes(item[condition.field_name])
         : false;
     case "not_equals":
-      // Similar logic as "exclude"
       return condition.values
         ? !condition.values.includes(item[condition.field_name])
         : false;
     case "range":
       const value = new Date(item[condition.field_name]);
-      const start = new Date(condition.range_start!); // Assuming range_start and range_end are always provided for "range" type
+      const start = new Date(condition.range_start!);
       const end = new Date(condition.range_end!);
       return value >= start && value <= end;
     default:
-      return true; // Default case to include the item if condition type is unknown
+      return true;
   }
 }
+
+// If TableInstance does not inherently support generics,
+// you don't explicitly declare T here but ensure the usage is type-safe.
+export function updateTableVisibility<T extends Record<string, any>>(
+  tableInstance: MRT_TableInstance<T>,
+  columnsConfig: ColumnConfig[] | null
+) {
+  let visibility: Record<string, boolean> = {};
+  let pinning: Record<"left" | "right", string[]> = { left: [], right: [] };
+
+  // Reset logic when columnsConfig is null
+  if (columnsConfig === null) {
+    visibility = tableInstance
+      .getAllLeafColumns()
+      .reduce<Record<string, boolean>>((acc, column) => {
+        acc[column.id] = true; // Assuming you want all columns visible by default
+        return acc;
+      }, {});
+
+    tableInstance.resetColumnPinning(); // This line may need to be adjusted based on the actual API of your table instance.
+  } else {
+    // Hide all columns initially
+    visibility = tableInstance
+      .getAllLeafColumns()
+      .reduce<Record<string, boolean>>((acc, column) => {
+        acc[column.id] = false;
+        return acc;
+      }, {});
+
+    // Update visibility and construct pinning object based on config
+    columnsConfig.forEach((columnConfig) => {
+      const { field_name, visible, pin } = columnConfig;
+      visibility[field_name] = !!visible;
+
+      if (pin === "left" || pin === "right") {
+        pinning[pin].push(field_name);
+      }
+    });
+
+    // Update the table instance with the new visibility and pinning state
+    tableInstance.setColumnVisibility(visibility);
+    tableInstance.setColumnPinning(pinning);
+  }
+}
+
+// //calculate the total points for all players in the table in a useMemo hook
+// const activeViewStatistics = useMemo(() => {
+//   if (filteredDataItems.length > 0) {
+//     let total_items = filteredDataItems.length;
+//     // items where sst_status_and_supplier_status_comparison is "match"
+//     let sst_status_match_items = filteredDataItems.filter(
+//       (item) => item.sst_status_and_supplier_status_comparison === "match"
+//     ).length;
+//     // check_manually
+//     let sst_status_check_manually_items = filteredDataItems.filter(
+//       (item) =>
+//         item.sst_status_and_supplier_status_comparison === "check_manually"
+//     ).length;
+//     // mismatch
+//     let sst_status_mismatch_items = filteredDataItems.filter(
+//       (item) => item.sst_status_and_supplier_status_comparison === "mismatch"
+//     ).length;
+//     let activeViewStats = {
+//       total_items,
+//       sst_status_match_items,
+//       sst_status_mismatch_items,
+//       sst_status_check_manually_items,
+//     };
+//     return activeViewStats;
+//   } else {
+//     let total_items = data_items.length;
+//     // items where sst_status_and_supplier_status_comparison is "match"
+//     let sst_status_match_items = data_items.filter(
+//       (item) => item.sst_status_and_supplier_status_comparison === "match"
+//     ).length;
+//     // check_manually
+//     let sst_status_check_manually_items = data_items.filter(
+//       (item) =>
+//         item.sst_status_and_supplier_status_comparison === "check_manually"
+//     ).length;
+//     // mismatch
+//     let sst_status_mismatch_items = data_items.filter(
+//       (item) => item.sst_status_and_supplier_status_comparison === "mismatch"
+//     ).length;
+//     let activeViewStats = {
+//       total_items,
+//       sst_status_match_items,
+//       sst_status_mismatch_items,
+//       sst_status_check_manually_items,
+//     };
+//     return activeViewStats;
+//   }
+// }, [data_items, filteredDataItems]);

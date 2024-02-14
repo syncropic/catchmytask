@@ -79,29 +79,11 @@ import AddTo from "./AddTo";
 import Chat from "./Chat";
 import { useAppStore } from "src/store";
 import { DateInput, DatePicker } from "@mantine/dates";
-// import dayjs from "dayjs";
-// import Editor, { useMonaco } from "@monaco-editor/react";
-// import EditorJS from "@editorjs/editorjs";
-// import Header from "@editorjs/header";
-// import List from "@editorjs/list";
-import Tables from "./Tables";
-import IncludeColumns from "./IncludeColumns";
-import FilterColumns from "./FilterColumns";
-import DatePickerTool from "./DatePickerTool";
-import DateInputTool from "./DateInputTool";
-import ColumnOptionsTool from "./ColumnOptionsTool";
-import { handleRun } from "src/utils";
-import { dateTypeOptions } from "src/utils";
-import { format, parseISO, set } from "date-fns";
 import { IBooking, IView, IIdentity, ColumnConfig, Column } from "./interfaces";
 import dynamic from "next/dynamic";
 import { IconDownload } from "@tabler/icons";
 import CodeBlock from "@components/codeblock/codeblock";
 import SelectTaskComponent from "@components/selecttask";
-import {
-  SendFlightConfirmation,
-  SendFlightScheduleChangeEmail,
-} from "@components/completeaction";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const invalidate = useInvalidate();
@@ -479,30 +461,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       placeholder: "Search Bookings",
     },
     mantineTableContainerProps: { sx: { maxHeight: "500px" } },
-    // renderRowActionMenuItems: ({ row }) => (
-    //   <>
-    //     <Menu.Item
-    //       onClick={() => {
-    //         setActionType("add_to");
-    //         open();
-    //       }}
-    //       icon={<IconCirclePlus style={{ width: rem(14), height: rem(14) }} />}
-    //     >
-    //       Add To
-    //     </Menu.Item>
-    //     <Menu.Item
-    //       onClick={() => {
-    //         setActionType("chat");
-    //         open();
-    //       }}
-    //       icon={
-    //         <IconMessageCircle style={{ width: rem(14), height: rem(14) }} />
-    //       }
-    //     >
-    //       Chat
-    //     </Menu.Item>
-    //   </>
-    // ),
+
     renderRowActions: ({ row }) => (
       <>
         <SelectTaskComponent
@@ -510,7 +469,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           identity={identity}
           action_step={null}
           record={row.original}
-          open={open}
+          data_items={[]}
           setActionType={setActionType}
           variant="inline"
           activeActionOption={activeActionOption}
@@ -780,58 +739,6 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     }
   }, [activeViews, data_items]);
 
-  // //calculate the total points for all players in the table in a useMemo hook
-  // const activeViewStatistics = useMemo(() => {
-  //   // const totalPoints = data.reduce((acc, row) => acc + row.points, 0);
-  //   // const totalPlayers = data.length;
-  //   // return totalPoints / totalPlayers;
-  //   if (filteredDataItems.length > 0) {
-  //     let total_items = filteredDataItems.length;
-  //     // items where sst_status_and_supplier_status_comparison is "match"
-  //     let sst_status_match_items = filteredDataItems.filter(
-  //       (item) => item.sst_status_and_supplier_status_comparison === "match"
-  //     ).length;
-  //     // check_manually
-  //     let sst_status_check_manually_items = filteredDataItems.filter(
-  //       (item) =>
-  //         item.sst_status_and_supplier_status_comparison === "check_manually"
-  //     ).length;
-  //     // mismatch
-  //     let sst_status_mismatch_items = filteredDataItems.filter(
-  //       (item) => item.sst_status_and_supplier_status_comparison === "mismatch"
-  //     ).length;
-  //     let activeViewStats = {
-  //       total_items,
-  //       sst_status_match_items,
-  //       sst_status_mismatch_items,
-  //       sst_status_check_manually_items,
-  //     };
-  //     return activeViewStats;
-  //   } else {
-  //     let total_items = data_items.length;
-  //     // items where sst_status_and_supplier_status_comparison is "match"
-  //     let sst_status_match_items = data_items.filter(
-  //       (item) => item.sst_status_and_supplier_status_comparison === "match"
-  //     ).length;
-  //     // check_manually
-  //     let sst_status_check_manually_items = data_items.filter(
-  //       (item) =>
-  //         item.sst_status_and_supplier_status_comparison === "check_manually"
-  //     ).length;
-  //     // mismatch
-  //     let sst_status_mismatch_items = data_items.filter(
-  //       (item) => item.sst_status_and_supplier_status_comparison === "mismatch"
-  //     ).length;
-  //     let activeViewStats = {
-  //       total_items,
-  //       sst_status_match_items,
-  //       sst_status_mismatch_items,
-  //       sst_status_check_manually_items,
-  //     };
-  //     return activeViewStats;
-  //   }
-  // }, [data_items, filteredDataItems]);
-
   const getCellStyle = (value: any, activeViews: any) => {
     // console.log(value);
     // Ensure that activeViews and activeViews.conditional_formatting are defined
@@ -923,53 +830,6 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     <>
       <div>{/* <DynamicTextInput /> */}</div>
       <div className="w-max-screen">
-        {/* <div className="container mx-auto">
-          <div className="flex flex-col space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="font-bold">Status Comparison</div>
-              <div>Total Items: {activeViewStatistics?.total_items}</div>
-              <div>Match: {activeViewStatistics?.sst_status_match_items}</div>
-              <div>
-                Mismatch: {activeViewStatistics?.sst_status_mismatch_items}
-              </div>
-              <div>
-                Check Manually:{" "}
-                {activeViewStatistics?.sst_status_check_manually_items}
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="font-bold">Price Comparison</div>
-              <div>Total Items: {activeViewStatistics?.total_price_items}</div>
-              <div>Match: {activeViewStatistics?.price_status_match_items}</div>
-              <div>
-                Mismatch: {activeViewStatistics?.price_status_mismatch_items}
-              </div>
-              <div>
-                Check Manually:{" "}
-                {activeViewStatistics?.price_status_check_manually_items}
-              </div>
-            </div>
-          </div>
-        </div> */}
-
-        {/* <Accordion defaultValue="details">
-          <Accordion.Item key="details" value="details">
-            <Accordion.Control icon={<IconChartAreaFilled />}>
-              <div>Visualizations</div>
-            </Accordion.Control>
-            <Accordion.Panel>
-              <CodeBlock jsonData={data} />
-              <div className="h-16">
-                <MyResponsiveBar data={sample_data} />
-              </div>
-            </Accordion.Panel>
-          </Accordion.Item>
-        </Accordion> */}
-        {/* <div className="h-36"> */}
-        {/* <MyResponsiveBar data={sample_data} /> */}
-        {/* <MyResponsivePie data={sample_data} /> */}
-        {/* </div> */}
         <div className="grid grid-cols-1 md:grid-cols-3 items-center p-4 gap-4">
           <div className="hidden md:block"></div>{" "}
           {/* Empty div for spacing on medium and large screens */}
@@ -978,7 +838,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
             identity={identity}
             action_step={null}
             record={null}
-            open={open}
+            data_items={[]}
             setActionType={setActionType}
             activeActionOption={activeActionOption}
             setActiveActionOption={setActiveActionOption}
@@ -1003,127 +863,3 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   );
 };
 export default PageList;
-
-// function DynamicTextInput() {
-//   const editorRef = useRef(null);
-//   const { text, setText } = useAppStore();
-//   // CUSTOM MUTATION FUNCTION
-//   const {
-//     mutate: customMutate,
-//     isLoading: mutationIsLoading,
-//     isError: mutationIsError,
-//   } = useCustomMutation();
-
-//   // Function to save editor data
-//   const saveEditorData = async () => {
-//     if (editorRef.current) {
-//       // console.log("saveEditorData");
-//       const savedData = await editorRef.current.save();
-//       const request_data = savedData;
-//       customMutate({
-//         url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
-//         method: "post",
-//         values: request_data,
-//         successNotification: (data, values) => {
-//           // invalidate({
-//           //   resource: "caesars_bookings",
-//           //   invalidates: ["list"],
-//           // });
-//           return {
-//             message: `successfully executed.`,
-//             description: "Success with no errors",
-//             type: "success",
-//           };
-//         },
-//         errorNotification: (data, values) => {
-//           return {
-//             message: `Something went wrong when executing`,
-//             description: "Error",
-//             type: "error",
-//           };
-//         },
-//       });
-//       // console.log(savedData);
-//       // setText(JSON.stringify(savedData)); // Update state or send data to server
-//     }
-//   };
-
-//   useEffect(() => {
-//     let EditorJS;
-
-//     import("@editorjs/editorjs").then((module) => {
-//       EditorJS = module.default;
-
-//       if (!editorRef.current) {
-//         editorRef.current = new EditorJS({
-//           holder: "editor",
-//           tools: {
-//             // header: Header,
-//             // list: List,
-//             // highlightedText: HighlightedText,
-//             tables: {
-//               class: Tables,
-//               // inlineToolbar: true,
-//             }, // Add the Tables tool here
-//             include_columns: {
-//               class: IncludeColumns,
-//               // inlineToolbar: true,
-//             }, // Add the Columns tool here
-//             filter_columns: {
-//               class: FilterColumns,
-//               // inlineToolbar: true,
-//             }, // Add the Columns tool here
-//             // datePicker: {
-//             //   class: DateInputTool,
-//             //   // Optionally, you can specify other configurations for the tool here
-//             // },
-//             columnOptions: {
-//               class: ColumnOptionsTool,
-//               // Optionally, you can specify other configurations for the tool here
-//             },
-//           },
-//         });
-//       }
-//     });
-
-//     return () => {
-//       if (editorRef.current) {
-//         // Unmount the React component from the DatePicker container
-//         const datePickerContainers =
-//           document.querySelectorAll(".date-tool-wrapper");
-//         datePickerContainers.forEach((container) => {
-//           ReactDOM.unmountComponentAtNode(container);
-//         });
-
-//         editorRef.current.destroy();
-//         editorRef.current = null;
-//       }
-//     };
-//   }, []);
-
-//   return (
-//     <div>
-//       <div className="flex justify-center">
-//         <Button onClick={saveEditorData}>SAVE</Button>
-//       </div>
-//       <div id="editor" className="editor-container p-4 bg-white rounded"></div>
-//     </div>
-//   );
-// }
-
-// function SelectTaskComponent({
-//   setActionType,
-//   action_options,
-//   identity,
-//   open,
-//   // action_step,
-//   record,
-//   mutate,
-// }) {
-
-interface FormValues {
-  start_date: string;
-  end_date: string;
-  date_type: string[];
-  // Add other form fields here as needed
-}

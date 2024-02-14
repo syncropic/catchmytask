@@ -9,16 +9,7 @@ import {
   HttpError,
   useGetIdentity,
 } from "@refinedev/core";
-import { useTable } from "@refinedev/react-table";
-import { ColumnDef, flexRender } from "@tanstack/react-table";
-import {
-  IconCirclePlus,
-  IconEdit,
-  IconMessageCircle,
-  IconRefresh,
-  IconSend,
-  IconTrash,
-} from "@tabler/icons-react";
+
 import {
   ScrollArea,
   Table,
@@ -329,14 +320,12 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           action_options={action_options}
           identity={identity}
           action_step={null}
-          // mutate={customMutate}
+          data_items={[]}
           record={row.original}
-          open={open}
           setActionType={setActionType}
           variant="inline"
           activeActionOption={activeActionOption}
           setActiveActionOption={setActiveActionOption}
-          // className="col-span-1 md:col-span-3 lg:col-span-1" // This ensures full width on small screens and centers on larger screens
         />
       </>
     ),

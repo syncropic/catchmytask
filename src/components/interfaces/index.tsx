@@ -1,6 +1,20 @@
+import { MRT_TableInstance } from "mantine-react-table";
+
 export type IIdentity = {
   [key: string]: any;
 };
+
+export interface TabularViewComponentProps<T extends Record<string, any>> {
+  data_columns: any[]; // Define more specific type if possible
+  resource: string;
+  data_items: T[];
+  isLoadingDataItems: boolean;
+  initialStateColumnPinningLeft: string[];
+  updateTableVisibility: (
+    tableInstance: MRT_TableInstance<T>,
+    columnsConfig: ColumnConfig[] | null
+  ) => void;
+}
 
 export interface CompleteActionComponentProps {
   setActionType: (type: string) => void;
@@ -28,6 +42,26 @@ export interface SelectActionOptionComponentProps {
   activeActionOption: any;
   setActiveActionOption: (item: any) => void;
 }
+
+// export interface TabularViewComponentProps {
+//   resource: string;
+//   data_columns: any[];
+//   data_items: any[];
+//   data_interface: any;
+//   isLoadingDataItems: boolean;
+//   // setActionType: (type: string) => void;
+//   // action_options: Array<{ value: string; label: string; [key: string]: any }>;
+//   // data_items: any[];
+//   // identity: any;
+//   // open: () => void;
+//   // close: () => void;
+//   // opened: boolean;
+//   // record: any;
+//   // action_step: any;
+//   // variant?: "inline" | "default";
+//   // activeActionOption: any;
+//   // setActiveActionOption: (item: any) => void;
+// }
 
 export interface IView {
   id: string;

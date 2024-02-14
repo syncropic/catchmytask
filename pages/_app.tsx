@@ -53,6 +53,7 @@ import MessageCreate from "./messages/create";
 import { IconMail } from "@tabler/icons";
 import {
   IconDashboard,
+  IconHome,
   IconListCheck,
   IconMusic,
   IconRefresh,
@@ -298,6 +299,17 @@ const App = (props: React.PropsWithChildren) => {
                   icon: <IconDashboard />,
                 },
               },
+              // {
+              //   name: "home",
+              //   list: "/home",
+              //   create: "/home/create",
+              //   edit: "/home/edit/:id",
+              //   show: "/home/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     icon: <IconHome />,
+              //   },
+              // },
               {
                 name: "messages",
                 list: "/messages",
@@ -544,19 +556,19 @@ const App = (props: React.PropsWithChildren) => {
               //   //   dataProviderName: "catchmyvibeApiDataProvider",
               //   // },
               // },
-              {
-                name: "tracks",
-                list: "/tracks",
-                create: "/tracks/create",
-                edit: "/tracks/edit/:id",
-                show: "/tracks/show/:id",
-                meta: {
-                  canDelete: true,
-                  dataProviderName: "catchmyvibeApiDataProvider",
-                  // icon: <IconMusic />,
-                  // hide: true,
-                },
-              },
+              // {
+              //   name: "tracks",
+              //   list: "/tracks",
+              //   create: "/tracks/create",
+              //   edit: "/tracks/edit/:id",
+              //   show: "/tracks/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     dataProviderName: "catchmyvibeApiDataProvider",
+              //     // icon: <IconMusic />,
+              //     // hide: true,
+              //   },
+              // },
               // {
               //   name: "artist",
               //   list: "/artist",

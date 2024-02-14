@@ -228,13 +228,16 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     isError: isErrorReports,
   } = useList<IView, HttpError>({
     resource: "views",
+    filters: [
+      {
+        field: "view_status",
+        operator: "eq",
+        value: "published",
+      },
+    ],
   });
 
   const data_items = data?.data ?? [];
-  // filter data_items for only items where key view_status = "published"
-  // const published_data_items = data_items.filter((item) => {
-  //   return item?.view_status === "published";
-  // });
 
   // useMantineReactTable hook
   const table = useMantineReactTable({

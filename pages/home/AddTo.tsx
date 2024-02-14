@@ -26,6 +26,7 @@ import {
   Flex,
   Tooltip,
   Drawer,
+  Checkbox,
 } from "@mantine/core";
 import {
   List,
@@ -108,10 +109,11 @@ export const AddTo: React.FC<IResourceComponentsProps> = () => {
       {
         id: "actions",
         accessorKey: "id",
-        header: "quick actions",
+        enableColumnFilter: false,
+        header: "add",
         Cell: ({ renderedCellValue, row }) => (
           <Group spacing="xs" noWrap>
-            <Button size="xs">Add</Button>
+            <Checkbox size="xs"></Checkbox>
             {/* <EditButton size="xs" recordItemId={row.original.id} /> */}
             {/* <Button size="xs">Play</Button>
             <Button size="xs">Queue</Button> */}
@@ -200,15 +202,25 @@ export const AddTo: React.FC<IResourceComponentsProps> = () => {
     },
   });
   return (
+    // <div className="w-max-screen">
+    //   <MantineProvider
+    //     theme={{
+    //       colorScheme: "light",
+    //       primaryColor: "blue",
+    //     }}
+    //   >
+    //     <MantineReactTable table={table} />
+    //   </MantineProvider>
+    // </div>
     <div className="w-max-screen">
       {/* <MantineProvider
-    theme={{
-      colorScheme: "light",
-      primaryColor: "blue",
-    }}
-  >
-    <MantineReactTable table={table} />
-  </MantineProvider> */}
+      theme={{
+        colorScheme: "light",
+        primaryColor: "blue",
+      }}
+    >
+      <MantineReactTable table={table} />
+    </MantineProvider> */}
       Add record to specific customizable views for easy retrieval and sharing.{" "}
       <b>Coming soon</b>
     </div>

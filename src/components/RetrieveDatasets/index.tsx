@@ -15,7 +15,10 @@ export function RetrieveDatasets({
   setActionType,
   action_options,
   identity,
+  data_items,
   open,
+  close,
+  opened,
   record,
   action_step,
   variant = "default",
@@ -24,13 +27,30 @@ export function RetrieveDatasets({
 }: CompleteActionComponentProps) {
   const invalidate = useInvalidate();
 
-  // const setActiveItem = useAppStore((state) => state.setActiveItem);
-  // const activeItem = useAppStore((state) => state.activeItem); // this is the selected action configure and send for run already configured
   const {
     mutate,
     isLoading: mutationIsLoading,
     isError: mutationIsError,
   } = useCustomMutation();
+  // const {
+  //   getInputProps,
+  //   saveButtonProps,
+  //   setFieldValue,
+  //   values,
+  //   refineCore: { formLoading, onFinish },
+  //   onSubmit,
+  // } = useForm({
+  //   initialValues: {
+  //     start_date: "",
+  //     end_date: "",
+  //     date_type: [] as string[],
+  //     email_type: [] as string[],
+  //     custom_message: "",
+  //     mail_list: [] as string[],
+  //     id: "",
+  //   },
+  // });
+
   const {
     getInputProps,
     saveButtonProps,
@@ -42,27 +62,34 @@ export function RetrieveDatasets({
     initialValues: {
       // author: "user:TYvGonCb3nVDfdvfxfUvSQh0Zv93",
       // description: "",
-      // action: [] as string[],
+      // name: [] as string[],
       start_date: "",
       end_date: "",
       date_type: [] as string[],
-      email_type: [] as string[],
       custom_message: "",
+      // custom_message: "",
       mail_list: [] as string[],
       id: "",
       // to_email_list: ["dp.wanjala@gmail.com"] as string[],
       // cc_email_list: [] as string[],
       // tags: "",
       // from: "david.wanjala@snowstormtech.com",
-      // email_type: ["default"] as string[],
+      email_type: ["default"] as string[],
     },
   });
 
-  const handleActionChange = (value: string[]) => {
-    const item = action_options.find((item) => item.value === value[0]);
+  // const handleActionChange = (value: string[]) => {
+  //   const item = action_options.find((item) => item.value === value[0]);
+  //   // setActiveItem(item);
+  //   // setActionType("create");
+  //   setFieldValue("action", value);
+  // };
+
+  const handleDateTypeChange = (value: string[]) => {
+    // const item = action_options.find((item) => item.value === value[0]);
     // setActiveItem(item);
     // setActionType("create");
-    setFieldValue("action", value);
+    setFieldValue("date_type", value);
   };
 
   const handleSubmit = (e: any) => {
@@ -186,21 +213,6 @@ export function RetrieveDatasets({
     }
     // console.log(request_data);
 
-    // setActionType("run");
-    // open();
-    // handleRun({
-    //   identity: identity,
-    //   resource: "onewurld_bookings",
-    //   record: record,
-    //   mutate: mutate,
-    //   task: activeItem,
-    //   invalidateCallback: () => {
-    //     invalidate({
-    //       resource: "onewurld_bookings",
-    //       invalidates: ["list"],
-    //     });
-    //   },
-    // })
     mutate({
       url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
       method: "post",
@@ -248,6 +260,19 @@ export function RetrieveDatasets({
         </>
       )}
     >
+      {/* <MultiSelect
+        required
+        mt="sm"
+        label="date_type"
+        placeholder="Select date type"
+        data={dateTypeOptions} // Replace with your options source
+        {...getInputProps("date_type")}
+        value={getInputProps("date_type").value}
+
+        // onChange={handleDateTypeChange}
+        // required
+      /> */}
+
       <MultiSelect
         required
         mt="sm"

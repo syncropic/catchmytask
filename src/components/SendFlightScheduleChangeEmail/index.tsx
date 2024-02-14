@@ -16,6 +16,7 @@ import {
   formatDateTimeAsDateTime,
 } from "src/utils";
 import { CompleteActionComponentProps } from "@components/interfaces";
+import CodeBlock from "@components/codeblock/codeblock";
 
 export function SendFlightScheduleChangeEmail({
   setActionType,
@@ -23,6 +24,8 @@ export function SendFlightScheduleChangeEmail({
   identity,
   data_items,
   open,
+  close,
+  opened,
   record,
   action_step,
   variant = "default",
@@ -30,7 +33,6 @@ export function SendFlightScheduleChangeEmail({
   setActiveActionOption,
 }: CompleteActionComponentProps) {
   const invalidate = useInvalidate();
-
   const {
     mutate,
     isLoading: mutationIsLoading,
@@ -46,20 +48,12 @@ export function SendFlightScheduleChangeEmail({
   } = useForm({
     initialValues: {
       author: identity?.email,
-      flight_airline_reference_code: "",
-      contact_email: "",
-      contact_name: "",
-      flight_change_pnr_old_text: "",
-      flight_change_pnr_new_text: "",
+      author_email: identity?.email,
+      flight_airline_reference_code: record?.flight_airline_reference_code,
+      contact_email: record?.contact_email,
+      contact_name: record?.contact_name,
     },
   });
-
-  const handleActionChange = (value: string[]) => {
-    const item = action_options.find((item) => item.value === value[0]);
-    // setActiveItem(item);
-    // setActionType("create");
-    setFieldValue("action", value);
-  };
 
   const handleSubmit = (e: any) => {
     let request_data = {
@@ -74,11 +68,15 @@ export function SendFlightScheduleChangeEmail({
       },
     };
     mutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/create`,
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
       method: "post",
       values: request_data,
       successNotification: (data, values) => {
-        // invalidateCallback();
+        invalidate({
+          resource: "caesars_bookings",
+          invalidates: ["list"],
+        });
+        close();
         return {
           message: `successfully executed.`,
           description: "Success with no errors",
@@ -103,13 +101,6 @@ export function SendFlightScheduleChangeEmail({
         onClick: handleSubmit,
         size: "xs",
       }}
-      // contentProps={{
-      //   style: {
-      //     // backgroundColor: "cornflowerblue",
-      //     padding: "16px",
-      //     height: "420px",
-      //   },
-      // }}
       title={<Title order={3}>Configure and Execute Action</Title>}
       goBack={false}
       footerButtons={({ saveButtonProps }) => (

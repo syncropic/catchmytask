@@ -1,15 +1,12 @@
 import { Button, Drawer, LoadingOverlay, MultiSelect } from "@mantine/core";
 import { useCustomMutation, useInvalidate } from "@refinedev/core";
 import { useForm } from "@refinedev/mantine";
-import { addSeparator } from "src/utils";
-import {
-  RetrieveDatasets,
-  SendFlightConfirmation,
-  SendFlightScheduleChangeEmail,
-  Sync,
-} from "@components/completeaction";
 import { useDisclosure } from "@mantine/hooks";
 import { SelectActionOptionComponentProps } from "@components/interfaces";
+import DynamicComponentLoader from "@components/DynamicComponentLoader";
+import RetrieveDatasets from "@components/RetrieveDatasets";
+import SendFlightConfirmation from "@components/SendFlightConfirmation";
+import SendFlightScheduleChangeEmail from "@components/SendFlightScheduleChangeEmail";
 
 function SelectTaskComponent({
   setActionType,
@@ -48,42 +45,6 @@ function SelectTaskComponent({
   };
   const [opened, { open, close }] = useDisclosure(false);
 
-  // const handleRunInline = () => {
-  //   const action_option = action_options.find(
-  //     (item) => item.value === values?.action[0]
-  //   );
-  //   let request_data = action_option ?? {};
-  //   mutate({
-  //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
-  //     method: "post",
-  //     values: {
-  //       ...action_option,
-  //       values: {
-  //         ...record,
-  //         action_option: addSeparator(action_option?.id, "action_options"),
-  //       },
-  //       options: {
-  //         ...action_option?.options,
-  //         execution_type: "new_task",
-  //       },
-  //     },
-  //     successNotification: (data, values) => {
-  //       return {
-  //         message: `successfully executed.`,
-  //         description: "Success with no errors",
-  //         type: "success",
-  //       };
-  //     },
-  //     errorNotification: (data, values) => {
-  //       return {
-  //         message: `Something went wrong when executing`,
-  //         description: "Error",
-  //         type: "error",
-  //       };
-  //     },
-  //   });
-  // };
-
   return (
     <div className="flex items-end space-x-2">
       <Drawer
@@ -92,12 +53,35 @@ function SelectTaskComponent({
         title={activeActionOption?.display_name}
         position="right"
       >
-        {activeActionOption?.display_name === "Send Flight Confirmation" && (
-          <SendFlightConfirmation
+        {/* {activeActionOption?.metadata?.display_component && (
+          <DynamicComponentLoader
+            componentName={activeActionOption?.metadata?.display_component
+              .trim()
+              .replace(/\s+/g, "")}
+            componentProps={{
+              data_items: data_items,
+              setActionType: setActionType,
+              action_options: action_options,
+              identity: identity,
+              open: open,
+              close: close,
+              opened: opened,
+              record: record,
+              action_step: null,
+              variant: "default",
+              activeActionOption: activeActionOption,
+              setActiveActionOption: setActiveActionOption,
+            }}
+          />
+        )} */}
+
+        {activeActionOption?.metadata?.display_component ==
+          "RetrieveDatasets" && (
+          <RetrieveDatasets
+            data_items={data_items}
             setActionType={setActionType}
             action_options={action_options}
             identity={identity}
-            data_items={data_items}
             open={open}
             close={close}
             opened={opened}
@@ -108,8 +92,26 @@ function SelectTaskComponent({
             setActiveActionOption={setActiveActionOption}
           />
         )}
-        {activeActionOption?.display_name ===
-          "Send Flight Schedule Change Email" && (
+        {activeActionOption?.metadata?.display_component ==
+          "SendFlightConfirmation" && (
+          <SendFlightConfirmation
+            data_items={data_items}
+            setActionType={setActionType}
+            action_options={action_options}
+            identity={identity}
+            open={open}
+            close={close}
+            opened={opened}
+            record={record}
+            action_step={null}
+            variant="default"
+            activeActionOption={activeActionOption}
+            setActiveActionOption={setActiveActionOption}
+          />
+        )}
+
+        {activeActionOption?.metadata?.display_component ==
+          "SendFlightScheduleChangeEmail" && (
           <SendFlightScheduleChangeEmail
             data_items={data_items}
             setActionType={setActionType}
@@ -125,22 +127,22 @@ function SelectTaskComponent({
             setActiveActionOption={setActiveActionOption}
           />
         )}
-        {activeActionOption?.display_name === "Sync" && (
-          <Sync
-            data_items={data_items}
-            setActionType={setActionType}
-            action_options={action_options}
-            identity={identity}
-            open={open}
-            close={close}
-            opened={opened}
-            record={record}
-            action_step={null}
-            variant="default"
-            activeActionOption={activeActionOption}
-            setActiveActionOption={setActiveActionOption}
-          />
-        )}
+
+        {/*         
+        <RetrieveDatasets
+          data_items={data_items}
+          setActionType={setActionType}
+          action_options={action_options}
+          identity={identity}
+          open={open}
+          close={close}
+          opened={opened}
+          record={record}
+          action_step={null}
+          variant="default"
+          activeActionOption={activeActionOption}
+          setActiveActionOption={setActiveActionOption}
+        /> */}
       </Drawer>
       <LoadingOverlay
         visible={mutationIsLoading}
@@ -181,7 +183,6 @@ function SelectTaskComponent({
             value={getInputProps("action").value}
             onChange={handleActionChange}
             withinPortal={true}
-            // style={{ option: { whiteSpace: "normal" } }} // Adjust this line based on your component's API
           />
           <Button
             size="sm"
