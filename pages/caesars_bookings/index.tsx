@@ -69,12 +69,34 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   const data_columns = useMemo<MRT_ColumnDef<IBooking>[]>(
     () => [
       {
-        accessorKey: "sst_itinerary_page_url",
-        header: "sst_trip_page",
+        accessorKey: "flight_pnr",
+        header: "flight_pnr",
+        Cell: ({ row }) => <div>{row.original.flight_pnr ?? ""}</div>,
+      },
+      {
+        accessorKey: "flight_confirmation_message",
+        header: "flight_confirmation_message",
         Cell: ({ row }) => {
           return (
-            <Anchor href={row.original.sst_itinerary_page_url} target="_blank">
-              {row.original.sst_itinerary_page_url ? "open" : ""}
+            <Anchor
+              href={row.original.flight_confirmation_message_url}
+              target="_blank"
+            >
+              {row.original.flight_confirmation_message ?? ""}
+            </Anchor>
+          );
+        },
+      },
+      {
+        accessorKey: "flight_change_message",
+        header: "flight_change_message",
+        Cell: ({ row }) => {
+          return (
+            <Anchor
+              href={row.original.flight_change_message_url}
+              target="_blank"
+            >
+              {row.original.flight_change_message ?? ""}
             </Anchor>
           );
         },
@@ -86,10 +108,15 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         Cell: ({ row }) => <div>{row.original.booking_type ?? ""}</div>,
       },
       {
-        accessorKey: "carrier_type",
-        header: "carrier_type",
-        filterVariant: "multi-select",
-        Cell: ({ row }) => <div>{row.original.carrier_type ?? ""}</div>,
+        accessorKey: "sst_itinerary_page_url",
+        header: "sst_trip_page",
+        Cell: ({ row }) => {
+          return (
+            <Anchor href={row.original.sst_itinerary_page_url} target="_blank">
+              {row.original.sst_itinerary_page_url ? "open" : ""}
+            </Anchor>
+          );
+        },
       },
       {
         accessorKey: "sst_internal_id",
@@ -152,45 +179,13 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         ),
       },
       {
-        accessorKey: "flight_pnr",
-        header: "flight_pnr",
-        Cell: ({ row }) => <div>{row.original.flight_pnr ?? ""}</div>,
-      },
-      {
         accessorKey: "flight_airline_reference_code",
         header: "flight_airline_reference_code",
         Cell: ({ row }) => (
           <div>{row.original.flight_airline_reference_code ?? ""}</div>
         ),
       },
-      {
-        accessorKey: "flight_confirmation_message",
-        header: "flight_confirmation_message",
-        Cell: ({ row }) => {
-          return (
-            <Anchor
-              href={row.original.flight_confirmation_message_url}
-              target="_blank"
-            >
-              {row.original.flight_confirmation_message ?? ""}
-            </Anchor>
-          );
-        },
-      },
-      {
-        accessorKey: "flight_change_message",
-        header: "flight_change_message",
-        Cell: ({ row }) => {
-          return (
-            <Anchor
-              href={row.original.flight_change_message_url}
-              target="_blank"
-            >
-              {row.original.flight_change_message ?? ""}
-            </Anchor>
-          );
-        },
-      },
+
       {
         accessorKey: "flight_change_assigned_agent",
         header: "flight_change_assigned_agent",
@@ -216,6 +211,12 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         header: "hotel_pnr",
         Cell: ({ row }) => <div>{row.original.hotel_pnr ?? ""}</div>,
       },
+      {
+        accessorKey: "carrier_type",
+        header: "carrier_type",
+        filterVariant: "multi-select",
+        Cell: ({ row }) => <div>{row.original.carrier_type ?? ""}</div>,
+      },
     ],
     [activeViews]
   );
@@ -236,7 +237,12 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         data_items={data_items}
         isLoadingDataItems={isLoadingDataItems}
         updateTableVisibility={updateTableVisibility}
-        initialStateColumnPinningLeft={["sst_internal_id"]}
+        initialStateColumnPinningLeft={[
+          "mrt-row-select",
+          "mrt-row-expand",
+          "mrt-row-actions",
+          "sst_internal_id",
+        ]}
       ></ReactMantineTableView>
     </>
   );

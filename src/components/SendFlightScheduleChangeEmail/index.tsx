@@ -17,6 +17,7 @@ import {
 } from "src/utils";
 import { CompleteActionComponentProps } from "@components/interfaces";
 import CodeBlock from "@components/codeblock/codeblock";
+import { IconDatabaseShare, IconMathFunction } from "@tabler/icons-react";
 
 export function SendFlightScheduleChangeEmail({
   setActionType,
@@ -49,9 +50,18 @@ export function SendFlightScheduleChangeEmail({
     initialValues: {
       author: identity?.email,
       author_email: identity?.email,
-      flight_airline_reference_code: record?.flight_airline_reference_code,
+      sst_internal_id: record?.sst_internal_id,
+      sst_booking_full_name: record?.sst_booking_full_name,
       contact_email: record?.contact_email,
-      contact_name: record?.contact_name,
+      flight_pnr: record?.flight_pnr,
+      flight_change_pnr_old_text: record?.flight_change_pnr_old_text,
+      flight_change_pnr_new_text: record?.flight_change_pnr_new_text,
+      flight_change_assigned_agent: record?.flight_change_assigned_agent,
+      flight_change_remarks: record?.flight_change_remarks,
+      flight_change_status: record?.flight_change_status,
+      flight_change_type: record?.flight_change_type,
+      flight_change_message: record?.flight_change_message,
+      flight_airline_reference_code: record?.flight_airline_reference_code,
     },
   });
 
@@ -92,6 +102,57 @@ export function SendFlightScheduleChangeEmail({
       },
     });
   };
+
+  const handleSaveOnly = (e: any) => {
+    let request_data = {
+      ...activeActionOption,
+      options: {
+        ...activeActionOption?.options,
+        execution_action_step_names: [
+          "get_collection_info_1",
+          "get_credential_info_1",
+          "update_record_fields_1",
+        ],
+        execute_by: "execution_action_step_names",
+        execution_includes: "save_only",
+      },
+      id: addSeparator(activeActionOption?.id, "action_options"),
+      values: {
+        ...record,
+        ...values, // so i can override original in the form if not disabled
+        action_options: [
+          addSeparator(activeActionOption?.id, "action_options"),
+        ],
+      },
+    };
+    // console.log("mode", "save_only");
+    // console.log("request_data", request_data);
+    mutate({
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
+      method: "post",
+      values: request_data,
+      successNotification: (data, values) => {
+        invalidate({
+          resource: "caesars_bookings",
+          invalidates: ["list"],
+        });
+        // close();
+        return {
+          message: `successfully executed.`,
+          description: "Success with no errors",
+          type: "success",
+        };
+      },
+      errorNotification: (data, values) => {
+        return {
+          message: `Something went wrong when executing`,
+          description: "Error",
+          type: "error",
+        };
+      },
+    });
+  };
+
   return (
     <Create
       // isLoading={formLoading}
@@ -101,14 +162,30 @@ export function SendFlightScheduleChangeEmail({
         onClick: handleSubmit,
         size: "xs",
       }}
-      title={<Title order={3}>Configure and Execute Action</Title>}
+      title={<Title order={3}>Configure Execute Action</Title>}
       goBack={false}
       footerButtons={({ saveButtonProps }) => (
-        <>
-          <SaveButton {...saveButtonProps} fullWidth>
-            Complete Action
+        <div className="flex w-full gap-4">
+          <SaveButton
+            {...saveButtonProps}
+            className="flex-grow w-1/3"
+            variant="light"
+            leftIcon={<IconDatabaseShare size={16} />}
+            disabled={mutationIsLoading}
+            onClick={handleSaveOnly}
+          >
+            Save Only
           </SaveButton>
-        </>
+          <SaveButton
+            {...saveButtonProps}
+            className="flex-grow w-2/3"
+            variant="filled"
+            leftIcon={<IconMathFunction size={16} />}
+            disabled={mutationIsLoading}
+          >
+            Save and Run Action
+          </SaveButton>
+        </div>
       )}
     >
       <TextInput
@@ -120,11 +197,11 @@ export function SendFlightScheduleChangeEmail({
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
         {...getInputProps("sst_internal_id")}
-        value={record?.sst_internal_id}
+        // value={record?.sst_internal_id}
         disabled
         // required
       />
-      {/* <TextInput
+      <TextInput
         required
         mt="sm"
         label="flight_airline_reference_code"
@@ -133,10 +210,10 @@ export function SendFlightScheduleChangeEmail({
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
         {...getInputProps("flight_airline_reference_code")}
-        value={record?.flight_airline_reference_code}
+        // value={record?.flight_airline_reference_code}
         // disabled
         // required
-      /> */}
+      />
       <TextInput
         required
         mt="sm"
@@ -146,7 +223,7 @@ export function SendFlightScheduleChangeEmail({
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
         {...getInputProps("sst_booking_full_name")}
-        value={record?.sst_booking_full_name}
+        // value={record?.sst_booking_full_name}
         disabled
         // required
       />
@@ -159,8 +236,8 @@ export function SendFlightScheduleChangeEmail({
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
         {...getInputProps("contact_email")}
-        value={record?.contact_email}
-        // disabled
+        // value={record?.contact_email}
+        disabled
         // required
       />
       <TextInput
@@ -172,7 +249,7 @@ export function SendFlightScheduleChangeEmail({
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
         {...getInputProps("flight_pnr")}
-        value={record?.flight_pnr}
+        // value={record?.flight_pnr}
         disabled
         // required
       />
@@ -182,7 +259,8 @@ export function SendFlightScheduleChangeEmail({
         mt="sm"
         label="flight_change_pnr_old_text"
         {...getInputProps("flight_change_pnr_old_text")}
-        value={record?.flight_change_pnr_old_text}
+        // value={record?.flight_change_pnr_old_text}
+        required
       />
       <Textarea
         autosize
@@ -190,7 +268,54 @@ export function SendFlightScheduleChangeEmail({
         mt="sm"
         label="flight_change_pnr_new_text"
         {...getInputProps("flight_change_pnr_new_text")}
-        value={record?.flight_change_pnr_new_text}
+        // value={record?.flight_change_pnr_new_text}
+        required
+      />
+      <TextInput
+        // required
+        placeholder="automatically added"
+        mt="sm"
+        label="flight_change_type"
+        {...getInputProps("flight_change_type")}
+        // value={record?.flight_pnr}
+        // disabled
+        // required
+      />
+      <TextInput
+        // required
+        placeholder="automatically added"
+        mt="sm"
+        label="flight_change_message"
+        {...getInputProps("flight_change_message")}
+        // value={record?.flight_pnr}
+        // disabled
+        // required
+      />
+      <Textarea
+        autosize
+        minRows={2}
+        mt="sm"
+        label="flight_change_remarks"
+        {...getInputProps("flight_change_remarks")}
+        // required
+      />
+      <TextInput
+        // required
+        mt="sm"
+        label="flight_change_status"
+        {...getInputProps("flight_change_status")}
+        // value={record?.flight_pnr}
+        // disabled
+        // required
+      />
+      <TextInput
+        // required
+        mt="sm"
+        label="flight_change_assigned_agent"
+        {...getInputProps("flight_change_assigned_agent")}
+        // value={record?.flight_pnr}
+        // disabled
+        // required
       />
     </Create>
   );

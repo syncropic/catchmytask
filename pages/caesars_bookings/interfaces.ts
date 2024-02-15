@@ -15,6 +15,7 @@ export interface IBooking {
   flight_change_message_url: string;
   flight_change_assigned_agent: string;
   flight_change_status: string;
+  flight_change_am: string;
   flight_change_type: string;
   flight_confirmation_message: string;
   flight_confirmation_message_url: string;

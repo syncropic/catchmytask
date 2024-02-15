@@ -738,7 +738,12 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         data_items={data_items}
         isLoadingDataItems={isLoadingDataItems}
         updateTableVisibility={updateTableVisibility}
-        initialStateColumnPinningLeft={["sst_booking_number"]}
+        initialStateColumnPinningLeft={[
+          "mrt-row-select",
+          "mrt-row-expand",
+          "mrt-row-actions",
+          "sst_booking_number",
+        ]}
       ></ReactMantineTableView>
     </>
   );

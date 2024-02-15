@@ -152,14 +152,16 @@ function SelectTaskComponent({
       {variant === "inline" ? (
         <>
           <MultiSelect
-            className="flex-1"
-            // label="actions"
-            placeholder="select action"
+            placeholder="Select action"
             searchable={true}
             data={action_options.map((action) => action.display_name)}
             value={getInputProps("action").value}
             onChange={handleActionChange}
             withinPortal={true}
+            styles={{
+              input: { width: "200px" }, // Apply fixed width to the input part
+              wrapper: { width: "200px" }, // Optionally ensure the wrapper also has a fixed width
+            }}
           />
           <Button
             size="xs"

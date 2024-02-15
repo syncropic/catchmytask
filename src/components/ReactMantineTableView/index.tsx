@@ -7,7 +7,7 @@ import {
   ColumnConfig,
 } from "@components/interfaces";
 import SelectTaskComponent from "@components/selecttask";
-import { Button, Flex, MantineProvider, Text } from "@mantine/core";
+import { Box, Button, Flex, MantineProvider, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   useCustomMutation,
@@ -103,6 +103,21 @@ export function ReactMantineTableView<T extends Record<string, any>>({
     enableEditing: true,
     editDisplayMode: "cell",
     enableStickyFooter: true,
+    // enableColumnResizing: true,
+    // layoutMode: "grid",
+    // mantineTableHeadCellProps: {
+    //   sx: {
+    //     flex: "0 0 auto",
+    //   },
+    // },
+    // mantineTableBodyCellProps: {
+    //   sx: {
+    //     flex: "0 0 auto",
+    //   },
+    // },
+    displayColumnDefOptions: {
+      "mrt-row-actions": { minSize: 250, maxSize: 250, size: 250 },
+    }, //change width of actions column to 300px
     state: { isLoading: mutationIsLoading || isLoadingDataItems },
     mantineEditTextInputProps: ({ cell }) => ({
       onBlur: (event) => {
@@ -126,21 +141,24 @@ export function ReactMantineTableView<T extends Record<string, any>>({
       placeholder: "Search Items",
     },
     mantineTableContainerProps: { sx: { maxHeight: "500px" } },
+    // mantineTableProps: {
+    //   sx: {
+    //     tableLayout: "fixed",
+    //   },
+    // },
 
     renderRowActions: ({ row }) => (
-      <>
-        <SelectTaskComponent
-          action_options={action_options}
-          identity={identity}
-          action_step={null}
-          record={row.original}
-          data_items={[]}
-          setActionType={setActionType}
-          variant="inline"
-          activeActionOption={activeActionOption}
-          setActiveActionOption={setActiveActionOption}
-        />
-      </>
+      <SelectTaskComponent
+        action_options={action_options}
+        identity={identity}
+        action_step={null}
+        record={row.original}
+        data_items={[]}
+        setActionType={setActionType}
+        variant="inline"
+        activeActionOption={activeActionOption}
+        setActiveActionOption={setActiveActionOption}
+      />
     ),
     renderTopToolbar: ({ table }) => {
       const handleDelete = () => {
@@ -294,6 +312,16 @@ export function ReactMantineTableView<T extends Record<string, any>>({
     }
   }, [activeViews, data_items]);
 
+  useEffect(() => {
+    const columnFilters = data_table.getState().columnFilters;
+    const filtered_items = data_table.getFilteredRowModel().flatRows;
+    if (columnFilters.length > 0 && filtered_items.length === 0) {
+      console.log("Column filters array has items.", columnFilters);
+      console.log("Filtered items array has 0 items.");
+      handleAddToCollection(resource, columnFilters);
+    }
+  }, [data_table.getState().columnFilters]); // Dependency array
+
   const handleSaveCell = (cell: any, event: any) => {
     let update_values = {
       id: cell.row.original.related_record,
@@ -305,6 +333,43 @@ export function ReactMantineTableView<T extends Record<string, any>>({
       url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/${resource}/${id}`,
       method: "post",
       values: update_values,
+      successNotification: (data, values) => {
+        // invalidate list
+        invalidate({
+          resource: resource,
+          invalidates: ["list"],
+        });
+
+        return {
+          message: `successfully executed.`,
+          description: "Success with no errors",
+          type: "success",
+        };
+      },
+      errorNotification: (data, values) => {
+        return {
+          message: `Something went wrong when executing`,
+          description: "Error",
+          type: "error",
+        };
+      },
+    });
+  };
+
+  const handleAddToCollection = (resource: any, filters: any) => {
+    // let update_values = {
+    //   id: cell.row.original.related_record,
+    //   [cell.column.id]: event,
+    // };
+    // // console.log("update_values", update_values);
+    // let id = cell.row.original.related_record;
+    customMutate({
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/return_or_add_item_to_collection`,
+      method: "post",
+      values: {
+        resource: resource,
+        filters: filters,
+      },
       successNotification: (data, values) => {
         // invalidate list
         invalidate({
