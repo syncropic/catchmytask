@@ -14,12 +14,13 @@ import {
   addSeparator,
   dateTypeOptions,
   formatDateTimeAsDateTime,
+  testProgressOptions,
 } from "src/utils";
 import { CompleteActionComponentProps } from "@components/interfaces";
 import CodeBlock from "@components/codeblock/codeblock";
 import { IconDatabaseShare, IconMathFunction } from "@tabler/icons-react";
 
-export function SendFlightScheduleChangeEmail({
+export function TestCaesarsFlightsAndHotels<T extends Record<string, any>>({
   setActionType,
   action_options,
   identity,
@@ -28,11 +29,12 @@ export function SendFlightScheduleChangeEmail({
   close,
   opened,
   record,
+  data_table,
   action_step,
   variant = "default",
   activeActionOption,
   setActiveActionOption,
-}: CompleteActionComponentProps) {
+}: CompleteActionComponentProps<T>) {
   const invalidate = useInvalidate();
   const {
     mutate,
@@ -50,18 +52,25 @@ export function SendFlightScheduleChangeEmail({
     initialValues: {
       author: identity?.email,
       author_email: identity?.email,
-      sst_internal_id: record?.sst_internal_id,
-      sst_booking_full_name: record?.sst_booking_full_name,
-      contact_email: record?.contact_email,
-      flight_pnr: record?.flight_pnr,
-      flight_change_pnr_old_text: record?.flight_change_pnr_old_text,
-      flight_change_pnr_new_text: record?.flight_change_pnr_new_text,
-      flight_change_assigned_agent: record?.flight_change_assigned_agent,
-      flight_change_remarks: record?.flight_change_remarks,
-      flight_change_status: record?.flight_change_status,
-      flight_change_type: record?.flight_change_type,
-      flight_change_message: record?.flight_change_message,
-      flight_airline_reference_code: record?.flight_airline_reference_code,
+      trip_id: record?.trip_id,
+      // sst_booking_full_name: record?.sst_booking_full_name,
+      // test run data, dropdown for saved to utilize etc.
+      test_id: "",
+      test_environment: "",
+      test_description: "",
+      test_base_url: "",
+      test_progress_option: "",
+
+      // contact_email: record?.contact_email,
+      // flight_pnr: record?.flight_pnr,
+      // flight_change_pnr_old_text: record?.flight_change_pnr_old_text,
+      // flight_change_pnr_new_text: record?.flight_change_pnr_new_text,
+      // flight_change_assigned_agent: record?.flight_change_assigned_agent,
+      // flight_change_remarks: record?.flight_change_remarks,
+      // flight_change_status: record?.flight_change_status,
+      // flight_change_type: record?.flight_change_type,
+      // flight_change_message: record?.flight_change_message,
+      // flight_airline_reference_code: record?.flight_airline_reference_code,
     },
   });
 
@@ -191,21 +200,81 @@ export function SendFlightScheduleChangeEmail({
       <TextInput
         required
         mt="sm"
-        label="sst_internal_id"
+        label="trip_id"
         // placeholder="Select date type"
         // data={dateTypeOptions} // Replace with your options source
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
-        {...getInputProps("sst_internal_id")}
+        {...getInputProps("trip_id")}
         // value={record?.sst_internal_id}
         disabled
         // required
       />
       <TextInput
+        required
+        mt="sm"
+        label="test_id"
+        // placeholder="Select date type"
+        // data={dateTypeOptions} // Replace with your options source
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("test_id")}
+        // value={record?.sst_internal_id}
+        // disabled
         // required
+      />
+      <TextInput
+        required
+        mt="sm"
+        label="test_name"
+        // placeholder="Select date type"
+        // data={dateTypeOptions} // Replace with your options source
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("test_name")}
+        // value={record?.sst_internal_id}
+        // disabled
+        // required
+      />
+      <TextInput
+        required
+        mt="sm"
+        label="test_base_url"
+        // placeholder="Select date type"
+        // data={dateTypeOptions} // Replace with your options source
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("test_base_url")}
+        // value={record?.sst_internal_id}
+        // disabled
+        // required
+      />
+
+      <MultiSelect
+        required
+        mt="sm"
+        label="test_progress_option"
+        placeholder="test_progress_option"
+        data={testProgressOptions} // Replace with your options source
+        maxSelectedValues={1}
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("test_progress_option")}
+        // required
+      />
+      <Textarea
+        autosize
+        minRows={2}
+        mt="sm"
+        label="test_description"
+        {...getInputProps("test_description")}
+        // required
+      />
+      {/* <TextInput
+        required
         mt="sm"
         label="flight_airline_reference_code"
-        placeholder="will auto-add on run if not specified here"
+        // placeholder="Select date type"
         // data={dateTypeOptions} // Replace with your options source
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
@@ -213,8 +282,8 @@ export function SendFlightScheduleChangeEmail({
         // value={record?.flight_airline_reference_code}
         // disabled
         // required
-      />
-      <TextInput
+      /> */}
+      {/* <TextInput
         required
         mt="sm"
         label="sst_booking_full_name"
@@ -226,20 +295,8 @@ export function SendFlightScheduleChangeEmail({
         // value={record?.sst_booking_full_name}
         disabled
         // required
-      />
-      <TextInput
-        required
-        mt="sm"
-        label="contact_email"
-        // placeholder="Select date type"
-        // data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("contact_email")}
-        // value={record?.contact_email}
-        disabled
-        // required
-      />
+      /> */}
+      {/*       
       <TextInput
         required
         mt="sm"
@@ -252,46 +309,9 @@ export function SendFlightScheduleChangeEmail({
         // value={record?.flight_pnr}
         disabled
         // required
-      />
-      <Textarea
-        autosize
-        minRows={5}
-        mt="sm"
-        label="flight_change_pnr_old_text"
-        {...getInputProps("flight_change_pnr_old_text")}
-        // value={record?.flight_change_pnr_old_text}
-        required
-      />
-      <Textarea
-        autosize
-        minRows={5}
-        mt="sm"
-        label="flight_change_pnr_new_text"
-        {...getInputProps("flight_change_pnr_new_text")}
-        // value={record?.flight_change_pnr_new_text}
-        required
-      />
-      <TextInput
-        // required
-        placeholder="will auto-add on run if not specified here"
-        mt="sm"
-        label="flight_change_type"
-        {...getInputProps("flight_change_type")}
-        // value={record?.flight_pnr}
-        // disabled
-        // required
-      />
-      <TextInput
-        // required
-        placeholder="will auto-add on run if not specified here"
-        mt="sm"
-        label="flight_change_message"
-        {...getInputProps("flight_change_message")}
-        // value={record?.flight_pnr}
-        // disabled
-        // required
-      />
-      <Textarea
+      /> */}
+
+      {/* <Textarea
         autosize
         minRows={2}
         mt="sm"
@@ -316,9 +336,9 @@ export function SendFlightScheduleChangeEmail({
         // value={record?.flight_pnr}
         // disabled
         // required
-      />
+      /> */}
     </Create>
   );
 }
 
-export default SendFlightScheduleChangeEmail;
+export default TestCaesarsFlightsAndHotels;

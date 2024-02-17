@@ -393,6 +393,18 @@ const App = (props: React.PropsWithChildren) => {
                   dataProviderName: "catchmytaskApiDataProvider",
                 },
               },
+              {
+                name: "trips",
+                list: "/trips",
+                create: "/trips/create",
+                edit: "/trips/edit/:id",
+                show: "/trips/show/:id",
+                meta: {
+                  canDelete: true,
+                  // hide: true,
+                  dataProviderName: "catchmytaskApiDataProvider",
+                },
+              },
               // {
               //   name: "onewurld_subscriptions",
               //   list: "/onewurld_subscriptions",
@@ -446,19 +458,19 @@ const App = (props: React.PropsWithChildren) => {
               //     dataProviderName: "default",
               //   },
               // },
-              {
-                name: "tests",
-                list: "/tests",
-                create: "/tests/create",
-                edit: "/tests/edit/:id",
-                show: "/tests/show/:id",
-                meta: {
-                  canDelete: true,
-                  icon: <IconTestPipe />,
+              // {
+              //   name: "tests",
+              //   list: "/tests",
+              //   create: "/tests/create",
+              //   edit: "/tests/edit/:id",
+              //   show: "/tests/show/:id",
+              //   meta: {
+              //     canDelete: true,
+              //     icon: <IconTestPipe />,
 
-                  // dataProviderName: "default",
-                },
-              },
+              //     // dataProviderName: "default",
+              //   },
+              // },
               // {
               //   name: "test_cases",
               //   list: "/test_cases",
@@ -566,7 +578,7 @@ const App = (props: React.PropsWithChildren) => {
               //     canDelete: true,
               //     dataProviderName: "catchmyvibeApiDataProvider",
               //     // icon: <IconMusic />,
-              //     // hide: true,
+              //     // hide: true,6
               //   },
               // },
               // {

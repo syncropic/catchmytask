@@ -7,18 +7,21 @@ import DynamicComponentLoader from "@components/DynamicComponentLoader";
 import RetrieveDatasets from "@components/RetrieveDatasets";
 import SendFlightConfirmation from "@components/SendFlightConfirmation";
 import SendFlightScheduleChangeEmail from "@components/SendFlightScheduleChangeEmail";
+import AddPaymentInformation from "@components/AddPaymentInformation";
+import TestCaesarsFlightsAndHotels from "@components/TestCaesarsFlightsAndHotels";
 
-function SelectTaskComponent({
+function SelectTaskComponent<T extends Record<string, any>>({
   setActionType,
   data_items,
   action_options,
   identity,
   action_step,
   record,
+  data_table,
   variant = "default",
   activeActionOption,
   setActiveActionOption,
-}: SelectActionOptionComponentProps) {
+}: SelectActionOptionComponentProps<T>) {
   const invalidate = useInvalidate();
   const {
     mutate,
@@ -86,6 +89,7 @@ function SelectTaskComponent({
             close={close}
             opened={opened}
             record={record}
+            data_table={data_table}
             action_step={null}
             variant="default"
             activeActionOption={activeActionOption}
@@ -103,6 +107,7 @@ function SelectTaskComponent({
             close={close}
             opened={opened}
             record={record}
+            data_table={data_table}
             action_step={null}
             variant="default"
             activeActionOption={activeActionOption}
@@ -126,6 +131,46 @@ function SelectTaskComponent({
             activeActionOption={activeActionOption}
             setActiveActionOption={setActiveActionOption}
           />
+        )}
+        {activeActionOption?.metadata?.display_component ==
+          "AddPaymentInformation" && (
+          <>
+            <AddPaymentInformation
+              data_items={data_items}
+              setActionType={setActionType}
+              action_options={action_options}
+              identity={identity}
+              open={open}
+              close={close}
+              opened={opened}
+              record={record}
+              data_table={data_table}
+              action_step={null}
+              variant="default"
+              activeActionOption={activeActionOption}
+              setActiveActionOption={setActiveActionOption}
+            />
+          </>
+        )}
+        {activeActionOption?.metadata?.display_component ==
+          "TestCaesarsFlightsAndHotels" && (
+          <>
+            <TestCaesarsFlightsAndHotels
+              data_items={data_items}
+              setActionType={setActionType}
+              action_options={action_options}
+              identity={identity}
+              open={open}
+              close={close}
+              opened={opened}
+              record={record}
+              data_table={data_table}
+              action_step={null}
+              variant="default"
+              activeActionOption={activeActionOption}
+              setActiveActionOption={setActiveActionOption}
+            />
+          </>
         )}
 
         {/*         

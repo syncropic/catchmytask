@@ -19,7 +19,7 @@ import { CompleteActionComponentProps } from "@components/interfaces";
 import CodeBlock from "@components/codeblock/codeblock";
 import { IconDatabaseShare, IconMathFunction } from "@tabler/icons-react";
 
-export function SendFlightScheduleChangeEmail({
+export function AddPaymentInformation<T extends Record<string, any>>({
   setActionType,
   action_options,
   identity,
@@ -28,11 +28,12 @@ export function SendFlightScheduleChangeEmail({
   close,
   opened,
   record,
+  data_table,
   action_step,
   variant = "default",
   activeActionOption,
   setActiveActionOption,
-}: CompleteActionComponentProps) {
+}: CompleteActionComponentProps<T>) {
   const invalidate = useInvalidate();
   const {
     mutate,
@@ -52,16 +53,17 @@ export function SendFlightScheduleChangeEmail({
       author_email: identity?.email,
       sst_internal_id: record?.sst_internal_id,
       sst_booking_full_name: record?.sst_booking_full_name,
-      contact_email: record?.contact_email,
-      flight_pnr: record?.flight_pnr,
-      flight_change_pnr_old_text: record?.flight_change_pnr_old_text,
-      flight_change_pnr_new_text: record?.flight_change_pnr_new_text,
-      flight_change_assigned_agent: record?.flight_change_assigned_agent,
-      flight_change_remarks: record?.flight_change_remarks,
-      flight_change_status: record?.flight_change_status,
-      flight_change_type: record?.flight_change_type,
-      flight_change_message: record?.flight_change_message,
-      flight_airline_reference_code: record?.flight_airline_reference_code,
+
+      // contact_email: record?.contact_email,
+      // flight_pnr: record?.flight_pnr,
+      // flight_change_pnr_old_text: record?.flight_change_pnr_old_text,
+      // flight_change_pnr_new_text: record?.flight_change_pnr_new_text,
+      // flight_change_assigned_agent: record?.flight_change_assigned_agent,
+      // flight_change_remarks: record?.flight_change_remarks,
+      // flight_change_status: record?.flight_change_status,
+      // flight_change_type: record?.flight_change_type,
+      // flight_change_message: record?.flight_change_message,
+      // flight_airline_reference_code: record?.flight_airline_reference_code,
     },
   });
 
@@ -86,7 +88,7 @@ export function SendFlightScheduleChangeEmail({
           resource: "caesars_bookings",
           invalidates: ["list"],
         });
-        // close();
+        close();
         return {
           message: `successfully executed.`,
           description: "Success with no errors",
@@ -166,7 +168,7 @@ export function SendFlightScheduleChangeEmail({
       goBack={false}
       footerButtons={({ saveButtonProps }) => (
         <div className="flex w-full gap-4">
-          <SaveButton
+          {/* <SaveButton
             {...saveButtonProps}
             className="flex-grow w-1/3"
             variant="light"
@@ -175,15 +177,15 @@ export function SendFlightScheduleChangeEmail({
             onClick={handleSaveOnly}
           >
             Save Only
-          </SaveButton>
+          </SaveButton> */}
           <SaveButton
             {...saveButtonProps}
-            className="flex-grow w-2/3"
+            className="flex-grow"
             variant="filled"
             leftIcon={<IconMathFunction size={16} />}
             disabled={mutationIsLoading}
           >
-            Save and Run Action
+            Save
           </SaveButton>
         </div>
       )}
@@ -201,11 +203,11 @@ export function SendFlightScheduleChangeEmail({
         disabled
         // required
       />
-      <TextInput
-        // required
+      {/* <TextInput
+        required
         mt="sm"
         label="flight_airline_reference_code"
-        placeholder="will auto-add on run if not specified here"
+        // placeholder="Select date type"
         // data={dateTypeOptions} // Replace with your options source
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
@@ -213,7 +215,7 @@ export function SendFlightScheduleChangeEmail({
         // value={record?.flight_airline_reference_code}
         // disabled
         // required
-      />
+      /> */}
       <TextInput
         required
         mt="sm"
@@ -227,19 +229,7 @@ export function SendFlightScheduleChangeEmail({
         disabled
         // required
       />
-      <TextInput
-        required
-        mt="sm"
-        label="contact_email"
-        // placeholder="Select date type"
-        // data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("contact_email")}
-        // value={record?.contact_email}
-        disabled
-        // required
-      />
+      {/*       
       <TextInput
         required
         mt="sm"
@@ -252,46 +242,9 @@ export function SendFlightScheduleChangeEmail({
         // value={record?.flight_pnr}
         disabled
         // required
-      />
-      <Textarea
-        autosize
-        minRows={5}
-        mt="sm"
-        label="flight_change_pnr_old_text"
-        {...getInputProps("flight_change_pnr_old_text")}
-        // value={record?.flight_change_pnr_old_text}
-        required
-      />
-      <Textarea
-        autosize
-        minRows={5}
-        mt="sm"
-        label="flight_change_pnr_new_text"
-        {...getInputProps("flight_change_pnr_new_text")}
-        // value={record?.flight_change_pnr_new_text}
-        required
-      />
-      <TextInput
-        // required
-        placeholder="will auto-add on run if not specified here"
-        mt="sm"
-        label="flight_change_type"
-        {...getInputProps("flight_change_type")}
-        // value={record?.flight_pnr}
-        // disabled
-        // required
-      />
-      <TextInput
-        // required
-        placeholder="will auto-add on run if not specified here"
-        mt="sm"
-        label="flight_change_message"
-        {...getInputProps("flight_change_message")}
-        // value={record?.flight_pnr}
-        // disabled
-        // required
-      />
-      <Textarea
+      /> */}
+
+      {/* <Textarea
         autosize
         minRows={2}
         mt="sm"
@@ -316,9 +269,9 @@ export function SendFlightScheduleChangeEmail({
         // value={record?.flight_pnr}
         // disabled
         // required
-      />
+      /> */}
     </Create>
   );
 }
 
-export default SendFlightScheduleChangeEmail;
+export default AddPaymentInformation;

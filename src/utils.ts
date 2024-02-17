@@ -101,6 +101,32 @@ export const dateTypeOptions = [
   },
 ];
 
+export const locationTypeOptions = [
+  {
+    value: "current_view",
+    label: "current_view",
+    name: "current_view",
+  },
+  {
+    value: "local",
+    label: "local",
+    name: "local",
+  },
+];
+
+export const testProgressOptions = [
+  {
+    value: "continue_until_checkout",
+    label: "continue_until_checkout",
+    name: "continue_until_checkout",
+  },
+  {
+    value: "continue_until_confirmed_booking",
+    label: "continue_until_confirmed_booking",
+    name: "continue_until_confirmed_booking",
+  },
+];
+
 export const emailTypeOptions = [
   {
     value: "default",

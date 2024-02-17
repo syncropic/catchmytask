@@ -7,7 +7,14 @@ import {
   ColumnConfig,
 } from "@components/interfaces";
 import SelectTaskComponent from "@components/selecttask";
-import { Box, Button, Flex, MantineProvider, Text } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Drawer,
+  Flex,
+  MantineProvider,
+  Text,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   useCustomMutation,
@@ -29,6 +36,8 @@ import { useAppStore } from "src/store";
 import { addSeparator, evaluateCondition } from "src/utils";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import Chat from "@components/Chat";
+import Sync from "@components/Sync";
 
 export function ReactMantineTableView<T extends Record<string, any>>({
   data_columns,
@@ -49,6 +58,7 @@ export function ReactMantineTableView<T extends Record<string, any>>({
     isError: isErrorActionOptionsData,
   } = useList({
     resource: "action_options",
+    dataProviderName: "default",
   });
 
   const action_options = actionOptionsData?.data
@@ -58,9 +68,12 @@ export function ReactMantineTableView<T extends Record<string, any>>({
           value: option.display_name,
           label: option.display_name,
           metadata: option.metadata,
+          name: option.name,
         }))
         .filter((option) => option?.metadata?.resources?.includes(resource))
     : [];
+
+  console.log("action_options", action_options);
 
   const go = useGo();
   const [opened, { open, close }] = useDisclosure(false);
@@ -153,6 +166,7 @@ export function ReactMantineTableView<T extends Record<string, any>>({
         identity={identity}
         action_step={null}
         record={row.original}
+        data_table={data_table}
         data_items={[]}
         setActionType={setActionType}
         variant="inline"
@@ -227,7 +241,25 @@ export function ReactMantineTableView<T extends Record<string, any>>({
             </Button>
             <Button
               onClick={() => {
+                setActionType("sync");
+                const item = action_options.find(
+                  (item) => item.name === "sync"
+                );
+                setActiveActionOption(item);
+                open();
+              }}
+              // disabled
+              variant="outline"
+            >
+              Sync
+            </Button>
+            <Button
+              onClick={() => {
                 setActionType("chat");
+                const item = action_options.find(
+                  (item) => item.name === "chat"
+                );
+                setActiveActionOption(item);
                 open();
               }}
               // disabled
@@ -446,6 +478,7 @@ export function ReactMantineTableView<T extends Record<string, any>>({
             action_step={null}
             record={null}
             data_items={[]}
+            data_table={data_table}
             setActionType={setActionType}
             activeActionOption={activeActionOption}
             setActiveActionOption={setActiveActionOption}
@@ -461,6 +494,47 @@ export function ReactMantineTableView<T extends Record<string, any>>({
         >
           <MantineReactTable table={data_table} />
         </MantineProvider>
+        <Drawer
+          opened={opened}
+          onClose={close}
+          title={activeActionOption?.display_name}
+          position="right"
+        >
+          {activeActionOption?.metadata?.display_component == "Chat" && (
+            <Chat
+              data_items={data_items}
+              setActionType={setActionType}
+              action_options={action_options}
+              identity={identity}
+              open={open}
+              close={close}
+              opened={opened}
+              record={{}} // instead of record when row pass the entire table and i can read the filtered items from there
+              data_table={data_table}
+              action_step={null}
+              variant="default"
+              activeActionOption={activeActionOption}
+              setActiveActionOption={setActiveActionOption}
+            />
+          )}
+          {activeActionOption?.metadata?.display_component == "Sync" && (
+            <Sync
+              data_items={data_items}
+              setActionType={setActionType}
+              action_options={action_options}
+              identity={identity}
+              open={open}
+              close={close}
+              opened={opened}
+              record={{}}
+              data_table={data_table}
+              action_step={null}
+              variant="default"
+              activeActionOption={activeActionOption}
+              setActiveActionOption={setActiveActionOption}
+            />
+          )}
+        </Drawer>
       </div>
     </>
   );

@@ -16,7 +16,7 @@ export interface TabularViewComponentProps<T extends Record<string, any>> {
   ) => void;
 }
 
-export interface CompleteActionComponentProps {
+export interface CompleteActionComponentProps<T extends Record<string, any>> {
   setActionType: (type: string) => void;
   action_options: Array<{ value: string; label: string; [key: string]: any }>;
   data_items: any[];
@@ -29,9 +29,12 @@ export interface CompleteActionComponentProps {
   variant?: "inline" | "default";
   activeActionOption: any;
   setActiveActionOption: (item: any) => void;
+  data_table: MRT_TableInstance<T>;
 }
 
-export interface SelectActionOptionComponentProps {
+export interface SelectActionOptionComponentProps<
+  T extends Record<string, any>
+> {
   setActionType: (type: string) => void;
   action_options: Array<{ value: string; label: string; [key: string]: any }>;
   data_items: any[];
@@ -41,6 +44,7 @@ export interface SelectActionOptionComponentProps {
   variant?: "inline" | "default";
   activeActionOption: any;
   setActiveActionOption: (item: any) => void;
+  data_table: MRT_TableInstance<T>;
 }
 
 // export interface TabularViewComponentProps {
