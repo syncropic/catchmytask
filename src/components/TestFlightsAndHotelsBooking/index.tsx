@@ -8,7 +8,7 @@ import {
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useCustomMutation, useInvalidate } from "@refinedev/core";
-import { Create, SaveButton, useForm } from "@refinedev/mantine";
+import { Create, CreateButton, SaveButton, useForm } from "@refinedev/mantine";
 import { format, parseISO } from "date-fns";
 import {
   addSeparator,
@@ -19,8 +19,13 @@ import {
 import { CompleteActionComponentProps } from "@components/interfaces";
 import CodeBlock from "@components/codeblock/codeblock";
 import { IconDatabaseShare, IconMathFunction } from "@tabler/icons-react";
+import { useModal } from "@refinedev/core";
+import CreateAutomation from "pages/automations/create";
+import { useDisclosure } from "@mantine/hooks";
+import { Text } from "@mantine/core";
+import { useAppStore } from "src/store";
 
-export function TestCaesarsFlightsAndHotels<T extends Record<string, any>>({
+export function TestFlightsAndHotelsBooking<T extends Record<string, any>>({
   setActionType,
   action_options,
   identity,
@@ -36,6 +41,9 @@ export function TestCaesarsFlightsAndHotels<T extends Record<string, any>>({
   setActiveActionOption,
 }: CompleteActionComponentProps<T>) {
   const invalidate = useInvalidate();
+  const { activeRequestData, setActiveRequestData } = useAppStore();
+  const [openedAutomation, { open: openAutomation, close: closeAutomation }] =
+    useDisclosure(false);
   const {
     mutate,
     isLoading: mutationIsLoading,
@@ -53,24 +61,7 @@ export function TestCaesarsFlightsAndHotels<T extends Record<string, any>>({
       author: identity?.email,
       author_email: identity?.email,
       trip_id: record?.trip_id,
-      // sst_booking_full_name: record?.sst_booking_full_name,
-      // test run data, dropdown for saved to utilize etc.
-      test_id: "",
-      test_environment: "",
       test_description: "",
-      test_base_url: "",
-      test_progress_option: "",
-
-      // contact_email: record?.contact_email,
-      // flight_pnr: record?.flight_pnr,
-      // flight_change_pnr_old_text: record?.flight_change_pnr_old_text,
-      // flight_change_pnr_new_text: record?.flight_change_pnr_new_text,
-      // flight_change_assigned_agent: record?.flight_change_assigned_agent,
-      // flight_change_remarks: record?.flight_change_remarks,
-      // flight_change_status: record?.flight_change_status,
-      // flight_change_type: record?.flight_change_type,
-      // flight_change_message: record?.flight_change_message,
-      // flight_airline_reference_code: record?.flight_airline_reference_code,
     },
   });
 
@@ -162,6 +153,32 @@ export function TestCaesarsFlightsAndHotels<T extends Record<string, any>>({
     });
   };
 
+  const handleCreateAutomation = () => {
+    let request_data = {
+      ...activeActionOption,
+      options: {
+        ...activeActionOption?.options,
+        execution_action_step_names: [
+          "get_collection_info_1",
+          "get_credential_info_1",
+          "update_record_fields_1",
+        ],
+        execute_by: "execution_action_step_names",
+        execution_includes: "save_only",
+      },
+      id: addSeparator(activeActionOption?.id, "action_options"),
+      values: {
+        ...record,
+        ...values, // so i can override original in the form if not disabled
+        action_options: [
+          addSeparator(activeActionOption?.id, "action_options"),
+        ],
+      },
+    };
+    setActiveRequestData(request_data);
+    openAutomation();
+  };
+
   return (
     <Create
       // isLoading={formLoading}
@@ -175,19 +192,33 @@ export function TestCaesarsFlightsAndHotels<T extends Record<string, any>>({
       goBack={false}
       footerButtons={({ saveButtonProps }) => (
         <div className="flex w-full gap-4">
-          <SaveButton
+          {/* <SaveButton
             {...saveButtonProps}
-            className="flex-grow w-1/3"
+            className="flex-grow w-1/2"
             variant="light"
             leftIcon={<IconDatabaseShare size={16} />}
             disabled={mutationIsLoading}
             onClick={handleSaveOnly}
           >
-            Save Only
-          </SaveButton>
+            CreateSave Automation
+          </SaveButton> */}
+          <Button
+            resource="automations"
+            size="xs"
+            variant="light"
+            onClick={() => {
+              if (openedAutomation) {
+                closeAutomation();
+              } else {
+                handleCreateAutomation();
+              }
+            }}
+          >
+            {openedAutomation ? "Close Automation" : "Create Automation"}
+          </Button>
           <SaveButton
             {...saveButtonProps}
-            className="flex-grow w-2/3"
+            className="flex-grow w-1/2"
             variant="filled"
             leftIcon={<IconMathFunction size={16} />}
             disabled={mutationIsLoading}
@@ -197,6 +228,16 @@ export function TestCaesarsFlightsAndHotels<T extends Record<string, any>>({
         </div>
       )}
     >
+      {/* {visible && (
+        <>
+          <p>Dummy Modal Content</p>
+          <button onClick={close}>Close Modal</button>
+        </>
+      )} */}
+      <Text>
+        <b>Action: </b>
+        {activeActionOption?.display_name}
+      </Text>
       <TextInput
         required
         mt="sm"
@@ -210,58 +251,6 @@ export function TestCaesarsFlightsAndHotels<T extends Record<string, any>>({
         disabled
         // required
       />
-      <TextInput
-        required
-        mt="sm"
-        label="test_id"
-        // placeholder="Select date type"
-        // data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("test_id")}
-        // value={record?.sst_internal_id}
-        // disabled
-        // required
-      />
-      <TextInput
-        required
-        mt="sm"
-        label="test_name"
-        // placeholder="Select date type"
-        // data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("test_name")}
-        // value={record?.sst_internal_id}
-        // disabled
-        // required
-      />
-      <TextInput
-        required
-        mt="sm"
-        label="test_base_url"
-        // placeholder="Select date type"
-        // data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("test_base_url")}
-        // value={record?.sst_internal_id}
-        // disabled
-        // required
-      />
-
-      <MultiSelect
-        required
-        mt="sm"
-        label="test_progress_option"
-        placeholder="test_progress_option"
-        data={testProgressOptions} // Replace with your options source
-        maxSelectedValues={1}
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("test_progress_option")}
-        // required
-      />
       <Textarea
         autosize
         minRows={2}
@@ -270,75 +259,10 @@ export function TestCaesarsFlightsAndHotels<T extends Record<string, any>>({
         {...getInputProps("test_description")}
         // required
       />
-      {/* <TextInput
-        required
-        mt="sm"
-        label="flight_airline_reference_code"
-        // placeholder="Select date type"
-        // data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("flight_airline_reference_code")}
-        // value={record?.flight_airline_reference_code}
-        // disabled
-        // required
-      /> */}
-      {/* <TextInput
-        required
-        mt="sm"
-        label="sst_booking_full_name"
-        // placeholder="Select date type"
-        // data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("sst_booking_full_name")}
-        // value={record?.sst_booking_full_name}
-        disabled
-        // required
-      /> */}
-      {/*       
-      <TextInput
-        required
-        mt="sm"
-        label="flight_pnr"
-        // placeholder="Select date type"
-        // data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("flight_pnr")}
-        // value={record?.flight_pnr}
-        disabled
-        // required
-      /> */}
 
-      {/* <Textarea
-        autosize
-        minRows={2}
-        mt="sm"
-        label="flight_change_remarks"
-        {...getInputProps("flight_change_remarks")}
-        // required
-      />
-      <TextInput
-        // required
-        mt="sm"
-        label="flight_change_status"
-        {...getInputProps("flight_change_status")}
-        // value={record?.flight_pnr}
-        // disabled
-        // required
-      />
-      <TextInput
-        // required
-        mt="sm"
-        label="flight_change_assigned_agent"
-        {...getInputProps("flight_change_assigned_agent")}
-        // value={record?.flight_pnr}
-        // disabled
-        // required
-      /> */}
+      {openedAutomation && <CreateAutomation></CreateAutomation>}
     </Create>
   );
 }
 
-export default TestCaesarsFlightsAndHotels;
+export default TestFlightsAndHotelsBooking;

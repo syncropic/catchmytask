@@ -9,11 +9,31 @@ export interface TabularViewComponentProps<T extends Record<string, any>> {
   resource: string;
   data_items: T[];
   isLoadingDataItems: boolean;
-  initialStateColumnPinningLeft: string[];
+  // initialStateColumnPinningLeft: string[];
+  customTableConfig?: any;
   updateTableVisibility: (
     tableInstance: MRT_TableInstance<T>,
     columnsConfig: ColumnConfig[] | null
   ) => void;
+}
+
+export interface AutomationActionConfigurationProps<
+  T extends Record<string, any>
+> {
+  automation_values: any;
+  // setActionType: (type: string) => void;
+  // action_options: Array<{ value: string; label: string; [key: string]: any }>;
+  // data_items: any[];
+  // identity: any;
+  // open: () => void;
+  // close: () => void;
+  // opened: boolean;
+  // record: any;
+  // action_step: any;
+  // variant?: "inline" | "default";
+  // activeActionOption: any;
+  // setActiveActionOption: (item: any) => void;
+  // data_table: MRT_TableInstance<T>;
 }
 
 export interface CompleteActionComponentProps<T extends Record<string, any>> {

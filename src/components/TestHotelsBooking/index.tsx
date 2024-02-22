@@ -3,22 +3,29 @@ import {
   LoadingOverlay,
   MultiSelect,
   TextInput,
+  Textarea,
   Title,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useCustomMutation, useInvalidate } from "@refinedev/core";
-import { Create, SaveButton, useForm } from "@refinedev/mantine";
+import { Create, CreateButton, SaveButton, useForm } from "@refinedev/mantine";
 import { format, parseISO } from "date-fns";
 import {
   addSeparator,
   dateTypeOptions,
   formatDateTimeAsDateTime,
+  testProgressOptions,
 } from "src/utils";
 import { CompleteActionComponentProps } from "@components/interfaces";
 import CodeBlock from "@components/codeblock/codeblock";
 import { IconDatabaseShare, IconMathFunction } from "@tabler/icons-react";
+import { useModal } from "@refinedev/core";
+import CreateAutomation from "pages/automations/create";
+import { useDisclosure } from "@mantine/hooks";
+import { Text } from "@mantine/core";
+import { useAppStore } from "src/store";
 
-export function SendFlightConfirmation<T extends Record<string, any>>({
+export function TestHotelsBooking<T extends Record<string, any>>({
   setActionType,
   action_options,
   identity,
@@ -27,12 +34,16 @@ export function SendFlightConfirmation<T extends Record<string, any>>({
   close,
   opened,
   record,
+  data_table,
   action_step,
   variant = "default",
   activeActionOption,
   setActiveActionOption,
 }: CompleteActionComponentProps<T>) {
   const invalidate = useInvalidate();
+  const { activeRequestData, setActiveRequestData } = useAppStore();
+  const [openedAutomation, { open: openAutomation, close: closeAutomation }] =
+    useDisclosure(false);
   const {
     mutate,
     isLoading: mutationIsLoading,
@@ -49,9 +60,8 @@ export function SendFlightConfirmation<T extends Record<string, any>>({
     initialValues: {
       author: identity?.email,
       author_email: identity?.email,
-      flight_airline_reference_code: record?.flight_airline_reference_code,
-      contact_email: record?.contact_email,
-      contact_name: record?.contact_name,
+      trip_id: record?.trip_id,
+      test_description: "",
     },
   });
 
@@ -76,7 +86,7 @@ export function SendFlightConfirmation<T extends Record<string, any>>({
           resource: "caesars_bookings",
           invalidates: ["list"],
         });
-        close();
+        // close();
         return {
           message: `successfully executed.`,
           description: "Success with no errors",
@@ -143,6 +153,32 @@ export function SendFlightConfirmation<T extends Record<string, any>>({
     });
   };
 
+  const handleCreateAutomation = () => {
+    let request_data = {
+      ...activeActionOption,
+      options: {
+        ...activeActionOption?.options,
+        execution_action_step_names: [
+          "get_collection_info_1",
+          "get_credential_info_1",
+          "update_record_fields_1",
+        ],
+        execute_by: "execution_action_step_names",
+        execution_includes: "save_only",
+      },
+      id: addSeparator(activeActionOption?.id, "action_options"),
+      values: {
+        ...record,
+        ...values, // so i can override original in the form if not disabled
+        action_options: [
+          addSeparator(activeActionOption?.id, "action_options"),
+        ],
+      },
+    };
+    setActiveRequestData(request_data);
+    openAutomation();
+  };
+
   return (
     <Create
       // isLoading={formLoading}
@@ -152,23 +188,37 @@ export function SendFlightConfirmation<T extends Record<string, any>>({
         onClick: handleSubmit,
         size: "xs",
       }}
-      title={<Title order={3}>Configure and Execute Action</Title>}
+      title={<Title order={3}>Configure And Execute Action</Title>}
       goBack={false}
       footerButtons={({ saveButtonProps }) => (
         <div className="flex w-full gap-4">
-          <SaveButton
+          {/* <SaveButton
             {...saveButtonProps}
-            className="flex-grow w-1/3"
+            className="flex-grow w-1/2"
             variant="light"
             leftIcon={<IconDatabaseShare size={16} />}
             disabled={mutationIsLoading}
             onClick={handleSaveOnly}
           >
-            Save Only
-          </SaveButton>
+            CreateSave Automation
+          </SaveButton> */}
+          <Button
+            resource="automations"
+            size="xs"
+            variant="light"
+            onClick={() => {
+              if (openedAutomation) {
+                closeAutomation();
+              } else {
+                handleCreateAutomation();
+              }
+            }}
+          >
+            {openedAutomation ? "Close Automation" : "Create Automation"}
+          </Button>
           <SaveButton
             {...saveButtonProps}
-            className="flex-grow w-2/3"
+            className="flex-grow w-1/2"
             variant="filled"
             leftIcon={<IconMathFunction size={16} />}
             disabled={mutationIsLoading}
@@ -178,47 +228,41 @@ export function SendFlightConfirmation<T extends Record<string, any>>({
         </div>
       )}
     >
+      {/* {visible && (
+        <>
+          <p>Dummy Modal Content</p>
+          <button onClick={close}>Close Modal</button>
+        </>
+      )} */}
+      <Text>
+        <b>Action: </b>
+        {activeActionOption?.display_name}
+      </Text>
       <TextInput
         required
         mt="sm"
-        label="flight_airline_reference_code"
-        placeholder="flight_airline_reference_code"
+        label="trip_id"
+        // placeholder="Select date type"
         // data={dateTypeOptions} // Replace with your options source
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
-        {...getInputProps("flight_airline_reference_code")}
-        // value={record?.flight_airline_reference_code}
-        // disabled
+        {...getInputProps("trip_id")}
+        // value={record?.sst_internal_id}
+        disabled
         // required
       />
-      <TextInput
-        required
+      <Textarea
+        autosize
+        minRows={2}
         mt="sm"
-        label="contact_email"
-        placeholder="contact_email"
-        // data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("contact_email")}
-        // value={record?.contact_email}
-        // disabled
+        label="test_description"
+        {...getInputProps("test_description")}
         // required
       />
-      <TextInput
-        required
-        mt="sm"
-        label="contact_name"
-        placeholder="contact_name"
-        // data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("contact_name")}
-        // value={record?.contact_email}
-        // disabled
-        // required
-      />
+
+      {openedAutomation && <CreateAutomation></CreateAutomation>}
     </Create>
   );
 }
 
-export default SendFlightConfirmation;
+export default TestHotelsBooking;

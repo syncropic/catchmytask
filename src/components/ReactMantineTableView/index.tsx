@@ -37,7 +37,8 @@ import { addSeparator, evaluateCondition } from "src/utils";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import Chat from "@components/Chat";
-import Sync from "@components/Sync";
+import { CreateButton } from "@refinedev/mantine";
+// import Sync from "@components/Sync";
 
 export function ReactMantineTableView<T extends Record<string, any>>({
   data_columns,
@@ -45,7 +46,7 @@ export function ReactMantineTableView<T extends Record<string, any>>({
   data_items,
   isLoadingDataItems,
   updateTableVisibility,
-  initialStateColumnPinningLeft,
+  customTableConfig,
 }: TabularViewComponentProps<T>) {
   // VALIDATE
   const invalidate = useInvalidate();
@@ -72,8 +73,6 @@ export function ReactMantineTableView<T extends Record<string, any>>({
         }))
         .filter((option) => option?.metadata?.resources?.includes(resource))
     : [];
-
-  console.log("action_options", action_options);
 
   const go = useGo();
   const [opened, { open, close }] = useDisclosure(false);
@@ -137,13 +136,6 @@ export function ReactMantineTableView<T extends Record<string, any>>({
         handleSaveCell(cell, event.target.value);
       },
     }),
-    initialState: {
-      density: "xs",
-      showGlobalFilter: true,
-      showColumnFilters: true,
-      pagination: { pageSize: 30, pageIndex: 0 },
-      columnPinning: { left: initialStateColumnPinningLeft },
-    },
     paginationDisplayMode: "pages",
     positionToolbarAlertBanner: "bottom",
     mantinePaginationProps: {
@@ -186,6 +178,7 @@ export function ReactMantineTableView<T extends Record<string, any>>({
           <Flex gap="xs">
             <MRT_GlobalFilterTextInput table={table} />
             <MRT_ToggleFiltersButton table={table} />
+            <CreateButton></CreateButton>
           </Flex>
           <Flex sx={{ gap: "8px" }}>
             <Button
@@ -282,7 +275,7 @@ export function ReactMantineTableView<T extends Record<string, any>>({
     },
     renderDetailPanel: ({ row }) => (
       <div>
-        <div>
+        {/* <div>
           <Text>
             <b>Flight Change Remarks:</b> {row.original.flight_change_remarks}
           </Text>
@@ -294,10 +287,11 @@ export function ReactMantineTableView<T extends Record<string, any>>({
             <b>New PNR Text:</b>
             <pre>{row.original.flight_change_pnr_new_text}</pre>
           </p>
-        </div>
+        </div> */}
         <CodeBlock jsonData={row.original} />
       </div>
     ),
+    ...customTableConfig,
   });
 
   const applyFilters = (activeView: ActiveView, data: any[]): any[] => {
@@ -517,7 +511,7 @@ export function ReactMantineTableView<T extends Record<string, any>>({
               setActiveActionOption={setActiveActionOption}
             />
           )}
-          {activeActionOption?.metadata?.display_component == "Sync" && (
+          {/* {activeActionOption?.metadata?.display_component == "Sync" && (
             <Sync
               data_items={data_items}
               setActionType={setActionType}
@@ -533,7 +527,7 @@ export function ReactMantineTableView<T extends Record<string, any>>({
               activeActionOption={activeActionOption}
               setActiveActionOption={setActiveActionOption}
             />
-          )}
+          )} */}
         </Drawer>
       </div>
     </>

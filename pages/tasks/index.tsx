@@ -42,7 +42,7 @@ import {
   MRT_GlobalFilterTextInput,
   MRT_ToggleFiltersButton,
 } from "mantine-react-table";
-import { addSeparator } from "src/utils";
+import { addSeparator, updateTableVisibility } from "src/utils";
 import AddTo from "./AddTo";
 import Chat from "./Chat";
 import { useDisclosure } from "@mantine/hooks";
@@ -51,6 +51,7 @@ import { parseISO, format } from "date-fns";
 import SelectTaskComponent from "@components/selecttask";
 import { CompleteActionComponentProps } from "@components/interfaces";
 import { IIdentity } from "@components/interfaces";
+import ReactMantineTableView from "@components/ReactMantineTableView";
 
 // Define the data structure
 interface IReport {
@@ -104,7 +105,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     isError: mutationIsError,
   } = useCustomMutation();
 
-  const columns = useMemo<MRT_ColumnDef<IReport>[]>(
+  const data_columns = useMemo<MRT_ColumnDef<IReport>[]>(
     () => [
       {
         id: "actions",
@@ -250,6 +251,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       {
         accessorKey: "created_at",
         header: "created_at",
+        sortingFn: "datetime",
         Cell: ({ row }) => {
           // Check if created_at is null or undefined before attempting to format
           if (
@@ -272,7 +274,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
 
   const {
     data,
-    isLoading,
+    isLoading: isLoadingDataItems,
     isError: isErrorReports,
   } = useList<IReport, HttpError>();
 
@@ -280,7 +282,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
 
   // useMantineReactTable hook
   const table = useMantineReactTable({
-    columns,
+    columns: data_columns,
     data: data_items,
     enableRowSelection: true,
     enableColumnOrdering: true,
@@ -321,6 +323,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           identity={identity}
           action_step={null}
           data_items={[]}
+          data_table={table}
           record={row.original}
           setActionType={setActionType}
           variant="inline"
@@ -449,26 +452,27 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       },
     });
   };
+  let customTableConfig = {
+    initialState: {
+      sorting: [{ id: "created_at", desc: true }],
+      density: "xs",
+      showGlobalFilter: true,
+      showColumnFilters: true,
+      pagination: { pageSize: 30, pageIndex: 0 },
+      columnPinning: {
+        left: ["mrt-row-select", "mrt-row-expand", "mrt-row-actions"],
+      },
+    },
+  };
   return (
-    <div className="w-max-screen">
-      <Drawer
-        opened={opened}
-        onClose={close}
-        title={actionType}
-        position="right"
-      >
-        {actionType === "add_to" && <AddTo />}
-        {actionType === "chat" && <Chat />}
-      </Drawer>
-      <MantineProvider
-        theme={{
-          colorScheme: "light",
-          primaryColor: "blue",
-        }}
-      >
-        <MantineReactTable table={table} />
-      </MantineProvider>
-    </div>
+    <ReactMantineTableView
+      data_columns={data_columns}
+      resource="task"
+      data_items={data_items}
+      isLoadingDataItems={isLoadingDataItems}
+      updateTableVisibility={updateTableVisibility}
+      customTableConfig={customTableConfig}
+    ></ReactMantineTableView>
   );
 };
 export default PageList;

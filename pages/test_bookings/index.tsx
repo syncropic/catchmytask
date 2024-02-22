@@ -470,6 +470,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           action_step={null}
           record={row.original}
           data_items={[]}
+          data_table={booking_table}
           setActionType={setActionType}
           variant="inline"
           activeActionOption={activeActionOption}
@@ -839,6 +840,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
             action_step={null}
             record={null}
             data_items={[]}
+            data_table={booking_table}
             setActionType={setActionType}
             activeActionOption={activeActionOption}
             setActiveActionOption={setActiveActionOption}

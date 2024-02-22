@@ -249,6 +249,23 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
 
   const [filteredDataItems, setFilteredDataItems] = useState(data_items);
 
+  let customTableConfig = {
+    initialState: {
+      sorting: [{ id: "test_end_datetime", desc: true }],
+      density: "xs",
+      showGlobalFilter: true,
+      showColumnFilters: true,
+      pagination: { pageSize: 30, pageIndex: 0 },
+      columnPinning: {
+        left: [
+          "mrt-row-select",
+          "mrt-row-expand",
+          "mrt-row-actions",
+          "payment_id",
+        ],
+      },
+    },
+  };
   return (
     <>
       <ReactMantineTableView
@@ -257,7 +274,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         data_items={data_items}
         isLoadingDataItems={isLoadingDataItems}
         updateTableVisibility={updateTableVisibility}
-        initialStateColumnPinningLeft={["payment_id"]}
+        customTableConfig={customTableConfig}
       ></ReactMantineTableView>
     </>
   );

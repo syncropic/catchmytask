@@ -1,17 +1,31 @@
-import { Button, LoadingOverlay, MultiSelect, Title } from "@mantine/core";
+import {
+  Button,
+  LoadingOverlay,
+  MultiSelect,
+  TextInput,
+  Textarea,
+  Title,
+} from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useCustomMutation, useInvalidate } from "@refinedev/core";
-import { Create, SaveButton, useForm } from "@refinedev/mantine";
+import { Create, CreateButton, SaveButton, useForm } from "@refinedev/mantine";
 import { format, parseISO } from "date-fns";
 import {
   addSeparator,
   dateTypeOptions,
   formatDateTimeAsDateTime,
+  testProgressOptions,
 } from "src/utils";
-
 import { CompleteActionComponentProps } from "@components/interfaces";
+import CodeBlock from "@components/codeblock/codeblock";
+import { IconDatabaseShare, IconMathFunction } from "@tabler/icons-react";
+import { useModal } from "@refinedev/core";
+import CreateAutomation from "pages/automations/create";
+import { useDisclosure } from "@mantine/hooks";
+import { Text } from "@mantine/core";
+import { useAppStore } from "src/store";
 
-export function RetrieveDatasets({
+export function RetrieveDatasets<T extends Record<string, any>>({
   setActionType,
   action_options,
   identity,
@@ -20,37 +34,21 @@ export function RetrieveDatasets({
   close,
   opened,
   record,
+  data_table,
   action_step,
   variant = "default",
   activeActionOption,
   setActiveActionOption,
-}: CompleteActionComponentProps) {
+}: CompleteActionComponentProps<T>) {
   const invalidate = useInvalidate();
-
+  const { activeRequestData, setActiveRequestData } = useAppStore();
+  const [openedAutomation, { open: openAutomation, close: closeAutomation }] =
+    useDisclosure(false);
   const {
     mutate,
     isLoading: mutationIsLoading,
     isError: mutationIsError,
   } = useCustomMutation();
-  // const {
-  //   getInputProps,
-  //   saveButtonProps,
-  //   setFieldValue,
-  //   values,
-  //   refineCore: { formLoading, onFinish },
-  //   onSubmit,
-  // } = useForm({
-  //   initialValues: {
-  //     start_date: "",
-  //     end_date: "",
-  //     date_type: [] as string[],
-  //     email_type: [] as string[],
-  //     custom_message: "",
-  //     mail_list: [] as string[],
-  //     id: "",
-  //   },
-  // });
-
   const {
     getInputProps,
     saveButtonProps,
@@ -60,9 +58,8 @@ export function RetrieveDatasets({
     onSubmit,
   } = useForm({
     initialValues: {
-      // author: "user:TYvGonCb3nVDfdvfxfUvSQh0Zv93",
-      // description: "",
-      // name: [] as string[],
+      author: identity?.email,
+      author_email: identity?.email,
       start_date: "",
       end_date: "",
       date_type: [] as string[],
@@ -77,20 +74,6 @@ export function RetrieveDatasets({
       email_type: ["default"] as string[],
     },
   });
-
-  // const handleActionChange = (value: string[]) => {
-  //   const item = action_options.find((item) => item.value === value[0]);
-  //   // setActiveItem(item);
-  //   // setActionType("create");
-  //   setFieldValue("action", value);
-  // };
-
-  const handleDateTypeChange = (value: string[]) => {
-    // const item = action_options.find((item) => item.value === value[0]);
-    // setActiveItem(item);
-    // setActionType("create");
-    setFieldValue("date_type", value);
-  };
 
   const handleSubmit = (e: any) => {
     // console.log("values", values);
@@ -234,6 +217,83 @@ export function RetrieveDatasets({
       },
     });
   };
+
+  const handleSaveOnly = (e: any) => {
+    let request_data = {
+      ...activeActionOption,
+      options: {
+        ...activeActionOption?.options,
+        execution_action_step_names: [
+          "get_collection_info_1",
+          "get_credential_info_1",
+          "update_record_fields_1",
+        ],
+        execute_by: "execution_action_step_names",
+        execution_includes: "save_only",
+      },
+      id: addSeparator(activeActionOption?.id, "action_options"),
+      values: {
+        ...record,
+        ...values, // so i can override original in the form if not disabled
+        action_options: [
+          addSeparator(activeActionOption?.id, "action_options"),
+        ],
+      },
+    };
+    // console.log("mode", "save_only");
+    // console.log("request_data", request_data);
+    mutate({
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
+      method: "post",
+      values: request_data,
+      successNotification: (data, values) => {
+        invalidate({
+          resource: "caesars_bookings",
+          invalidates: ["list"],
+        });
+        // close();
+        return {
+          message: `successfully executed.`,
+          description: "Success with no errors",
+          type: "success",
+        };
+      },
+      errorNotification: (data, values) => {
+        return {
+          message: `Something went wrong when executing`,
+          description: "Error",
+          type: "error",
+        };
+      },
+    });
+  };
+
+  const handleCreateAutomation = () => {
+    let request_data = {
+      ...activeActionOption,
+      options: {
+        ...activeActionOption?.options,
+        execution_action_step_names: [
+          "get_collection_info_1",
+          "get_credential_info_1",
+          "update_record_fields_1",
+        ],
+        execute_by: "execution_action_step_names",
+        execution_includes: "save_only",
+      },
+      id: addSeparator(activeActionOption?.id, "action_options"),
+      values: {
+        ...record,
+        ...values, // so i can override original in the form if not disabled
+        action_options: [
+          addSeparator(activeActionOption?.id, "action_options"),
+        ],
+      },
+    };
+    setActiveRequestData(request_data);
+    openAutomation();
+  };
+
   return (
     <Create
       // isLoading={formLoading}
@@ -243,36 +303,46 @@ export function RetrieveDatasets({
         onClick: handleSubmit,
         size: "xs",
       }}
-      contentProps={{
-        style: {
-          // backgroundColor: "cornflowerblue",
-          padding: "16px",
-          height: "420px",
-        },
-      }}
-      title={<Title order={3}>Configure and Execute Action</Title>}
+      title={<Title order={3}>Configure And Execute Action</Title>}
       goBack={false}
       footerButtons={({ saveButtonProps }) => (
-        <>
-          <SaveButton {...saveButtonProps} fullWidth>
-            Complete Action
+        <div className="flex w-full gap-4">
+          <Button
+            resource="automations"
+            size="xs"
+            variant="light"
+            onClick={() => {
+              if (openedAutomation) {
+                closeAutomation();
+              } else {
+                handleCreateAutomation();
+              }
+            }}
+          >
+            {openedAutomation ? "Close Automation" : "Create Automation"}
+          </Button>
+          <SaveButton
+            {...saveButtonProps}
+            className="flex-grow w-1/2"
+            variant="filled"
+            leftIcon={<IconMathFunction size={16} />}
+            disabled={mutationIsLoading}
+          >
+            Save and Run Action
           </SaveButton>
-        </>
+        </div>
       )}
     >
-      {/* <MultiSelect
-        required
-        mt="sm"
-        label="date_type"
-        placeholder="Select date type"
-        data={dateTypeOptions} // Replace with your options source
-        {...getInputProps("date_type")}
-        value={getInputProps("date_type").value}
-
-        // onChange={handleDateTypeChange}
-        // required
-      /> */}
-
+      {/* {visible && (
+        <>
+          <p>Dummy Modal Content</p>
+          <button onClick={close}>Close Modal</button>
+        </>
+      )} */}
+      <Text>
+        <b>Action: </b>
+        {activeActionOption?.display_name}
+      </Text>
       <MultiSelect
         required
         mt="sm"
@@ -298,6 +368,8 @@ export function RetrieveDatasets({
         placeholder="End date"
         {...getInputProps("end_date")}
       />
+
+      {openedAutomation && <CreateAutomation></CreateAutomation>}
     </Create>
   );
 }

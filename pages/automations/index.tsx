@@ -7,6 +7,8 @@ import {
   useCustomMutation,
   useList,
   HttpError,
+  useUpdate,
+  useInvalidate,
 } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { ColumnDef, flexRender } from "@tanstack/react-table";
@@ -37,6 +39,7 @@ import {
   Tooltip,
   Drawer,
   rem,
+  Switch,
 } from "@mantine/core";
 import {
   List,
@@ -53,94 +56,45 @@ import {
   MRT_GlobalFilterTextInput,
   MRT_ToggleFiltersButton,
 } from "mantine-react-table";
-import { addSeparator } from "src/utils";
+import {
+  addSeparator,
+  formatDateTimeAsDateTime,
+  handleComingSoon,
+  updateTableVisibility,
+} from "src/utils";
 import AddTo from "./AddTo";
 import Chat from "./Chat";
 import { useDisclosure } from "@mantine/hooks";
 import { useAppStore } from "src/store";
 import { parseISO, format } from "date-fns";
-
-// Define the data structure
-interface IReport {
-  id: string;
-  name: string;
-  created_at: string;
-  updated_at: string;
-  author: string;
-  status: string;
-  trigger: string;
-}
+import ReactMantineTableView from "@components/ReactMantineTableView";
+import { IAutomation } from "./interfaces";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const go = useGo();
-  const [opened, { open, close }] = useDisclosure(false);
-  const actionType = useAppStore((state) => state.actionType);
-  const setActionType = useAppStore((state) => state.setActionType);
-  const {
-    mutate,
-    isLoading: mutationIsLoading,
-    isError: mutationIsError,
-  } = useCustomMutation();
+  const { mutate: mutateUpdate, isLoading: isLoadingMutateUpdate } =
+    useUpdate();
+  const { mutate: mutateCustom, isLoading: isLoadingMutateCustom } =
+    useCustomMutation();
+  const invalidate = useInvalidate();
 
-  // Define the object with the specified keys and values
-  const refreshReportRequestData = {
-    task: {
-      author: "user:TYvGonCb3nVDfdvfxfUvSQh0Zv93",
-      description: "generate_schedule_change_email",
-      status: "active",
-      id: "task:⟨4eab1ed2-13a3-4781-b2ba-3f1694805cc5⟩",
-    },
-    source: {
-      location: "database",
-      id: "task:⟨40c4a2ca-c35d-4ea7-bd33-084a6a5212dd⟩",
-    },
-    destination: {
-      location: "database",
-      record: "",
-      id: "",
-    },
-    options: {
-      sync_from_source_to_destination: true,
-      delete_source_from_destination: false,
-      plan_with_llm: false,
-      rerun_execution_orders: [],
-      execution_orders_range: [11, 20],
-      execute_by: "execution_orders_range",
-      user_feedback: "continue",
-    },
-    task_input: {
-      generate_sql_query_01: {
-        text_query:
-          "Retrieve all onewurld bookings from cyDashBoardSetupTable where reporting date is >= 2024-01-16 and <= 2024-01-16. The collection is onewurld",
-      },
-      create_email_message_01: {
-        email_type: "personal",
-        personal_message: "",
-        internal_message: "",
-      },
-      send_email_message_01: {
-        mail_list: "personal",
-      },
-    },
-  };
-
-  const columns = useMemo<MRT_ColumnDef<IReport>[]>(
+  const data_columns = useMemo<MRT_ColumnDef<IAutomation>[]>(
     () => [
       {
-        id: "actions",
-        accessorKey: "id",
-        enableColumnFilter: false,
-        header: "quick actions",
-        Cell: ({ renderedCellValue, row }) => (
-          <Group spacing="xs" noWrap>
-            {/* <EditButton size="xs" recordItemId={row.original.id} /> */}
-            <Button size="xs" onClick={handleComingSoon} variant="outline">
-              Run
-            </Button>
-            <Button size="xs" onClick={handleComingSoon} variant="outline">
-              Configure
-            </Button>
-          </Group>
+        accessorKey: "automation_status",
+        header: "automation_status",
+        filterVariant: "multi-select",
+        Cell: ({ row }) => (
+          <Switch
+            defaultChecked
+            checked={row.original.automation_status === "active"}
+            onChange={(event) =>
+              handleChangeAutomationStatus(
+                row.original,
+                event.currentTarget.checked
+              )
+            }
+          />
         ),
       },
       {
@@ -166,24 +120,53 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
           </Anchor>
         ),
       },
-      { accessorKey: "status", header: "status" },
-      { accessorKey: "trigger", header: "trigger" },
+      {
+        accessorKey: "frequency",
+        header: "frequency",
+        filterVariant: "multi-select",
+      },
+      {
+        accessorKey: "start_datetime",
+        header: "start_datetime",
+        filterVariant: "date-range",
+        sortingFn: "datetime",
+        Cell: ({ row }) => (
+          <Text size="sm">
+            {formatDateTimeAsDateTime(row.original?.start_datetime)}
+          </Text>
+        ),
+      },
+      {
+        accessorKey: "end_datetime",
+        header: "end_datetime",
+        filterVariant: "date-range",
+        sortingFn: "datetime",
+        Cell: ({ row }) => (
+          <Text size="sm">
+            {formatDateTimeAsDateTime(row.original?.end_datetime)}
+          </Text>
+        ),
+      },
       { accessorKey: "author", header: "author" },
       {
         accessorKey: "updated_at",
         header: "updated_at",
+        filterVariant: "date-range",
+        sortingFn: "datetime",
         Cell: ({ row }) => (
           <Text size="sm">
-            {format(parseISO(row.original.updated_at), "yyyy-MM-dd hh:mm a")}
+            {formatDateTimeAsDateTime(row.original?.updated_at)}
           </Text>
         ),
       },
       {
         accessorKey: "created_at",
         header: "created_at",
+        filterVariant: "date-range",
+        sortingFn: "datetime",
         Cell: ({ row }) => (
           <Text size="sm">
-            {format(parseISO(row.original.created_at), "yyyy-MM-dd hh:mm a")}
+            {formatDateTimeAsDateTime(row.original?.created_at)}
           </Text>
         ),
       },
@@ -193,164 +176,124 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
 
   const {
     data,
-    isLoading,
+    isLoading: isLoadingDataItems,
     isError: isErrorReports,
-  } = useList<IReport, HttpError>();
+  } = useList<IAutomation, HttpError>({
+    resource: "automations",
+    filters: [
+      {
+        field: "view_status",
+        operator: "eq",
+        value: "published",
+      },
+    ],
+  });
 
   const data_items = data?.data ?? [];
 
-  // useMantineReactTable hook
-  const table = useMantineReactTable({
-    columns,
-    data: data_items,
-    enableRowSelection: true,
-    enableColumnOrdering: true,
-    enableGlobalFilter: true,
-    enableColumnFilters: true,
-    enableRowActions: true,
-    enableStickyHeader: true,
-    enableColumnFilterModes: true,
-    enableFacetedValues: true,
-    enableGrouping: true,
-    enablePinning: true,
+  let customTableConfig = {
     initialState: {
+      sorting: [{ id: "created_at", desc: true }],
       density: "xs",
       showGlobalFilter: true,
       showColumnFilters: true,
       pagination: { pageSize: 30, pageIndex: 0 },
-      sorting: [
-        {
-          id: "updated_at",
-          desc: true,
-        },
-      ],
+      columnPinning: {
+        left: ["mrt-row-select", "mrt-row-expand", "mrt-row-actions"],
+      },
     },
-    paginationDisplayMode: "pages",
-    positionToolbarAlertBanner: "bottom",
-    mantinePaginationProps: {
-      radius: "xl",
-      size: "lg",
-    },
-    mantineSearchTextInputProps: {
-      placeholder: "Search Reports",
-    },
-    mantineTableContainerProps: { sx: { maxHeight: "500px" } },
-    renderRowActionMenuItems: ({ row }) => (
-      <>
-        <Menu.Item
-          onClick={() => {
-            setActionType("add_to");
-            open();
-          }}
-          icon={<IconCirclePlus style={{ width: rem(14), height: rem(14) }} />}
-        >
-          Add To
-        </Menu.Item>
-        <Menu.Item
-          onClick={() => {
-            setActionType("run");
-            open();
-          }}
-          icon={
-            <IconMathFunction style={{ width: rem(14), height: rem(14) }} />
-          }
-        >
-          Run
-        </Menu.Item>
-      </>
-    ),
-    renderDetailPanel: ({ row }) => (
-      <div>
-        <CodeBlock jsonData={row.original} />
-      </div>
-    ),
-    renderTopToolbar: ({ table }) => {
-      const handleDeactivate = () => {
-        table.getSelectedRowModel().flatRows.map((row) => {
-          alert("deactivating " + row.getValue("name"));
-        });
-      };
-
-      const handleActivate = () => {
-        table.getSelectedRowModel().flatRows.map((row) => {
-          alert("activating " + row.getValue("name"));
-        });
-      };
-
-      const handleContact = () => {
-        table.getSelectedRowModel().flatRows.map((row) => {
-          alert("contact " + row.getValue("name"));
-        });
-      };
-
-      return (
-        <Flex p="md" justify="space-between">
-          <Flex gap="xs">
-            {/* import MRT sub-components */}
-            <MRT_GlobalFilterTextInput table={table} />
-            <MRT_ToggleFiltersButton table={table} />
-            <CreateButton></CreateButton>
-          </Flex>
-          <Flex sx={{ gap: "8px" }}>
-            <Button
-              color="red"
-              disabled={!table.getIsSomeRowsSelected()}
-              // onClick={handleDelete}
-              onClick={handleComingSoon}
-              variant="filled"
-            >
-              Delete
-            </Button>
-            {/* <Tooltip label="Allowed file types: .xlsx, .json, .xml">
-              <Button
-                // color="green"
-                // disabled={!table.getIsSomeRowsSelected()}
-                // onClick={handleGenerateScheduleChangeEmail}
-                onClick={handleComingSoon}
-                variant="filled"
-              >
-                Import
-              </Button>
-            </Tooltip> */}
-            <Tooltip label="Export file types: .xlsx, .json">
-              <Button
-                // color="green"
-                // disabled={!table.getIsSomeRowsSelected()}
-                // onClick={handleGenerateScheduleChangeEmail}
-                onClick={handleComingSoon}
-                variant="filled"
-              >
-                Run
-              </Button>
-            </Tooltip>
-          </Flex>
-        </Flex>
-      );
-    },
-  });
-  const handleComingSoon = () => {
-    alert("Coming Soon");
   };
+
+  const handleChangeAutomationStatus = (record: any, e: any) => {
+    mutateUpdate(
+      {
+        resource: "automations",
+        values: {
+          automation_status: e ? "active" : "inactive",
+        },
+        id: addSeparator(record?.id, "automations"),
+        successNotification: (data, values) => {
+          invalidate({
+            resource: "automations",
+            invalidates: ["list"],
+          });
+          // close();
+          return {
+            message: `successfully executed.`,
+            description: "Success with no errors",
+            type: "success",
+          };
+        },
+        errorNotification: (data, values) => {
+          return {
+            message: `Something went wrong when executing`,
+            description: "Error",
+            type: "error",
+          };
+        },
+      },
+      {
+        // onError: (error, variables, context) => {
+        //   // An error occurred!
+        // },
+        onSuccess: (data, variables, context) => {
+          // Let's celebrate!
+          // console.log("call custom mutation here");
+          handleActivateAutomation(data?.data);
+          // console.log("variables", variables);
+          // console.log("context", context);
+        },
+      }
+    );
+  };
+
+  const handleActivateAutomation = (data: any) => {
+    // let request_data = {
+    //   ...activeActionOption,
+    //   id: addSeparator(activeActionOption?.id, "action_options"),
+    //   values: {
+    //     ...record,
+    //     ...values, // so i can override original in the form if not disabled
+    //     action_options: [
+    //       addSeparator(activeActionOption?.id, "action_options"),
+    //     ],
+    //   },
+    // };
+    mutateCustom({
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/activate-automation`,
+      method: "post",
+      values: data,
+      successNotification: (data, values) => {
+        // invalidate({
+        //   resource: "caesars_bookings",
+        //   invalidates: ["list"],
+        // });
+        // close();
+        return {
+          message: `successfully executed.`,
+          description: "Success with no errors",
+          type: "success",
+        };
+      },
+      errorNotification: (data, values) => {
+        return {
+          message: `Something went wrong when executing`,
+          description: "Error",
+          type: "error",
+        };
+      },
+    });
+  };
+
   return (
-    <div className="w-max-screen">
-      <Drawer
-        opened={opened}
-        onClose={close}
-        title={actionType}
-        position="right"
-      >
-        {actionType === "add_to" && <AddTo />}
-        {actionType === "chat" && <Chat />}
-      </Drawer>
-      <MantineProvider
-        theme={{
-          colorScheme: "light",
-          primaryColor: "blue",
-        }}
-      >
-        <MantineReactTable table={table} />
-      </MantineProvider>
-    </div>
+    <ReactMantineTableView
+      data_columns={data_columns}
+      resource="task"
+      data_items={data_items}
+      isLoadingDataItems={isLoadingDataItems}
+      updateTableVisibility={updateTableVisibility}
+      customTableConfig={customTableConfig}
+    ></ReactMantineTableView>
   );
 };
 export default PageList;

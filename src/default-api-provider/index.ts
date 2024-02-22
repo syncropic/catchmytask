@@ -144,7 +144,13 @@ export const dataProvider = (
     //   headers,
     // });
     // console.log(variables);
-    const idWithSeparator = addSeparator(id, resource);
+    let idWithSeparator = null;
+    if (typeof id === "string" && id.includes(":")) {
+      idWithSeparator = id;
+    } else {
+      idWithSeparator = addSeparator(id, resource);
+    }
+
     const [data] = await db.merge(idWithSeparator, variables);
     return {
       data,

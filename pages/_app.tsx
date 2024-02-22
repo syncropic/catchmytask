@@ -49,6 +49,8 @@ import { CustomTitle } from "@components/title";
 import { accessControlProvider } from "src/access-control-provider";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import ViewList from "./views";
+import ShortcutList from "./shortcuts";
+
 import MessageCreate from "./messages/create";
 import { IconMail } from "@tabler/icons";
 import {
@@ -332,7 +334,7 @@ const App = (props: React.PropsWithChildren) => {
                 meta: {
                   canDelete: true,
                   icon: <IconListCheck />,
-
+                  hide: true,
                   // dataProviderName: "default",
                 },
               },
@@ -345,6 +347,19 @@ const App = (props: React.PropsWithChildren) => {
                 meta: {
                   canDelete: true,
                   icon: <IconRefresh />,
+                  hide: true,
+                },
+              },
+              {
+                name: "data_models",
+                list: "/data_models",
+                create: "/data_models/create",
+                edit: "/data_models/edit/:id",
+                show: "/data_models/show/:id",
+                meta: {
+                  canDelete: true,
+                  icon: <IconRefresh />,
+                  hide: true,
                 },
               },
               // {
@@ -401,7 +416,7 @@ const App = (props: React.PropsWithChildren) => {
                 show: "/trips/show/:id",
                 meta: {
                   canDelete: true,
-                  // hide: true,
+                  hide: true,
                   dataProviderName: "catchmytaskApiDataProvider",
                 },
               },
@@ -581,6 +596,18 @@ const App = (props: React.PropsWithChildren) => {
               //     // hide: true,6
               //   },
               // },
+              {
+                name: "test_runs",
+                list: "/test_runs",
+                create: "/test_runs/create",
+                edit: "/test_runs/edit/:id",
+                show: "/test_runs/show/:id",
+                meta: {
+                  canDelete: true,
+                  hide: true,
+                  dataProviderName: "catchmytaskApiDataProvider",
+                },
+              },
               // {
               //   name: "artist",
               //   list: "/artist",
@@ -609,6 +636,18 @@ const App = (props: React.PropsWithChildren) => {
                 create: "/views/create",
                 edit: "/views/edit/:id",
                 show: "/views/show/:id",
+                meta: {
+                  canDelete: true,
+                  hide: true,
+                  // dataProviderName: "catchmyvibeApiDataProvider",
+                },
+              },
+              {
+                name: "shortcuts",
+                list: "/shortcuts",
+                create: "/shortcuts/create",
+                edit: "/shortcuts/edit/:id",
+                show: "/shortcuts/show/:id",
                 meta: {
                   canDelete: true,
                   hide: true,
@@ -679,6 +718,7 @@ function MyApp({
             render={({ items, logout, collapsed }) => {
               return (
                 <>
+                  <ShortcutList />
                   <ViewList />
                   {items}
                   {logout}

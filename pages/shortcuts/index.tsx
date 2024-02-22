@@ -11,7 +11,13 @@ import {
 } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { ColumnDef, flexRender } from "@tanstack/react-table";
-import { IconEdit, IconMail, IconSend, IconTrash } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconMail,
+  IconSend,
+  IconTableShortcut,
+  IconTrash,
+} from "@tabler/icons-react";
 import {
   ScrollArea,
   Table,
@@ -28,6 +34,7 @@ import {
   Tooltip,
   HoverCard,
   Modal,
+  Accordion,
 } from "@mantine/core";
 import {
   List,
@@ -370,7 +377,17 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   });
   return (
     <div className="w-max-screen">
-      <Modal
+      <Accordion defaultValue="actions">
+        <Accordion.Item key="details" value="details">
+          <Accordion.Control icon={<IconTableShortcut size={16} />}>
+            <Text size="sm">Quick Access</Text>
+          </Accordion.Control>
+          <Accordion.Panel>
+            {/* <CodeBlock jsonData={data} /> */}
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion>
+      {/* <Modal
         opened={opened}
         onClose={() => setOpened(false)}
         title={actionType === "open_send" ? "Send Message" : "Download"}
@@ -386,7 +403,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         }}
       >
         <MantineReactTable table={table} />
-      </MantineProvider>
+      </MantineProvider> */}
     </div>
   );
 };

@@ -8,7 +8,9 @@ import RetrieveDatasets from "@components/RetrieveDatasets";
 import SendFlightConfirmation from "@components/SendFlightConfirmation";
 import SendFlightScheduleChangeEmail from "@components/SendFlightScheduleChangeEmail";
 import AddPaymentInformation from "@components/AddPaymentInformation";
-import TestCaesarsFlightsAndHotels from "@components/TestCaesarsFlightsAndHotels";
+import TestFlightsBooking from "@components/TestFlightsBooking";
+import TestFlightsAndHotelsBooking from "@components/TestFlightsAndHotelsBooking";
+import { useAppStore } from "src/store";
 
 function SelectTaskComponent<T extends Record<string, any>>({
   setActionType,
@@ -39,10 +41,12 @@ function SelectTaskComponent<T extends Record<string, any>>({
   } = useForm({
     initialValues: {},
   });
+  const { activeRecord, setActiveRecord } = useAppStore();
 
   const handleActionChange = (value: string[]) => {
     const item = action_options.find((item) => item.value === value[0]);
     setActiveActionOption(item);
+    setActiveRecord(record);
     // setActionType("create");
     setFieldValue("action", value);
   };
@@ -119,6 +123,7 @@ function SelectTaskComponent<T extends Record<string, any>>({
           "SendFlightScheduleChangeEmail" && (
           <SendFlightScheduleChangeEmail
             data_items={data_items}
+            data_table={data_table}
             setActionType={setActionType}
             action_options={action_options}
             identity={identity}
@@ -153,9 +158,29 @@ function SelectTaskComponent<T extends Record<string, any>>({
           </>
         )}
         {activeActionOption?.metadata?.display_component ==
-          "TestCaesarsFlightsAndHotels" && (
+          "TestFlightsAndHotelsBooking" && (
           <>
-            <TestCaesarsFlightsAndHotels
+            <TestFlightsAndHotelsBooking
+              data_items={data_items}
+              setActionType={setActionType}
+              action_options={action_options}
+              identity={identity}
+              open={open}
+              close={close}
+              opened={opened}
+              record={record}
+              data_table={data_table}
+              action_step={null}
+              variant="default"
+              activeActionOption={activeActionOption}
+              setActiveActionOption={setActiveActionOption}
+            />
+          </>
+        )}
+        {activeActionOption?.metadata?.display_component ==
+          "TestFlightsBooking" && (
+          <>
+            <TestFlightsBooking
               data_items={data_items}
               setActionType={setActionType}
               action_options={action_options}

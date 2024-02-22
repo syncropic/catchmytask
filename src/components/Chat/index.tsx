@@ -20,7 +20,7 @@ import CodeBlock from "@components/codeblock/codeblock";
 import { IconDatabaseShare, IconMathFunction } from "@tabler/icons-react";
 import ReactMantineTableView from "@components/ReactMantineTableView";
 
-export function Chat({
+export function Chat<T extends Record<string, any>>({
   setActionType,
   action_options,
   identity,
@@ -33,7 +33,7 @@ export function Chat({
   variant = "default",
   activeActionOption,
   setActiveActionOption,
-}: CompleteActionComponentProps) {
+}: CompleteActionComponentProps<T>) {
   const invalidate = useInvalidate();
   const {
     mutate,
@@ -184,7 +184,7 @@ export function Chat({
         data_items={[]}
         isLoadingDataItems={false}
         updateTableVisibility={() => {}}
-        initialStateColumnPinningLeft={["id"]}
+        customTableConfig={{}}
       ></ReactMantineTableView>
       <Textarea
         autosize

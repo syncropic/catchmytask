@@ -271,9 +271,29 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     data,
     isLoading: isLoadingDataItems,
     isError: isErrorLoadingDataItems,
-  } = useList<ITrip, HttpError>();
+  } = useList<ITrip, HttpError>({
+    resource: "trips",
+  });
 
   const data_items = data?.data ?? [];
+
+  let customTableConfig = {
+    initialState: {
+      sorting: [{ id: "test_end_datetime", desc: true }],
+      density: "xs",
+      showGlobalFilter: true,
+      showColumnFilters: true,
+      pagination: { pageSize: 30, pageIndex: 0 },
+      columnPinning: {
+        left: [
+          "mrt-row-select",
+          "mrt-row-expand",
+          "mrt-row-actions",
+          "trip_id",
+        ],
+      },
+    },
+  };
 
   return (
     <>
@@ -283,12 +303,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         data_items={data_items}
         isLoadingDataItems={isLoadingDataItems}
         updateTableVisibility={updateTableVisibility}
-        initialStateColumnPinningLeft={[
-          "mrt-row-select",
-          "mrt-row-expand",
-          "mrt-row-actions",
-          "sst_internal_id",
-        ]}
+        customTableConfig={customTableConfig}
       ></ReactMantineTableView>
     </>
   );

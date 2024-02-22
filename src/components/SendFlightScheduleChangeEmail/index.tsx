@@ -19,7 +19,7 @@ import { CompleteActionComponentProps } from "@components/interfaces";
 import CodeBlock from "@components/codeblock/codeblock";
 import { IconDatabaseShare, IconMathFunction } from "@tabler/icons-react";
 
-export function SendFlightScheduleChangeEmail({
+export function SendFlightScheduleChangeEmail<T extends Record<string, any>>({
   setActionType,
   action_options,
   identity,
@@ -32,7 +32,7 @@ export function SendFlightScheduleChangeEmail({
   variant = "default",
   activeActionOption,
   setActiveActionOption,
-}: CompleteActionComponentProps) {
+}: CompleteActionComponentProps<T>) {
   const invalidate = useInvalidate();
   const {
     mutate,
