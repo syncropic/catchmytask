@@ -125,8 +125,8 @@ export const dataProvider = (
     // Create a record with a specific ID
     const [data] = await db.create(`${resource}`, {
       ...variables,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      created_datetime: new Date().toISOString(),
+      updated_datetime: new Date().toISOString(),
     });
 
     return {

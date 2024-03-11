@@ -44,20 +44,43 @@ const useAppStore = create(
       isPlaying: false,
       setAudioUrl: (url) => set({ audioUrl: url }),
       togglePlayPause: () => set((state) => ({ isPlaying: !state.isPlaying })),
-      channels: [
-        {
-          id: "channel_1",
-          tracks: [{ id: "track_1", position: 0, audio_url: "audio_url" }],
-        },
-        {
-          id: "channel_2",
-          tracks: [{ id: "track_2", position: 0, audio_url: "audio_url_2" }],
-        },
-      ],
+      timeline: {
+        currentTime: 0,
+        duration: 60, // Let's assume a duration of 60 seconds for demonstration
+        isPlaying: false,
+      },
+      setTimeline: (timeline) => set({ timeline }),
+      setCurrentTime: (currentTime) =>
+        set((state) => ({ timeline: { ...state.timeline, currentTime } })),
+      toggleTimelinePlayPause: () =>
+        set((state) => ({
+          timeline: { ...state.timeline, isPlaying: !state.timeline.isPlaying },
+        })),
+      channel1: null,
+      setChannel1: (channel) => set((state) => ({ channel1: channel })),
+      channel2: null,
+      setChannel2: (channel) => set((state) => ({ channel2: channel })),
       actionType: null,
       setActionType: (actionType) => set((state) => ({ actionType })),
       activeItem: null,
       setActiveItem: (activeItem) => set((state) => ({ activeItem })),
+      activeLayout: {
+        leftSection: {
+          isDisplayed: true,
+        },
+        centerSection: {
+          isDisplayed: true,
+        },
+        rightSection: {
+          isDisplayed: true,
+        },
+      },
+      setActiveLayout: (activeLayout) => set((state) => ({ activeLayout })),
+      activeQuery: null,
+      setActiveQuery: (activeQuery) => set((state) => ({ activeQuery })),
+      activeQueryResults: null,
+      setActiveQueryResults: (activeQueryResults) =>
+        set((state) => ({ activeQueryResults })),
       activeRecord: null,
       setActiveRecord: (activeRecord) => set((state) => ({ activeRecord })),
       activeActionOption: null,
@@ -66,6 +89,8 @@ const useAppStore = create(
       activeDataModel: null,
       setActiveDataModel: (activeDataModel) =>
         set((state) => ({ activeDataModel })),
+      activeFile: null,
+      setActiveFile: (activeFile) => set((state) => ({ activeFile })),
       activeRequestData: null,
       setActiveRequestData: (activeRequestData) =>
         set((state) => ({ activeRequestData })),
@@ -73,6 +98,8 @@ const useAppStore = create(
       setOpened: (opened) => set((state) => ({ opened })),
       activeItem_2: null,
       setActiveItem_2: (activeItem_2) => set((state) => ({ activeItem_2 })),
+      activeItem_3: null,
+      setActiveItem_3: (activeItem_3) => set((state) => ({ activeItem_3 })),
       syncFiles: [],
       setSyncFiles: (syncFiles) => set((state) => ({ syncFiles })),
       text: "",
@@ -91,6 +118,18 @@ const useAppStore = create(
       activeViewStats: {},
       setActiveViewStats: (stats) =>
         set((state) => ({ ...state, activeViewStats: stats })),
+      activeSessions: [],
+      setActiveSessions: (view) =>
+        set((state) => ({ ...state, activeSessions: view })),
+      activeSessionStats: {},
+      setActiveSessionStats: (stats) =>
+        set((state) => ({ ...state, activeSessionStats: stats })),
+      activeSession: {},
+      setActiveSession: (session) =>
+        set((state) => ({ ...state, activeSession: session })),
+      activeColumnOptions: [],
+      setActiveColumnOptions: (view) =>
+        set((state) => ({ ...state, activeColumnOptions: view })),
     }),
     {
       name: "catchmytask-store",

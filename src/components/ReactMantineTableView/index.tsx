@@ -43,6 +43,7 @@ import { CreateButton } from "@refinedev/mantine";
 export function ReactMantineTableView<T extends Record<string, any>>({
   data_columns,
   resource,
+  session,
   data_items,
   isLoadingDataItems,
   updateTableVisibility,
@@ -62,7 +63,7 @@ export function ReactMantineTableView<T extends Record<string, any>>({
     dataProviderName: "default",
   });
 
-  const action_options = actionOptionsData?.data
+  const action_options = Array.isArray(actionOptionsData?.data)
     ? actionOptionsData?.data
         .map((option) => ({
           ...option,
@@ -71,7 +72,12 @@ export function ReactMantineTableView<T extends Record<string, any>>({
           metadata: option.metadata,
           name: option.name,
         }))
-        .filter((option) => option?.metadata?.resources?.includes(resource))
+        .filter((option) => {
+          // Ensure we have an array to work with for resources.
+          const resources = option.metadata?.resources || [];
+          // Check for the presence of 'resource' or 'general' in the resources array.
+          return resources.includes(resource) || resources.includes("general");
+        })
     : [];
 
   const go = useGo();
@@ -79,15 +85,17 @@ export function ReactMantineTableView<T extends Record<string, any>>({
   const {
     actionType,
     setActionType,
-    activeViews,
-    setActiveViews,
+    activeSession: global_activeSession,
+    setActiveSession,
     opened: global_opened,
     setOpened,
-    activeViewStats,
-    setActiveViewStats,
+    activeSessionStats,
+    setActiveSessionStats,
     activeActionOption,
     setActiveActionOption,
   } = useAppStore();
+  // if view passed as prop is not null then activeViews is set to view otherwise it is set to global_activeViews
+  const activeSession = session ? session : global_activeSession;
 
   // custom mutation
   const {
@@ -178,10 +186,10 @@ export function ReactMantineTableView<T extends Record<string, any>>({
           <Flex gap="xs">
             <MRT_GlobalFilterTextInput table={table} />
             <MRT_ToggleFiltersButton table={table} />
-            <CreateButton></CreateButton>
+            <CreateButton size="xs"></CreateButton>
           </Flex>
           <Flex sx={{ gap: "8px" }}>
-            <Button
+            {/* <Button
               onClick={() => {
                 setActionType("open_send");
                 setOpened(true);
@@ -190,9 +198,10 @@ export function ReactMantineTableView<T extends Record<string, any>>({
               // disabled
               variant="outline"
               leftIcon={<IconMail />}
+              size="xs"
             >
               Send
-            </Button>
+            </Button> */}
             <Button
               onClick={() => {
                 // setActionType("open_download");
@@ -203,10 +212,11 @@ export function ReactMantineTableView<T extends Record<string, any>>({
               // disabled
               variant="outline"
               leftIcon={<IconDownload />}
+              size="xs"
             >
               Download
             </Button>
-            <Button
+            {/* <Button
               onClick={() => {
                 // setActionType("open_views");
                 // open();
@@ -215,9 +225,10 @@ export function ReactMantineTableView<T extends Record<string, any>>({
               }}
               // disabled
               variant={activeViews?.name ? "light" : "outline"}
+              size="xs"
             >
               {activeViews?.name ? "Clear View" : "No View Selected"}
-            </Button>
+            </Button> */}
             <Button
               onClick={() => {
                 table.setColumnFilters([]);
@@ -226,13 +237,14 @@ export function ReactMantineTableView<T extends Record<string, any>>({
               variant={
                 table.getState().columnFilters.length > 0 ? "light" : "outline"
               }
+              size="xs"
             >
               {table.getState().columnFilters.length > 0
                 ? `Clear ${table.getState().columnFilters.length} Filters`
                 : "No Filters Applied"}
               {/* {JSON.stringify(table.getState().columnFilters)} */}
             </Button>
-            <Button
+            {/* <Button
               onClick={() => {
                 setActionType("sync");
                 const item = action_options.find(
@@ -243,181 +255,172 @@ export function ReactMantineTableView<T extends Record<string, any>>({
               }}
               // disabled
               variant="outline"
+              size="xs"
             >
               Sync
-            </Button>
-            <Button
+            </Button> */}
+            {/* <Button
               onClick={() => {
                 setActionType("chat");
                 const item = action_options.find(
                   (item) => item.name === "chat"
                 );
+                console.log("item", item);
                 setActiveActionOption(item);
                 open();
               }}
               // disabled
               variant="outline"
+              size="xs"
             >
               Chat
-            </Button>
-            <Button
+            </Button> */}
+            {/* <Button
               color="red"
               disabled={!table.getIsSomeRowsSelected()}
               // onClick={handleDelete}
               //   onClick={handleComingSoon}
               variant="filled"
+              size="xs"
             >
               Delete
-            </Button>
+            </Button> */}
           </Flex>
         </Flex>
       );
     },
     renderDetailPanel: ({ row }) => (
       <div>
-        {/* <div>
-          <Text>
-            <b>Flight Change Remarks:</b> {row.original.flight_change_remarks}
-          </Text>
-          <p>
-            <b>Old PNR text:</b>
-            <pre>{row.original.flight_change_pnr_old_text}</pre>
-          </p>
-          <p>
-            <b>New PNR Text:</b>
-            <pre>{row.original.flight_change_pnr_new_text}</pre>
-          </p>
-        </div> */}
         <CodeBlock jsonData={row.original} />
       </div>
     ),
     ...customTableConfig,
   });
 
-  const applyFilters = (activeView: ActiveView, data: any[]): any[] => {
-    let filteredData = [...data];
+  // const applyFilters = (activeView: ActiveView, data: any[]): any[] => {
+  //   let filteredData = [...data];
 
-    activeView.filters_configuration.forEach((group) => {
-      if (group.group_operator === "OR") {
-        // For 'OR' logic, ensure at least one condition within the group matches
-        filteredData = filteredData.filter((item) =>
-          group.conditions.some((condition) => {
-            return evaluateCondition(item, condition);
-          })
-        );
-      } else {
-        // Default to 'AND' logic if no group_operator is specified
-        group.conditions.forEach((condition) => {
-          filteredData = filteredData.filter((item) => {
-            return evaluateCondition(item, condition);
-          });
-        });
-      }
-    });
+  //   activeView.filters_configuration.forEach((group) => {
+  //     if (group.group_operator === "OR") {
+  //       // For 'OR' logic, ensure at least one condition within the group matches
+  //       filteredData = filteredData.filter((item) =>
+  //         group.conditions.some((condition) => {
+  //           return evaluateCondition(item, condition);
+  //         })
+  //       );
+  //     } else {
+  //       // Default to 'AND' logic if no group_operator is specified
+  //       group.conditions.forEach((condition) => {
+  //         filteredData = filteredData.filter((item) => {
+  //           return evaluateCondition(item, condition);
+  //         });
+  //       });
+  //     }
+  //   });
 
-    return filteredData;
-  };
+  //   return filteredData;
+  // };
 
   // When activeViews changes, apply filters
-  useEffect(() => {
-    // Reset filtered data and column visibility when activeViews is null
-    if (activeViews === null) {
-      setFilteredDataItems(data_items);
-      updateTableVisibility(data_table, null); // Reset column visibility to default
-    } else {
-      // Existing logic for when activeViews is not null
-      const newFilteredData = activeViews?.filters_configuration
-        ? applyFilters(activeViews, data_items)
-        : data_items;
-      setFilteredDataItems(newFilteredData);
-      updateTableVisibility(data_table, activeViews?.fields_configuration);
+  // useEffect(() => {
+  //   // Reset filtered data and column visibility when activeViews is null
+  //   if (activeSession === null) {
+  //     setFilteredDataItems(data_items);
+  //     updateTableVisibility(data_table, null); // Reset column visibility to default
+  //   } else {
+  //     // Existing logic for when activeViews is not null
+  //     const newFilteredData = activeSession?.filters_configuration
+  //       ? applyFilters(activeSession, data_items)
+  //       : data_items;
+  //     setFilteredDataItems(newFilteredData);
+  //     updateTableVisibility(data_table, activeSession?.fields_configuration);
 
-      let activeViewStats = {
-        totalItems: filteredDataItems.length,
-      };
-    }
-  }, [activeViews, data_items]);
+  //     let activeViewStats = {
+  //       totalItems: filteredDataItems.length,
+  //     };
+  //   }
+  // }, [activeSession, data_items]);
 
-  useEffect(() => {
-    const columnFilters = data_table.getState().columnFilters;
-    const filtered_items = data_table.getFilteredRowModel().flatRows;
-    if (columnFilters.length > 0 && filtered_items.length === 0) {
-      console.log("Column filters array has items.", columnFilters);
-      console.log("Filtered items array has 0 items.");
-      handleAddToCollection(resource, columnFilters);
-    }
-  }, [data_table.getState().columnFilters]); // Dependency array
+  // useEffect(() => {
+  //   const columnFilters = data_table.getState().columnFilters;
+  //   const filtered_items = data_table.getFilteredRowModel().flatRows;
+  //   if (columnFilters.length > 0 && filtered_items.length === 0) {
+  //     console.log("Column filters array has items.", columnFilters);
+  //     console.log("Filtered items array has 0 items.");
+  //     handleAddToCollection(resource, columnFilters);
+  //   }
+  // }, [data_table.getState().columnFilters]); // Dependency array
 
-  const handleSaveCell = (cell: any, event: any) => {
-    let update_values = {
-      id: cell.row.original.related_record,
-      [cell.column.id]: event,
-    };
-    // console.log("update_values", update_values);
-    let id = cell.row.original.related_record;
-    customMutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/${resource}/${id}`,
-      method: "post",
-      values: update_values,
-      successNotification: (data, values) => {
-        // invalidate list
-        invalidate({
-          resource: resource,
-          invalidates: ["list"],
-        });
+  // const handleSaveCell = (cell: any, event: any) => {
+  //   let update_values = {
+  //     id: cell.row.original.related_record,
+  //     [cell.column.id]: event,
+  //   };
+  //   // console.log("update_values", update_values);
+  //   let id = cell.row.original.related_record;
+  //   customMutate({
+  //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/${resource}/${id}`,
+  //     method: "post",
+  //     values: update_values,
+  //     successNotification: (data, values) => {
+  //       // invalidate list
+  //       invalidate({
+  //         resource: resource,
+  //         invalidates: ["list"],
+  //       });
 
-        return {
-          message: `successfully executed.`,
-          description: "Success with no errors",
-          type: "success",
-        };
-      },
-      errorNotification: (data, values) => {
-        return {
-          message: `Something went wrong when executing`,
-          description: "Error",
-          type: "error",
-        };
-      },
-    });
-  };
+  //       return {
+  //         message: `successfully executed.`,
+  //         description: "Success with no errors",
+  //         type: "success",
+  //       };
+  //     },
+  //     errorNotification: (data, values) => {
+  //       return {
+  //         message: `Something went wrong when executing`,
+  //         description: "Error",
+  //         type: "error",
+  //       };
+  //     },
+  //   });
+  // };
 
-  const handleAddToCollection = (resource: any, filters: any) => {
-    // let update_values = {
-    //   id: cell.row.original.related_record,
-    //   [cell.column.id]: event,
-    // };
-    // // console.log("update_values", update_values);
-    // let id = cell.row.original.related_record;
-    customMutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/return_or_add_item_to_collection`,
-      method: "post",
-      values: {
-        resource: resource,
-        filters: filters,
-      },
-      successNotification: (data, values) => {
-        // invalidate list
-        invalidate({
-          resource: resource,
-          invalidates: ["list"],
-        });
+  // const handleAddToCollection = (resource: any, filters: any) => {
+  //   // let update_values = {
+  //   //   id: cell.row.original.related_record,
+  //   //   [cell.column.id]: event,
+  //   // };
+  //   // // console.log("update_values", update_values);
+  //   // let id = cell.row.original.related_record;
+  //   customMutate({
+  //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/return_or_add_item_to_collection`,
+  //     method: "post",
+  //     values: {
+  //       resource: resource,
+  //       filters: filters,
+  //     },
+  //     successNotification: (data, values) => {
+  //       // invalidate list
+  //       invalidate({
+  //         resource: resource,
+  //         invalidates: ["list"],
+  //       });
 
-        return {
-          message: `successfully executed.`,
-          description: "Success with no errors",
-          type: "success",
-        };
-      },
-      errorNotification: (data, values) => {
-        return {
-          message: `Something went wrong when executing`,
-          description: "Error",
-          type: "error",
-        };
-      },
-    });
-  };
+  //       return {
+  //         message: `successfully executed.`,
+  //         description: "Success with no errors",
+  //         type: "success",
+  //       };
+  //     },
+  //     errorNotification: (data, values) => {
+  //       return {
+  //         message: `Something went wrong when executing`,
+  //         description: "Error",
+  //         type: "error",
+  //       };
+  //     },
+  //   });
+  // };
 
   // HANDLE DOWNLOAD
   const handleDownload = async (items: any[]) => {
@@ -454,18 +457,16 @@ export function ReactMantineTableView<T extends Record<string, any>>({
 
     // Use FileSaver to save the file
     const blob = new Blob([buffer], { type: fileType });
-    saveAs(blob, activeViews?.name + fileExtension);
+    saveAs(blob, activeSession?.name + fileExtension);
   };
 
   return (
     <>
       <div className="w-max-screen">
-        <div className="flex justify-center">
-          <div>{activeViews?.name}</div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 items-center p-4 gap-4">
-          <div className="hidden md:block"></div>{" "}
-          {/* Empty div for spacing on medium and large screens */}
+        {/* <div className="flex justify-center">
+          <div>{activeSession?.name}</div>
+        </div> */}
+        <div className="flex flex-row justify-center m-4 p-5">
           <SelectTaskComponent
             action_options={action_options}
             identity={identity}
@@ -477,7 +478,6 @@ export function ReactMantineTableView<T extends Record<string, any>>({
             activeActionOption={activeActionOption}
             setActiveActionOption={setActiveActionOption}
           />
-          <div className="hidden md:block"></div>{" "}
         </div>
 
         <MantineProvider
@@ -511,23 +511,6 @@ export function ReactMantineTableView<T extends Record<string, any>>({
               setActiveActionOption={setActiveActionOption}
             />
           )}
-          {/* {activeActionOption?.metadata?.display_component == "Sync" && (
-            <Sync
-              data_items={data_items}
-              setActionType={setActionType}
-              action_options={action_options}
-              identity={identity}
-              open={open}
-              close={close}
-              opened={opened}
-              record={{}}
-              data_table={data_table}
-              action_step={null}
-              variant="default"
-              activeActionOption={activeActionOption}
-              setActiveActionOption={setActiveActionOption}
-            />
-          )} */}
         </Drawer>
       </div>
     </>

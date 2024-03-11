@@ -1,3 +1,4 @@
+"use client";
 import {
   Button,
   LoadingOverlay,
@@ -7,7 +8,7 @@ import {
   Title,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
-import { useCustomMutation, useInvalidate } from "@refinedev/core";
+import { useCustomMutation, useInvalidate, useResource } from "@refinedev/core";
 import { Create, SaveButton, useForm } from "@refinedev/mantine";
 import { format, parseISO } from "date-fns";
 import {
@@ -19,6 +20,15 @@ import { CompleteActionComponentProps } from "@components/interfaces";
 import CodeBlock from "@components/codeblock/codeblock";
 import { IconDatabaseShare, IconMathFunction } from "@tabler/icons-react";
 import ReactMantineTableView from "@components/ReactMantineTableView";
+// import { CopilotTextarea } from "@copilotkit/react-textarea";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+const CopilotTextarea = dynamic(
+  () => import("@copilotkit/react-textarea").then((mod) => mod.CopilotTextarea),
+  {
+    ssr: false, // This disables server-side rendering for this component
+  }
+);
 
 export function Chat<T extends Record<string, any>>({
   setActionType,
@@ -40,6 +50,11 @@ export function Chat<T extends Record<string, any>>({
     isLoading: mutationIsLoading,
     isError: mutationIsError,
   } = useCustomMutation();
+  const [text, setText] = useState("");
+  // useeffect to log out the text on change
+  useEffect(() => {
+    console.log("text", text);
+  }, [text]);
   const {
     getInputProps,
     saveButtonProps,
@@ -54,12 +69,16 @@ export function Chat<T extends Record<string, any>>({
       message: record?.message,
     },
   });
-
+  const { resource, action, id } = useResource();
   const handleSubmit = (e: any) => {
     let request_data = {
       ...activeActionOption,
       id: addSeparator(activeActionOption?.id, "action_options"),
       values: {
+        resource: {
+          name: resource?.name,
+          data_model: resource?.meta?.data_model,
+        },
         ...record,
         ...values, // so i can override original in the form if not disabled
         action_options: [
@@ -68,62 +87,12 @@ export function Chat<T extends Record<string, any>>({
       },
     };
     mutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/chat`,
       method: "post",
       values: request_data,
       successNotification: (data, values) => {
         invalidate({
-          resource: "caesars_bookings",
-          invalidates: ["list"],
-        });
-        close();
-        return {
-          message: `successfully executed.`,
-          description: "Success with no errors",
-          type: "success",
-        };
-      },
-      errorNotification: (data, values) => {
-        return {
-          message: `Something went wrong when executing`,
-          description: "Error",
-          type: "error",
-        };
-      },
-    });
-  };
-
-  const handleSaveOnly = (e: any) => {
-    let request_data = {
-      ...activeActionOption,
-      options: {
-        ...activeActionOption?.options,
-        execution_action_step_names: [
-          "get_collection_info_1",
-          "get_credential_info_1",
-          "update_record_fields_1",
-        ],
-        execute_by: "execution_action_step_names",
-        execution_includes: "save_only",
-      },
-      id: addSeparator(activeActionOption?.id, "action_options"),
-      values: {
-        ...record,
-        ...values, // so i can override original in the form if not disabled
-        action_options: [
-          addSeparator(activeActionOption?.id, "action_options"),
-        ],
-      },
-    };
-    // console.log("mode", "save_only");
-    // console.log("request_data", request_data);
-    mutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
-      method: "post",
-      values: request_data,
-      successNotification: (data, values) => {
-        invalidate({
-          resource: "caesars_bookings",
+          resource: resource?.name,
           invalidates: ["list"],
         });
         // close();
@@ -141,6 +110,60 @@ export function Chat<T extends Record<string, any>>({
         };
       },
     });
+  };
+
+  // const handleSaveOnly = (e: any) => {
+  //   let request_data = {
+  //     ...activeActionOption,
+  //     options: {
+  //       ...activeActionOption?.options,
+  //       execution_action_step_names: [
+  //         "get_collection_info_1",
+  //         "get_credential_info_1",
+  //         "update_record_fields_1",
+  //       ],
+  //       execute_by: "execution_action_step_names",
+  //       execution_includes: "save_only",
+  //     },
+  //     id: addSeparator(activeActionOption?.id, "action_options"),
+  //     values: {
+  //       ...record,
+  //       ...values, // so i can override original in the form if not disabled
+  //       action_options: [
+  //         addSeparator(activeActionOption?.id, "action_options"),
+  //       ],
+  //     },
+  //   };
+  //   // console.log("mode", "save_only");
+  //   // console.log("request_data", request_data);
+  //   mutate({
+  //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
+  //     method: "post",
+  //     values: request_data,
+  //     successNotification: (data, values) => {
+  //       invalidate({
+  //         resource: "caesars_bookings",
+  //         invalidates: ["list"],
+  //       });
+  //       // close();
+  //       return {
+  //         message: `successfully executed.`,
+  //         description: "Success with no errors",
+  //         type: "success",
+  //       };
+  //     },
+  //     errorNotification: (data, values) => {
+  //       return {
+  //         message: `Something went wrong when executing`,
+  //         description: "Error",
+  //         type: "error",
+  //       };
+  //     },
+  //   });
+  // };
+
+  let customTableConfig = {
+    renderTopToolbar: false,
   };
 
   return (
@@ -184,9 +207,9 @@ export function Chat<T extends Record<string, any>>({
         data_items={[]}
         isLoadingDataItems={false}
         updateTableVisibility={() => {}}
-        customTableConfig={{}}
+        customTableConfig={customTableConfig}
       ></ReactMantineTableView>
-      <Textarea
+      {/* <Textarea
         autosize
         minRows={2}
         mt="sm"
@@ -194,6 +217,24 @@ export function Chat<T extends Record<string, any>>({
         {...getInputProps("message")}
         // value={record?.flight_change_pnr_old_text}
         required
+      /> */}
+      <CopilotTextarea
+        className="px-4 py-4"
+        value={text}
+        onValueChange={(value: string) => setText(value)}
+        placeholder="Type your message here..."
+        autosuggestionsConfig={{
+          textareaPurpose:
+            "Travel notes from the user's previous vacations. Likely written in a colloquial style, but adjust as needed.",
+          chatApiConfigs: {
+            suggestionsApiConfig: {
+              forwardedParams: {
+                max_tokens: 20,
+                stop: [".", "?", "!"],
+              },
+            },
+          },
+        }}
       />
     </Create>
   );

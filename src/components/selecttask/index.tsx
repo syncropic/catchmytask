@@ -1,15 +1,13 @@
-import { Button, Drawer, LoadingOverlay, MultiSelect } from "@mantine/core";
+import {
+  Button,
+  Drawer,
+  LoadingOverlay,
+  MultiSelect,
+  ScrollArea,
+} from "@mantine/core";
 import { useCustomMutation, useInvalidate } from "@refinedev/core";
 import { useForm } from "@refinedev/mantine";
-import { useDisclosure } from "@mantine/hooks";
 import { SelectActionOptionComponentProps } from "@components/interfaces";
-import DynamicComponentLoader from "@components/DynamicComponentLoader";
-import RetrieveDatasets from "@components/RetrieveDatasets";
-import SendFlightConfirmation from "@components/SendFlightConfirmation";
-import SendFlightScheduleChangeEmail from "@components/SendFlightScheduleChangeEmail";
-import AddPaymentInformation from "@components/AddPaymentInformation";
-import TestFlightsBooking from "@components/TestFlightsBooking";
-import TestFlightsAndHotelsBooking from "@components/TestFlightsAndHotelsBooking";
 import { useAppStore } from "src/store";
 
 function SelectTaskComponent<T extends Record<string, any>>({
@@ -41,179 +39,30 @@ function SelectTaskComponent<T extends Record<string, any>>({
   } = useForm({
     initialValues: {},
   });
-  const { activeRecord, setActiveRecord } = useAppStore();
+  const { activeRecord, setActiveRecord, activeLayout, setActiveLayout } =
+    useAppStore();
 
   const handleActionChange = (value: string[]) => {
     const item = action_options.find((item) => item.value === value[0]);
     setActiveActionOption(item);
-    setActiveRecord(record);
-    // setActionType("create");
+    setActionType("setActiveActionOption");
+    if (record) {
+      setActiveRecord(record);
+    }
+    activateSection("rightSection");
     setFieldValue("action", value);
   };
-  const [opened, { open, close }] = useDisclosure(false);
+  // handle toggleDisplay
+  const activateSection = (section: string) => {
+    if (activeLayout) {
+      const newLayout = { ...activeLayout };
+      newLayout[section].isDisplayed = true;
+      setActiveLayout(newLayout);
+    }
+  };
 
   return (
     <div className="flex items-end space-x-2">
-      <Drawer
-        opened={opened}
-        onClose={close}
-        title={activeActionOption?.display_name}
-        position="right"
-      >
-        {/* {activeActionOption?.metadata?.display_component && (
-          <DynamicComponentLoader
-            componentName={activeActionOption?.metadata?.display_component
-              .trim()
-              .replace(/\s+/g, "")}
-            componentProps={{
-              data_items: data_items,
-              setActionType: setActionType,
-              action_options: action_options,
-              identity: identity,
-              open: open,
-              close: close,
-              opened: opened,
-              record: record,
-              action_step: null,
-              variant: "default",
-              activeActionOption: activeActionOption,
-              setActiveActionOption: setActiveActionOption,
-            }}
-          />
-        )} */}
-
-        {activeActionOption?.metadata?.display_component ==
-          "RetrieveDatasets" && (
-          <RetrieveDatasets
-            data_items={data_items}
-            setActionType={setActionType}
-            action_options={action_options}
-            identity={identity}
-            open={open}
-            close={close}
-            opened={opened}
-            record={record}
-            data_table={data_table}
-            action_step={null}
-            variant="default"
-            activeActionOption={activeActionOption}
-            setActiveActionOption={setActiveActionOption}
-          />
-        )}
-        {activeActionOption?.metadata?.display_component ==
-          "SendFlightConfirmation" && (
-          <SendFlightConfirmation
-            data_items={data_items}
-            setActionType={setActionType}
-            action_options={action_options}
-            identity={identity}
-            open={open}
-            close={close}
-            opened={opened}
-            record={record}
-            data_table={data_table}
-            action_step={null}
-            variant="default"
-            activeActionOption={activeActionOption}
-            setActiveActionOption={setActiveActionOption}
-          />
-        )}
-
-        {activeActionOption?.metadata?.display_component ==
-          "SendFlightScheduleChangeEmail" && (
-          <SendFlightScheduleChangeEmail
-            data_items={data_items}
-            data_table={data_table}
-            setActionType={setActionType}
-            action_options={action_options}
-            identity={identity}
-            open={open}
-            close={close}
-            opened={opened}
-            record={record}
-            action_step={null}
-            variant="default"
-            activeActionOption={activeActionOption}
-            setActiveActionOption={setActiveActionOption}
-          />
-        )}
-        {activeActionOption?.metadata?.display_component ==
-          "AddPaymentInformation" && (
-          <>
-            <AddPaymentInformation
-              data_items={data_items}
-              setActionType={setActionType}
-              action_options={action_options}
-              identity={identity}
-              open={open}
-              close={close}
-              opened={opened}
-              record={record}
-              data_table={data_table}
-              action_step={null}
-              variant="default"
-              activeActionOption={activeActionOption}
-              setActiveActionOption={setActiveActionOption}
-            />
-          </>
-        )}
-        {activeActionOption?.metadata?.display_component ==
-          "TestFlightsAndHotelsBooking" && (
-          <>
-            <TestFlightsAndHotelsBooking
-              data_items={data_items}
-              setActionType={setActionType}
-              action_options={action_options}
-              identity={identity}
-              open={open}
-              close={close}
-              opened={opened}
-              record={record}
-              data_table={data_table}
-              action_step={null}
-              variant="default"
-              activeActionOption={activeActionOption}
-              setActiveActionOption={setActiveActionOption}
-            />
-          </>
-        )}
-        {activeActionOption?.metadata?.display_component ==
-          "TestFlightsBooking" && (
-          <>
-            <TestFlightsBooking
-              data_items={data_items}
-              setActionType={setActionType}
-              action_options={action_options}
-              identity={identity}
-              open={open}
-              close={close}
-              opened={opened}
-              record={record}
-              data_table={data_table}
-              action_step={null}
-              variant="default"
-              activeActionOption={activeActionOption}
-              setActiveActionOption={setActiveActionOption}
-            />
-          </>
-        )}
-
-        {/*         
-        <RetrieveDatasets
-          data_items={data_items}
-          setActionType={setActionType}
-          action_options={action_options}
-          identity={identity}
-          open={open}
-          close={close}
-          opened={opened}
-          record={record}
-          action_step={null}
-          variant="default"
-          activeActionOption={activeActionOption}
-          setActiveActionOption={setActiveActionOption}
-        /> */}
-      </Drawer>
       <LoadingOverlay
         visible={mutationIsLoading}
         // zIndex={1000}
@@ -223,31 +72,35 @@ function SelectTaskComponent<T extends Record<string, any>>({
         <>
           <MultiSelect
             placeholder="Select action"
+            maxSelectedValues={1}
             searchable={true}
             data={action_options.map((action) => action.display_name)}
             value={getInputProps("action").value}
             onChange={handleActionChange}
             withinPortal={true}
             styles={{
-              input: { width: "200px" }, // Apply fixed width to the input part
-              wrapper: { width: "200px" }, // Optionally ensure the wrapper also has a fixed width
+              input: { width: "200px" },
+              wrapper: { width: "200px" },
             }}
           />
-          <Button
+          {/* <Button
             size="xs"
             onClick={() => {
               // handleRunInline();
               setActionType("run");
-              open();
+              setActiveRecord(record);
+              activateSection("rightSection");
+              // open();
             }}
           >
             RUN
-          </Button>
+          </Button> */}
         </>
       ) : (
         <>
           <MultiSelect
             className="flex-1"
+            maxSelectedValues={1}
             // label="actions"
             placeholder="select action"
             searchable={true}
@@ -256,15 +109,17 @@ function SelectTaskComponent<T extends Record<string, any>>({
             onChange={handleActionChange}
             withinPortal={true}
           />
-          <Button
+          {/* <Button
             size="sm"
             onClick={() => {
               setActionType("run");
-              open();
+              setActiveRecord(record);
+              activateSection("rightSection");
+              // open();
             }}
           >
             RUN
-          </Button>
+          </Button> */}
         </>
       )}
     </div>

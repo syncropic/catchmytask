@@ -71,11 +71,9 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
     <>
       <Show isLoading={isLoading}>
         <Text>
-          <b>sstg_booking_number:</b> {record?.sstg_booking_number}
+          <b>item_id:</b> {record?.trip_id}
         </Text>
-        <Text>
-          <b>passenger:</b> {record?.passenger}
-        </Text>
+
         <Accordion defaultValue="details">
           <Accordion.Item key="details" value="details">
             <Accordion.Control icon={<IconList />}>

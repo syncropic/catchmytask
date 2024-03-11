@@ -2,6 +2,7 @@ import {
   Button,
   LoadingOverlay,
   MultiSelect,
+  OptionalPortal,
   TextInput,
   Textarea,
   Title,
@@ -304,6 +305,7 @@ export function RetrieveDatasets<T extends Record<string, any>>({
         size: "xs",
       }}
       title={<Title order={3}>Configure And Execute Action</Title>}
+      breadcrumb={null}
       goBack={false}
       footerButtons={({ saveButtonProps }) => (
         <div className="flex w-full gap-4">
@@ -333,43 +335,45 @@ export function RetrieveDatasets<T extends Record<string, any>>({
         </div>
       )}
     >
-      {/* {visible && (
+      <div className="flex flex-col align-text-bottom">
+        {/* {visible && (
         <>
           <p>Dummy Modal Content</p>
           <button onClick={close}>Close Modal</button>
         </>
       )} */}
-      <Text>
-        <b>Action: </b>
-        {activeActionOption?.display_name}
-      </Text>
-      <MultiSelect
-        required
-        mt="sm"
-        label="date_type"
-        placeholder="Select date type"
-        data={dateTypeOptions} // Replace with your options source
-        // value={getInputProps("date_type").value}
-        // onChange={handleNameChange}
-        {...getInputProps("date_type")}
-        // required
-      />
-      <DateInput
-        required
-        valueFormat="DD/MM/YYYY HH:mm:ss"
-        label="start_date"
-        placeholder="Start date"
-        {...getInputProps("start_date")}
-      />
-      <DateInput
-        required
-        valueFormat="DD/MM/YYYY HH:mm:ss"
-        label="end_date"
-        placeholder="End date"
-        {...getInputProps("end_date")}
-      />
+        <Text>
+          <b>Action: </b>
+          {activeActionOption?.display_name}
+        </Text>
+        <MultiSelect
+          required
+          mt="sm"
+          label="date_type"
+          placeholder="Select date type"
+          data={dateTypeOptions} // Replace with your options source
+          // value={getInputProps("date_type").value}
+          // onChange={handleNameChange}
+          {...getInputProps("date_type")}
+          // required
+        />
+        <DateInput
+          required
+          valueFormat="DD/MM/YYYY HH:mm:ss"
+          label="start_date"
+          placeholder="Start date"
+          {...getInputProps("start_date")}
+        />
+        <DateInput
+          required
+          valueFormat="DD/MM/YYYY HH:mm:ss"
+          label="end_date"
+          placeholder="End date"
+          {...getInputProps("end_date")}
+        />
 
-      {openedAutomation && <CreateAutomation></CreateAutomation>}
+        {openedAutomation && <CreateAutomation></CreateAutomation>}
+      </div>
     </Create>
   );
 }

@@ -119,6 +119,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   });
 
   const documents = documents_data?.data ?? [];
+  // console.log(documents);
 
   // useMantineReactTable hook
   const table = useMantineReactTable({

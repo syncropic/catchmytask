@@ -50,6 +50,7 @@ import CodeBlock from "@components/codeblock/codeblock";
 import SelectTaskComponent from "@components/selecttask";
 import ReactMantineTableView from "@components/ReactMantineTableView";
 import { ITrip } from "pages/trips/interfaces";
+import Reveal from "@components/Reveal";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const go = useGo();
@@ -71,198 +72,152 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       {
         accessorKey: "trip_id",
         header: "trip_id",
-        Cell: ({ row }) => <div>{row.original.trip_id ?? ""}</div>,
-      },
-      {
-        accessorKey: "flight_id",
-        header: "flight_id",
-        Cell: ({ row }) => <div>{row.original.flight_id ?? ""}</div>,
-      },
-      // {
-      //   accessorKey: "flight_confirmation_message",
-      //   header: "flight_confirmation_message",
-      //   Cell: ({ row }) => {
-      //     return (
-      //       <Anchor
-      //         href={row.original.flight_confirmation_message_url}
-      //         target="_blank"
-      //       >
-      //         {row.original.flight_confirmation_message ?? ""}
-      //       </Anchor>
-      //     );
-      //   },
-      // },
-      // {
-      //   accessorKey: "flight_change_message",
-      //   header: "flight_change_message",
-      //   Cell: ({ row }) => {
-      //     return (
-      //       <Anchor
-      //         href={row.original.flight_change_message_url}
-      //         target="_blank"
-      //       >
-      //         {row.original.flight_change_message ?? ""}
-      //       </Anchor>
-      //     );
-      //   },
-      // },
-      // {
-      //   accessorKey: "booking_type",
-      //   header: "booking_type",
-      //   filterVariant: "multi-select",
-      //   Cell: ({ row }) => <div>{row.original.booking_type ?? ""}</div>,
-      // },
-      // {
-      //   accessorKey: "sst_itinerary_page_url",
-      //   header: "sst_trip_page",
-      //   Cell: ({ row }) => {
-      //     return (
-      //       <Anchor href={row.original.sst_itinerary_page_url} target="_blank">
-      //         {row.original.sst_itinerary_page_url ? "open" : ""}
-      //       </Anchor>
-      //     );
-      //   },
-      // },
-      // {
-      //   accessorKey: "sst_internal_id",
-      //   header: "sst_internal_id",
-      //   Cell: ({ row }) => (
-      //     <Anchor component={Text}>
-      //       <Text
-      //         size="sm"
-      //         onClick={() => {
-      //           go({
-      //             to: {
-      //               resource: "caesars_bookings",
-      //               action: "show",
-      //               id: row.original.related_record,
-      //             },
-      //             type: "push",
-      //           });
-      //         }}
-      //       >
-      //         {row.original.sst_internal_id}
-      //       </Text>
-      //     </Anchor>
-      //   ),
-      // },
-      // {
-      //   accessorKey: "sst_booking_full_name",
-      //   header: "sst_booking_full_name",
-      //   Cell: ({ row }) => (
-      //     <div>{row.original.sst_booking_full_name ?? ""}</div>
-      //   ),
-      // },
-      {
-        accessorKey: "flight_departure_airport",
-        header: "flight_departure_airport",
         Cell: ({ row }) => (
-          <div>{row.original.flight_departure_airport ?? ""}</div>
+          <Anchor component={Text}>
+            <Text
+              size="sm"
+              onClick={() => {
+                go({
+                  to: {
+                    resource: "trips",
+                    action: "show",
+                    id: row.original.trip_id,
+                  },
+                  type: "push",
+                });
+              }}
+            >
+              {row.original.trip_id}
+            </Text>
+          </Anchor>
         ),
       },
       {
+        accessorKey: "departure_location",
+        header: "departure_location",
+        Cell: ({ row }) => <div>{row.original.departure_location ?? ""}</div>,
+      },
+      {
         accessorFn: (row) => {
-          const sDay = new Date(row?.flight_departure_datetime ?? "");
+          const sDay = new Date(row?.departure_datetime ?? "");
           sDay.setHours(0, 0, 0, 0);
           return sDay;
         },
-        header: "flight_departure_datetime",
+        header: "departure_datetime",
         filterVariant: "date-range",
         sortingFn: "datetime",
         Cell: ({ row }) => (
           <Text size="sm">
-            {formatDateTimeAsDate(row.original?.flight_departure_datetime)}
+            {formatDateTimeAsDate(row.original?.departure_datetime)}
           </Text>
         ),
       },
       {
-        accessorKey: "flight_arrival_airport",
-        header: "flight_arrival_airport",
-        Cell: ({ row }) => (
-          <div>{row.original.flight_arrival_airport ?? ""}</div>
-        ),
+        accessorKey: "arrival_location",
+        header: "arrival_location",
+        Cell: ({ row }) => <div>{row.original.arrival_location ?? ""}</div>,
       },
       {
         accessorFn: (row) => {
-          const sDay = new Date(row?.flight_arrival_datetime ?? "");
+          const sDay = new Date(row?.return_datetime ?? "");
           sDay.setHours(0, 0, 0, 0);
           return sDay;
         },
-        header: "flight_arrival_datetime",
+        header: "return_datetime",
         filterVariant: "date-range",
         sortingFn: "datetime",
         Cell: ({ row }) => (
           <Text size="sm">
-            {formatDateTimeAsDate(row.original?.flight_arrival_datetime)}
+            {formatDateTimeAsDate(row.original?.return_datetime)}
           </Text>
         ),
       },
       {
-        accessorKey: "flight_direction",
-        header: "flight_direction",
+        accessorKey: "is_roundtrip",
+        header: "is_roundtrip",
         filterVariant: "multi-select",
-        Cell: ({ row }) => <div>{row.original.flight_direction ?? ""}</div>,
+        Cell: ({ row }) => <div>{row.original.is_roundtrip ?? ""}</div>,
       },
       {
-        accessorKey: "flight_booking_class",
-        header: "flight_booking_class",
+        accessorKey: "trip_passengers",
+        header: "trip_passengers",
         filterVariant: "multi-select",
-        Cell: ({ row }) => <div>{row.original.flight_booking_class ?? ""}</div>,
+        Cell: ({ row }) => {
+          return (
+            <Reveal
+              data={row.original.trip_passengers}
+              resource="passengers"
+            ></Reveal>
+          );
+        },
       },
-      // {
-      //   accessorFn: (row) => {
-      //     const sDay = new Date(row?.sst_departure_date_pst ?? "");
-      //     sDay.setHours(0, 0, 0, 0);
-      //     return sDay;
-      //   },
-      //   header: "sst_departure_date_pst",
-      //   filterVariant: "date-range",
-      //   sortingFn: "datetime",
-      //   Cell: ({ row }) => (
-      //     <Text size="sm">
-      //       {formatDateTimeAsDate(row.original?.sst_departure_date_pst)}
-      //     </Text>
-      //   ),
-      // },
-      // {
-      //   accessorKey: "flight_airline_reference_code",
-      //   header: "flight_airline_reference_code",
-      //   Cell: ({ row }) => (
-      //     <div>{row.original.flight_airline_reference_code ?? ""}</div>
-      //   ),
-      // },
-
-      // {
-      //   accessorKey: "flight_change_assigned_agent",
-      //   header: "flight_change_assigned_agent",
-      //   filterVariant: "multi-select",
-      //   Cell: ({ row }) => (
-      //     <div>{row.original.flight_change_assigned_agent ?? ""}</div>
-      //   ),
-      // },
-      // {
-      //   accessorKey: "flight_change_status",
-      //   header: "flight_change_status",
-      //   filterVariant: "multi-select",
-      //   Cell: ({ row }) => <div>{row.original.flight_change_status ?? ""}</div>,
-      // },
-      // {
-      //   accessorKey: "flight_change_type",
-      //   header: "flight_change_type",
-      //   filterVariant: "multi-select",
-      //   Cell: ({ row }) => <div>{row.original.flight_change_type ?? ""}</div>,
-      // },
-      // {
-      //   accessorKey: "hotel_pnr",
-      //   header: "hotel_pnr",
-      //   Cell: ({ row }) => <div>{row.original.hotel_pnr ?? ""}</div>,
-      // },
-      // {
-      //   accessorKey: "carrier_type",
-      //   header: "carrier_type",
-      //   filterVariant: "multi-select",
-      //   Cell: ({ row }) => <div>{row.original.carrier_type ?? ""}</div>,
-      // },
+      {
+        accessorKey: "flight_segments",
+        header: "flight_segments",
+        // filterVariant: "multi-select",
+        Cell: ({ row }) => {
+          return (
+            <Reveal
+              data={row.original.flight_segments}
+              resource="flight_segments"
+            ></Reveal>
+          );
+        },
+      },
+      {
+        accessorKey: "hotel_segments",
+        header: "hotel_segments",
+        // filterVariant: "multi-select",
+        Cell: ({ row }) => {
+          return (
+            <Reveal
+              data={row.original.hotel_segments}
+              resource="hotel_segments"
+            ></Reveal>
+          );
+        },
+      },
+      {
+        accessorKey: "payment_methods",
+        header: "payment_methods",
+        // filterVariant: "multi-select",
+        Cell: ({ row }) => {
+          return (
+            <Reveal
+              data={row.original.payment_methods}
+              resource="payment_methods"
+            ></Reveal>
+          );
+        },
+      },
+      {
+        accessorKey: "trip_author",
+        header: "trip_author",
+        filterVariant: "multi-select",
+        Cell: ({ row }) => <div>{row.original.trip_author ?? ""}</div>,
+      },
+      {
+        accessorFn: (row) => new Date(row?.trip_created_date ?? ""),
+        header: "trip_created_date",
+        filterVariant: "date-range",
+        sortingFn: "datetime",
+        Cell: ({ row }) => (
+          <Text size="sm">
+            {formatDateTimeAsDateTime(row.original?.trip_created_date)}
+          </Text>
+        ),
+      },
+      {
+        accessorFn: (row) => new Date(row?.trip_updated_date ?? ""),
+        header: "trip_updated_date",
+        filterVariant: "date-range",
+        sortingFn: "datetime",
+        Cell: ({ row }) => (
+          <Text size="sm">
+            {formatDateTimeAsDateTime(row.original?.trip_updated_date)}
+          </Text>
+        ),
+      },
     ],
     [activeViews]
   );

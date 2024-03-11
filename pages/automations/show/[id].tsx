@@ -5,6 +5,7 @@ import {
   useCustomMutation,
   useGetIdentity,
   useDelete,
+  useGo,
 } from "@refinedev/core";
 import { Show, TextField, DateField } from "@refinedev/mantine";
 import {
@@ -53,6 +54,7 @@ import {
   addSeparator,
   formatDateTimeAsDate,
   formatDateTimeAsDateTime,
+  updateTableVisibility,
 } from "src/utils";
 import CodeBlock from "src/components/codeblock/codeblock";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -62,346 +64,181 @@ import { parseISO, format } from "date-fns";
 import { useInvalidate } from "@refinedev/core";
 import { renderOperationDetails } from "src/components/actionstep";
 import { useAppStore } from "src/store";
-
-interface IActionStep {
-  request_object: any;
-  id: string;
-  status: string;
-  updated_at: string;
-  created_at: string;
-  results: any;
-}
-
-interface IActionOption {
-  // [key: string]: any;
-  request_object: any;
-}
-
-type IIdentity = {
-  email: string;
-};
+import { ITestRun } from "pages/test_runs/interfaces";
+import ReactMantineTableView from "@components/ReactMantineTableView";
+import { IView } from "pages/views/interfaces";
 
 export const PageShow: React.FC<IResourceComponentsProps> = () => {
-  const { data: identity } = useGetIdentity<IIdentity>();
-  const actionType = useAppStore((state) => state.actionType);
-  const setActionType = useAppStore((state) => state.setActionType);
-  const { mutate: mutateDelete } = useDelete();
-
-  const invalidate = useInvalidate();
-
-  const { mutate, isLoading: mutationIsLoading, isError } = useCustomMutation();
-
+  // record
   const { id } = useParsed();
   const { queryResult } = useShow();
-  const { data, isLoading } = queryResult;
+  const { data: dataRecord, isLoading } = queryResult;
 
-  const record = data?.data;
-  // console.log("record", record);
+  const record = dataRecord?.data;
 
-  // action_options data
+  const go = useGo();
   const {
-    data: executingRecordData,
-    isLoading: isLoadingExecutingRecordData,
-    isError: isErrorExecutingRecordData,
-  } = useOne<IActionOption, HttpError>({
-    resource: "action_runs",
-    id: record?.executing_record,
+    actionType,
+    setActionType,
+    activeViews,
+    setActiveViews,
+    opened: global_opened,
+    setOpened,
+    activeViewStats,
+    setActiveViewStats,
+    activeActionOption,
+    setActiveActionOption,
+  } = useAppStore();
+
+  const {
+    data: dataView,
+    isLoading: isLoadingView,
+    isError: isErrorView,
+  } = useOne<IView, HttpError>({
+    resource: "views",
+    id: "views:u3nmcujfok427omee1wu",
   });
 
-  const executing_record = executingRecordData?.data ?? [];
+  const view = dataView?.data;
+  // console.log("view", view);
+  // // set active views with useeffect
+  // useEffect(() => {
+  //   setActiveViews({
+  //     ...activeViews,
+  //     show: true,
+  //   });
+  // }, [view]);
 
-  // additions
-  const {
-    data: executeData,
-    isLoading: isLoadingExecuteData,
-    isError: isErrorExecuteData,
-  } = useList<IActionStep, HttpError>({
-    resource: "execute",
-    filters: [
-      {
-        field: "in",
-        operator: "eq",
-        value: addSeparator(id, "task"),
-      },
-    ],
-  });
-
-  // Example data
-  const execute_data = executeData?.data ?? [];
-
-  const handleRun = (task: any, action_step: any, record: any) => {
-    // console.log("task", task);
-    mutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
-      method: "post",
-      values: {
-        ...task,
-        options: {
-          ...task?.options,
-          create_database_record: false,
-          execution_type: "action_step",
-          execution_orders_range: [
-            action_step?.execution_order,
-            action_step?.execution_order,
-          ],
-        },
-        task: {
-          ...task?.task,
-          id: action_step?.in,
-        },
-      },
-      successNotification: (data, values) => {
-        invalidate({
-          resource: "execute",
-          invalidates: ["list"],
-        });
-        return {
-          message: `successfully run.`,
-          description: "Success with no errors",
-          type: "success",
-        };
-      },
-      errorNotification: (data, values) => {
-        return {
-          message: `Something went wrong when running`,
-          description: "Error",
-          type: "error",
-        };
-      },
-    });
-  };
-  // console.log(execute_data);
-  const columns = useMemo<MRT_ColumnDef<IActionStep>[]>(
+  const data_columns = useMemo<MRT_ColumnDef<ITestRun>[]>(
     () => [
-      // { accessorKey: "id", header: "id" },
       {
-        id: "actions",
-        accessorKey: "id",
-        enableColumnFilter: false,
-        header: "quick actions",
-        Cell: ({ renderedCellValue, row }) => (
-          <Group spacing="xs" noWrap>
-            <Button
-              size="xs"
-              variant="outline"
-              color={row.original.status === "complete" ? "green" : "blue"}
-              onClick={() =>
-                handleRun(
-                  // executing_record && "request_object" in executing_record
-                  //   ? executing_record.request_object
-                  //   : null,
-                  record?.request_object,
-                  row.original,
-                  record
-                )
-              }
+        accessorKey: "test_id",
+        header: "test_id",
+        Cell: ({ row }) => <div>{row.original.test_id ?? ""}</div>,
+      },
+      {
+        accessorKey: "test_name",
+        header: "test_name",
+        Cell: ({ row }) => <div>{row.original.test_name ?? ""}</div>,
+      },
+      {
+        accessorKey: "test_result",
+        header: "test_result_summary",
+        Cell: ({ row }) => <div>{row.original.test_result ?? ""}</div>,
+      },
+      {
+        accessorKey: "test_result_url",
+        header: "test_result_url",
+        Cell: ({ row }) => {
+          return (
+            <Anchor href={row.original.test_result_url} target="_blank">
+              {row.original.test_result_url ? "view_result" : ""}
+            </Anchor>
+          );
+        },
+      },
+      {
+        accessorKey: "test_intermediate_result_url",
+        header: "test_intermediate_result_url",
+        Cell: ({ row }) => {
+          return (
+            <Anchor
+              href={row.original.test_intermediate_result_url}
+              target="_blank"
             >
-              Run
-            </Button>
-
-            <Button onClick={handleComingSoon} size="xs" variant="outline">
-              Configure
-            </Button>
-          </Group>
+              {row.original.test_intermediate_result_url ? "view_result" : ""}
+            </Anchor>
+          );
+        },
+      },
+      {
+        accessorFn: (row) => new Date(row?.test_start_datetime ?? ""),
+        header: "test_start_datetime",
+        filterVariant: "date-range",
+        sortingFn: "datetime",
+        Cell: ({ row }) => (
+          <Text size="sm">
+            {formatDateTimeAsDateTime(row.original?.test_start_datetime)}
+          </Text>
         ),
       },
 
-      { accessorKey: "name", header: "name" },
-      { accessorKey: "kind", header: "kind" },
-      { accessorKey: "status", header: "status" },
-      { accessorKey: "execution_order", header: "execution_order" },
-      { accessorKey: "in", header: "task" },
-      { accessorKey: "out", header: "function" },
       {
-        accessorKey: "created_at",
-        header: "created_at",
+        // accessorFn: (row) => {
+        //   const sDay = new Date(row?.test_end_datetime ?? "");
+        //   sDay.setHours(0, 0, 0, 0);
+        //   return sDay;
+        // },
+        accessorFn: (row) => new Date(row?.test_end_datetime ?? ""),
+        header: "test_end_datetime",
+        filterVariant: "date-range",
+        sortingFn: "datetime",
         Cell: ({ row }) => (
           <Text size="sm">
-            {format(parseISO(row.original.created_at), "yyyy-MM-dd hh:mm a")}
+            {formatDateTimeAsDateTime(row.original?.test_end_datetime)}
           </Text>
         ),
       },
       {
-        accessorKey: "updated_at",
-        header: "updated_at",
+        accessorKey: "test_duration_seconds",
+        header: "test_duration_seconds",
         Cell: ({ row }) => (
-          <Text size="sm">
-            {format(parseISO(row.original.updated_at), "yyyy-MM-dd hh:mm a")}
-          </Text>
+          <div>{row.original.test_duration_seconds ?? ""}</div>
         ),
+      },
+      {
+        accessorKey: "test_parameters_id",
+        header: "test_parameters_id",
+        Cell: ({ row }) => <div>{row.original.test_parameters_id ?? ""}</div>,
+      },
+      {
+        accessorKey: "test_item_id",
+        header: "test_item_id",
+        Cell: ({ row }) => <div>{row.original.test_item_id ?? ""}</div>,
       },
     ],
-    [executingRecordData, executeData]
+    [activeViews]
   );
-  // console.log("executing_record_item", executing_record_item);
-  // useMantineReactTable hook
-  const table = useMantineReactTable({
-    columns,
-    enableRowSelection: true,
-    enableColumnOrdering: true,
-    enableGlobalFilter: true,
-    enableColumnFilters: true,
-    enableRowActions: true,
-    enableStickyHeader: true,
-    enableColumnFilterModes: true,
-    enableFacetedValues: true,
-    enableGrouping: true,
-    enablePinning: true,
-    paginationDisplayMode: "pages",
-    positionToolbarAlertBanner: "bottom",
-    mantinePaginationProps: {
-      radius: "xl",
-      size: "md",
-    },
-    mantineSearchTextInputProps: {
-      placeholder: "Search Actions",
-    },
-    mantineTableContainerProps: { sx: { maxHeight: "500px" } },
-    state: { isLoading: mutationIsLoading },
+
+  const {
+    data,
+    isLoading: isLoadingDataItems,
+    isError: isErrorLoadingDataItems,
+  } = useList<ITestRun, HttpError>({
+    resource: "test_runs",
+    // query: {
+    //   filter: {
+    //     test_id: id,
+    //   },
+    // },
+  });
+
+  const data_items = data?.data ?? [];
+  let customTableConfig = {
     initialState: {
+      sorting: [{ id: "test_end_datetime", desc: true }],
       density: "xs",
       showGlobalFilter: true,
       showColumnFilters: true,
       pagination: { pageSize: 30, pageIndex: 0 },
-      sorting: [
-        {
-          id: "execution_order", // Column ID to sort by
-          desc: false, // false for ascending, true for descending
-        },
-      ],
+      columnPinning: {
+        left: [
+          "mrt-row-select",
+          "mrt-row-expand",
+          "mrt-row-actions",
+          "test_id",
+        ],
+      },
     },
-    data: execute_data,
-    renderDetailPanel: ({ row }) => (
-      <div>
-        {row.original.results && row.original.results.items ? (
-          row.original.results.items.map((item: any, index: any) => (
-            <div key={index} className="w-full">
-              {renderOperationDetails(item.file_operation, item)}
-            </div>
-          ))
-        ) : (
-          <Text>No results available.</Text>
-        )}
-      </div>
-    ),
-    renderRowActionMenuItems: ({ row }) => (
-      <>
-        <Menu.Item
-          onClick={() => {
-            setActionType("add_to");
-            open();
-          }}
-          icon={<IconCirclePlus style={{ width: rem(14), height: rem(14) }} />}
-        >
-          Add To
-        </Menu.Item>
-        <Menu.Item
-          onClick={() => {
-            setActionType("chat");
-            open();
-          }}
-          icon={
-            <IconMessageCircle style={{ width: rem(14), height: rem(14) }} />
-          }
-        >
-          Chat
-        </Menu.Item>
-        <Menu.Item
-          onClick={() => {
-            mutateDelete({
-              resource: "execute",
-              id: row.original.id,
-            });
-          }}
-          icon={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
-        >
-          Delete
-        </Menu.Item>
-      </>
-    ),
-    renderTopToolbar: ({ table }) => {
-      const handleDeactivate = () => {
-        table.getSelectedRowModel().flatRows.map((row) => {
-          alert("deactivating " + row.getValue("name"));
-        });
-      };
-
-      const handleDelete = () => {
-        table.getSelectedRowModel().flatRows.map((row) => {
-          // console.log("deleting " + row.getValue("id"));
-          mutateDelete({
-            resource: "execute",
-            id: row.original.id,
-          });
-        });
-      };
-      // const handleBulkRun = () => {
-      //   // Step 1: Make a copy of flatRows and sort it
-      //   const sortedRows = [...table.getSelectedRowModel().flatRows].sort(
-      //     (a, b) => {
-      //       return a.original.execution_order - b.original.execution_order;
-      //     }
-      //   );
-
-      //   sortedRows.forEach((row) => {
-      //     console.log(
-      //       // "running " + row.original.name + " " + row.original.execution_order
-      //     );
-      //     // handleRun(report_option, row.original, record);
-      //   });
-      // };
-
-      return (
-        <Flex p="md" justify="space-between">
-          <Flex gap="xs">
-            {/* import MRT sub-components */}
-            <MRT_GlobalFilterTextInput table={table} />
-            <MRT_ToggleFiltersButton table={table} />
-          </Flex>
-          <Flex sx={{ gap: "8px" }}>
-            <Button
-              color="red"
-              disabled={!table.getIsSomeRowsSelected() || mutationIsLoading}
-              onClick={handleDelete}
-              variant="filled"
-            >
-              Delete
-            </Button>
-            <Button
-              color="green"
-              disabled={!table.getIsSomeRowsSelected() || mutationIsLoading}
-              // onClick={handleBulkRun}
-              variant="filled"
-            >
-              Run
-            </Button>
-          </Flex>
-        </Flex>
-      );
-    },
-  });
-  const handleComingSoon = () => {
-    alert("Coming Soon");
   };
 
   return (
     <>
       <Show isLoading={isLoading}>
-        <Text>
+        {/* <Text>
           <b>Id:</b> {record?.id}
         </Text>
-        <Text>
-          <b>Name:</b> {record?.name}
-        </Text>
-        <Text>
-          <b>Author:</b> {record?.author}
-        </Text>
-        <Text>
-          <b>Updated At:</b> {record?.updated_at}
-        </Text>
-        {/* <Text>
-          Summary and reports results links will be available here.
-        </Text> */}
+        
         <Accordion defaultValue="actions">
           <Accordion.Item key="details" value="details">
             <Accordion.Control icon={<IconList />}>
@@ -416,23 +253,18 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
               Runs
             </Accordion.Control>
             <Accordion.Panel>
-              {executing_record ? (
-                <>
-                  <MantineProvider
-                    theme={{
-                      colorScheme: "light",
-                      primaryColor: "blue",
-                    }}
-                  >
-                    <MantineReactTable table={table} />
-                  </MantineProvider>
-                </>
-              ) : (
-                "Loading..."
-              )}
+              <ReactMantineTableView
+                data_columns={data_columns}
+                view={view}
+                resource="test_runs"
+                data_items={data_items}
+                isLoadingDataItems={isLoadingDataItems}
+                updateTableVisibility={updateTableVisibility}
+                customTableConfig={customTableConfig}
+              ></ReactMantineTableView>
             </Accordion.Panel>
           </Accordion.Item>
-        </Accordion>
+        </Accordion> */}
       </Show>
     </>
   );

@@ -15,7 +15,7 @@ import { authOptions } from "../api/auth/[...nextauth]";
 
 export default function Login() {
   const { data: session } = useSession();
-  const go = useGo();
+  // const go = useGo();
   const { isLoading, data: isAuthenticatedData } = useIsAuthenticated();
 
   const content = session ? (

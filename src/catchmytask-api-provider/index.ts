@@ -8,6 +8,12 @@ import { stringify } from "query-string";
 type MethodTypes = "get" | "delete" | "head" | "options";
 type MethodTypesWithBody = "post" | "put" | "patch";
 
+// Function to get the stored token
+const getToken = () => {
+  let auth_token = localStorage.getItem("cmt_auth_token");
+  return auth_token ? JSON.parse(auth_token).access_token : "";
+};
+
 export const dataProvider = (
   apiUrl: string,
   // db: any = getDb(),
@@ -17,12 +23,14 @@ export const dataProvider = (
   "createMany" | "updateMany" | "deleteMany"
 > => ({
   getList: async ({ resource, pagination, filters, sorters, meta }) => {
-    const url = `${apiUrl}/${resource}`;
+    // const url = `${apiUrl}/${resource}`;
+    const url = `${apiUrl}/query`;
 
     // const { current = 1, pageSize = 10, mode = "server" } = pagination ?? {};
 
     const { headers: headersFromMeta, method } = meta ?? {};
-    const requestMethod = (method as MethodTypes) ?? "get";
+    // const requestMethod = (method as MethodTypes) ?? "get";
+    const requestMethod = (method as MethodTypes) ?? "post";
 
     const queryFilters = generateFilter(filters);
 
@@ -45,53 +53,37 @@ export const dataProvider = (
       query._order = _order.join(",");
     }
 
-    const { data, headers } = await httpClient[requestMethod](
-      `${url}?${stringify(query)}&${stringify(queryFilters)}`,
-      {
-        headers: headersFromMeta,
-      }
-    );
+    // add Authorization header
+    const headers_with_Authorization = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+      ...headersFromMeta,
+    };
+    let payload = {
+      query: resource,
+      query_language: "resource",
+      credentials: "onewurld_automated_reports",
+    };
 
+    // const { data, headers } = await httpClient[requestMethod](
+    //   `${url}?${stringify(query)}&${stringify(queryFilters)}`,
+    //   payload,
+    //   {
+    //     headers: headers_with_Authorization,
+    //   }
+    // );
+
+    const { data, headers } = await httpClient.post(url, payload, {
+      headers: headers_with_Authorization,
+    });
+
+    // console.log("data length", data?.length);
+    // console.log("data", data);
     const total = +headers["x-total-count"];
-
     return {
       data,
       total: total || data.length,
     };
-    // console.log(queryFilters);
-    // Select all records from a table
-    // const data = await db.select(resource);
-
-    // // SURREALDB
-    // const queryFiltersString = null;
-    // let queryString = null;
-
-    // // Check if the object has at least one key
-    // if (Object.keys(queryFilters).length > 0) {
-    //   // console.log(queryFilters);
-    //   // create a string of the filters i.e key = value
-    //   const queryFiltersString = Object.keys(queryFilters)
-    //     .map((key) => `${key} = '${queryFilters[key]}'`)
-    //     .join(" AND ");
-    //   // console.log(queryFiltersString);
-    //   queryString = `SELECT * FROM ${resource} WHERE ${queryFiltersString}`;
-    // } else {
-    //   queryString = `SELECT * FROM ${resource}`;
-    // }
-
-    // const dataResult = await db.query(queryString);
-    // // console.log(data[0]);
-    // // console.log(data);
-    // // console.log(dataResult[0][1]);
-    // const data = dataResult[0];
-    // // remove prefix from the id of the record in data
-    // data.map((record: any) => {
-    //   record.id = removeSeparator(record.id);
-    // });
-    // return {
-    //   data: data,
-    //   total: data.length,
-    // };
   },
 
   getMany: async ({ resource, ids, meta }) => {
@@ -115,13 +107,18 @@ export const dataProvider = (
     const url = `${apiUrl}/${resource}`;
 
     const { headers, method } = meta ?? {};
+    // add Authorization header
+    const headers_with_Authorization = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+      ...headers,
+    };
+    console.log(headers_with_Authorization);
     const requestMethod = (method as MethodTypesWithBody) ?? "post";
 
     const { data } = await httpClient[requestMethod](url, variables, {
-      headers,
+      headers: headers_with_Authorization,
     });
-    // const [data] = await db.select("page:3u4ta9099ikeg0cgy4dm");
-    // const [data]: never[] = [];
 
     return {
       data,
@@ -215,24 +212,32 @@ export const dataProvider = (
       requestUrl = `${requestUrl}&${stringify(query)}`;
     }
 
+    // add Authorization header
+    const headers_with_Authorization = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+      ...headers,
+    };
+    console.log(headers_with_Authorization);
+
     let axiosResponse;
     switch (method) {
       case "put":
       case "post":
       case "patch":
         axiosResponse = await httpClient[method](url, payload, {
-          headers,
+          headers: headers_with_Authorization,
         });
         break;
       case "delete":
         axiosResponse = await httpClient.delete(url, {
           data: payload,
-          headers: headers,
+          headers: headers_with_Authorization,
         });
         break;
       default:
         axiosResponse = await httpClient.get(requestUrl, {
-          headers,
+          headers: headers_with_Authorization,
         });
         break;
     }

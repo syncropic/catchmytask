@@ -1,16 +1,17 @@
 export interface ITrip {
-  related_record: string;
-  flight_id: string;
-  flight_departure_airport: string;
-  flight_arrival_airport: string;
-  flight_departure_datetime: Date | string;
-  flight_arrival_datetime: Date | string;
-  flight_author: string;
-  flight_booking_class: string;
-  flight_cabin_option: string;
-  flight_type: string;
-  flight_direction: string;
+  departure_location: string;
+  arrival_location: string;
+  departure_datetime: Date | string;
+  return_datetime: Date | string;
+  is_roundtrip: boolean;
+  flight_segments: string;
+  hotel_segments: string;
+  payment_methods: string;
+  trip_passengers: string;
+  trip_author: string;
   trip_id: string;
+  trip_created_date: Date | string;
+  trip_updated_date: Date | string;
 }
 
 // export a simple react component

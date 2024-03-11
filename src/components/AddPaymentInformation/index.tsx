@@ -2,6 +2,8 @@ import {
   Button,
   LoadingOverlay,
   MultiSelect,
+  NumberInput,
+  Select,
   TextInput,
   Textarea,
   Title,
@@ -53,17 +55,14 @@ export function AddPaymentInformation<T extends Record<string, any>>({
       author_email: identity?.email,
       sst_internal_id: record?.sst_internal_id,
       sst_booking_full_name: record?.sst_booking_full_name,
-
-      // contact_email: record?.contact_email,
-      // flight_pnr: record?.flight_pnr,
-      // flight_change_pnr_old_text: record?.flight_change_pnr_old_text,
-      // flight_change_pnr_new_text: record?.flight_change_pnr_new_text,
-      // flight_change_assigned_agent: record?.flight_change_assigned_agent,
-      // flight_change_remarks: record?.flight_change_remarks,
-      // flight_change_status: record?.flight_change_status,
-      // flight_change_type: record?.flight_change_type,
-      // flight_change_message: record?.flight_change_message,
-      // flight_airline_reference_code: record?.flight_airline_reference_code,
+      flight_pnr: record?.flight_pnr,
+      payment_type: "cc_usage",
+      payment_currency: "USD",
+      payment_usage: "issue tickets",
+      payment_author: identity?.email,
+      payment_comments: "",
+      payment_account_id: "CA5347865363914901",
+      payment_status: "charged",
     },
   });
 
@@ -108,16 +107,16 @@ export function AddPaymentInformation<T extends Record<string, any>>({
   const handleSaveOnly = (e: any) => {
     let request_data = {
       ...activeActionOption,
-      options: {
-        ...activeActionOption?.options,
-        execution_action_step_names: [
-          "get_collection_info_1",
-          "get_credential_info_1",
-          "update_record_fields_1",
-        ],
-        execute_by: "execution_action_step_names",
-        execution_includes: "save_only",
-      },
+      // options: {
+      //   ...activeActionOption?.options,
+      //   execution_action_step_names: [
+      //     "get_collection_info_1",
+      //     "get_credential_info_1",
+      //     "update_record_fields_1",
+      //   ],
+      //   execute_by: "execution_action_step_names",
+      //   execution_includes: "save_only",
+      // },
       id: addSeparator(activeActionOption?.id, "action_options"),
       values: {
         ...record,
@@ -130,7 +129,7 @@ export function AddPaymentInformation<T extends Record<string, any>>({
     // console.log("mode", "save_only");
     // console.log("request_data", request_data);
     mutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
+      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/save`,
       method: "post",
       values: request_data,
       successNotification: (data, values) => {
@@ -161,7 +160,7 @@ export function AddPaymentInformation<T extends Record<string, any>>({
       isLoading={mutationIsLoading}
       saveButtonProps={{
         disabled: saveButtonProps?.disabled,
-        onClick: handleSubmit,
+        onClick: handleSaveOnly,
         size: "xs",
       }}
       title={<Title order={3}>Configure And Execute Action</Title>}
@@ -203,6 +202,19 @@ export function AddPaymentInformation<T extends Record<string, any>>({
         disabled
         // required
       />
+      <TextInput
+        required
+        mt="sm"
+        label="flight_pnr"
+        // placeholder="Select date type"
+        // data={dateTypeOptions} // Replace with your options source
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("flight_pnr")}
+        // value={record?.sst_internal_id}
+        disabled
+        // required
+      />
       {/* <TextInput
         required
         mt="sm"
@@ -229,6 +241,112 @@ export function AddPaymentInformation<T extends Record<string, any>>({
         disabled
         // required
       />
+      <Select
+        required
+        searchable
+        mt="sm"
+        label="payment_type"
+        // placeholder="Select date type"
+        data={["cc_usage", "refund"]} // Replace with your options source
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("payment_type")}
+        // value={record?.sst_booking_full_name}
+        // disabled
+        // required
+      />
+      <Select
+        required
+        searchable
+        mt="sm"
+        label="payment_status"
+        // placeholder="Select date type"
+        data={["charged", "refunded"]} // Replace with your options source
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("payment_status")}
+        // value={record?.sst_booking_full_name}
+        // disabled
+        // required
+      />
+      <TextInput
+        required
+        mt="sm"
+        label="payment_account_id"
+        // placeholder="Select date type"
+        // data={dateTypeOptions} // Replace with your options source
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("payment_account_id")}
+        // value={record?.sst_booking_full_name}
+        // disabled
+        // required
+      />
+      <Select
+        required
+        searchable
+        mt="sm"
+        label="payment_usage"
+        // placeholder="Select date type"
+        data={["issue tickets", "flight amendment", "smart booking", "test"]} // Replace with your options source
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("payment_usage")}
+        // value={record?.sst_booking_full_name}
+        // disabled
+        // required
+      />
+      <TextInput
+        required
+        mt="sm"
+        label="payment_author"
+        // placeholder="Select date type"
+        // data={dateTypeOptions} // Replace with your options source
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("payment_author")}
+        // value={record?.sst_booking_full_name}
+        disabled
+        // required
+      />
+      <Select
+        required
+        searchable
+        mt="sm"
+        label="payment_currency"
+        // placeholder="Select date type"
+        data={["USD", "CAD"]} // Replace with your options source
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("payment_currency")}
+        // value={record?.sst_booking_full_name}
+        // disabled
+        // required
+      />
+      <NumberInput
+        required
+        mt="sm"
+        label="payment_amount"
+        precision={4}
+        step={0.05}
+        // placeholder="Select date type"
+        // data={dateTypeOptions} // Replace with your options source
+        // value={getInputProps("date_type").value}
+        // onChange={handleNameChange}
+        {...getInputProps("payment_amount")}
+        // value={record?.sst_booking_full_name}
+        // disabled
+        // required
+      />
+      <Textarea
+        autosize
+        minRows={2}
+        mt="sm"
+        label="payment_comments"
+        {...getInputProps("payment_comments")}
+        // required
+      />
+
       {/*       
       <TextInput
         required

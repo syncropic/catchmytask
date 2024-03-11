@@ -1,8 +1,18 @@
-export interface IView {
+export interface IFieldConfiguration {
+  data_type: "varchar" | "datetime"; // Adjust this union type based on all possible data types
+  field_name: string;
+  pin?: "left" | "right"; // Optional since not all fields have it, adjust based on possible values
+  visible: boolean;
+}
+
+export interface IShortcut {
+  created_datetime: Date | string;
+  updated_datetime: Date | string;
   id: string;
   name: string;
-  resource: string;
-  view_status: string;
+  author: string;
+  record_id: string;
+  record_name: string;
 }
 
 export interface IFilter {

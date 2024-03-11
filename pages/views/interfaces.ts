@@ -1,8 +1,27 @@
+// export interface IView {
+//   id: string;
+//   name: string;
+//   resource: string;
+//   view_status: string;
+// }
+
+export interface IFieldConfiguration {
+  data_type: "varchar" | "datetime"; // Adjust this union type based on all possible data types
+  field_name: string;
+  pin?: "left" | "right"; // Optional since not all fields have it, adjust based on possible values
+  visible: boolean;
+}
+
 export interface IView {
+  created_at: string; // ISO date-time string
+  data_models: string[];
+  description: string;
+  fields_configuration: IFieldConfiguration[];
   id: string;
   name: string;
   resource: string;
-  view_status: string;
+  updated_at: string; // ISO date-time string
+  view_status: "published" | "draft" | "review"; // Adjust this union type based on all possible statuses
 }
 
 export interface IFilter {

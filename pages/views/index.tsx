@@ -11,7 +11,13 @@ import {
 } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { ColumnDef, flexRender } from "@tanstack/react-table";
-import { IconEdit, IconMail, IconSend, IconTrash } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconMail,
+  IconSearch,
+  IconSend,
+  IconTrash,
+} from "@tabler/icons-react";
 import {
   ScrollArea,
   Table,
@@ -28,6 +34,7 @@ import {
   Tooltip,
   HoverCard,
   Modal,
+  Drawer,
 } from "@mantine/core";
 import {
   List,
@@ -48,6 +55,7 @@ import { addSeparator } from "src/utils";
 import { useAppStore } from "src/store";
 import MessageCreate from "../messages/create";
 import DownloadCreate from "../downloads/create";
+import QueryCreate from "../query/create";
 import { IconDownload } from "@tabler/icons";
 import { IView } from "./interfaces";
 
@@ -327,7 +335,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
                 />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Download Views">
+            {/* <Tooltip label="Download Views">
               <ActionIcon variant="filled" aria-label="Dowload" size="sm">
                 <IconDownload
                   // size={20}
@@ -335,6 +343,19 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
                   // stroke={1.5}
                   onClick={() => {
                     setActionType("open_download");
+                    setOpened(true);
+                  }}
+                />
+              </ActionIcon>
+            </Tooltip> */}
+            <Tooltip label="Query">
+              <ActionIcon variant="filled" aria-label="Query" size="sm">
+                <IconSearch
+                  // size={20}
+                  // style={{ width: "70%", height: "70%" }}
+                  // stroke={1.5}
+                  onClick={() => {
+                    setActionType("open_query");
                     setOpened(true);
                   }}
                 />
@@ -371,7 +392,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   return (
     <div className="w-max-screen">
       <Modal
-        opened={opened}
+        opened={opened && actionType !== "open_query"}
         onClose={() => setOpened(false)}
         title={actionType === "open_send" ? "Send Message" : "Download"}
         size="xl"
@@ -379,6 +400,15 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         {actionType === "open_send" && <MessageCreate />}
         {actionType === "open_download" && <DownloadCreate />}
       </Modal>
+      <Drawer
+        opened={opened}
+        onClose={() => setOpened(false)}
+        title={actionType === "open_query" ? "Query" : "Query"}
+        // size="xl"
+        position="right"
+      >
+        {actionType === "open_query" && <QueryCreate />}
+      </Drawer>
       <MantineProvider
         theme={{
           colorScheme: "light",

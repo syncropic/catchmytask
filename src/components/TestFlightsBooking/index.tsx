@@ -62,6 +62,11 @@ export function TestFlightsBooking<T extends Record<string, any>>({
       author_email: identity?.email,
       trip_id: record?.trip_id,
       test_description: "",
+      billing_addresses: record?.billing_addresses,
+      flight_segments: record?.flight_segments,
+      hotel_segments: record?.hotel_segments,
+      payment_methods: record?.payment_methods,
+      trip_passengers: record?.trip_passengers,
     },
   });
 
@@ -72,6 +77,11 @@ export function TestFlightsBooking<T extends Record<string, any>>({
       values: {
         ...record,
         ...values, // so i can override original in the form if not disabled
+        billing_addresses: JSON.parse(values?.billing_addresses),
+        flight_segments: JSON.parse(values?.flight_segments),
+        hotel_segments: JSON.parse(values?.hotel_segments),
+        payment_methods: JSON.parse(values?.payment_methods),
+        trip_passengers: JSON.parse(values?.trip_passengers),
         action_options: [
           addSeparator(activeActionOption?.id, "action_options"),
         ],
