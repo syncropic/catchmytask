@@ -1,55 +1,49 @@
-import {
-  Button,
-  LoadingOverlay,
-  MultiSelect,
-  TextInput,
-  Textarea,
-  Title,
-} from "@mantine/core";
-import { DateInput } from "@mantine/dates";
-import {
-  useCustomMutation,
-  useGetIdentity,
-  useInvalidate,
-} from "@refinedev/core";
-import { Create, CreateButton, SaveButton, useForm } from "@refinedev/mantine";
-import { format, parseISO } from "date-fns";
-import {
-  addSeparator,
-  dateTypeOptions,
-  formatDateTimeAsDateTime,
-  testProgressOptions,
-} from "src/utils";
+import IframeView from "@components/IframeView";
+import { componentMapping, extractFields } from "@components/Utils";
 import {
   CompleteActionComponentProps,
   IIdentity,
 } from "@components/interfaces";
-import CodeBlock from "@components/codeblock/codeblock";
-import { IconDatabaseShare, IconMathFunction } from "@tabler/icons-react";
-import { useModal } from "@refinedev/core";
-import CreateAutomation from "pages/automations/create";
+import { Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Text } from "@mantine/core";
-import { useAppStore } from "src/store";
-import CodeView from "@components/CodeView";
+import { useCustomMutation, useGetIdentity } from "@refinedev/core";
+import { Create, SaveButton, useForm } from "@refinedev/mantine";
+import { IconMathFunction } from "@tabler/icons-react";
+import { format, parseISO } from "date-fns";
+import CreateAutomation from "pages/automations/create";
+import CreateChat from "pages/chat/create";
+import { useEffect, useState } from "react";
+import { addSeparator, formatDateTimeAsDateTime } from "src/utils";
 
-interface FormComponentProps<T extends Record<string, any>> {
-  activeActionOption: any;
-  activeRecord: any;
-  extractedFields: any;
-}
-
-export function Form<T extends Record<string, any>>({
+export function ActionControlForm<T extends Record<string, any>>({
+  activeSession,
+  activeRecords,
   activeActionOption,
-  activeRecord,
-  extractedFields,
-}: FormComponentProps<T>) {
-  const invalidate = useInvalidate();
-  const { data: identity } = useGetIdentity<IIdentity>();
-  const { activeRequestData, setActiveRequestData } = useAppStore();
+}: CompleteActionComponentProps<T>) {
+  // const { activeRequestData, setActiveRequestData } = useAppStore();
+  // const invalidate = useInvalidate();
+  // create a state value called extractedFields and update that when the activeRecord and/or activeActionOption changes
+  const [extractedFields, setExtractedFields] = useState({});
+  useEffect(() => {
+    setExtractedFields(
+      extractFields(
+        activeRecords[0] || {},
+        activeActionOption?.field_configurations || []
+      )
+    );
+  }, [activeRecords, activeActionOption]);
+  // const extractedFields = extractFields(
+  //   activeRecords[0] || {},
+  //   activeActionOption?.field_configurations || []
+  // );
+  console.log("extractedFields", extractedFields);
+  // console.log("activeRecord", activeRecords[0]);
+  // console.log("activeActionOption", activeActionOption);
   const [openedAutomation, { open: openAutomation, close: closeAutomation }] =
     useDisclosure(false);
-
+  const [openedChat, { open: openChat, close: closeChat }] =
+    useDisclosure(false);
+  const { data: identity } = useGetIdentity<IIdentity>();
   const {
     mutate,
     isLoading: mutationIsLoading,
@@ -66,58 +60,48 @@ export function Form<T extends Record<string, any>>({
     initialValues: {
       author: identity?.email,
       author_email: identity?.email,
-      ...extractedFields,
+      // start_date: "",
+      // end_date: "",
+      // date_type: [] as string[],
+      // mail_list: [] as string[],
+      // id: "",
+      // to_email_list: ["dp.wanjala@gmail.com"] as string[],
+      // cc_email_list: [] as string[],
+      // tags: "",
+      // from: "david.wanjala@snowstormtech.com",
+      // email_type: ["default"] as string[],
+      // flight_airline_reference_code:
+      //   activeRecords[0]?.flight_airline_reference_code,
+      // contact_email: activeRecords[0]?.contact_email,
+      // contact_name: activeRecords[0]?.contact_name,
+    },
+    refineCoreProps: {
+      // for when cloning and passing other metadata to dataprovider
+      // resource: resource,
+      // id: id,
+      // onMutationSuccess: (data, variables, context, isAutoSave) => {
+      //   console.log({ data, variables, context, isAutoSave });
+      // },
+      // onMutationError: (data, variables, context, isAutoSave) => {
+      //   console.log({ data, variables, context, isAutoSave });
+      // },
+      // // invalidates: ["list", "many", "detail"],
+      // successNotification: (data, values, resource) => {
+      //   return {
+      //     message: `Success with no errors`,
+      //     description: "Success with no errors",
+      //     type: "success",
+      //   };
+      // },
+    },
+    transformValues: (values) => {
+      return {
+        ...values,
+        // id: uuidv4(), // if creating new item
+      };
     },
   });
 
-  //   console.log(extractedFields);
-  //   console.log(activeRecord);
-  //   console.log(values);
-
-  //   const handleSubmit = (e: any) => {
-  //     let request_data = {
-  //       ...activeActionOption,
-  //       id: addSeparator(activeActionOption?.id, "action_options"),
-  //       values: {
-  //         // ...record,
-  //         ...values, // so i can override original in the form if not disabled
-  //         // billing_addresses: JSON.parse(values?.billing_addresses),
-  //         // flight_segments: JSON.parse(values?.flight_segments),
-  //         // hotel_segments: JSON.parse(values?.hotel_segments),
-  //         // payment_methods: JSON.parse(values?.payment_methods),
-  //         // trip_passengers: JSON.parse(values?.trip_passengers),
-  //         action_options: [
-  //           addSeparator(activeActionOption?.id, "action_options"),
-  //         ],
-  //       },
-  //     };
-  //     mutate({
-  //       url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
-  //       method: "post",
-  //       values: request_data,
-  //       successNotification: (data, values) => {
-  //         invalidate({
-  //           resource: "caesars_bookings",
-  //           invalidates: ["list"],
-  //         });
-  //         // close();
-  //         return {
-  //           message: `successfully executed.`,
-  //           description: "Success with no errors",
-  //           type: "success",
-  //         };
-  //       },
-  //       errorNotification: (data, values) => {
-  //         return {
-  //           message: `Something went wrong when executing`,
-  //           description: "Error",
-  //           type: "error",
-  //         };
-  //       },
-  //     });
-  //   };
-
-  let action_step = null;
   const handleSubmit = (e: any) => {
     // console.log("values", values);
     let start_date: string = values?.start_date;
@@ -150,7 +134,7 @@ export function Form<T extends Record<string, any>>({
     // console.log(activeItem);
 
     const task = activeActionOption;
-    // const action_step = null;
+    const action_step = null;
     const resource = "onewurld_bookings";
     const record = {
       ...values,
@@ -165,14 +149,14 @@ export function Form<T extends Record<string, any>>({
         ...task?.task_input,
         get_collection_info_1: {
           ...task?.task_input?.get_collection_info_1,
-          // end_date: formatDateTimeAsDateTime(new Date()),
-          // start_date: formatDateTimeAsDateTime(new Date()),
+          end_date: formatDateTimeAsDateTime(new Date()),
+          start_date: formatDateTimeAsDateTime(new Date()),
         },
         create_email_message_1: {
           email_type: record?.email_type,
-          personal_message: record?.custom_message,
-          internal_message: record?.custom_message,
-          custom_message: record?.custom_message,
+          // personal_message: record?.custom_message,
+          // internal_message: record?.custom_message,
+          // custom_message: record?.custom_message,
         },
         send_email_message_1: {
           mail_list: record?.mail_list,
@@ -261,113 +245,141 @@ export function Form<T extends Record<string, any>>({
     });
   };
 
-  const handleSaveOnly = (e: any) => {
-    let request_data = {
-      ...activeActionOption,
-      options: {
-        ...activeActionOption?.options,
-        execution_action_step_names: [
-          "get_collection_info_1",
-          "get_credential_info_1",
-          "update_record_fields_1",
-        ],
-        execute_by: "execution_action_step_names",
-        execution_includes: "save_only",
-      },
-      id: addSeparator(activeActionOption?.id, "action_options"),
-      values: {
-        // ...record,
-        // ...values, // so i can override original in the form if not disabled
-        // action_options: [
-        //   addSeparator(activeActionOption?.id, "action_options"),
-        // ],
-      },
-    };
-    // console.log("mode", "save_only");
-    // console.log("request_data", request_data);
-    mutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
-      method: "post",
-      values: request_data,
-      successNotification: (data, values) => {
-        invalidate({
-          resource: "caesars_bookings",
-          invalidates: ["list"],
-        });
-        // close();
-        return {
-          message: `successfully executed.`,
-          description: "Success with no errors",
-          type: "success",
-        };
-      },
-      errorNotification: (data, values) => {
-        return {
-          message: `Something went wrong when executing`,
-          description: "Error",
-          type: "error",
-        };
-      },
-    });
-  };
+  // const handleSubmit = (e: any) => {
+  //   let request_data = {
+  //     ...activeActionOption,
+  //     id: addSeparator(activeActionOption?.id, "action_options"),
+  //     values: {
+  //       ...activeRecords[0],
+  //       ...values, // so i can override original in the form if not disabled
+  //       action_options: [
+  //         addSeparator(activeActionOption?.id, "action_options"),
+  //       ],
+  //     },
+  //   };
+  //   mutate({
+  //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
+  //     method: "post",
+  //     values: request_data,
+  //     successNotification: (data, values) => {
+  //       invalidate({
+  //         resource: "caesars_bookings",
+  //         invalidates: ["list"],
+  //       });
+  //       close();
+  //       return {
+  //         message: `successfully executed.`,
+  //         description: "Success with no errors",
+  //         type: "success",
+  //       };
+  //     },
+  //     errorNotification: (data, values) => {
+  //       return {
+  //         message: `Something went wrong when executing`,
+  //         description: "Error",
+  //         type: "error",
+  //       };
+  //     },
+  //   });
+  // };
 
-  const handleCreateAutomation = () => {
-    let request_data = {
-      ...activeActionOption,
-      options: {
-        ...activeActionOption?.options,
-        execution_action_step_names: [
-          "get_collection_info_1",
-          "get_credential_info_1",
-          "update_record_fields_1",
-        ],
-        execute_by: "execution_action_step_names",
-        execution_includes: "save_only",
-      },
-      id: addSeparator(activeActionOption?.id, "action_options"),
-      values: {
-        // ...record,
-        // ...values, // so i can override original in the form if not disabled
-        // action_options: [
-        //   addSeparator(activeActionOption?.id, "action_options"),
-        // ],
-      },
-    };
-    setActiveRequestData(request_data);
-    openAutomation();
-  };
-  const componentMapping = {
-    TextInput: TextInput,
-    Textarea: Textarea,
-    DateInput: DateInput,
-    MultiSelect: MultiSelect,
-  };
-  //   console.log("activeActionOption", activeActionOption);
+  // const handleSaveOnly = (e: any) => {
+  //   let request_data = {
+  //     ...activeActionOption,
+  //     options: {
+  //       ...activeActionOption?.options,
+  //       execution_action_step_names: [
+  //         "get_collection_info_1",
+  //         "get_credential_info_1",
+  //         "update_record_fields_1",
+  //       ],
+  //       execute_by: "execution_action_step_names",
+  //       execution_includes: "save_only",
+  //     },
+  //     id: addSeparator(activeActionOption?.id, "action_options"),
+  //     values: {
+  //       ...activeRecords[0],
+  //       ...values, // so i can override original in the form if not disabled
+  //       action_options: [
+  //         addSeparator(activeActionOption?.id, "action_options"),
+  //       ],
+  //     },
+  //   };
+  //   // console.log("mode", "save_only");
+  //   // console.log("request_data", request_data);
+  //   mutate({
+  //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
+  //     method: "post",
+  //     values: request_data,
+  //     successNotification: (data, values) => {
+  //       invalidate({
+  //         resource: "caesars_bookings",
+  //         invalidates: ["list"],
+  //       });
+  //       // close();
+  //       return {
+  //         message: `successfully executed.`,
+  //         description: "Success with no errors",
+  //         type: "success",
+  //       };
+  //     },
+  //     errorNotification: (data, values) => {
+  //       return {
+  //         message: `Something went wrong when executing`,
+  //         description: "Error",
+  //         type: "error",
+  //       };
+  //     },
+  //   });
+  // };
 
   return (
     <Create
       // isLoading={formLoading}
-      breadcrumb={false}
       isLoading={mutationIsLoading}
       saveButtonProps={{
         disabled: saveButtonProps?.disabled,
         onClick: handleSubmit,
         size: "xs",
       }}
-      title={<Title order={5}>Configure And Run Action</Title>}
+      breadcrumb={false}
+      title={false}
       goBack={false}
       footerButtons={({ saveButtonProps }) => (
         <div className="flex w-full gap-4">
           {/* <SaveButton
-              {...saveButtonProps}
-              className="flex-grow w-1/2"
-              variant="light"
-              leftIcon={<IconDatabaseShare size={16} />}
-              disabled={mutationIsLoading}
-              onClick={handleSaveOnly}
-            >
-              CreateSave Automation
-            </SaveButton> */}
+            {...saveButtonProps}
+            className="flex-grow w-1/3"
+            variant="light"
+            leftIcon={<IconDatabaseShare size={16} />}
+            disabled={mutationIsLoading}
+            onClick={handleSaveOnly}
+          >
+            Save Values
+          </SaveButton> */}
+          <SaveButton
+            {...saveButtonProps}
+            className="flex-grow w-2/3"
+            variant="filled"
+            leftIcon={<IconMathFunction size={16} />}
+            disabled={mutationIsLoading}
+          >
+            Run
+          </SaveButton>
+          <Button
+            resource="automations"
+            size="xs"
+            variant="light"
+            onClick={() => {
+              if (openedChat) {
+                closeChat();
+              } else {
+                openChat();
+              }
+            }}
+          >
+            {openedChat ? "Close Chat" : "Chat"}
+          </Button>
           <Button
             resource="automations"
             size="xs"
@@ -376,30 +388,19 @@ export function Form<T extends Record<string, any>>({
               if (openedAutomation) {
                 closeAutomation();
               } else {
-                handleCreateAutomation();
+                openAutomation();
               }
             }}
           >
-            {openedAutomation ? "Close Automation" : "Create Automation"}
+            {openedAutomation ? "Close Automation" : "Automate"}
           </Button>
-          <SaveButton
-            {...saveButtonProps}
-            className="flex-grow w-1/2"
-            variant="filled"
-            leftIcon={<IconMathFunction size={16} />}
-            disabled={mutationIsLoading}
-          >
-            Save and Run Action
-          </SaveButton>
         </div>
       )}
     >
-      <Text>
-        <b>Action: </b>
-        {activeActionOption?.display_name}
-      </Text>
-      {/* {JSON.stringify(activeActionOption)} */}
-      {/* {activeActionOption?.field_configurations &&
+      {activeActionOption?.name === "view_file" && (
+        <IframeView file_path={activeRecords[0]?.file_path}></IframeView>
+      )}
+      {activeActionOption?.field_configurations &&
         activeActionOption?.field_configurations?.map((field) => {
           const Component = componentMapping[field.component];
           return (
@@ -411,12 +412,11 @@ export function Form<T extends Record<string, any>>({
               />
             </div>
           );
-        })} */}
-      <CodeView path="hello/world.py"></CodeView>
-
+        })}
+      {openedChat && <CreateChat></CreateChat>}
       {openedAutomation && <CreateAutomation></CreateAutomation>}
     </Create>
   );
 }
 
-export default Form;
+export default ActionControlForm;

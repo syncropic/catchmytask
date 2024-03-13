@@ -1,66 +1,20 @@
-import React, { useMemo, useState } from "react";
+import { IIdentity, IShortcut } from "@components/interfaces";
+import { Anchor, Group, HoverCard, MantineProvider, Text } from "@mantine/core";
 import {
-  IResourceComponentsProps,
-  GetManyResponse,
-  useMany,
-  useGo,
-  useCustomMutation,
-  useList,
   HttpError,
+  IResourceComponentsProps,
   useDelete,
   useGetIdentity,
+  useGo,
+  useList,
 } from "@refinedev/core";
-import { useTable } from "@refinedev/react-table";
-import { ColumnDef, flexRender } from "@tanstack/react-table";
-import {
-  IconEdit,
-  IconMail,
-  IconSearch,
-  IconSend,
-  IconTrash,
-} from "@tabler/icons-react";
-import {
-  ScrollArea,
-  Table,
-  Pagination,
-  Group,
-  MantineProvider,
-  Menu,
-  Box,
-  ActionIcon,
-  Text,
-  Button,
-  Flex,
-  Anchor,
-  Tooltip,
-  HoverCard,
-  Modal,
-  Drawer,
-} from "@mantine/core";
-import {
-  List,
-  EditButton,
-  ShowButton,
-  DeleteButton,
-  DateField,
-  CreateButton,
-} from "@refinedev/mantine";
 import {
   MantineReactTable,
   useMantineReactTable,
   type MRT_ColumnDef,
-  MRT_GlobalFilterTextInput,
-  MRT_ToggleFiltersButton,
 } from "mantine-react-table";
-import { addSeparator } from "src/utils";
+import React, { useMemo } from "react";
 import { useAppStore } from "src/store";
-import MessageCreate from "../messages/create";
-import DownloadCreate from "../downloads/create";
-import QueryCreate from "../query/create";
-import { IconDownload } from "@tabler/icons";
-import { IShortcut } from "./interfaces";
-import { IIdentity } from "@components/interfaces";
-import { useOne } from "@refinedev/core";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const go = useGo();
@@ -80,7 +34,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     () => [
       {
         accessorKey: "name",
-        header: "shortcuts",
+        header: "My Shortcuts",
         // minSize: 100, //min size enforced during resizing
         // maxSize: 50, //max size enforced during resizing
         // size: 50, //medium column

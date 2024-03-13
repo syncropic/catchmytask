@@ -268,7 +268,7 @@ export function CloneForm<T extends Record<string, any>>({
           );
         })} */}
       {/* <div>viewfile section</div> */}
-      <Editor
+      {/* <Editor
         height="100vh"
         defaultLanguage="python"
         defaultValue=""
@@ -276,6 +276,11 @@ export function CloneForm<T extends Record<string, any>>({
         onChange={handleEditorChange}
         onMount={handleEditorDidMount}
         options={options}
+      /> */}
+      <CodeServerIframe
+        src="http://localhost:8443/?folder=/config&file=/config/018e21b1-0bfe-7048-ab46-2b39f5f8091c/send_flight_confirmation/create_freshdesk_ticket_default.py"
+        width="100%"
+        height="500px"
       />
       <Accordion>
         <Accordion.Item key="more_details" value="more_details">
@@ -292,3 +297,15 @@ export function CloneForm<T extends Record<string, any>>({
 }
 
 export default CloneForm;
+
+const CodeServerIframe = ({ src, width, height }) => {
+  return (
+    <iframe
+      src={src}
+      width={width}
+      height={height}
+      style={{ border: "none" }}
+      title="Code Server"
+    ></iframe>
+  );
+};

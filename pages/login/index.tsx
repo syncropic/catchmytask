@@ -1,16 +1,8 @@
-import { AuthPage } from "@refinedev/mantine";
-import { useGo } from "@refinedev/core";
-import type {
-  GetServerSidePropsContext,
-  InferGetServerSidePropsType,
-} from "next";
-import { getProviders } from "next-auth/react";
+import type { GetServerSidePropsContext } from "next";
 import { getServerSession } from "next-auth/next";
-// import { GetServerSideProps } from "next";
-// import { authProvider } from "src/authProvider";
-import { useSession, signIn, signOut } from "next-auth/react";
-import { useEffect } from "react";
+import { getProviders } from "next-auth/react";
 import { useIsAuthenticated } from "@refinedev/core";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { authOptions } from "../api/auth/[...nextauth]";
 
 export default function Login() {

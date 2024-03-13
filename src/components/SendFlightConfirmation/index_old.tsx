@@ -6,11 +6,7 @@ import {
   Title,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
-import {
-  useCustomMutation,
-  useGetIdentity,
-  useInvalidate,
-} from "@refinedev/core";
+import { useCustomMutation, useInvalidate } from "@refinedev/core";
 import { Create, SaveButton, useForm } from "@refinedev/mantine";
 import { format, parseISO } from "date-fns";
 import {
@@ -18,20 +14,25 @@ import {
   dateTypeOptions,
   formatDateTimeAsDateTime,
 } from "src/utils";
-import {
-  CompleteActionComponentProps,
-  IIdentity,
-} from "@components/interfaces";
+import { CompleteActionComponentProps } from "@components/interfaces";
+import CodeBlock from "@components/codeblock/codeblock";
 import { IconDatabaseShare, IconMathFunction } from "@tabler/icons-react";
-import { componentMapping } from "@components/Utils";
 
 export function SendFlightConfirmation<T extends Record<string, any>>({
+  setActionType,
+  action_options,
+  identity,
+  data_items,
+  open,
+  close,
+  opened,
   record,
+  action_step,
+  variant = "default",
   activeActionOption,
-  inputFields,
+  setActiveActionOption,
 }: CompleteActionComponentProps<T>) {
   const invalidate = useInvalidate();
-  const { data: identity } = useGetIdentity<IIdentity>();
   const {
     mutate,
     isLoading: mutationIsLoading,
@@ -151,8 +152,7 @@ export function SendFlightConfirmation<T extends Record<string, any>>({
         onClick: handleSubmit,
         size: "xs",
       }}
-      // title={<Title order={3}>Configure and Execute Action</Title>}
-      title={null}
+      title={<Title order={3}>Configure and Execute Action</Title>}
       goBack={false}
       footerButtons={({ saveButtonProps }) => (
         <div className="flex w-full gap-4">
@@ -178,20 +178,7 @@ export function SendFlightConfirmation<T extends Record<string, any>>({
         </div>
       )}
     >
-      {activeActionOption?.field_configurations &&
-        activeActionOption?.field_configurations?.map((field) => {
-          const Component = componentMapping[field.component];
-          return (
-            <div key={field.name} className="mb-4">
-              <Component
-                {...getInputProps(field.name)}
-                {...field.props}
-                label={field.label}
-              />
-            </div>
-          );
-        })}
-      {/* <TextInput
+      <TextInput
         required
         mt="sm"
         label="flight_airline_reference_code"
@@ -229,7 +216,7 @@ export function SendFlightConfirmation<T extends Record<string, any>>({
         // value={record?.contact_email}
         // disabled
         // required
-      /> */}
+      />
     </Create>
   );
 }

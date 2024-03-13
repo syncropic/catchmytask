@@ -169,30 +169,31 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
     }
   };
 
-  const handleCreateAutomation = () => {
-    let request_data = {
-      ...activeActionOption,
-      options: {
-        ...activeActionOption?.options,
-        execution_action_step_names: [
-          "get_collection_info_1",
-          "get_credential_info_1",
-          "update_record_fields_1",
-        ],
-        execute_by: "execution_action_step_names",
-        execution_includes: "save_only",
-      },
-      id: addSeparator(activeActionOption?.id, "action_options"),
-      values: {
-        ...activeRecords[0],
-        ...values, // so i can override original in the form if not disabled
-        action_options: [
-          addSeparator(activeActionOption?.id, "action_options"),
-        ],
-      },
-    };
-    setActiveRequestData(request_data);
-    openAutomation();
+  const handleCreateChat = () => {
+    console.log("handleCreateChat");
+    // let request_data = {
+    //   ...activeActionOption,
+    //   options: {
+    //     ...activeActionOption?.options,
+    //     execution_action_step_names: [
+    //       "get_collection_info_1",
+    //       "get_credential_info_1",
+    //       "update_record_fields_1",
+    //     ],
+    //     execute_by: "execution_action_step_names",
+    //     execution_includes: "save_only",
+    //   },
+    //   id: addSeparator(activeActionOption?.id, "action_options"),
+    //   values: {
+    //     ...record,
+    //     ...values, // so i can override original in the form if not disabled
+    //     action_options: [
+    //       addSeparator(activeActionOption?.id, "action_options"),
+    //     ],
+    //   },
+    // };
+    // setActiveRequestData(request_data);
+    // openAutomation();
   };
 
   return (
@@ -231,103 +232,20 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
         </div>
       )}
     >
-      <TextInput
+      <div>Chat History:</div>
+      <Textarea
+        minRows={5}
         required
         mt="sm"
-        label="name"
-        placeholder="name"
-        {...getInputProps("name")}
-      />
-      <MultiSelect
-        required
-        searchable
-        maxSelectedValues={1}
-        mt="sm"
-        label="automation_types"
-        placeholder="automation_types"
-        data={automation_type_options} // Replace with your options source
+        label="chat_message"
+        placeholder="chat_message"
+        // data={dateTypeOptions} // Replace with your options source
         // value={getInputProps("date_type").value}
         // onChange={handleNameChange}
-        {...getInputProps("automation_types")}
+        {...getInputProps("chat_message")}
+        // value={record?.contact_email}
+        // disabled
         // required
-      />
-      <Text size="sm" mt="xl" mb="sm" fw={500}>
-        Define frequency using one of the options below
-      </Text>
-      <Tabs defaultValue="options">
-        <Tabs.List>
-          <Tabs.Tab value="options">
-            <Text size="xs">Options</Text>
-          </Tabs.Tab>
-          <Tabs.Tab value="natural_language">
-            <Text size="xs">Natural Language</Text>
-          </Tabs.Tab>
-
-          <Tabs.Tab value="expression">
-            <Text size="xs">Cron Expression</Text>
-          </Tabs.Tab>
-        </Tabs.List>
-        <Tabs.Panel value="options">
-          <Select
-            required
-            searchable
-            // maxSelectedValues={1}
-            mt="sm"
-            label="frequency"
-            placeholder="select a frequency option"
-            data={frequency_options} // Replace with your options source
-            // value={getInputProps("date_type").value}
-            {...getInputProps("frequency")}
-            onChange={handleChangeFrequencyOption}
-            // required
-          />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="natural_language">
-          <Textarea
-            autosize
-            minRows={2}
-            mt="sm"
-            required
-            label="frequency"
-            placeholder="Describe frequency using natural language"
-            // {...getInputProps("description")}
-          />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="expression">
-          <Textarea
-            required
-            autosize
-            minRows={2}
-            mt="sm"
-            label="frequency"
-            placeholder="Describe frequency using cron expression"
-            // {...getInputProps("description")}
-          />
-        </Tabs.Panel>
-      </Tabs>
-
-      <DateInput
-        required
-        valueFormat="DD/MM/YYYY HH:mm:ss"
-        label="start_datetime"
-        placeholder="start_datetime"
-        {...getInputProps("start_datetime")}
-      />
-      <DateInput
-        // required
-        valueFormat="DD/MM/YYYY HH:mm:ss"
-        label="end_datetime"
-        placeholder="end_datetime"
-        {...getInputProps("end_datetime")}
-      />
-      <Textarea
-        autosize
-        minRows={2}
-        mt="sm"
-        label="description"
-        {...getInputProps("description")}
       />
     </Create>
   );

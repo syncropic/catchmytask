@@ -5,16 +5,6 @@ export interface IFieldConfiguration {
   visible: boolean;
 }
 
-export interface IShortcut {
-  created_datetime: Date | string;
-  updated_datetime: Date | string;
-  id: string;
-  name: string;
-  author: string;
-  record_id: string;
-  record_name: string;
-}
-
 export interface IFilter {
   column_name: string;
   include: string[];

@@ -1,59 +1,33 @@
-import React, { useMemo, useState } from "react";
 import {
-  IResourceComponentsProps,
-  GetManyResponse,
-  useMany,
-  useGo,
-  useCustomMutation,
-  useList,
   HttpError,
-  useDelete,
+  IResourceComponentsProps,
   useCreate,
+  useDelete,
   useGetIdentity,
+  useGo,
   useInvalidate,
+  useList,
 } from "@refinedev/core";
+import React, { useMemo } from "react";
 
 import {
-  ScrollArea,
-  Table,
-  Pagination,
-  Group,
-  MantineProvider,
-  Menu,
-  Box,
-  ActionIcon,
-  Text,
-  Button,
-  Flex,
   Anchor,
-  Tooltip,
+  Flex,
+  Group,
   HoverCard,
-  Modal,
-  Drawer,
+  MantineProvider,
+  Text,
 } from "@mantine/core";
-import {
-  List,
-  EditButton,
-  ShowButton,
-  DeleteButton,
-  DateField,
-  CreateButton,
-} from "@refinedev/mantine";
+import { CreateButton } from "@refinedev/mantine";
 import {
   MantineReactTable,
   useMantineReactTable,
   type MRT_ColumnDef,
-  MRT_GlobalFilterTextInput,
-  MRT_ToggleFiltersButton,
 } from "mantine-react-table";
-import { addSeparator } from "src/utils";
 import { useAppStore } from "src/store";
-import MessageCreate from "../messages/create";
-import DownloadCreate from "../downloads/create";
 // import QueryCreate from "../query/create";
-import { IconDownload } from "@tabler/icons";
-import { ISession } from "./interfaces";
 import { IIdentity } from "@components/interfaces";
+import { ISession } from "./interfaces";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const go = useGo();
@@ -80,25 +54,6 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         // size: 50, //medium column
         Cell: ({ row }) => (
           <>
-            {/* <Anchor component={Text}>
-              <Text
-                size="sm"
-                onClick={() => {
-                  setActionType("setActiveSession");
-                  setActiveSession(row.original);
-                  go({
-                    to: {
-                      resource: "sessions",
-                      action: "show",
-                      id: row.original.id,
-                    },
-                    type: "push",
-                  });
-                }}
-              >
-                {row.original.name}
-              </Text>
-            </Anchor> */}
             <Group>
               <HoverCard
                 width={280}
@@ -384,24 +339,6 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   });
   return (
     <div className="w-max-screen">
-      <Modal
-        opened={opened && actionType !== "open_query"}
-        onClose={() => setOpened(false)}
-        title={actionType === "open_send" ? "Send Message" : "Download"}
-        size="xl"
-      >
-        {actionType === "open_send" && <MessageCreate />}
-        {actionType === "open_download" && <DownloadCreate />}
-      </Modal>
-      {/* <Drawer
-        opened={opened}
-        onClose={() => setOpened(false)}
-        title={actionType === "open_query" ? "Query" : "Query"}
-        // size="xl"
-        position="right"
-      >
-        {actionType === "open_query" && <QueryCreate />}
-      </Drawer> */}
       <MantineProvider
         theme={{
           colorScheme: "light",

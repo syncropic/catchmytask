@@ -358,6 +358,30 @@ export function Form<T extends Record<string, any>>({
       goBack={false}
       footerButtons={({ saveButtonProps }) => (
         <div className="flex w-full gap-4">
+          {/* <SaveButton
+              {...saveButtonProps}
+              className="flex-grow w-1/2"
+              variant="light"
+              leftIcon={<IconDatabaseShare size={16} />}
+              disabled={mutationIsLoading}
+              onClick={handleSaveOnly}
+            >
+              CreateSave Automation
+            </SaveButton> */}
+          <Button
+            resource="automations"
+            size="xs"
+            variant="light"
+            onClick={() => {
+              if (openedAutomation) {
+                closeAutomation();
+              } else {
+                handleCreateAutomation();
+              }
+            }}
+          >
+            {openedAutomation ? "Close Automation" : "Create Automation"}
+          </Button>
           <SaveButton
             {...saveButtonProps}
             className="flex-grow w-1/2"
@@ -374,6 +398,23 @@ export function Form<T extends Record<string, any>>({
         <b>Action: </b>
         {activeActionOption?.display_name}
       </Text>
+      {/* {JSON.stringify(activeActionOption)} */}
+      {/* {activeActionOption?.field_configurations &&
+        activeActionOption?.field_configurations?.map((field) => {
+          const Component = componentMapping[field.component];
+          return (
+            <div key={field.name} className="mb-4">
+              <Component
+                {...getInputProps(field.name)}
+                {...field.props}
+                label={field.label}
+              />
+            </div>
+          );
+        })} */}
+      {/* <CodeView path="hello/world.py"></CodeView> */}
+
+      {openedAutomation && <CreateAutomation></CreateAutomation>}
     </Create>
   );
 }
