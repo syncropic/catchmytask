@@ -3,44 +3,16 @@ import { AuthBindings, Refine } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { notificationProvider } from "@refinedev/mantine";
 import routerProvider, { DocumentTitleHandler } from "@refinedev/nextjs-router";
-import { IconDashboard } from "@tabler/icons-react";
 import type { NextPage } from "next";
 import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
 import { AppProps } from "next/app";
 import { useRouter } from "next/router";
 import { accessControlProvider } from "src/access-control-provider";
-import initializeCatchmytaskDb from "src/catchmytask-api-provider/db";
-import initializeCatchmyvibeDb from "src/catchmyvibe-api-provider/db";
 import BaseLayout from "src/components/Layout";
-import initializeDefaultDb from "src/default-api-provider/db";
-import catchmytaskApiDataProvider from "../src/catchmytask-api-provider";
-import catchmyvibeApiDataProvider from "../src/catchmyvibe-api-provider";
 import defaultApiDataProvider from "../src/default-api-provider";
-import onewurldDataProvider from "../src/onewurld-provider";
 import "../styles/globals.css";
 
-const API_URL = "https://api.fake-rest.refine.dev";
-
-const initializeDefaultDbInstance = initializeDefaultDb({
-  namespace: "catchmytask",
-  database: "catchmytask",
-  username: "catchmytask",
-  password: "ao6xjEh#55Ojjkawe&C0Kdv",
-});
-
-const catchmytaskDbInstance = initializeCatchmytaskDb({
-  namespace: "catchmytask",
-  database: "catchmytask",
-  username: "catchmytask",
-  password: "ao6xjEh#55Ojjkawe&C0Kdv",
-});
-
-const catchmyvibeDbInstance = initializeCatchmyvibeDb({
-  namespace: "catchmyvibe",
-  database: "catchmyvibe",
-  username: "catchmyvibe",
-  password: "ao6xjEh#55Ojj!!F&C0Kdv",
-});
+const API_URL = `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}`;
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   noLayout?: boolean;
@@ -59,6 +31,14 @@ type ExtendedAppProps = AppProps & {
 };
 
 const App = (props: React.PropsWithChildren) => {
+  // const instanceKey1 = `${process.env.NEXT_PUBLIC_DB_NAMESPACE}:${process.env.NEXT_PUBLIC_DB_DATABASE}`;
+  // const dbInstance1 = useDb(instanceKey1);
+  // const instanceKey2 = `${process.env.NEXT_PUBLIC_DB_NAMESPACE_SECOND}:${process.env.NEXT_PUBLIC_DB_DATABASE_SECOND}`;
+  // const dbInstance2 = useDb(instanceKey2);
+  // console.log("instanceKey1", instanceKey1);
+  // console.log("dbInstance1", dbInstance1);
+  // console.log("instanceKey2", instanceKey2);
+  // console.log("dbInstance2", dbInstance2);
   const { data, status } = useSession();
   const router = useRouter();
   const { to } = router.query;
@@ -231,15 +211,15 @@ const App = (props: React.PropsWithChildren) => {
             routerProvider={routerProvider}
             dataProvider={{
               default: defaultApiDataProvider(API_URL),
-              // catchmytaskGraphqlApiDataProvider:
-              //   catchmytaskGraphqlApiDataProvider(graphqlClient),
-              catchmyvibeApiDataProvider: catchmyvibeApiDataProvider(API_URL),
-              onewurldProvider: onewurldDataProvider(
-                `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}`
-              ),
-              catchmytaskApiDataProvider: catchmytaskApiDataProvider(
-                `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}`
-              ),
+              // default: defaultApiDataProvider(API_URL, dbInstance1),
+              // catchmyvibeApiDataProvider: catchmyvibeApiDataProvider(
+              //   API_URL,
+              //   dbInstance2
+              // ),
+              // catchmytaskApiDataProvider: catchmytaskApiDataProvider(
+              //   API_URL,
+              //   dbInstance1
+              // ),
             }}
             notificationProvider={notificationProvider}
             authProvider={authProvider}
@@ -254,67 +234,32 @@ const App = (props: React.PropsWithChildren) => {
                 list: "/profile",
               },
               {
+                name: "datasets",
+                list: "/datasets",
+                create: "/datasets/create",
+                edit: "/datasets/edit/:id",
+                show: "/datasets/show/:id",
+                clone: "/datasets/clone/:id",
+                meta: {
+                  credentials: "surrealdb_catchmytask",
+                  query_language: "surrealql",
+                },
+              },
+              {
                 name: "applications",
                 list: "/applications",
                 create: "/applications/create",
                 edit: "/applications/edit/:id",
                 show: "/applications/show/:id",
-                clone: "/applications/clone/:id",
-                // meta: {
-                //   canDelete: true,
-                //   // icon: <IconDashboard />,
-                // },
               },
+
               {
                 name: "sessions",
                 list: "/sessions",
-                create: "/sessions/create",
-                edit: "/sessions/edit/:id",
-                show: "/sessions/show/:id",
-                clone: "/sessions/clone/:id",
-                // meta: {
-                //   canDelete: true,
-                //   // icon: <IconDashboard />,
-                // },
+                create: "/:applicationId/sessions/create",
+                edit: "/:applicationId/sessions/:id/edit",
+                show: "/:applicationId/sessions/:id",
               },
-              {
-                name: "general",
-                list: "/general",
-                create: "/general/create",
-                edit: "/general/edit/:id",
-                show: "/general/show/:id",
-                clone: "/general/clone/:id",
-                // meta: {
-                //   canDelete: true,
-                //   // icon: <IconDashboard />,
-                // },
-              },
-
-              {
-                name: "query",
-                list: "/query",
-                create: "/query/create",
-                edit: "/query/edit/:id",
-                show: "/query/show/:id",
-                meta: {
-                  canDelete: true,
-                  hide: true,
-                  dataProviderName: "catchmytaskApiDataProvider",
-                },
-              },
-              {
-                name: "action_control",
-                list: "/action_control",
-                create: "/action_control/create",
-                edit: "/action_control/edit/:id",
-                show: "/action_control/show/:id",
-                meta: {
-                  canDelete: true,
-                  hide: true,
-                  dataProviderName: "catchmytaskApiDataProvider",
-                },
-              },
-
               {
                 name: "shortcuts",
                 list: "/shortcuts",
@@ -324,7 +269,8 @@ const App = (props: React.PropsWithChildren) => {
                 meta: {
                   canDelete: true,
                   hide: true,
-                  // dataProviderName: "catchmyvibeApiDataProvider",
+                  credentials: "surrealdb_catchmytask",
+                  query_language: "surrealql",
                 },
               },
             ]}

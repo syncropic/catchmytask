@@ -20,16 +20,9 @@ import {
   MantineReactTable,
   useMantineReactTable,
 } from "mantine-react-table";
+import { useState } from "react";
 import { useAppStore } from "src/store";
 import { addSeparator } from "src/utils";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  formatDateTimeAsDate,
-  getCellStyleInline,
-  updateTableVisibility,
-} from "src/utils";
-import { TableViewComponentProps } from "@components/interfaces";
-import { useDataColumns } from "@components/Utils";
 
 export function TableView<T extends Record<string, any>>({
   data_columns,
@@ -103,18 +96,18 @@ export function TableView<T extends Record<string, any>>({
     columns: data_columns,
     data: filteredDataItems,
     enableRowSelection: true,
-    enableColumnOrdering: true,
-    enableGlobalFilter: true,
-    enableColumnFilters: true,
+    // enableColumnOrdering: true,
+    // enableGlobalFilter: true,
+    // enableColumnFilters: true,
     enableRowActions: true,
     enableStickyHeader: true,
-    enableColumnFilterModes: true,
-    enableFacetedValues: true,
-    enableGrouping: true,
+    // enableColumnFilterModes: true,
+    // enableFacetedValues: true,
+    // enableGrouping: true,
     enablePinning: true,
-    enableEditing: true,
-    editDisplayMode: "cell",
-    enableStickyFooter: true,
+    // enableEditing: true,
+    // editDisplayMode: "cell",
+    // enableStickyFooter: true,
     // enableColumnResizing: true,
     // layoutMode: "grid",
     // mantineTableHeadCellProps: {
@@ -127,9 +120,9 @@ export function TableView<T extends Record<string, any>>({
     //     flex: "0 0 auto",
     //   },
     // },
-    displayColumnDefOptions: {
-      "mrt-row-actions": { minSize: 250, maxSize: 250, size: 250 },
-    }, //change width of actions column to 300px
+    // displayColumnDefOptions: {
+    //   "mrt-row-actions": { minSize: 250, maxSize: 250, size: 250 },
+    // }, //change width of actions column to 300px
     state: { isLoading: mutationIsLoading || isLoadingDataItems },
     // mantineEditTextInputProps: ({ cell }) => ({
     //   onBlur: (event) => {
@@ -164,6 +157,7 @@ export function TableView<T extends Record<string, any>>({
         variant="inline"
         activeActionOption={activeActionOption}
         setActiveActionOption={setActiveActionOption}
+        view_item={item}
       />
     ),
     renderTopToolbar: ({ table }) => {
@@ -472,6 +466,7 @@ export function TableView<T extends Record<string, any>>({
             setActionType={setActionType}
             activeActionOption={activeActionOption}
             setActiveActionOption={setActiveActionOption}
+            view_item={item}
           />
         </div>
       )}

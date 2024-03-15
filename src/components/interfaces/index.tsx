@@ -1,5 +1,17 @@
 import { MRT_TableInstance } from "mantine-react-table";
-import { ISession } from "pages/sessions/interfaces";
+
+export interface ISession {
+  created_datetime: string;
+  updated_datetime: string;
+  author: string;
+  // data_models: string[];
+  // description: string;
+  // fields_configuration: IFieldConfiguration[];
+  id: string;
+  name: string;
+  // resource: string;
+  session_status: "published" | "draft" | "review";
+}
 
 export interface IApplication {
   id: string;
@@ -73,12 +85,47 @@ export interface CompleteActionComponentProps<T extends Record<string, any>> {
   // opened: boolean;
   // action_step: any;
   // variant?: "inline" | "default";
-  activeSession: any;
+  activeSession: ISession;
+  activeAction: IAction;
   activeRecords: any[];
-  activeActionOption: any;
+  // activeActionOption: any;
   // inputFields: FieldConfiguration[];
   // setActiveActionOption: (item: any) => void;
   // data_table: MRT_TableInstance<T>;
+}
+
+export interface ISession {
+  active_query: ActiveQuery;
+  author: string;
+  conditional_formatting: any[];
+  created_datetime: Date | string;
+  data_models: string[];
+  description: string;
+  id: string;
+  list: ListItem[];
+  name: string;
+  resource: string;
+  session_status: string;
+  updated_datetime: Date | string;
+}
+
+export interface ActiveQuery {
+  credentials: string;
+  query: string;
+  query_language: string;
+}
+
+export interface ListItem {
+  active_query: ActiveQuery;
+  display_components: string[];
+  display_name: string;
+  display_type: string;
+  fields_configuration: FieldConfiguration[];
+  id: string;
+  name: string;
+  order: number;
+  resource: string;
+  resource_type: string;
 }
 
 export interface SelectActionOptionComponentProps<
@@ -91,9 +138,10 @@ export interface SelectActionOptionComponentProps<
   record: any;
   action_step: any;
   variant?: "inline" | "default";
-  activeActionOption: any;
-  setActiveActionOption: (item: any) => void;
+  // activeActionOption: any;
+  // setActiveActionOption: (item: any) => void;
   data_table: MRT_TableInstance<T>;
+  view_item: IListItem;
 }
 
 // export type FieldConfiguration = {
@@ -107,6 +155,7 @@ export interface FieldConfiguration {
   field_name: string;
   display_format: string;
   display_component: string;
+  display_name: string;
   display_component_content: any;
   data_type?: string;
   filter_variant?:
@@ -122,49 +171,50 @@ export interface FieldConfiguration {
   filter_fn?: (rowValue: any, filterValue: any) => boolean;
   filter_mode?: string;
   visible: boolean;
+  props: any;
 }
 
-export interface Column {
-  field_name: string;
-  display_format: string;
-  display_component: string;
-  display_component_content: any;
-  data_type?: string;
-  filter_variant?:
-    | "select"
-    | "text"
-    | "checkbox"
-    | "date"
-    | "autocomplete"
-    | "date-range"
-    | "multi-select"
-    | "range"
-    | "range-slider";
-  filter_fn?: (rowValue: any, filterValue: any) => boolean;
-  filter_mode?: string;
-  visible: boolean;
-}
+// export interface Column {
+//   field_name: string;
+//   display_format: string;
+//   display_component: string;
+//   display_component_content: any;
+//   data_type?: string;
+//   filter_variant?:
+//     | "select"
+//     | "text"
+//     | "checkbox"
+//     | "date"
+//     | "autocomplete"
+//     | "date-range"
+//     | "multi-select"
+//     | "range"
+//     | "range-slider";
+//   filter_fn?: (rowValue: any, filterValue: any) => boolean;
+//   filter_mode?: string;
+//   visible: boolean;
+// }
 
-export interface Column {
-  field_name: string;
-  display_format: string;
-  display_component: string;
-  display_component_content: any;
-  data_type?: string;
-  filter_variant?:
-    | "select"
-    | "text"
-    | "checkbox"
-    | "date"
-    | "autocomplete"
-    | "date-range"
-    | "multi-select"
-    | "range"
-    | "range-slider";
-  filter_fn?: (rowValue: any, filterValue: any) => boolean;
-  filter_mode?: string;
-  visible: boolean;
-}
+// export interface InputField {
+//   field_name: string;
+//   display_format: string;
+//   display_component: string;
+//   display_component_content: any;
+//   data_type?: string;
+//   filter_variant?:
+//     | "select"
+//     | "text"
+//     | "checkbox"
+//     | "date"
+//     | "autocomplete"
+//     | "date-range"
+//     | "multi-select"
+//     | "range"
+//     | "range-slider";
+//   filter_fn?: (rowValue: any, filterValue: any) => boolean;
+//   filter_mode?: string;
+//   visible: boolean;
+// }
 
 export interface RowData {
   [key: string]: any;
@@ -291,6 +341,56 @@ export interface IShortcut {
   author: string;
   record_id: string;
   record_name: string;
+}
+
+export interface IAction {
+  created_at: Date | string;
+  updated_at: Date | string;
+  destination: {
+    id: string;
+    location: string;
+    record: string;
+  };
+  display_name: string;
+  field_configurations: FieldConfiguration[];
+  id: string;
+  metadata: {
+    display_component: string;
+    icon: string;
+    resources: string[];
+    type: string;
+    use_open: boolean;
+  };
+  name: string;
+  options: {
+    create_database_record: boolean;
+    delete_source_from_destination: boolean;
+    execute_by: string;
+    execution_orders_range: number[];
+    execution_type: string;
+    plan_with_llm: boolean;
+    record_task_field_name: string;
+    rerun_execution_orders: number[];
+    sync_from_source_to_destination: boolean;
+    update_record: boolean;
+    user_feedback: string;
+  };
+  source: {
+    id: string;
+    location: string;
+  };
+  task: {
+    author: string;
+    description: string;
+    id: string;
+    name: string;
+    status: string;
+  };
+  task_input: {
+    [key: string]: {
+      [prop: string]: any;
+    };
+  };
 }
 
 // export a simple react component

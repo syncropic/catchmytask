@@ -1,16 +1,44 @@
 import ListView from "@components/ListView";
-import { IListItem } from "@components/interfaces";
+import { IApplication, IIdentity, IListItem } from "@components/interfaces";
+import SelectTaskComponent from "@components/selecttask";
 import { Accordion, Button, Text } from "@mantine/core";
-import { IResourceComponentsProps, useShow } from "@refinedev/core";
+import {
+  HttpError,
+  IResourceComponentsProps,
+  useGetIdentity,
+  useOne,
+  useParsed,
+  useShow,
+} from "@refinedev/core";
 import { CloneButton, EditButton, Show } from "@refinedev/mantine";
 import { IconCopy } from "@tabler/icons-react";
 import React, { useEffect } from "react";
 import { useAppStore } from "src/store";
 
 export const PageShow: React.FC<IResourceComponentsProps> = () => {
+  // get applicationId from the URL
+  const { data: identity } = useGetIdentity<IIdentity>();
+
+  const { params } = useParsed();
+  const {
+    data: applicationData,
+    isLoading: isLoadingApplication,
+    isError: isErrorApplication,
+    error: errorApplication,
+  } = useOne<IApplication, HttpError>({
+    resource: "applications",
+    id: params?.applicationId,
+  });
+
+  // console.log("applicationData", applicationData);
+
   const { queryResult } = useShow();
-  const { setActiveSession, setActiveRecord, setActiveActionId } =
-    useAppStore();
+  const {
+    setActiveSession,
+    setActiveRecord,
+    setActiveActionId,
+    setActionType,
+  } = useAppStore();
   const { data, isLoading } = queryResult;
 
   const session = data?.data;
@@ -20,6 +48,7 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
       setActiveSession(session);
     }
   }, [session]);
+
   const handleClone = () => {
     setActiveRecord(session);
     setActiveActionId({
@@ -36,14 +65,24 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
           <>
             {/* {defaultButtons} */}
             {/* <EditButton resource="sessions" size="xs" /> */}
-            <Button
+            {/* <Button
               size="xs"
               variant="outline"
               leftIcon={<IconCopy></IconCopy>}
               onClick={handleClone}
             >
               Clone
-            </Button>
+            </Button> */}
+            {/* <SelectTaskComponent
+              action_options={[]}
+              identity={identity}
+              action_step={null}
+              record={null}
+              data_items={[]}
+              data_table={{}}
+              setActionType={setActionType}
+              view_item={{}}
+            /> */}
             {/* <CloneButton
               size="xs"
               // onClick={() => {

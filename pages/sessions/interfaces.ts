@@ -10,11 +10,11 @@ export interface ISession {
   updated_datetime: string;
   author: string;
   // data_models: string[];
-  // description: string;
+  description: string;
   // fields_configuration: IFieldConfiguration[];
   id: string;
   name: string;
-  // resource: string;
+  application: string;
   session_status: "published" | "draft" | "review";
 }
 

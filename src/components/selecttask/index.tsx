@@ -19,10 +19,9 @@ function SelectTaskComponent<T extends Record<string, any>>({
   record,
   data_table,
   variant = "default",
-  activeActionOption,
-  setActiveActionOption,
+  view_item,
 }: SelectActionOptionComponentProps<T>) {
-  const invalidate = useInvalidate();
+  // const invalidate = useInvalidate();
   const {
     mutate,
     isLoading: mutationIsLoading,
@@ -39,16 +38,33 @@ function SelectTaskComponent<T extends Record<string, any>>({
   } = useForm({
     initialValues: {},
   });
-  const { activeRecord, setActiveRecord, activeLayout, setActiveLayout } =
-    useAppStore();
+  const {
+    activeRecord,
+    setActiveRecord,
+    activeLayout,
+    setActiveLayout,
+    activeViewItem,
+    setActiveViewItem,
+    activeActionId,
+    setActiveActionId,
+  } = useAppStore();
 
   const handleActionChange = (value: string[]) => {
-    const item = action_options.find((item) => item.value === value[0]);
-    setActiveActionOption(item);
-    setActionType("setActiveActionOption");
+    console.log("value", value[0]);
+    const item = action_options.find((item) => item.display_name === value[0]);
+    setActiveActionId(item);
+    // console.log("activeActionId", item);
+    // setActiveActionOption(item);
+    // setActionType("setActiveActionOption");
     if (record) {
       setActiveRecord(record);
     }
+    if (view_item && item) {
+      setActiveViewItem(view_item);
+    } else {
+      setActiveViewItem(null);
+    }
+
     activateSection("rightSection");
     setFieldValue("action", value);
   };

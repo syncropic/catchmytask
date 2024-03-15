@@ -86,6 +86,11 @@ const useAppStore = create(
       activeActionOption: null,
       setActiveActionOption: (activeActionOption) =>
         set((state) => ({ activeActionOption })),
+      activeActionId: null,
+      setActiveActionId: (activeActionId) =>
+        set((state) => ({ activeActionId })),
+      activeAction: null,
+      setActiveAction: (activeAction) => set((state) => ({ activeAction })),
       activeDataModel: null,
       setActiveDataModel: (activeDataModel) =>
         set((state) => ({ activeDataModel })),
@@ -127,6 +132,12 @@ const useAppStore = create(
       activeSession: {},
       setActiveSession: (session) =>
         set((state) => ({ ...state, activeSession: session })),
+      activeApplication: {},
+      setActiveApplication: (application) =>
+        set((state) => ({ ...state, activeApplication: application })),
+      activeViewItem: {},
+      setActiveViewItem: (view_item) =>
+        set((state) => ({ ...state, activeViewItem: view_item })),
       activeColumnOptions: [],
       setActiveColumnOptions: (view) =>
         set((state) => ({ ...state, activeColumnOptions: view })),

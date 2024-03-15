@@ -2,6 +2,34 @@ import { ColumnConfig, FilterCondition } from "@components/interfaces";
 import { format, parseISO } from "date-fns";
 import { MRT_TableInstance } from "mantine-react-table";
 
+export function formatIdWithPrefix(
+  id: string | number | undefined,
+  prefix: string
+): string {
+  const separator = ":";
+  // Return "undefined" as a string if id is actually undefined
+  if (id === undefined) {
+    return "undefined";
+  }
+
+  // Ensure id is treated as a string, accommodating for numbers or other types
+  const idStr = id.toString();
+
+  // First, check if id already starts with prefix, if so, handle separator logic
+  if (idStr.startsWith(prefix)) {
+    // Check if the correct separator is already placed after the prefix
+    if (idStr.substring(prefix.length).startsWith(separator)) {
+      return idStr; // Correctly formatted with prefix and separator
+    } else {
+      // Prefix is there, but separator is missing or not in the correct position
+      return `${prefix}${separator}${idStr.substring(prefix.length)}`;
+    }
+  } else {
+    // Prefix not present at the start, add prefix and separator
+    return `${prefix}${separator}${idStr}`;
+  }
+}
+
 export function removeSeparator(id: string | number | undefined): string {
   const separator = ":";
   // Return undefined immediately if id is undefined

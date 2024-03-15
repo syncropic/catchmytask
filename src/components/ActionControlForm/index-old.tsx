@@ -24,14 +24,18 @@ import { addSeparator, formatDateTimeAsDateTime } from "src/utils";
 
 export function ActionControlForm<T extends Record<string, any>>({
   activeSession,
-  activeAction,
   activeRecords,
+  activeActionOption: activeActionOptionArg,
 }: CompleteActionComponentProps<T>) {
-  const { activeViewItem } = useAppStore();
-
+  const { activeViewItem, activeActionOption } = useAppStore();
+  const { data, isLoading, isError, error } = useOne<IAction, HttpError>({
+    resource: "action_options",
+    id: activeActionOption?.id,
+  });
+  console.log("data", data);
   const extractedFields = extractFields(
     activeRecords[0] || {},
-    activeAction?.field_configurations || []
+    activeActionOption?.field_configurations || []
   );
   const [openedAutomation, { open: openAutomation, close: closeAutomation }] =
     useDisclosure(false);
@@ -96,7 +100,7 @@ export function ActionControlForm<T extends Record<string, any>>({
     // console.log("start_date", start_date);
     // console.log(activeItem);
 
-    const task = activeAction;
+    const task = activeActionOption;
     const action_step = null;
     const resource = "onewurld_bookings";
     const record = {
@@ -208,6 +212,105 @@ export function ActionControlForm<T extends Record<string, any>>({
     });
   };
 
+  // const handleSubmit = (e: any) => {
+  //   let request_data = {
+  //     ...activeActionOption,
+  //     id: addSeparator(activeActionOption?.id, "action_options"),
+  //     values: {
+  //       ...activeRecords[0],
+  //       ...values, // so i can override original in the form if not disabled
+  //       action_options: [
+  //         addSeparator(activeActionOption?.id, "action_options"),
+  //       ],
+  //     },
+  //   };
+  //   mutate({
+  //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
+  //     method: "post",
+  //     values: request_data,
+  //     successNotification: (data, values) => {
+  //       invalidate({
+  //         resource: "caesars_bookings",
+  //         invalidates: ["list"],
+  //       });
+  //       close();
+  //       return {
+  //         message: `successfully executed.`,
+  //         description: "Success with no errors",
+  //         type: "success",
+  //       };
+  //     },
+  //     errorNotification: (data, values) => {
+  //       return {
+  //         message: `Something went wrong when executing`,
+  //         description: "Error",
+  //         type: "error",
+  //       };
+  //     },
+  //   });
+  // };
+
+  // const handleSaveOnly = (e: any) => {
+  //   let request_data = {
+  //     ...activeActionOption,
+  //     options: {
+  //       ...activeActionOption?.options,
+  //       execution_action_step_names: [
+  //         "get_collection_info_1",
+  //         "get_credential_info_1",
+  //         "update_record_fields_1",
+  //       ],
+  //       execute_by: "execution_action_step_names",
+  //       execution_includes: "save_only",
+  //     },
+  //     id: addSeparator(activeActionOption?.id, "action_options"),
+  //     values: {
+  //       ...activeRecords[0],
+  //       ...values, // so i can override original in the form if not disabled
+  //       action_options: [
+  //         addSeparator(activeActionOption?.id, "action_options"),
+  //       ],
+  //     },
+  //   };
+  //   // console.log("mode", "save_only");
+  //   // console.log("request_data", request_data);
+  //   mutate({
+  //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
+  //     method: "post",
+  //     values: request_data,
+  //     successNotification: (data, values) => {
+  //       invalidate({
+  //         resource: "caesars_bookings",
+  //         invalidates: ["list"],
+  //       });
+  //       // close();
+  //       return {
+  //         message: `successfully executed.`,
+  //         description: "Success with no errors",
+  //         type: "success",
+  //       };
+  //     },
+  //     errorNotification: (data, values) => {
+  //       return {
+  //         message: `Something went wrong when executing`,
+  //         description: "Error",
+  //         type: "error",
+  //       };
+  //     },
+  //   });
+  // };
+
+  const viewComponent = (activeViewItem, activeRecord) => {
+    if (!activeViewItem) {
+      return null;
+    }
+    if (!activeViewItem?.resource_type) {
+      return null;
+    }
+    const Component = componentMapping[activeViewItem.resource_type];
+    return <Component item={activeRecord} />;
+  };
+
   return (
     <Create
       // isLoading={formLoading}
@@ -222,6 +325,16 @@ export function ActionControlForm<T extends Record<string, any>>({
       goBack={false}
       footerButtons={({ saveButtonProps }) => (
         <div className="flex w-full gap-4">
+          {/* <SaveButton
+            {...saveButtonProps}
+            className="flex-grow w-1/3"
+            variant="light"
+            leftIcon={<IconDatabaseShare size={16} />}
+            disabled={mutationIsLoading}
+            onClick={handleSaveOnly}
+          >
+            Save Values
+          </SaveButton> */}
           <SaveButton
             {...saveButtonProps}
             className="flex-grow w-2/3"
@@ -262,24 +375,25 @@ export function ActionControlForm<T extends Record<string, any>>({
         </div>
       )}
     >
-      {/* <div>actioncontrolform</div> */}
-      {/* {JSON.stringify(activeAction)} */}
-      {/* {activeAction?.name === "view"
+      {JSON.stringify(activeActionOption)}
+      {activeActionOption?.name === "view"
         ? viewComponent(activeViewItem, activeRecords[0])
-        : null} */}
-      {activeAction?.field_configurations &&
-        activeAction?.field_configurations?.map((field: FieldConfiguration) => {
-          const Component = componentMapping[field.display_component];
-          return (
-            <div key={field.field_name} className="mb-4">
-              <Component
-                {...getInputProps(field.field_name)}
-                {...field.props}
-                label={field.display_name}
-              />
-            </div>
-          );
-        })}
+        : null}
+      {activeActionOption?.field_configurations &&
+        activeActionOption?.field_configurations?.map(
+          (field: FieldConfiguration) => {
+            const Component = componentMapping[field.display_component];
+            return (
+              <div key={field.field_name} className="mb-4">
+                <Component
+                  {...getInputProps(field.field_name)}
+                  {...field.props}
+                  label={field.display_name}
+                />
+              </div>
+            );
+          }
+        )}
       {openedChat && <CreateChat></CreateChat>}
       {openedAutomation && <CreateAutomation></CreateAutomation>}
     </Create>

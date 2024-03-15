@@ -4,20 +4,18 @@ import { HttpError, IResourceComponentsProps, useOne } from "@refinedev/core";
 import React from "react";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
-  // list of all available applications dataset columns
   const { data, isLoading, isError, error } = useOne<IDataset, HttpError>({
     resource: "datasets",
     id: "datasets:⟨ba87cd4a-ce75-41e7-901f-047b29c6c725⟩",
   });
   // console.log("applications_dataset", data);
   // create show_item that implements the IShowItem interface from the item in list key where name  == "default"
+  const list_item = data?.data?.list?.find((item) => item.name == "default");
+  // console.log("list_item", list_item);
 
   // const { subscriptions } = useSubscriptions();
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error: {JSON.stringify(error)}</div>;
-  // const list_item = data?.data?.list?.find((item) => item.name == "default");
-  const list_item = data?.data.list.find((item) => item.name == "default");
-
   return (
     <>
       <ListView item={list_item} />

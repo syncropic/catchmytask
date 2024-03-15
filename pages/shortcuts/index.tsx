@@ -35,31 +35,9 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       {
         accessorKey: "name",
         header: "My Shortcuts",
-        // minSize: 100, //min size enforced during resizing
-        // maxSize: 50, //max size enforced during resizing
-        // size: 50, //medium column
+
         Cell: ({ row }) => (
           <>
-            {/* <Anchor component={Text}>
-              <Text
-                size="sm"
-                onClick={() => {
-                  setActionType("set_shortcut");
-                  setActiveSession(row.original);
-                  go({
-                    to: {
-                      resource: row.original.record_name,
-                      action: "show",
-                      id: row.original.record_id,
-                    },
-
-                    type: "push",
-                  });
-                }}
-              >
-                {row.original.name}
-              </Text>
-            </Anchor> */}
             <Group>
               <HoverCard
                 width={280}

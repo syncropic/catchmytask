@@ -27,7 +27,7 @@ import {
 import { useAppStore } from "src/store";
 // import QueryCreate from "../query/create";
 import { IIdentity } from "@components/interfaces";
-import { ISession } from "./interfaces";
+import { ISession } from "@components/interfaces";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const go = useGo();
@@ -49,6 +49,9 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       {
         accessorKey: "name",
         header: "session",
+        // minSize: 100, //min size enforced during resizing
+        // maxSize: 50, //max size enforced during resizing
+        // size: 50, //medium column
         Cell: ({ row }) => (
           <>
             <Group>
@@ -63,17 +66,16 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
                     <Text
                       size="sm"
                       onClick={() => {
-                        // setActionType("setActiveSession");
+                        setActionType("setActiveSession");
                         setActiveSession(row.original);
                         go({
                           to: {
                             resource: "sessions",
                             action: "show",
                             id: row.original.id,
-                            meta: {
-                              applicationId: row.original.application,
-                            },
                           },
+                          // to: "/applications/show/applications:⟨018e21b1-0bfe-7048-ab46-2b39f5f8091c⟩/sessions",
+                          // to: "/applications/show/applications:⟨018e21b1-0bfe-7048-ab46-2b39f5f8091c⟩/sessions/show/sessions:⟨e94b4bec-ae36-4db1-8f38-853755320d56⟩",
                           type: "push",
                         });
                       }}
@@ -186,6 +188,45 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       placeholder: "Search sessions",
     },
     mantineTableContainerProps: { sx: { maxHeight: "350px" } },
+    // renderRowActionMenuItems: ({ row }) => (
+    //   <>
+    //     <Menu.Item
+    //       onClick={() =>
+    //         mutate({
+    //           url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/create`,
+    //           method: "post",
+    //           values: {
+    //             ...refreshReportRequestData,
+    //             task: {
+    //               ...refreshReportRequestData.task,
+    //               name: row.original.id,
+    //             },
+    //             destination: {
+    //               ...refreshReportRequestData.destination,
+    //               record: addSeparator(row.original.id, "caesars_bookings"),
+    //             },
+    //           },
+    //           successNotification: (data, values) => {
+    //             return {
+    //               message: `${row.original.id} Successfully fetched.`,
+    //               description: "Success with no errors",
+    //               type: "success",
+    //             };
+    //           },
+    //           errorNotification: (data, values) => {
+    //             return {
+    //               message: `Something went wrong when getting ${row.original.id}`,
+    //               description: "Error",
+    //               type: "error",
+    //             };
+    //           },
+    //         })
+    //       }
+    //     >
+    //       {mutationIsLoading ? "Loading..." : "Refresh Report"}
+    //     </Menu.Item>
+    //   </>
+    // ),
     // renderDetailPanel: ({ row }) => (
     //   <div>
     //     <Text>

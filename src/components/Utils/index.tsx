@@ -3,13 +3,27 @@ import ExternalLink from "@components/ExternalLink";
 import FilePath from "@components/FilePath";
 import PrimaryKey from "@components/PrimaryKey";
 import Reveal from "@components/Reveal";
+import ViewApplication from "@components/ViewApplication";
+import ViewBooking from "@components/ViewBooking";
+import ViewFile from "@components/ViewFile";
+import ViewPayment from "@components/ViewPayment";
+import ViewTask from "@components/ViewTask";
+import ViewTestRun from "@components/ViewTestRun";
+import ViewTrip from "@components/ViewTrip";
 import {
+  Column,
   FieldConfiguration,
   IIdentity,
   ISubscription,
   RowData,
 } from "@components/interfaces";
-import { MultiSelect, TextInput, Textarea } from "@mantine/core";
+import {
+  MultiSelect,
+  NumberInput,
+  Select,
+  TextInput,
+  Textarea,
+} from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { HttpError, useGetIdentity, useList } from "@refinedev/core";
 import { MRT_ColumnDef } from "mantine-react-table";
@@ -27,18 +41,27 @@ export function createColumnDef<RowDataType extends RowData>(
   const isPrimaryKey = column?.display_component === "PrimaryKey";
   const isFilePath = column?.display_component === "FilePath";
   const isReveal = column?.display_component === "Reveal";
+  const isDisplayColumn = [
+    "mrt-row-select",
+    "mrt-row-expand",
+    "mrt-row-actions",
+  ].includes(column?.field_name);
   // default is when it is not a datetime or decimal
   const isDefault =
     !isDateTime &&
     !isDecimal &&
     !isExternalLink &&
     !isPrimaryKey &&
-    !isFilePath;
+    !isFilePath &&
+    !isDisplayColumn;
   return {
     id: column?.field_name,
     header: column?.field_name,
     ...(isDefault && {
       accessorKey: column?.field_name,
+    }),
+    ...(isDisplayColumn && {
+      columnDefType: "display",
     }),
     ...(isDateTime && {
       accessorFn: (row) => new Date(row[column.field_name] ?? ""),
@@ -157,11 +180,11 @@ export function useSubscriptions() {
 
 export function extractFields(
   dataObject: Record<string, any>,
-  fieldConfigurations: FieldConfiguration[]
+  fields: FieldConfiguration[]
 ): Record<string, any> {
   const result: Record<string, any> = {};
 
-  fieldConfigurations.forEach(({ field_name }) => {
+  fields.forEach(({ field_name }) => {
     // If the dataObject has the key specified in the field configuration, add it to the result
     if (dataObject.hasOwnProperty(field_name)) {
       result[field_name] = dataObject[field_name];
@@ -176,6 +199,15 @@ export const componentMapping = {
   Textarea: Textarea,
   DateInput: DateInput,
   MultiSelect: MultiSelect,
+  Select: Select,
+  NumberInput: NumberInput,
+  trips: ViewTrip,
+  bookings: ViewBooking,
+  payments: ViewPayment,
+  test_runs: ViewTestRun,
+  files: ViewFile,
+  applications: ViewApplication,
+  tasks: ViewTask,
 };
 
 export type BaseKey = {

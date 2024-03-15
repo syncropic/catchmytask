@@ -194,6 +194,18 @@ const UserMenu: React.FC<{ user: IIdentity }> = ({ user }) => {
         </Menu.Target>
         {/* ...Menu.Items */}
         <Menu.Dropdown>
+          {user.email === "david.wanjala@snowstormtech.com" && (
+            <>
+              <Menu.Label>Applications</Menu.Label>
+              <Menu.Item
+                icon={<IconSettings size={14} />}
+                onClick={() => list("applications")}
+              >
+                Applications
+              </Menu.Item>
+            </>
+          )}
+
           <Menu.Label>Account</Menu.Label>
           <Menu.Item
             icon={<IconSettings size={14} />}
