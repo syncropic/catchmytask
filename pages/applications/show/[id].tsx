@@ -1,4 +1,5 @@
 import ListView from "@components/ListView";
+import ResourceHeader from "@components/ResourceHeader";
 import SelectAction from "@components/SelectAction";
 import { IApplication, IDataset, IListItem } from "@components/interfaces";
 import { Accordion, Text } from "@mantine/core";
@@ -12,6 +13,7 @@ import {
 import { Show } from "@refinedev/mantine";
 import React, { useEffect } from "react";
 import { useAppStore } from "src/store";
+import { formatDateTimeAsDateTime } from "src/utils";
 
 export const PageShow: React.FC<IResourceComponentsProps> = () => {
   const { params } = useParsed();
@@ -39,18 +41,22 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
   const actionsList = defaultDatasetListItem?.actions;
 
   const { queryResult } = useShow();
-  const { setActiveDataset, activeDataset, setActiveApplication } =
-    useAppStore();
+  const {
+    setActiveDataset,
+    activeDataset,
+    setActiveApplication,
+    activeApplication,
+  } = useAppStore();
 
   const { data, isLoading } = queryResult;
 
-  const dataset = data?.data;
+  const application = data?.data;
   // when session changes, set activeDataset
   useEffect(() => {
-    if (dataset) {
-      setActiveDataset(dataset);
+    if (application) {
+      setActiveApplication(application);
     }
-  }, [dataset]);
+  }, [data?.data]);
 
   // when session changes, set activeDataset
   // useEffect(() => {
@@ -66,24 +72,43 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
         headerButtons={({ defaultButtons }) => (
           <>
             <SelectAction
-              actions_list={actionsList}
+              actions_list={actionsList || []}
               record={activeDataset}
               view_item={null}
             />
           </>
         )}
       >
-        <>
+        {/* <>
           <Text>
-            <b>id:</b> {dataset?.id}
+            <b>id:</b> {application?.id}
           </Text>
           <Text>
             <b>name:</b>{" "}
-            {dataset?.name || dataset?.display_name || dataset?.title}
+            {application?.name ||
+              application?.display_name ||
+              application?.title}
           </Text>
-        </>
+        </> */}
+        <ResourceHeader
+          name={activeApplication?.name}
+          heading={activeApplication?.heading}
+          subheading={activeApplication?.subheading}
+          description={activeApplication?.description}
+        />
+        <div className="flex p-3 gap-3">
+          <Text>
+            <b>Author:</b> {activeApplication?.author}
+          </Text>
+          <Text>
+            <b>Updated:</b>{" "}
+            {formatDateTimeAsDateTime(activeApplication?.updated_datetime)}
+          </Text>
+        </div>
+        {/* <div>application stats and useful links i.e installs, author etc</div> */}
+        {/* <div>application sessions</div> */}
         <Accordion defaultValue="1">
-          {dataset?.list?.map((item: IListItem) => (
+          {activeApplication?.show?.map((item: IListItem) => (
             <Accordion.Item key={item?.order} value={item?.order?.toString()}>
               <Accordion.Control>{`${item?.resource}`}</Accordion.Control>
               <Accordion.Panel>

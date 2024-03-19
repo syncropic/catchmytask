@@ -1,8 +1,10 @@
 import Decimal from "@components/Decimal";
+import ExecutionStatus from "@components/ExecutionStatus";
 import ExternalLink from "@components/ExternalLink";
 import FilePath from "@components/FilePath";
 import PrimaryKey from "@components/PrimaryKey";
 import Reveal from "@components/Reveal";
+import SessionLink from "@components/SessionLink";
 import ViewApplication from "@components/ViewApplication";
 import ViewBooking from "@components/ViewBooking";
 import ViewFile from "@components/ViewFile";
@@ -13,6 +15,8 @@ import ViewTrip from "@components/ViewTrip";
 import {
   Column,
   FieldConfiguration,
+  IAction,
+  IApplication,
   IIdentity,
   ISubscription,
   RowData,
@@ -25,7 +29,7 @@ import {
   Textarea,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
-import { HttpError, useGetIdentity, useList } from "@refinedev/core";
+import { HttpError, useGetIdentity, useList, useOne } from "@refinedev/core";
 import { MRT_ColumnDef } from "mantine-react-table";
 import { useEffect, useMemo, useState } from "react";
 import DateTime from "src/components/DateTime";
@@ -41,6 +45,8 @@ export function createColumnDef<RowDataType extends RowData>(
   const isPrimaryKey = column?.display_component === "PrimaryKey";
   const isFilePath = column?.display_component === "FilePath";
   const isReveal = column?.display_component === "Reveal";
+  const isSessionLink = column?.display_component === "SessionLink";
+  const isExecutionStatus = column?.display_component === "ExecutionStatus";
   const isDisplayColumn = [
     "mrt-row-select",
     "mrt-row-expand",
@@ -53,12 +59,34 @@ export function createColumnDef<RowDataType extends RowData>(
     !isExternalLink &&
     !isPrimaryKey &&
     !isFilePath &&
-    !isDisplayColumn;
+    !isDisplayColumn &&
+    !isReveal &&
+    !isSessionLink &&
+    !isExecutionStatus;
   return {
     id: column?.field_name,
     header: column?.field_name,
+    ...(column?.filter_variant && {
+      filterVariant: column.filter_variant,
+      filterFn: column.filter_fn,
+    }),
     ...(isDefault && {
       accessorKey: column?.field_name,
+    }),
+    ...(column?.aggregation_fn && {
+      aggregationFn: column?.aggregation_fn,
+      AggregatedCell: ({ cell }) => {
+        if (isDateTime) {
+          return (
+            <DateTime
+              value={cell.getValue()}
+              displayFormat={column.display_format ?? "yyyy-MM-dd"}
+            />
+          );
+        } else {
+          return <div>{JSON.stringify(cell.getValue())}</div>;
+        }
+      },
     }),
     ...(isDisplayColumn && {
       columnDefType: "display",
@@ -94,6 +122,16 @@ export function createColumnDef<RowDataType extends RowData>(
         />
       ),
     }),
+
+    ...(isSessionLink && {
+      Cell: ({ row }) => (
+        <SessionLink
+          value={row.original[column.field_name]}
+          record={row.original}
+          displayComponentContent={column.display_component_content ?? null}
+        />
+      ),
+    }),
     ...(isPrimaryKey && {
       Cell: ({ row }) => (
         <PrimaryKey
@@ -120,10 +158,6 @@ export function createColumnDef<RowDataType extends RowData>(
         />
       ),
     }),
-    ...(column?.filter_variant && {
-      filterVariant: column.filter_variant,
-      filterFn: column.filter_fn,
-    }),
   };
 }
 
@@ -141,7 +175,8 @@ export function useDataColumns(columns: FieldConfiguration[], tableId: string) {
       .filter((column) => column?.visible)
       .map((column, index) => ({
         ...createColumnDef<RowData>(column),
-        id: `${tableId}-${column.field_name}-${index}`, // Adjusting the ID to include the tableId
+        // id: `${tableId}-${column.field_name}-${index}`, // Adjusting the ID to include the tableId
+        id: `${tableId}-${column.field_name}`, // Adjusting the ID to include the tableId
       }));
   }, [columns, tableId]);
 }
@@ -306,4 +341,79 @@ export function useAuthToken() {
   }, [identity]); // Re-run when `identity` changes
 
   return { token, loading, error };
+}
+
+type RecordIdentifier = {
+  id: string;
+  name: string;
+};
+
+export function extractIdentifier(activeRecord: any): RecordIdentifier | null {
+  // Define the keys in the priority order you want to check
+  const keysToCheck: string[] = ["id", "flight_pnr", "trip_id", "test_id"];
+
+  for (let key of keysToCheck) {
+    if (activeRecord?.[key]) {
+      return { id: activeRecord[key], name: key };
+    }
+  }
+
+  // Return null or any other default value if no keys are found
+  return null;
+}
+
+export function useFetchActionById(actionId: string | null) {
+  const [action, setAction] = useState<IAction | null>(null);
+  const { data, error, isLoading } = useOne<IAction, HttpError>({
+    resource: "actions",
+    id: `${actionId}`,
+  });
+
+  useEffect(() => {
+    if (!isLoading && data && !error) {
+      setAction(data.data);
+    }
+  }, [data, isLoading, error]);
+
+  return { action, isLoading, error };
+}
+
+export function useFetchApplicationById(applicationId: string | null) {
+  const [application, setApplication] = useState<IApplication | null>(null);
+  const { data, error, isLoading } = useOne<IApplication, HttpError>({
+    resource: "applications",
+    id: `${applicationId}`,
+  });
+
+  useEffect(() => {
+    if (!isLoading && data && !error) {
+      setApplication(data.data);
+    }
+  }, [data, isLoading, error]);
+
+  return { application, isLoading, error };
+}
+
+export type AggregationFn = (
+  getLeafRows: () => { original: { status: string } }[],
+  getChildRows: () => any[]
+) => string;
+
+export const getActionStatus: AggregationFn = (getLeafRows, getChildRows) => {
+  const leafRows = getLeafRows();
+  if (leafRows.some((row) => row.original.status === "error")) {
+    return "error";
+  } else if (leafRows.some((row) => row.original.status === "pending")) {
+    return "pending";
+  }
+  return "complete";
+};
+
+export function selectExecutionStatus(statusList: string[]): string {
+  if (statusList.some((status) => status === "error")) {
+    return "error";
+  } else if (statusList.some((status) => status === "pending")) {
+    return "pending";
+  }
+  return "complete";
 }

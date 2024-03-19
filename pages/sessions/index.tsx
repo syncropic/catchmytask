@@ -1,3 +1,32 @@
+// import ListView from "@components/ListView";
+// import { IDataset } from "@components/interfaces";
+// import { HttpError, IResourceComponentsProps, useOne } from "@refinedev/core";
+// import React from "react";
+
+// export const PageList: React.FC<IResourceComponentsProps> = () => {
+//   // list of all available applications dataset columns
+//   // sessions dataset
+//   const { data, isLoading, isError, error } = useOne<IDataset, HttpError>({
+//     resource: "datasets",
+//     id: "datasets:⟨0d2b472d-0473-4770-b7f9-0a1c986b824f⟩",
+//   });
+//   // console.log("applications_dataset", data);
+//   // create show_item that implements the IShowItem interface from the item in list key where name  == "default"
+
+//   // const { subscriptions } = useSubscriptions();
+//   if (isLoading) return <div>Loading...</div>;
+//   if (isError) return <div>Error: {JSON.stringify(error)}</div>;
+//   // const list_item = data?.data?.list?.find((item) => item.name == "default");
+//   const list_item = data?.data.list.find((item) => item.name == "sidebar");
+
+//   return (
+//     <>
+//       <ListView item={list_item} />
+//     </>
+//   );
+// };
+// export default PageList;
+
 import {
   HttpError,
   IResourceComponentsProps,
@@ -26,8 +55,7 @@ import {
 } from "mantine-react-table";
 import { useAppStore } from "src/store";
 // import QueryCreate from "../query/create";
-import { IIdentity } from "@components/interfaces";
-import { ISession } from "./interfaces";
+import { IIdentity, ISession } from "@components/interfaces";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const go = useGo();
@@ -168,7 +196,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       density: "xs",
       // showGlobalFilter: true,
       showColumnFilters: true,
-      // pagination: { pageSize: 7, pageIndex: 0 },
+      pagination: { pageSize: 7, pageIndex: 0 },
       // sorting: [
       //   {
       //     id: "updated_at",
@@ -176,15 +204,17 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
       //   },
       // ],
     },
+    enablePagination: false,
+    enableBottomToolbar: false, //hide the bottom toolbar as well if you want
     // paginationDisplayMode: "pages",
     // positionToolbarAlertBanner: "bottom",
-    // mantinePaginationProps: {
-    //   radius: "xl",
-    //   size: "xs",
-    // },
-    mantineSearchTextInputProps: {
-      placeholder: "Search sessions",
+    mantinePaginationProps: {
+      // radius: "xl",
+      size: "xs",
     },
+    // mantineSearchTextInputProps: {
+    //   placeholder: "Search sessions",
+    // },
     mantineTableContainerProps: { sx: { maxHeight: "350px" } },
     // renderDetailPanel: ({ row }) => (
     //   <div>
@@ -231,84 +261,21 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
             <CreateButton size="xs" resource="sessions">
               Create Session
             </CreateButton>
-            {/* <Tooltip label="Send sessions">
-              <ActionIcon variant="filled" aria-label="Send" size="sm">
-                <IconMail
-                  // size={20}
-                  // style={{ width: "70%", height: "70%" }}
-                  // stroke={1.5}
-                  onClick={() => {
-                    setActionType("open_send");
-                    setOpened(true);
-                  }}
-                />
-              </ActionIcon>
-            </Tooltip> */}
-            {/* <Tooltip label="Download sessions">
-              <ActionIcon variant="filled" aria-label="Dowload" size="sm">
-                <IconDownload
-                  // size={20}
-                  // style={{ width: "70%", height: "70%" }}
-                  // stroke={1.5}
-                  onClick={() => {
-                    setActionType("open_download");
-                    setOpened(true);
-                  }}
-                />
-              </ActionIcon>
-            </Tooltip> */}
-            {/* <Tooltip label="Query">
-              <ActionIcon variant="filled" aria-label="Query" size="sm">
-                <IconSearch
-                  // size={20}
-                  // style={{ width: "70%", height: "70%" }}
-                  // stroke={1.5}
-                  onClick={() => {
-                    setActionType("open_query");
-                    setOpened(true);
-                  }}
-                />
-              </ActionIcon>
-            </Tooltip> */}
-            {/* <Button
-              size="xs"
-              leftIcon={<IconMail size={18} />}
-             
-            ></Button> */}
           </Flex>
-          <Flex sx={{ gap: "8px" }}>
-            {/* <Button
-              color="red"
-              disabled={!table.getIsSomeRowsSelected()}
-              onClick={handleDelete}
-              variant="filled"
-            >
-              Delete
-            </Button> */}
-            {/* <Button
-              color="green"
-              disabled={!table.getIsSomeRowsSelected()}
-              onClick={handleActivate}
-              variant="filled"
-            >
-              Download
-            </Button> */}
-          </Flex>
+          <Flex sx={{ gap: "8px" }}></Flex>
         </Flex>
       );
     },
   });
   return (
-    <div className="w-max-screen">
-      <MantineProvider
-        theme={{
-          colorScheme: "light",
-          primaryColor: "blue",
-        }}
-      >
-        <MantineReactTable table={table} />
-      </MantineProvider>
-    </div>
+    <MantineProvider
+      theme={{
+        colorScheme: "light",
+        primaryColor: "blue",
+      }}
+    >
+      <MantineReactTable table={table} />
+    </MantineProvider>
   );
 };
 export default PageList;

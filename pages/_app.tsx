@@ -31,14 +31,6 @@ type ExtendedAppProps = AppProps & {
 };
 
 const App = (props: React.PropsWithChildren) => {
-  // const instanceKey1 = `${process.env.NEXT_PUBLIC_DB_NAMESPACE}:${process.env.NEXT_PUBLIC_DB_DATABASE}`;
-  // const dbInstance1 = useDb(instanceKey1);
-  // const instanceKey2 = `${process.env.NEXT_PUBLIC_DB_NAMESPACE_SECOND}:${process.env.NEXT_PUBLIC_DB_DATABASE_SECOND}`;
-  // const dbInstance2 = useDb(instanceKey2);
-  // console.log("instanceKey1", instanceKey1);
-  // console.log("dbInstance1", dbInstance1);
-  // console.log("instanceKey2", instanceKey2);
-  // console.log("dbInstance2", dbInstance2);
   const { data, status } = useSession();
   const router = useRouter();
   const { to } = router.query;
@@ -239,7 +231,6 @@ const App = (props: React.PropsWithChildren) => {
                 create: "/datasets/create",
                 edit: "/datasets/edit/:id",
                 show: "/datasets/show/:id",
-                clone: "/datasets/clone/:id",
                 meta: {
                   credentials: "surrealdb_catchmytask",
                   query_language: "surrealql",
@@ -295,18 +286,6 @@ function MyApp({
   Component,
   pageProps: { session, ...pageProps },
 }: ExtendedAppProps): JSX.Element {
-  // const renderComponent = () => {
-  //   if (Component.noLayout) {
-  //     return <Component {...pageProps} />;
-  //   }
-
-  //   return (
-  //     <>
-  //       <Component {...pageProps} />
-  //     </>
-  //   );
-  // };
-
   return (
     <SessionProvider session={session}>
       <App>

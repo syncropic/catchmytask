@@ -1,72 +1,20 @@
+import { Anchor, Text } from "@mantine/core";
 import {
+  HttpError,
   IResourceComponentsProps,
-  useShow,
-  useOne,
-  useCustomMutation,
-  useGetIdentity,
-  useDelete,
   useGo,
+  useList,
+  useOne,
+  useParsed,
+  useShow,
 } from "@refinedev/core";
-import { Show, TextField, DateField } from "@refinedev/mantine";
-import {
-  Accordion,
-  Anchor,
-  Flex,
-  MantineProvider,
-  Title,
-  rem,
-} from "@mantine/core";
-import React, { useEffect, useMemo, useState } from "react";
-import { GetManyResponse, useMany, useList, HttpError } from "@refinedev/core";
-import { useTable } from "@refinedev/react-table";
-import { ColumnDef, flexRender } from "@tanstack/react-table";
-import {
-  IconCirclePlus,
-  IconEdit,
-  IconList,
-  IconMathFunction,
-  IconMessageCircle,
-  IconSend,
-  IconTrash,
-} from "@tabler/icons-react";
-import {
-  ScrollArea,
-  Table,
-  Pagination,
-  Group,
-  Menu,
-  Box,
-  ActionIcon,
-  Text,
-  Code,
-  Button,
-} from "@mantine/core";
-import { List, EditButton, ShowButton, DeleteButton } from "@refinedev/mantine";
-import {
-  MantineReactTable,
-  useMantineReactTable,
-  type MRT_ColumnDef,
-  MRT_GlobalFilterTextInput,
-  MRT_ToggleFiltersButton,
-} from "mantine-react-table";
-import { useParsed } from "@refinedev/core";
-import {
-  addSeparator,
-  formatDateTimeAsDate,
-  formatDateTimeAsDateTime,
-  updateTableVisibility,
-} from "src/utils";
-import CodeBlock from "src/components/codeblock/codeblock";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import ListMessages from "@components/message/ListItems";
-import WriteMessagesForm from "@components/message/WriteItemForm";
-import { parseISO, format } from "date-fns";
-import { useInvalidate } from "@refinedev/core";
-import { renderOperationDetails } from "src/components/actionstep";
-import { useAppStore } from "src/store";
+import { Show } from "@refinedev/mantine";
+import { type MRT_ColumnDef } from "mantine-react-table";
 import { ITestRun } from "pages/test_runs/interfaces";
-import ReactMantineTableView from "@components/ReactMantineTableView";
 import { IView } from "pages/views/interfaces";
+import React, { useMemo } from "react";
+import { useAppStore } from "src/store";
+import { formatDateTimeAsDateTime } from "src/utils";
 
 export const PageShow: React.FC<IResourceComponentsProps> = () => {
   // record

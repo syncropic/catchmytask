@@ -13,21 +13,156 @@ const getToken = () => {
   return auth_token ? JSON.parse(auth_token).access_token : "";
 };
 
-// Function to generate a SurrealDBQL WHERE clause
-function generateWhereClause(filters) {
-  const conditions = filters.map((filter) => {
-    let operator = filter.operator;
-    // Translate "eq" to "=" for SQL compatibility
-    if (operator === "eq") {
-      operator = "=";
-    }
-    // Assuming the value is a string, we add single quotes around it
-    const value = `'${filter.value}'`;
-    return `${filter.field} ${operator} ${value}`;
-  });
+// Define supported operators
+type Operator =
+  | "eq"
+  | "ne"
+  | "lt"
+  | "gt"
+  | "lte"
+  | "gte"
+  | "in"
+  | "nin"
+  | "contains"
+  | "ncontains"
+  | "containss"
+  | "ncontainss"
+  | "between"
+  | "nbetween"
+  | "null"
+  | "nnull"
+  | "or"
+  | "startswith"
+  | "nstartswith"
+  | "startswiths"
+  | "nstartswiths"
+  | "endswith"
+  | "nendswith"
+  | "endswiths"
+  | "nendswiths";
 
-  // Join all conditions with AND (or OR, depending on your requirements)
-  return `WHERE ` + conditions.join(" AND ");
+// Base interface for filters excluding 'or', 'null', and 'nnull' which are handled separately
+interface BaseFilter {
+  field: string;
+  operator: Exclude<Operator, "or" | "null" | "nnull">;
+  value: any; // The type can be more specific based on your needs, such as string | number | string[] | number[]
+}
+
+// Filters for checking 'null' and 'nnull' conditions which don't require a 'value'
+interface NullFilter {
+  field: string;
+  operator: "null" | "nnull";
+}
+
+// Interface for 'or' conditions allowing nested filters
+interface OrFilter {
+  operator: "or";
+  value: Filter[];
+}
+
+// Union type representing any possible filter
+type Filter = BaseFilter | OrFilter | NullFilter;
+
+// Function to generate a WHERE clause from an array of filters
+function generateWhereClause(filters: Filter[]): string {
+  // Process a single value based on the operator to handle SQL syntax correctly
+  const processValue = (value: any, operator: Operator): string => {
+    // console.log("value", value); // Check the actual structure of value
+    // const mappedValues = value.map((val: any) => `'${val}'`);
+    // console.log("mappedValues", mappedValues); // Inspect the mapped (quoted) values
+    // const result = `(${mappedValues.join(", ")})`;
+    // console.log("result", result); // See the final result before return
+    switch (operator) {
+      case "in":
+      case "nin":
+        // Map each value to a single-quoted string and join with commas, enclosed in parentheses
+        return `[${value.map((val: any) => `'${val}'`).join(", ")}]`;
+      case "between":
+      case "nbetween":
+        // Handle two values for 'BETWEEN'
+        return `${value[0]} AND ${value[1]}`;
+      default:
+        // Default handling, adds quotes if the value is a string
+        return typeof value === "string" ? `'${value}'` : value.toString();
+    }
+  };
+
+  // Translate our custom operators to SQL operators
+  const translateOperator = (operator: Operator): string => {
+    switch (operator) {
+      case "eq":
+        return "=";
+      case "ne":
+        return "!=";
+      case "lt":
+        return "<";
+      case "gt":
+        return ">";
+      case "lte":
+        return "<=";
+      case "gte":
+        return ">=";
+      case "in":
+        return "IN";
+      case "nin":
+        return "NOT IN";
+      case "contains":
+      case "containss": // Assuming SQL LIKE for simplicity; might need adjustment for case sensitivity
+      case "startswith":
+      case "startswiths": // Simplified to LIKE, specific handling for the value required
+      case "endswith":
+      case "endswiths": // Simplified to LIKE, specific handling for the value required
+        return "LIKE";
+      case "ncontains":
+      case "ncontainss":
+      case "nstartswith":
+      case "nstartswiths":
+      case "nendswith":
+      case "nendswiths":
+        return "NOT LIKE";
+      case "between":
+        return "BETWEEN";
+      case "nbetween":
+        return "NOT BETWEEN";
+      case "null":
+        return "IS NULL";
+      case "nnull":
+        return "IS NOT NULL";
+      default:
+        return operator;
+    }
+  };
+
+  // Enhanced version of the processFilter function with type guards
+  const processFilter = (filter: Filter): string => {
+    if ("value" in filter) {
+      // This block will now only process filters that have a 'value' property (i.e., BaseFilter and OrFilter)
+
+      let operator = translateOperator(filter.operator);
+
+      if (filter.operator === "or") {
+        // Handle 'OR' conditions by recursively processing nested filters
+        const orConditions = filter.value
+          .map((subFilter) => `(${processFilter(subFilter)})`)
+          .join(" OR ");
+        return `(${orConditions})`;
+      } else {
+        // Process the value for all other conditions where 'value' is present
+        const value = processValue(filter.value, filter.operator);
+        return `${filter.field} ${operator} ${value}`;
+      }
+    } else {
+      // This block will handle NullFilter, which does not have a 'value' property
+      let operator = translateOperator(filter.operator);
+      return `${filter.field} ${operator}`;
+    }
+  };
+
+  // Join individual conditions with 'AND', forming the complete WHERE clause
+  const conditions = filters
+    .map((filter) => processFilter(filter))
+    .join(" AND ");
+  return conditions ? `WHERE ${conditions}` : "";
 }
 
 export const dataProvider = (

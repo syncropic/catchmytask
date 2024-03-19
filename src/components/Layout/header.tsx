@@ -5,21 +5,30 @@ import {
   pickNotDeprecated,
   useNavigation,
   useLogout,
+  useGo,
 } from "@refinedev/core";
 import { HamburgerMenu } from "./hamburgerMenu";
 import {
+  ActionIcon,
+  Anchor,
   Avatar,
   Button,
   Flex,
   Header as MantineHeader,
   Sx,
+  TextInput,
   Title,
+  rem,
   useMantineTheme,
 } from "@mantine/core";
 import { forwardRef } from "react";
 import {
+  IconApps,
   IconChevronRight,
+  IconComponents,
+  IconDatabase,
   IconLogout,
+  IconSearch,
   IconSettings,
   IconTrash,
 } from "@tabler/icons-react";
@@ -27,12 +36,16 @@ import { Group, Text, Menu, UnstyledButton } from "@mantine/core";
 import type { RefineThemedLayoutV2HeaderProps } from "@refinedev/mantine";
 import { useAppStore } from "src/store";
 import { IIdentity } from "@components/interfaces";
+import { CustomSpotlight } from "@components/Spotlight";
+import Link from "next/link";
 
 export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   isSticky,
   sticky,
 }) => {
   const { activeLayout, setActiveLayout } = useAppStore();
+  const go = useGo();
+  const { activeApplication } = useAppStore();
 
   const theme = useMantineTheme();
 
@@ -80,7 +93,34 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = ({
         }}
       >
         {/* <HamburgerMenu /> */}
-        <div>{null}</div>
+        {/* <div>{null}</div> */}
+        <div className="flex items-center">
+          {/* <ActionIcon>
+            <IconComponents
+              style={{ width: "70%", height: "70%" }}
+              stroke={1.5}
+              // color="blue"
+              gradientTransform="rotate(90)"
+              onClick={() => {
+                go({
+                  to: "/home",
+                  type: "push",
+                });
+              }}
+            />
+          </ActionIcon> */}
+
+          <Anchor
+            variant="gradient"
+            gradient={{ from: "blue", to: "cyan", deg: 90 }}
+            fw={500}
+            fz="lg"
+            component={Link}
+            href="/home"
+          >
+            {activeApplication?.name}
+          </Anchor>
+        </div>
         <div className="flex gap-4">
           <Button
             size="xs"
@@ -109,6 +149,7 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = ({
           >
             right
           </Button>
+          <CustomSpotlight />
         </div>
         <Flex align="center" gap="sm">
           {/* {user?.name && (
@@ -196,12 +237,30 @@ const UserMenu: React.FC<{ user: IIdentity }> = ({ user }) => {
         <Menu.Dropdown>
           {user.email === "david.wanjala@snowstormtech.com" && (
             <>
-              <Menu.Label>Applications</Menu.Label>
+              <Menu.Label>Store</Menu.Label>
               <Menu.Item
-                icon={<IconSettings size={14} />}
+                icon={<IconApps size={14} />}
                 onClick={() => list("applications")}
               >
                 Applications
+              </Menu.Item>
+              <Menu.Item
+                icon={<IconDatabase size={14} />}
+                onClick={() => list("datasets")}
+              >
+                Datasets
+              </Menu.Item>
+              <Menu.Item
+                icon={<IconComponents size={14} />}
+                onClick={() => list("sessions")}
+              >
+                Sessions
+              </Menu.Item>
+              <Menu.Item
+                icon={<IconSearch size={14} />}
+                // onClick={() => list("sessions")}
+              >
+                Spotlight
               </Menu.Item>
             </>
           )}

@@ -132,6 +132,9 @@ const useAppStore = create(
       activeSession: {},
       setActiveSession: (session) =>
         set((state) => ({ ...state, activeSession: session })),
+      activeDataset: {},
+      setActiveDataset: (dataset) =>
+        set((state) => ({ ...state, activeDataset: dataset })),
       activeApplication: {},
       setActiveApplication: (application) =>
         set((state) => ({ ...state, activeApplication: application })),

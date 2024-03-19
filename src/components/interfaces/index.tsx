@@ -1,18 +1,5 @@
 import { MRT_TableInstance } from "mantine-react-table";
 
-export interface ISession {
-  created_datetime: string;
-  updated_datetime: string;
-  author: string;
-  // data_models: string[];
-  // description: string;
-  // fields_configuration: IFieldConfiguration[];
-  id: string;
-  name: string;
-  // resource: string;
-  session_status: "published" | "draft" | "review";
-}
-
 export interface IApplication {
   id: string;
   name: string;
@@ -23,6 +10,11 @@ export interface IApplication {
 
 export type IIdentity = {
   [key: string]: any;
+};
+
+export type IActionsList = {
+  name: string;
+  id: string;
 };
 
 export interface TableViewComponentProps<T extends Record<string, any>> {
@@ -75,6 +67,26 @@ export interface AutomationActionConfigurationProps<
   // data_table: MRT_TableInstance<T>;
 }
 
+export interface IExecute {
+  id: string;
+  in: any;
+  out: any;
+  execution_order: number;
+  kind: string;
+  name: string;
+  status: string;
+  created_at: Date | string;
+  updated_at: Date | string;
+  results: any;
+  individual_fields: any[];
+  dependencies: any[];
+  combined_fields: any[];
+  author: string;
+  async: boolean;
+  callback: boolean;
+  context: any;
+}
+
 export interface CompleteActionComponentProps<T extends Record<string, any>> {
   // setActionType: (type: string) => void;
   // action_options: Array<{ value: string; label: string; [key: string]: any }>;
@@ -88,6 +100,7 @@ export interface CompleteActionComponentProps<T extends Record<string, any>> {
   activeSession: ISession;
   activeAction: IAction;
   activeRecords: any[];
+  actionFormFieldValues: any;
   // activeActionOption: any;
   // inputFields: FieldConfiguration[];
   // setActiveActionOption: (item: any) => void;
@@ -105,8 +118,9 @@ export interface ISession {
   list: ListItem[];
   name: string;
   resource: string;
-  session_status: string;
+  session_status: "published" | "draft" | "review";
   updated_datetime: Date | string;
+  application: string;
 }
 
 export interface ActiveQuery {
@@ -128,28 +142,28 @@ export interface ListItem {
   resource_type: string;
 }
 
+export interface SelectActionComponentProps<T extends Record<string, any>> {
+  actions_list: any;
+  record: any;
+  view_item: IListItem | null;
+}
+
 export interface SelectActionOptionComponentProps<
   T extends Record<string, any>
 > {
-  setActionType: (type: string) => void;
-  action_options: Array<{ value: string; label: string; [key: string]: any }>;
+  action_options: IAction[];
   data_items: any[];
-  identity: any;
   record: any;
   action_step: any;
   variant?: "inline" | "default";
-  // activeActionOption: any;
-  // setActiveActionOption: (item: any) => void;
   data_table: MRT_TableInstance<T>;
   view_item: IListItem;
 }
 
-// export type FieldConfiguration = {
-//   component: string;
-//   label: string;
-//   name: string;
-//   props: Record<string, any>;
-// };
+// export type AggregationFn<TData extends AnyData> = (
+//   getLeafRows: () => Row<TData>[],
+//   getChildRows: () => Row<TData>[]
+// ) => any
 
 export interface FieldConfiguration {
   field_name: string;
@@ -172,6 +186,15 @@ export interface FieldConfiguration {
   filter_mode?: string;
   visible: boolean;
   props: any;
+  aggregation_fn?:
+    | "sum"
+    | "mean"
+    | "count"
+    | "min"
+    | "max"
+    | "median"
+    | "unique"
+    | "uniqueCount";
 }
 
 // export interface Column {
@@ -220,17 +243,17 @@ export interface RowData {
   [key: string]: any;
 }
 
-// Assuming some type definitions (adjust according to your actual types)
-export interface IActionOption {
-  id: string;
-  name: string;
-  created_at: Date | string;
-  updated_at: Date | string;
-  source: any;
-  destination: any;
-  display_name: string;
-  field_configurations: FieldConfiguration[];
-}
+// // Assuming some type definitions (adjust according to your actual types)
+// export interface IActionOption {
+//   id: string;
+//   name: string;
+//   created_at: Date | string;
+//   updated_at: Date | string;
+//   source: any;
+//   destination: any;
+//   display_name: string;
+//   field_configurations: FieldConfiguration[];
+// }
 
 // Assuming some type definitions (adjust according to your actual types)
 export interface ColumnConfig {
@@ -282,6 +305,7 @@ export interface IShowItem {
     query: string;
     query_language: string;
   };
+  display_options: any;
   display_components: string[] | null;
   display_name: string | null;
   display_type: string;
@@ -289,14 +313,19 @@ export interface IShowItem {
   id: string;
   resource: string;
   show_order: number;
+  order: number;
+  name: string;
+  resource_type: string;
 }
 
 export interface IListItem {
+  actions: IActionsList[];
   active_query: {
     credentials: string;
     query: string;
     query_language: string;
   };
+  display_options: any;
   display_components: string[] | null;
   display_name: string | null;
   display_type: string;
@@ -392,6 +421,51 @@ export interface IAction {
     };
   };
 }
+
+export interface IAutomation {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  author: string;
+  automation_status: string;
+  automation_types: AutomationTypeOption[];
+  frequency_input_type: FrequencyInputType;
+  frequency: string;
+  start_datetime: Date | string;
+  end_datetime: Date | string;
+  request_data: any;
+}
+
+export type AutomationTypeOption = "webhook" | "scheduled" | "event-triggered";
+export type FrequencyInputType =
+  | "option"
+  | "natural_language"
+  | "cron_expression";
+
+export type FrequencyOptions =
+  | "every-1-minute"
+  | "every-5-minutes"
+  | "every-10-minutes"
+  | "every-15-minutes"
+  | "every-30-minutes"
+  | "every-1-hour"
+  | "every-2-hours"
+  | "every-3-hours"
+  | "every-4-hours"
+  | "every-6-hours"
+  | "every-8-hours"
+  | "every-12-hours"
+  | "every-1-day"
+  | "every-2-days"
+  | "every-3-days"
+  | "every-1-week"
+  | "every-2-weeks"
+  | "every-1-month"
+  | "every-2-months"
+  | "every-3-months"
+  | "every-6-months"
+  | "every-1-year";
 
 // export a simple react component
 const Interfaces = () => {

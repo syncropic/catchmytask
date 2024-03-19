@@ -1,43 +1,65 @@
 import ActionControlForm from "@components/ActionControlForm";
-import { HttpError, IResourceComponentsProps, useOne } from "@refinedev/core";
-import { useAppStore } from "src/store";
+import {
+  extractFields,
+  extractIdentifier,
+  useFetchActionById,
+} from "@components/Utils";
 import { Text } from "@mantine/core";
-import { IAction } from "@components/interfaces";
+import { IResourceComponentsProps } from "@refinedev/core";
+import { useEffect } from "react";
+import { useAppStore } from "src/store";
 
 export const PageCreate: React.FC<IResourceComponentsProps> = () => {
   const {
     activeSession,
-    activeActionId,
+    activeAction,
+    setActiveAction,
     activeRecord,
     activeViewItem,
     activeApplication,
+    setActiveActionId,
+    activeActionId,
   } = useAppStore();
 
-  const {
-    data: activeActionData,
-    isLoading: isLoadingActiveAction,
-    isError: isErrorActiveAction,
-    error: errorActiveAction,
-  } = useOne<IAction, HttpError>({
-    resource: "action_options",
-    id: activeActionId?.id,
-  });
+  // const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
+  const { action, isLoading, error } = useFetchActionById(
+    activeActionId?.id || ""
+  );
 
-  const activeAction = activeActionData?.data;
+  useEffect(() => {
+    if (action) {
+      setActiveAction(action);
+    }
+    // Handle other dependencies like record and view_item here
+    // if (record) {
+    //   setActiveRecord(record);
+    // }
 
-  // const extractedFields = extractFields(
-  //   activeRecords[0] || {},
-  //   activeActionOption?.field_configurations || []
-  // );
+    // if (view_item) {
+    //   setActiveViewItem(view_item);
+    // }
+    // activateSection("rightSection");
+  }, [activeActionId, action]);
 
-  // console.log("activeAction", activeAction);
+  const actionFormFieldValues = extractFields(
+    activeRecord || {},
+    activeAction?.field_configurations || []
+  );
+  // console.log("actionFormFieldValues", actionFormFieldValues);
+  if (actionFormFieldValues.length === 0) {
+    return (
+      <div>
+        <Text>No action fields to display</Text>
+      </div>
+    );
+  }
 
   return (
     <>
       {/* <div>make this a breadcrumb</div> */}
       {activeApplication?.name && (
         <>
-          <div className="flex">
+          <div className="flex gap-1">
             <Text fw={500}>Application:</Text>{" "}
             <Text>{activeApplication?.name}</Text>
           </div>
@@ -53,12 +75,7 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
       {activeRecord && (
         <div className="flex gap-1">
           <Text fw={500}>Record:</Text>
-          <Text>
-            {activeRecord?.id ||
-              activeRecord?.flight_pnr ||
-              activeRecord?.trip_id ||
-              activeRecord?.test_id}
-          </Text>
+          <Text>{JSON.stringify(extractIdentifier(activeRecord))}</Text>
         </div>
       )}
       {activeViewItem?.display_name && (
@@ -74,10 +91,12 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
             <Text fw={500}>Action: </Text>
             <Text>{activeAction?.display_name}</Text>
           </div>
+          {/* <div>{JSON.stringify(activeRecord)}</div> */}
           <ActionControlForm
             activeSession={activeSession}
             activeAction={activeAction}
             activeRecords={[activeRecord]}
+            actionFormFieldValues={actionFormFieldValues}
           ></ActionControlForm>
         </>
       )}

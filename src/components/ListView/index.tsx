@@ -4,6 +4,7 @@ import { IListItem } from "@components/interfaces";
 import { useCustom } from "@refinedev/core";
 import React, { useEffect, useState } from "react";
 import { updateTableVisibility } from "src/utils";
+import _ from "lodash";
 
 export const ListView: React.FC<{ item: IListItem }> = ({ item }) => {
   // console.log("item", item);
@@ -11,6 +12,7 @@ export const ListView: React.FC<{ item: IListItem }> = ({ item }) => {
     item?.fields_configuration,
     item?.id
   );
+  // console.log("data_columns_enhanced", data_columns_enhanced);
 
   // Assuming `useCustom` does not automatically re-run when its config changes,
   // you need to manage it with a state and useEffect.
@@ -42,7 +44,8 @@ export const ListView: React.FC<{ item: IListItem }> = ({ item }) => {
     },
   });
 
-  let customTableConfig = {
+  // Assuming this is your default configuration object
+  const defaultConfig = {
     initialState: {
       density: "xs",
       showGlobalFilter: true,
@@ -51,8 +54,19 @@ export const ListView: React.FC<{ item: IListItem }> = ({ item }) => {
       columnPinning: {
         left: ["mrt-row-select", "mrt-row-expand", "mrt-row-actions"],
       },
+      grouping: [],
     },
+    enableGrouping: false,
+    enableRowActions: true,
+    enableRowSelection: true,
   };
+
+  // Merge the defaultConfig with displayOptions, with displayOptions taking precedence
+  const customTableConfig = _.merge(
+    {},
+    defaultConfig,
+    item?.display_options || {}
+  );
 
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error: {JSON.stringify(error)}</div>;

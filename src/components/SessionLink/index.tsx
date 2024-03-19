@@ -3,8 +3,8 @@ import { Anchor, Text } from "@mantine/core";
 import { useAppStore } from "src/store";
 import { useGo } from "@refinedev/core";
 
-const PrimaryKey = ({ value, record, displayComponentContent }) => {
-  const { setActiveItem_2, activeViewItem } = useAppStore();
+const SessionLink = ({ value, record, displayComponentContent }) => {
+  const { activeApplication, setActiveSession } = useAppStore();
   const go = useGo();
   // Check if the value is a valid URL. If not, return an empty fragment
   if (!value) {
@@ -16,12 +16,16 @@ const PrimaryKey = ({ value, record, displayComponentContent }) => {
       <Text
         size="sm"
         onClick={() => {
-          setActiveItem_2(record);
+          // setActiveItem_2(record);
+          setActiveSession(record);
           go({
             to: {
-              resource: "datasets",
+              resource: "sessions",
               action: "show",
-              id: value,
+              id: record.id,
+              meta: {
+                applicationId: activeApplication?.id,
+              },
             },
             type: "push",
           });
@@ -33,4 +37,4 @@ const PrimaryKey = ({ value, record, displayComponentContent }) => {
   );
 };
 
-export default PrimaryKey;
+export default SessionLink;

@@ -1,73 +1,17 @@
-import React, { useMemo, useState } from "react";
 import {
-  IResourceComponentsProps,
-  GetManyResponse,
-  useMany,
-  useGo,
-  useCustomMutation,
-  useList,
   HttpError,
-  useUpdate,
+  IResourceComponentsProps,
+  useCustomMutation,
+  useGo,
   useInvalidate,
+  useList,
+  useUpdate,
 } from "@refinedev/core";
-import { useTable } from "@refinedev/react-table";
-import { ColumnDef, flexRender } from "@tanstack/react-table";
-import CodeBlock from "src/components/codeblock/codeblock";
+import React, { useMemo } from "react";
 
-import {
-  IconCirclePlus,
-  IconEdit,
-  IconMathFunction,
-  IconMessageCircle,
-  IconRefresh,
-  IconSend,
-  IconTrash,
-} from "@tabler/icons-react";
-import {
-  ScrollArea,
-  Table,
-  Pagination,
-  Group,
-  MantineProvider,
-  Menu,
-  Box,
-  ActionIcon,
-  Text,
-  Button,
-  Flex,
-  Anchor,
-  Tooltip,
-  Drawer,
-  rem,
-  Switch,
-} from "@mantine/core";
-import {
-  List,
-  EditButton,
-  ShowButton,
-  DeleteButton,
-  DateField,
-  CreateButton,
-} from "@refinedev/mantine";
-import {
-  MantineReactTable,
-  useMantineReactTable,
-  type MRT_ColumnDef,
-  MRT_GlobalFilterTextInput,
-  MRT_ToggleFiltersButton,
-} from "mantine-react-table";
-import {
-  addSeparator,
-  formatDateTimeAsDateTime,
-  handleComingSoon,
-  updateTableVisibility,
-} from "src/utils";
-import AddTo from "./AddTo";
-import Chat from "./Chat";
-import { useDisclosure } from "@mantine/hooks";
-import { useAppStore } from "src/store";
-import { parseISO, format } from "date-fns";
-import ReactMantineTableView from "@components/ReactMantineTableView";
+import { Anchor, Switch, Text } from "@mantine/core";
+import { type MRT_ColumnDef } from "mantine-react-table";
+import { addSeparator, formatDateTimeAsDateTime } from "src/utils";
 import { IAutomation } from "./interfaces";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
@@ -286,14 +230,15 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   };
 
   return (
-    <ReactMantineTableView
-      data_columns={data_columns}
-      resource="task"
-      data_items={data_items}
-      isLoadingDataItems={isLoadingDataItems}
-      updateTableVisibility={updateTableVisibility}
-      customTableConfig={customTableConfig}
-    ></ReactMantineTableView>
+    // <ReactMantineTableView
+    //   data_columns={data_columns}
+    //   resource="task"
+    //   data_items={data_items}
+    //   isLoadingDataItems={isLoadingDataItems}
+    //   updateTableVisibility={updateTableVisibility}
+    //   customTableConfig={customTableConfig}
+    // ></ReactMantineTableView>
+    <div>action control list</div>
   );
 };
 export default PageList;

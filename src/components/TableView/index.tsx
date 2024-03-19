@@ -1,15 +1,8 @@
+import SelectAction from "@components/SelectAction";
 import CodeBlock from "@components/codeblock/codeblock";
 import { IIdentity, TabularViewComponentProps } from "@components/interfaces";
-import SelectTaskComponent from "@components/selecttask";
 import { Button, Flex, MantineProvider } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import {
-  useCustomMutation,
-  useGetIdentity,
-  useGo,
-  useInvalidate,
-  useList,
-} from "@refinedev/core";
+import { useGetIdentity } from "@refinedev/core";
 import { CreateButton } from "@refinedev/mantine";
 import { IconDownload } from "@tabler/icons";
 import ExcelJS from "exceljs";
@@ -20,7 +13,7 @@ import {
   MantineReactTable,
   useMantineReactTable,
 } from "mantine-react-table";
-import { useState } from "react";
+import { useEffect } from "react";
 import { useAppStore } from "src/store";
 import { addSeparator } from "src/utils";
 
@@ -34,81 +27,36 @@ export function TableView<T extends Record<string, any>>({
   customTableConfig,
   item,
 }: TabularViewComponentProps<T>) {
-  // VALIDATE
-  const invalidate = useInvalidate();
-  // IDENTITY
   const { data: identity } = useGetIdentity<IIdentity>();
-  // ACTION OPTIONS
-  const {
-    data: actionOptionsData,
-    isLoading: isLoadingActionOptionsData,
-    isError: isErrorActionOptionsData,
-  } = useList({
-    resource: "action_options",
-    dataProviderName: "default",
-  });
+  // console.log("data_columns", data_columns);
 
-  const action_options = Array.isArray(actionOptionsData?.data)
-    ? actionOptionsData?.data
-        .map((option) => ({
-          ...option,
-          value: option.display_name,
-          label: option.display_name,
-          metadata: option.metadata,
-          name: option.name,
-        }))
-        .filter((option) => {
-          // Ensure we have an array to work with for resources.
-          const resources = option.metadata?.resources || [];
-          // Check for the presence of 'resource' or 'general' in the resources array.
-          return resources.includes(resource) || resources.includes("general");
-        })
-    : [];
-
-  const go = useGo();
-  const [opened, { open, close }] = useDisclosure(false);
   const {
-    actionType,
-    setActionType,
     activeSession: global_activeSession,
     setActiveSession,
     opened: global_opened,
-    setOpened,
-    activeSessionStats,
-    setActiveSessionStats,
-    activeActionOption,
-    setActiveActionOption,
   } = useAppStore();
   // if view passed as prop is not null then activeViews is set to view otherwise it is set to global_activeViews
   const activeSession = session ? session : global_activeSession;
-
-  // custom mutation
-  const {
-    mutate: customMutate,
-    isLoading: mutationIsLoading,
-    isError: mutationIsError,
-  } = useCustomMutation();
-
-  const [filteredDataItems, setFilteredDataItems] = useState(data_items);
+  // console.log("customTableConfig", customTableConfig);
 
   // useMantineReactTable hook
   const data_table = useMantineReactTable<T>({
     columns: data_columns,
-    data: filteredDataItems,
+    data: data_items,
     enableRowSelection: true,
-    // enableColumnOrdering: true,
-    // enableGlobalFilter: true,
-    // enableColumnFilters: true,
+    enableColumnOrdering: true,
+    enableGlobalFilter: true,
+    enableColumnFilters: true,
     enableRowActions: true,
     enableStickyHeader: true,
-    // enableColumnFilterModes: true,
-    // enableFacetedValues: true,
-    // enableGrouping: true,
+    enableColumnFilterModes: true,
+    enableFacetedValues: true,
+    enableGrouping: true,
     enablePinning: true,
     // enableEditing: true,
     // editDisplayMode: "cell",
-    // enableStickyFooter: true,
-    // enableColumnResizing: true,
+    enableStickyFooter: true,
+    enableColumnResizing: true,
     // layoutMode: "grid",
     // mantineTableHeadCellProps: {
     //   sx: {
@@ -120,21 +68,21 @@ export function TableView<T extends Record<string, any>>({
     //     flex: "0 0 auto",
     //   },
     // },
-    // displayColumnDefOptions: {
-    //   "mrt-row-actions": { minSize: 250, maxSize: 250, size: 250 },
-    // }, //change width of actions column to 300px
-    state: { isLoading: mutationIsLoading || isLoadingDataItems },
+    displayColumnDefOptions: {
+      "mrt-row-actions": { minSize: 200, maxSize: 200 },
+    },
+    state: { isLoading: isLoadingDataItems },
     // mantineEditTextInputProps: ({ cell }) => ({
     //   onBlur: (event) => {
     //     handleSaveCell(cell, event.target.value);
     //   },
     // }),
     paginationDisplayMode: "pages",
-    positionToolbarAlertBanner: "bottom",
-    mantinePaginationProps: {
-      radius: "xl",
-      size: "lg",
-    },
+    // positionToolbarAlertBanner: "bottom",
+    // mantinePaginationProps: {
+    //   radius: "xl",
+    //   size: "lg",
+    // },
     mantineSearchTextInputProps: {
       placeholder: "Search Items",
     },
@@ -146,26 +94,29 @@ export function TableView<T extends Record<string, any>>({
     // },
 
     renderRowActions: ({ row }) => (
-      <SelectTaskComponent
-        action_options={action_options}
-        identity={identity}
-        action_step={null}
+      // <SelectTaskComponent
+      //   action_options={action_options}
+      //   identity={identity}
+      //   action_step={null}
+      //   record={row.original}
+      //   data_table={data_table}
+      //   data_items={[]}
+      //   setActionType={setActionType}
+      //   variant="inline"
+      //   view_item={item}
+      // />
+      <SelectAction
+        actions_list={item?.actions ? item?.actions : []}
         record={row.original}
-        data_table={data_table}
-        data_items={[]}
-        setActionType={setActionType}
-        variant="inline"
-        activeActionOption={activeActionOption}
-        setActiveActionOption={setActiveActionOption}
         view_item={item}
       />
     ),
     renderTopToolbar: ({ table }) => {
-      const handleDelete = () => {
-        table.getSelectedRowModel().flatRows.map((row) => {
-          console.log("deleting " + row.getValue("pnr"));
-        });
-      };
+      // const handleDelete = () => {
+      //   table.getSelectedRowModel().flatRows.map((row) => {
+      //     console.log("deleting " + row.getValue("pnr"));
+      //   });
+      // };
 
       return (
         <Flex p="md" justify="space-between">
@@ -175,19 +126,6 @@ export function TableView<T extends Record<string, any>>({
             <CreateButton size="xs"></CreateButton>
           </Flex>
           <Flex sx={{ gap: "8px" }}>
-            {/* <Button
-              onClick={() => {
-                setActionType("open_send");
-                setOpened(true);
-                // open();
-              }}
-              // disabled
-              variant="outline"
-              leftIcon={<IconMail />}
-              size="xs"
-            >
-              Send
-            </Button> */}
             <Button
               onClick={() => {
                 // setActionType("open_download");
@@ -230,47 +168,6 @@ export function TableView<T extends Record<string, any>>({
                 : "No Filters Applied"}
               {/* {JSON.stringify(table.getState().columnFilters)} */}
             </Button>
-            {/* <Button
-              onClick={() => {
-                setActionType("sync");
-                const item = action_options.find(
-                  (item) => item.name === "sync"
-                );
-                setActiveActionOption(item);
-                open();
-              }}
-              // disabled
-              variant="outline"
-              size="xs"
-            >
-              Sync
-            </Button> */}
-            {/* <Button
-              onClick={() => {
-                setActionType("chat");
-                const item = action_options.find(
-                  (item) => item.name === "chat"
-                );
-                console.log("item", item);
-                setActiveActionOption(item);
-                open();
-              }}
-              // disabled
-              variant="outline"
-              size="xs"
-            >
-              Chat
-            </Button> */}
-            {/* <Button
-              color="red"
-              disabled={!table.getIsSomeRowsSelected()}
-              // onClick={handleDelete}
-              //   onClick={handleComingSoon}
-              variant="filled"
-              size="xs"
-            >
-              Delete
-            </Button> */}
           </Flex>
         </Flex>
       );
@@ -283,130 +180,15 @@ export function TableView<T extends Record<string, any>>({
     ...customTableConfig,
   });
 
-  // const applyFilters = (activeView: ActiveView, data: any[]): any[] => {
-  //   let filteredData = [...data];
-
-  //   activeView.filters_configuration.forEach((group) => {
-  //     if (group.group_operator === "OR") {
-  //       // For 'OR' logic, ensure at least one condition within the group matches
-  //       filteredData = filteredData.filter((item) =>
-  //         group.conditions.some((condition) => {
-  //           return evaluateCondition(item, condition);
-  //         })
-  //       );
-  //     } else {
-  //       // Default to 'AND' logic if no group_operator is specified
-  //       group.conditions.forEach((condition) => {
-  //         filteredData = filteredData.filter((item) => {
-  //           return evaluateCondition(item, condition);
-  //         });
-  //       });
-  //     }
-  //   });
-
-  //   return filteredData;
-  // };
-
-  // When activeViews changes, apply filters
-  // useEffect(() => {
-  //   // Reset filtered data and column visibility when activeViews is null
-  //   if (activeSession === null) {
-  //     setFilteredDataItems(data_items);
-  //     updateTableVisibility(data_table, null); // Reset column visibility to default
-  //   } else {
-  //     // Existing logic for when activeViews is not null
-  //     const newFilteredData = activeSession?.filters_configuration
-  //       ? applyFilters(activeSession, data_items)
-  //       : data_items;
-  //     setFilteredDataItems(newFilteredData);
-  //     updateTableVisibility(data_table, activeSession?.fields_configuration);
-
-  //     let activeViewStats = {
-  //       totalItems: filteredDataItems.length,
-  //     };
-  //   }
-  // }, [activeSession, data_items]);
-
-  // useEffect(() => {
-  //   const columnFilters = data_table.getState().columnFilters;
-  //   const filtered_items = data_table.getFilteredRowModel().flatRows;
-  //   if (columnFilters.length > 0 && filtered_items.length === 0) {
-  //     console.log("Column filters array has items.", columnFilters);
-  //     console.log("Filtered items array has 0 items.");
-  //     handleAddToCollection(resource, columnFilters);
-  //   }
-  // }, [data_table.getState().columnFilters]); // Dependency array
-
-  // const handleSaveCell = (cell: any, event: any) => {
-  //   let update_values = {
-  //     id: cell.row.original.related_record,
-  //     [cell.column.id]: event,
-  //   };
-  //   // console.log("update_values", update_values);
-  //   let id = cell.row.original.related_record;
-  //   customMutate({
-  //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/${resource}/${id}`,
-  //     method: "post",
-  //     values: update_values,
-  //     successNotification: (data, values) => {
-  //       // invalidate list
-  //       invalidate({
-  //         resource: resource,
-  //         invalidates: ["list"],
-  //       });
-
-  //       return {
-  //         message: `successfully executed.`,
-  //         description: "Success with no errors",
-  //         type: "success",
-  //       };
-  //     },
-  //     errorNotification: (data, values) => {
-  //       return {
-  //         message: `Something went wrong when executing`,
-  //         description: "Error",
-  //         type: "error",
-  //       };
-  //     },
-  //   });
-  // };
-
-  // const handleAddToCollection = (resource: any, filters: any) => {
-  //   // let update_values = {
-  //   //   id: cell.row.original.related_record,
-  //   //   [cell.column.id]: event,
-  //   // };
-  //   // // console.log("update_values", update_values);
-  //   // let id = cell.row.original.related_record;
-  //   customMutate({
-  //     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/return_or_add_item_to_collection`,
-  //     method: "post",
-  //     values: {
-  //       resource: resource,
-  //       filters: filters,
-  //     },
-  //     successNotification: (data, values) => {
-  //       // invalidate list
-  //       invalidate({
-  //         resource: resource,
-  //         invalidates: ["list"],
-  //       });
-
-  //       return {
-  //         message: `successfully executed.`,
-  //         description: "Success with no errors",
-  //         type: "success",
-  //       };
-  //     },
-  //     errorNotification: (data, values) => {
-  //       return {
-  //         message: `Something went wrong when executing`,
-  //         description: "Error",
-  //         type: "error",
-  //       };
-  //     },
-  //   });
-  // };
+  useEffect(() => {
+    const columnFilters = data_table.getState().columnFilters;
+    const filtered_items = data_table.getFilteredRowModel().flatRows;
+    if (columnFilters.length > 0 && filtered_items.length === 0) {
+      console.log("Column filters array has items.", columnFilters);
+      // console.log("Filtered items array has 0 items.");
+      // handleAddToCollection(resource, columnFilters);
+    }
+  }, [data_table.getState().columnFilters]); // Dependency array
 
   // HANDLE DOWNLOAD
   const handleDownload = async (items: any[]) => {
@@ -456,16 +238,16 @@ export function TableView<T extends Record<string, any>>({
 
       {item?.display_components?.includes("ListActions") && (
         <div className="flex flex-row justify-center">
-          <SelectTaskComponent
-            action_options={action_options}
-            identity={identity}
+          {/* <SelectTaskComponent
             action_step={null}
             record={null}
             data_items={[]}
             data_table={data_table}
-            setActionType={setActionType}
-            activeActionOption={activeActionOption}
-            setActiveActionOption={setActiveActionOption}
+          /> */}
+          <SelectAction
+            actions_list={item?.actions ? item?.actions : []}
+            // record={activeSession} get the row model for selected items
+            record={activeSession}
             view_item={item}
           />
         </div>
