@@ -1,10 +1,8 @@
-import React from "react";
-import { Anchor, Text } from "@mantine/core";
-import { useAppStore } from "src/store";
-import { useGo } from "@refinedev/core";
 import { selectExecutionStatus } from "@components/Utils";
+import { IFieldConfigurationWithValue } from "@components/interfaces";
+import React from "react";
 
-const ExecutionStatus = ({ value }) => {
+const ExecutionStatus: React.FC<IFieldConfigurationWithValue> = ({ value }) => {
   // const { setActiveItem_2, activeViewItem } = useAppStore();
   // const go = useGo();
   // Check if the value is a valid URL. If not, return an empty fragment

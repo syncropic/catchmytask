@@ -1,22 +1,29 @@
-import { componentMapping } from "@components/Utils";
+import {
+  componentMapping,
+  getComponentByResourceType,
+} from "@components/Utils";
 import ViewActionHistory from "@components/ViewActionHistory";
 import CodeBlock from "@components/codeblock/codeblock";
 import {
   CompleteActionComponentProps,
+  ComponentKey,
   FieldConfiguration,
   IIdentity,
-  IListItem,
+  IView,
 } from "@components/interfaces";
 import { Accordion, Button, Textarea } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useCustomMutation, useGetIdentity } from "@refinedev/core";
 import { Create, SaveButton, useForm } from "@refinedev/mantine";
 import { IconMathFunction } from "@tabler/icons-react";
-import { format, parseISO } from "date-fns";
+import _ from "lodash";
 import CreateAutomation from "pages/automations/create";
 import { useEffect } from "react";
 import { useAppStore } from "src/store";
-import { addSeparator, formatDateTimeAsDateTime } from "src/utils";
+import { formatDateTime } from "src/utils";
+import { v4 as uuidv4 } from "uuid";
+import { useQueryClient } from "@tanstack/react-query";
+import MonacoEditor from "@components/MonacoEditor";
 
 export function ActionControlForm<T extends Record<string, any>>({
   activeSession,
@@ -24,6 +31,7 @@ export function ActionControlForm<T extends Record<string, any>>({
   activeRecords,
   actionFormFieldValues,
 }: CompleteActionComponentProps<T>) {
+  const queryClient = useQueryClient();
   const { activeViewItem } = useAppStore();
   console.log("actionFormFieldValues", actionFormFieldValues);
   // let activeRecordId = activeRecords[0]?.id;
@@ -47,35 +55,22 @@ export function ActionControlForm<T extends Record<string, any>>({
     reset,
   } = useForm({
     initialValues: {
-      author: identity?.email,
-      author_email: identity?.email,
       ...actionFormFieldValues,
     },
     refineCoreProps: {},
-    transformValues: (values) => {
-      return {
-        ...values,
-        // id: uuidv4(), // if creating new item
-      };
-    },
   });
 
-  // // Use useEffect to react to changes in actionFormFieldValues
-  // useEffect(() => {
-  //   // Loop through each field in actionFormFieldValues
-  //   Object.entries(actionFormFieldValues).forEach(([key, value]) => {
-  //     // Update the form field value
-  //     setFieldValue(key, value);
-  //   });
-  // }, [actionFormFieldValues, setFieldValue]);
-  // // console.log("values", values);
   useEffect(() => {
     reset();
 
     // Step 1: Reset form with only 'author' and 'author_email'
+    // const resetValues = {
+    //   author: identity?.email,
+    //   author_email: identity?.email,
+    // };
+
     const resetValues = {
-      author: identity?.email,
-      author_email: identity?.email,
+      task_id: uuidv4(),
     };
 
     // Reinitialize form with base values plus dynamic actionFormFieldValues
@@ -87,12 +82,122 @@ export function ActionControlForm<T extends Record<string, any>>({
     });
   }, [actionFormFieldValues, identity?.email]);
 
-  const generateRequestData = (values: any) => {
-    let request_data = {
-      ...values,
-    };
+  type ReplacementValues = { [key: string]: string };
 
-    return request_data;
+  function formatValue(
+    value: string,
+    dataType: string,
+    formatString: string
+  ): string {
+    // console.log(
+    //   `Formatting value: ${value} as ${dataType} with format: ${formatString}`
+    // );
+    switch (dataType) {
+      case "date":
+        // Use formatDateTime for date values
+        const formattedDate = formatDateTime(value, formatString);
+        if (formattedDate !== undefined) {
+          return formattedDate;
+        } else {
+          console.error(
+            `Failed to format date value: ${value} with format: ${formatString}`
+          );
+          return value; // Return original value if formatting fails
+        }
+      case "number":
+        // Add logic for number formatting if necessary
+        return value;
+      default:
+        return value;
+    }
+  }
+
+  function recursiveReplace(
+    currentObj: any,
+    replacementValues: { [key: string]: string },
+    parentFormats: { [key: string]: string } = {}
+  ): any {
+    if (typeof currentObj === "string") {
+      return currentObj.replace(/\$\{([^}]+)\}/g, (_, variableName) => {
+        // console.log(`Found variable: ${variableName}`);
+        // Directly construct the expected format key based on the variable name
+        const expectedFormatKey = `${variableName}_date_format`;
+        const formatSpec = parentFormats[expectedFormatKey];
+
+        if (formatSpec) {
+          // console.log(`Using format spec: ${formatSpec} for ${variableName}`);
+          // Assuming 'date' as the dataType for simplicity, since that's what's being used
+          const formatString = formatSpec; // In your structure, the spec itself is the format string
+          let replacementValue = formatValue(
+            replacementValues[variableName],
+            "date",
+            formatString
+          );
+          return replacementValue;
+        } else {
+          // console.log(
+          //   `No format spec found for ${variableName} using key ${expectedFormatKey}`
+          // );
+          return replacementValues[variableName] || variableName; // Use original if no format found
+        }
+      });
+    } else if (Array.isArray(currentObj)) {
+      return currentObj.map((item) =>
+        recursiveReplace(item, replacementValues, parentFormats)
+      );
+    } else if (typeof currentObj === "object" && currentObj !== null) {
+      const childFormats = { ...parentFormats };
+      Object.keys(currentObj).forEach((key) => {
+        if (key.includes("_format")) {
+          // console.log(
+          //   `Extracting format for key: ${key}, Format: ${currentObj[key]}`
+          // );
+          // Add the entire format key and its value to childFormats
+          childFormats[key] = currentObj[key];
+        }
+      });
+
+      const replacedObj: any = {};
+      Object.keys(currentObj).forEach((key) => {
+        replacedObj[key] = recursiveReplace(
+          currentObj[key],
+          replacementValues,
+          childFormats
+        );
+      });
+      return replacedObj;
+    }
+    return currentObj;
+  }
+
+  function replacePlaceholdersInObject(
+    obj: any,
+    replacementValues: { [key: string]: string }
+  ) {
+    return recursiveReplace(obj, replacementValues);
+  }
+
+  const generateRequestData = (values: any) => {
+    console.log("values", values);
+    // Merge the activeAction with activeActionFormatted, with activeActionFormatted taking precedence
+    let activeActionFormatted = {
+      input_values: values,
+      task_input: {
+        ...replacePlaceholdersInObject(
+          activeAction?.task_input || {},
+          values || {}
+        ),
+      },
+      task: {
+        ...replacePlaceholdersInObject(activeAction?.task || {}, values || {}),
+      },
+    };
+    const activeActionRequestData = _.merge(
+      {},
+      activeAction || {},
+      activeActionFormatted || {}
+    );
+    return activeActionRequestData;
   };
 
   const handleSubmit = (e: any) => {
@@ -101,6 +206,8 @@ export function ActionControlForm<T extends Record<string, any>>({
       method: "post",
       values: generateRequestData(values),
       successNotification: (data, values) => {
+        // console.log("successNotification", data);
+        // invalidate query
         return {
           message: `successfully executed.`,
           description: "Success with no errors",
@@ -108,8 +215,12 @@ export function ActionControlForm<T extends Record<string, any>>({
         };
       },
       errorNotification: (data, values) => {
+        // console.log("successNotification", data?.response.status);
+        // console.log("errorNotification values", values);
         return {
-          message: `Something went wrong when executing`,
+          message: `${data?.response.status} : ${
+            data?.response.statusText
+          } : ${JSON.stringify(data?.response.data)}`,
           description: "Error",
           type: "error",
         };
@@ -117,11 +228,11 @@ export function ActionControlForm<T extends Record<string, any>>({
     });
   };
 
-  const viewComponent = (activeViewItem: any, activeRecord: any) => {
+  const viewComponent = (activeViewItem: IView, activeRecord: any) => {
     if (!activeViewItem) {
       return null;
     }
-    if (!activeViewItem?.resource_type) {
+    if (!activeViewItem.resource_type) {
       return null;
     }
     const Component = componentMapping[activeViewItem.resource_type];
@@ -214,7 +325,9 @@ export function ActionControlForm<T extends Record<string, any>>({
             {activeAction?.field_configurations &&
               activeAction?.field_configurations?.map(
                 (field: FieldConfiguration) => {
-                  const Component = componentMapping[field.display_component];
+                  const Component = getComponentByResourceType(
+                    field?.display_component as ComponentKey
+                  );
                   return (
                     <div key={field.field_name} className="mb-4">
                       <Component
@@ -251,7 +364,8 @@ export function ActionControlForm<T extends Record<string, any>>({
         <Accordion.Item key="more_details" value="more_details">
           <Accordion.Control>More Details</Accordion.Control>
           <Accordion.Panel>
-            <CodeBlock jsonData={activeRecords[0]}></CodeBlock>
+            {/* <CodeBlock jsonData={activeRecords[0]}></CodeBlock> */}
+            <MonacoEditor values={activeRecords[0]}></MonacoEditor>
           </Accordion.Panel>
         </Accordion.Item>
       </Accordion>

@@ -1,31 +1,8 @@
-import {
-  IResourceComponentsProps,
-  useShow,
-  useOne,
-  useCustomMutation,
-  useGetIdentity,
-  useDelete,
-  useCustom,
-} from "@refinedev/core";
-import {
-  Show,
-  TextField,
-  DateField,
-  CloneButton,
-  EditButton,
-} from "@refinedev/mantine";
-import {
-  Accordion,
-  Anchor,
-  Flex,
-  MantineProvider,
-  Title,
-  rem,
-  Text,
-} from "@mantine/core";
-import React, { useEffect, useMemo, useState } from "react";
-
-import TableView from "@components/tableview";
+import TableView from "@components/TableView";
+import { IListItem } from "@components/interfaces";
+import { Title } from "@mantine/core";
+import { useCustom } from "@refinedev/core";
+import { EditButton, Show } from "@refinedev/mantine";
 
 interface IActionStep {
   request_object: any;
@@ -45,13 +22,13 @@ type IIdentity = {
   email: string;
 };
 
-export const PageShow = ({ show_item }) => {
+export const PageShow = ({ active_query, resource }: IListItem) => {
   const { data, isLoading } = useCustom({
     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
     dataProviderName: "catchmytaskApiDataProvider",
     method: "post",
     config: {
-      payload: show_item?.active_query,
+      payload: active_query,
     },
     successNotification: (data, values) => {
       // invalidate({
@@ -80,7 +57,7 @@ export const PageShow = ({ show_item }) => {
         goBack={false}
         breadcrumb={null}
         isLoading={isLoading}
-        title={<Title order={5}>{show_item?.resource}</Title>}
+        title={<Title order={5}>{resource}</Title>}
         headerButtons={({ defaultButtons }) => (
           <>
             {/* {defaultButtons} */}
@@ -104,22 +81,11 @@ export const PageShow = ({ show_item }) => {
           </>
         )}
       >
-        {/* {display_components.includes("header") && (
-          <>
-            <Text>
-              <b>id:</b> {record?.id}
-            </Text>
-            <Text>
-              <b>name:</b>{" "}
-              {record?.name || record?.display_name || record?.title}
-            </Text>
-          </>
-        )} */}
         {isLoading ? (
           <div>Loading...</div>
         ) : (
           <>
-            <TableView
+            {/* <TableView
               resource={show_item?.resource}
               data_columns={show_item?.fields_configuration}
               data={
@@ -128,7 +94,8 @@ export const PageShow = ({ show_item }) => {
                   : data?.data
               }
               isLoading={isLoading}
-            ></TableView>
+            ></TableView> */}
+            <div>showview</div>
           </>
         )}
       </Show>

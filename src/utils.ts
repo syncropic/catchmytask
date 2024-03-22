@@ -90,6 +90,29 @@ export function addPrefix(id: string, prefix: string): string {
   return `${prefix}${separator}${id}`;
 }
 
+export function formatDateTime(
+  date: string | Date,
+  formatStr: string
+): string | undefined {
+  if (!date) {
+    return undefined;
+  }
+
+  try {
+    if (typeof date === "string") {
+      // If the date is a string, try parsing it as ISO first
+      const parsedDate = parseISO(date);
+      return format(parsedDate, formatStr);
+    } else {
+      // If the date is already a Date object, format it directly
+      return format(date, formatStr);
+    }
+  } catch (error) {
+    console.error(`Error formatting date: ${error}`);
+    return undefined;
+  }
+}
+
 export function formatDateTimeAsDate(date: string | Date): string | undefined {
   if (!date) {
     return undefined;

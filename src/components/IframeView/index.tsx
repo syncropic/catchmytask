@@ -1,6 +1,12 @@
+import { IFieldConfigurationWithValue } from "@components/interfaces";
 import React from "react";
 
-const IframeView = ({ file_path }) => {
+const IframeView: React.FC<IFieldConfigurationWithValue> = ({
+  value,
+  display_format,
+  display_component,
+  display_component_content,
+}) => {
   let full_file_path = "";
   let getFilePath = "";
   // if (activeActionOption?.name === "view_file") {
@@ -12,11 +18,11 @@ const IframeView = ({ file_path }) => {
   // }
   // const file_path = activeRecords[0]?.file_path;
   const applicationsIndex =
-    file_path?.indexOf("applications/") + "applications/".length; // Add length to skip "applications/"
-  getFilePath = file_path?.substring(applicationsIndex);
+    value?.indexOf("applications/") + "applications/".length; // Add length to skip "applications/"
+  getFilePath = value?.substring(applicationsIndex);
   full_file_path = `http://localhost:8443/??folder=/config&payload=[["openFile","vscode-remote:///config/${getFilePath}"]]`;
 
-  console.log("file_path", file_path);
+  console.log("file_path", value);
 
   return (
     <>

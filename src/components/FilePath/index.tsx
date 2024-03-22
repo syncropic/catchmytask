@@ -3,10 +3,16 @@ import { Anchor, Text } from "@mantine/core";
 import { useAppStore } from "src/store";
 import { useActivateSection } from "@components/Utils";
 import { HttpError, useOne } from "@refinedev/core";
-import { IActionOption } from "@components/interfaces";
+import { IAction, IFieldConfigurationWithValue } from "@components/interfaces";
 import { set } from "date-fns";
 
-const FilePath = ({ value, record, displayComponentContent }) => {
+const FilePath: React.FC<IFieldConfigurationWithValue> = ({
+  value,
+  record,
+  display_format,
+  display_component,
+  display_component_content,
+}) => {
   const {
     setActiveFile,
     setActiveActionOption,
@@ -19,7 +25,7 @@ const FilePath = ({ value, record, displayComponentContent }) => {
     data: viewFileActionOptionData,
     isLoading: isLoadingActionOption,
     isError: isErrorActionOption,
-  } = useOne<IActionOption, HttpError>({
+  } = useOne<IAction, HttpError>({
     resource: "action_options",
     id: "action_options:⟨1d005015-848e-41bd-93a0-241686b30d70⟩",
   });
@@ -40,7 +46,7 @@ const FilePath = ({ value, record, displayComponentContent }) => {
           activateSection("rightSection");
         }}
       >
-        {displayComponentContent ? displayComponentContent : value}
+        {display_component_content ? display_component_content : value}
       </Text>
     </Anchor>
   );

@@ -11,7 +11,6 @@ import BaseLayout from "src/components/Layout";
 import defaultApiDataProvider from "../src/default-api-provider";
 import "../styles/globals.css";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const API_URL = `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}`;
 
@@ -199,73 +198,75 @@ const App = (props: React.PropsWithChildren) => {
   return (
     <>
       <NotificationsProvider position="top-right">
-        <Refine
-          routerProvider={routerProvider}
-          dataProvider={{
-            default: defaultApiDataProvider(API_URL),
-          }}
-          notificationProvider={useNotificationProvider}
-          authProvider={authProvider}
-          accessControlProvider={accessControlProvider}
-          resources={[
-            {
-              name: "home",
-              list: "/home",
-            },
-            {
-              name: "profile",
-              list: "/profile",
-            },
-            {
-              name: "datasets",
-              list: "/datasets",
-              create: "/datasets/create",
-              edit: "/datasets/edit/:id",
-              show: "/datasets/show/:id",
-              meta: {
-                credentials: "surrealdb_catchmytask",
-                query_language: "surrealql",
+        <DevtoolsProvider>
+          <Refine
+            routerProvider={routerProvider}
+            dataProvider={{
+              default: defaultApiDataProvider(API_URL),
+            }}
+            notificationProvider={useNotificationProvider}
+            authProvider={authProvider}
+            accessControlProvider={accessControlProvider}
+            resources={[
+              {
+                name: "home",
+                list: "/home",
               },
-            },
-            {
-              name: "applications",
-              list: "/applications",
-              create: "/applications/create",
-              edit: "/applications/edit/:id",
-              show: "/applications/show/:id",
-            },
+              {
+                name: "profile",
+                list: "/profile",
+              },
+              {
+                name: "datasets",
+                list: "/datasets",
+                create: "/datasets/create",
+                edit: "/datasets/edit/:id",
+                show: "/datasets/show/:id",
+                meta: {
+                  credentials: "surrealdb_catchmytask",
+                  query_language: "surrealql",
+                },
+              },
+              {
+                name: "applications",
+                list: "/applications",
+                create: "/applications/create",
+                edit: "/applications/edit/:id",
+                show: "/applications/show/:id",
+              },
 
-            {
-              name: "sessions",
-              list: "/sessions",
-              create: "/:applicationId/sessions/create",
-              edit: "/:applicationId/sessions/:id/edit",
-              show: "/:applicationId/sessions/:id",
-            },
-            {
-              name: "shortcuts",
-              list: "/shortcuts",
-              create: "/shortcuts/create",
-              edit: "/shortcuts/edit/:id",
-              show: "/shortcuts/show/:id",
-              meta: {
-                canDelete: true,
-                hide: true,
-                credentials: "surrealdb_catchmytask",
-                query_language: "surrealql",
+              {
+                name: "sessions",
+                list: "/sessions",
+                create: "/:applicationId/sessions/create",
+                edit: "/:applicationId/sessions/:id/edit",
+                show: "/:applicationId/sessions/:id",
               },
-            },
-          ]}
-          options={{
-            syncWithLocation: true,
-            warnWhenUnsavedChanges: true,
-            projectId: "OpGcqe-gAGTnn-eW9pDg",
-          }}
-        >
-          <BaseLayout>{props.children}</BaseLayout>
-          <DocumentTitleHandler />
-          <ReactQueryDevtools initialIsOpen={false} />
-        </Refine>
+              {
+                name: "shortcuts",
+                list: "/shortcuts",
+                create: "/shortcuts/create",
+                edit: "/shortcuts/edit/:id",
+                show: "/shortcuts/show/:id",
+                meta: {
+                  canDelete: true,
+                  hide: true,
+                  credentials: "surrealdb_catchmytask",
+                  query_language: "surrealql",
+                },
+              },
+            ]}
+            options={{
+              syncWithLocation: true,
+              warnWhenUnsavedChanges: true,
+              projectId: "OpGcqe-gAGTnn-eW9pDg",
+            }}
+          >
+            <BaseLayout>{props.children}</BaseLayout>
+            <DocumentTitleHandler />
+            <DevtoolsPanel />
+          </Refine>
+        </DevtoolsProvider>
       </NotificationsProvider>
     </>
   );

@@ -2,8 +2,15 @@ import React from "react";
 import { Anchor, Text } from "@mantine/core";
 import { useAppStore } from "src/store";
 import { useGo } from "@refinedev/core";
+import { IFieldConfigurationWithValue } from "@components/interfaces";
 
-const PrimaryKey = ({ value, record, displayComponentContent }) => {
+const PrimaryKey: React.FC<IFieldConfigurationWithValue> = ({
+  value,
+  record,
+  display_format,
+  display_component,
+  display_component_content,
+}) => {
   const { setActiveItem_2, activeViewItem } = useAppStore();
   const go = useGo();
   // Check if the value is a valid URL. If not, return an empty fragment
@@ -27,7 +34,7 @@ const PrimaryKey = ({ value, record, displayComponentContent }) => {
           });
         }}
       >
-        {displayComponentContent ? displayComponentContent : value}
+        {display_component_content ? display_component_content : value}
       </Text>
     </Anchor>
   );

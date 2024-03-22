@@ -1,8 +1,12 @@
+import { IFieldConfigurationWithValue } from "@components/interfaces";
 import React from "react";
 
-const Decimal = ({ value, displayFormat }) => {
+const Decimal: React.FC<IFieldConfigurationWithValue> = ({
+  value,
+  display_format,
+}) => {
   // Function to format the number. Checks for null, undefined, or empty string values.
-  const formatNumber = (number, format) => {
+  const formatNumber = (number: any, format: any) => {
     // If the value is null, undefined, or an empty string, return an empty string
     if (number === null || number === undefined || number === "") {
       return "";
@@ -23,7 +27,7 @@ const Decimal = ({ value, displayFormat }) => {
     return format ? `${format}${formattedNumber}` : formattedNumber;
   };
 
-  return <div>{formatNumber(value, displayFormat)}</div>;
+  return <div>{formatNumber(value, display_format)}</div>;
 };
 
 export default Decimal;

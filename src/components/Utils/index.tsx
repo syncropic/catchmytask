@@ -4,6 +4,7 @@ import ExternalLink from "@components/ExternalLink";
 import FilePath from "@components/FilePath";
 import PrimaryKey from "@components/PrimaryKey";
 import Reveal from "@components/Reveal";
+import RowActions from "@components/RowActions";
 import SessionLink from "@components/SessionLink";
 import ViewApplication from "@components/ViewApplication";
 import ViewBooking from "@components/ViewBooking";
@@ -12,6 +13,7 @@ import ViewPayment from "@components/ViewPayment";
 import ViewTask from "@components/ViewTask";
 import ViewTestRun from "@components/ViewTestRun";
 import ViewTrip from "@components/ViewTrip";
+import { ComponentKey } from "@components/interfaces";
 import {
   Column,
   FieldConfiguration,
@@ -22,6 +24,7 @@ import {
   RowData,
 } from "@components/interfaces";
 import {
+  Button,
   MultiSelect,
   NumberInput,
   Select,
@@ -34,6 +37,7 @@ import { MRT_ColumnDef } from "mantine-react-table";
 import { useEffect, useMemo, useState } from "react";
 import DateTime from "src/components/DateTime";
 import { useAppStore } from "src/store";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Adjusted createColumnDef to fit your use case
 export function createColumnDef<RowDataType extends RowData>(
@@ -47,6 +51,7 @@ export function createColumnDef<RowDataType extends RowData>(
   const isReveal = column?.display_component === "Reveal";
   const isSessionLink = column?.display_component === "SessionLink";
   const isExecutionStatus = column?.display_component === "ExecutionStatus";
+  const isRowActions = column?.field_name === "row_actions";
   const isDisplayColumn = [
     "mrt-row-select",
     "mrt-row-expand",
@@ -62,7 +67,8 @@ export function createColumnDef<RowDataType extends RowData>(
     !isDisplayColumn &&
     !isReveal &&
     !isSessionLink &&
-    !isExecutionStatus;
+    !isExecutionStatus &&
+    !isRowActions;
   return {
     id: column?.field_name,
     header: column?.field_name,
@@ -79,8 +85,10 @@ export function createColumnDef<RowDataType extends RowData>(
         if (isDateTime) {
           return (
             <DateTime
+              {...column}
               value={cell.getValue()}
-              displayFormat={column.display_format ?? "yyyy-MM-dd"}
+              display_format={column.display_format ?? "yyyy-MM-dd"}
+              record={cell.row.original}
             />
           );
         } else {
@@ -91,12 +99,19 @@ export function createColumnDef<RowDataType extends RowData>(
     ...(isDisplayColumn && {
       columnDefType: "display",
     }),
+    ...(isRowActions && {
+      columnDefType: "display", //turns off data column features like sorting, filtering, etc.
+      enableColumnOrdering: true, //but you can turn back any of those features on if you want like this
+      Cell: ({ row }) => <RowActions record={row.original}></RowActions>,
+    }),
     ...(isDateTime && {
       accessorFn: (row) => new Date(row[column.field_name] ?? ""),
       Cell: ({ row }) => (
         <DateTime
+          {...column}
           value={row.original[column.field_name]}
-          displayFormat={column.display_format ?? "yyyy-MM-dd"}
+          record={row.original}
+          display_format={column.display_format ?? "yyyy-MM-dd"}
         />
       ),
     }),
@@ -108,17 +123,21 @@ export function createColumnDef<RowDataType extends RowData>(
       },
       Cell: ({ row }) => (
         <Decimal
+          {...column}
           value={row.original[column.field_name]}
-          displayFormat={column.display_format ?? ""}
+          display_format={column.display_format ?? ""}
+          record={row.original}
         />
       ),
     }),
     ...(isExternalLink && {
       Cell: ({ row }) => (
         <ExternalLink
+          {...column}
           value={row.original[column.field_name]}
-          displayFormat={column.display_format ?? ""}
-          displayComponentContent={column.display_component_content}
+          display_format={column.display_format ?? ""}
+          display_component_content={column.display_component_content}
+          record={row.original}
         />
       ),
     }),
@@ -126,27 +145,30 @@ export function createColumnDef<RowDataType extends RowData>(
     ...(isSessionLink && {
       Cell: ({ row }) => (
         <SessionLink
+          {...column}
           value={row.original[column.field_name]}
           record={row.original}
-          displayComponentContent={column.display_component_content ?? null}
+          display_component_content={column.display_component_content ?? null}
         />
       ),
     }),
     ...(isPrimaryKey && {
       Cell: ({ row }) => (
         <PrimaryKey
+          {...column}
           value={row.original[column.field_name]}
           record={row.original}
-          displayComponentContent={column.display_component_content ?? null}
+          display_component_content={column.display_component_content ?? null}
         />
       ),
     }),
     ...(isFilePath && {
       Cell: ({ row }) => (
         <FilePath
+          {...column}
           value={row.original[column.field_name]}
           record={row.original}
-          displayComponentContent={column.display_component_content ?? null}
+          display_component_content={column.display_component_content ?? null}
         />
       ),
     }),
@@ -229,7 +251,8 @@ export function extractFields(
   return result;
 }
 
-export const componentMapping = {
+// Adjust your componentMapping to explicitly use this type for its keys
+export const componentMapping: Record<ComponentKey, React.ElementType> = {
   TextInput: TextInput,
   Textarea: Textarea,
   DateInput: DateInput,
@@ -416,4 +439,15 @@ export function selectExecutionStatus(statusList: string[]): string {
     return "pending";
   }
   return "complete";
+}
+
+// export const queryClient = useQueryClient();
+
+// Helper function to get component by resource type
+export function getComponentByResourceType(resourceType: ComponentKey) {
+  const Component = componentMapping[resourceType];
+  if (!Component) {
+    throw new Error(`Component for resource type "${resourceType}" not found`);
+  }
+  return Component;
 }

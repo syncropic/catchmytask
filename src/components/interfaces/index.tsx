@@ -7,6 +7,29 @@ export interface IApplication {
   subheading: string;
   description: string;
 }
+export interface IBooking {
+  [key: string]: any;
+}
+
+export interface IFile {
+  [key: string]: any;
+}
+
+export interface IPayment {
+  [key: string]: any;
+}
+
+export interface ITask {
+  [key: string]: any;
+}
+
+export interface ITestRun {
+  [key: string]: any;
+}
+
+export interface ITrip {
+  [key: string]: any;
+}
 
 export type IIdentity = {
   [key: string]: any;
@@ -15,6 +38,28 @@ export type IIdentity = {
 export type IActionsList = {
   name: string;
   id: string;
+};
+
+// Define a type for the keys in componentMapping
+export type ComponentKey =
+  | "TextInput"
+  | "Textarea"
+  | "DateInput"
+  | "MultiSelect"
+  | "Select"
+  | "NumberInput"
+  | "trips"
+  | "bookings"
+  | "payments"
+  | "test_runs"
+  | "files"
+  | "applications"
+  | "tasks";
+
+export type IView = {
+  resource_type: ComponentKey;
+  name: string;
+  order: number;
 };
 
 export interface TableViewComponentProps<T extends Record<string, any>> {
@@ -195,6 +240,12 @@ export interface FieldConfiguration {
     | "median"
     | "unique"
     | "uniqueCount";
+}
+
+// Extends FieldConfiguration and add the value field
+export interface IFieldConfigurationWithValue extends FieldConfiguration {
+  value: any;
+  record: any;
 }
 
 // export interface Column {

@@ -32,6 +32,7 @@ type Operator =
   | "null"
   | "nnull"
   | "or"
+  | "and"
   | "startswith"
   | "nstartswith"
   | "startswiths"
@@ -44,7 +45,7 @@ type Operator =
 // Base interface for filters excluding 'or', 'null', and 'nnull' which are handled separately
 interface BaseFilter {
   field: string;
-  operator: Exclude<Operator, "or" | "null" | "nnull">;
+  operator: Exclude<Operator, "or" | "and" | "null" | "nnull">;
   value: any; // The type can be more specific based on your needs, such as string | number | string[] | number[]
 }
 
@@ -60,34 +61,29 @@ interface OrFilter {
   value: Filter[];
 }
 
-// Union type representing any possible filter
-type Filter = BaseFilter | OrFilter | NullFilter;
+// Interface for 'and' conditions allowing nested filters
+interface AndFilter {
+  operator: "and";
+  value: Filter[];
+}
+
+type Filter = BaseFilter | OrFilter | NullFilter | AndFilter;
 
 // Function to generate a WHERE clause from an array of filters
 function generateWhereClause(filters: Filter[]): string {
-  // Process a single value based on the operator to handle SQL syntax correctly
   const processValue = (value: any, operator: Operator): string => {
-    // console.log("value", value); // Check the actual structure of value
-    // const mappedValues = value.map((val: any) => `'${val}'`);
-    // console.log("mappedValues", mappedValues); // Inspect the mapped (quoted) values
-    // const result = `(${mappedValues.join(", ")})`;
-    // console.log("result", result); // See the final result before return
     switch (operator) {
       case "in":
       case "nin":
-        // Map each value to a single-quoted string and join with commas, enclosed in parentheses
-        return `[${value.map((val: any) => `'${val}'`).join(", ")}]`;
+        return `(${value.map((val: any) => `'${val}'`).join(", ")})`;
       case "between":
       case "nbetween":
-        // Handle two values for 'BETWEEN'
         return `${value[0]} AND ${value[1]}`;
       default:
-        // Default handling, adds quotes if the value is a string
         return typeof value === "string" ? `'${value}'` : value.toString();
     }
   };
 
-  // Translate our custom operators to SQL operators
   const translateOperator = (operator: Operator): string => {
     switch (operator) {
       case "eq":
@@ -107,11 +103,11 @@ function generateWhereClause(filters: Filter[]): string {
       case "nin":
         return "NOT IN";
       case "contains":
-      case "containss": // Assuming SQL LIKE for simplicity; might need adjustment for case sensitivity
+      case "containss":
       case "startswith":
-      case "startswiths": // Simplified to LIKE, specific handling for the value required
+      case "startswiths":
       case "endswith":
-      case "endswiths": // Simplified to LIKE, specific handling for the value required
+      case "endswiths":
         return "LIKE";
       case "ncontains":
       case "ncontainss":
@@ -133,32 +129,26 @@ function generateWhereClause(filters: Filter[]): string {
     }
   };
 
-  // Enhanced version of the processFilter function with type guards
   const processFilter = (filter: Filter): string => {
     if ("value" in filter) {
-      // This block will now only process filters that have a 'value' property (i.e., BaseFilter and OrFilter)
-
       let operator = translateOperator(filter.operator);
-
-      if (filter.operator === "or") {
-        // Handle 'OR' conditions by recursively processing nested filters
-        const orConditions = filter.value
+      if (filter.operator === "or" || filter.operator === "and") {
+        const conjunction = filter.operator.toUpperCase();
+        const conditions = filter.value
           .map((subFilter) => `(${processFilter(subFilter)})`)
-          .join(" OR ");
-        return `(${orConditions})`;
+          .join(` ${conjunction} `);
+        return `(${conditions})`;
       } else {
-        // Process the value for all other conditions where 'value' is present
         const value = processValue(filter.value, filter.operator);
         return `${filter.field} ${operator} ${value}`;
       }
     } else {
-      // This block will handle NullFilter, which does not have a 'value' property
+      // Handles NullFilter
       let operator = translateOperator(filter.operator);
       return `${filter.field} ${operator}`;
     }
   };
 
-  // Join individual conditions with 'AND', forming the complete WHERE clause
   const conditions = filters
     .map((filter) => processFilter(filter))
     .join(" AND ");

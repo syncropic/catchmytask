@@ -119,21 +119,6 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
   const { mutate: mutateCreate } = useCreate();
 
   const handleSubmit = (e: any) => {
-    // console.log("values", values);
-    // console.log("request_data", activeRequestData);
-    // console.log("activeActionOption", activeActionOption);
-    // console.log("activeRecord", activeRecord);
-    // let request_data = {
-    //   ...activeActionOption,
-    //   id: addSeparator(activeActionOption?.id, "action_options"),
-    //   values: {
-    //     ...record,
-    //     ...values, // so i can override original in the form if not disabled
-    //     action_options: [
-    //       addSeparator(activeActionOption?.id, "action_options"),
-    //     ],
-    //   },
-    // };
     mutateCreate({
       resource: "automations",
       values: values,
@@ -170,29 +155,29 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
   };
 
   const handleCreateAutomation = () => {
-    let request_data = {
-      ...activeActionOption,
-      options: {
-        ...activeActionOption?.options,
-        execution_action_step_names: [
-          "get_collection_info_1",
-          "get_credential_info_1",
-          "update_record_fields_1",
-        ],
-        execute_by: "execution_action_step_names",
-        execution_includes: "save_only",
-      },
-      id: addSeparator(activeActionOption?.id, "action_options"),
-      values: {
-        ...activeRecords[0],
-        ...values, // so i can override original in the form if not disabled
-        action_options: [
-          addSeparator(activeActionOption?.id, "action_options"),
-        ],
-      },
-    };
-    setActiveRequestData(request_data);
-    openAutomation();
+    // let request_data = {
+    //   ...activeActionOption,
+    //   options: {
+    //     ...activeActionOption?.options,
+    //     execution_action_step_names: [
+    //       "get_collection_info_1",
+    //       "get_credential_info_1",
+    //       "update_record_fields_1",
+    //     ],
+    //     execute_by: "execution_action_step_names",
+    //     execution_includes: "save_only",
+    //   },
+    //   id: addSeparator(activeActionOption?.id, "action_options"),
+    //   values: {
+    //     ...activeRecords[0],
+    //     ...values, // so i can override original in the form if not disabled
+    //     action_options: [
+    //       addSeparator(activeActionOption?.id, "action_options"),
+    //     ],
+    //   },
+    // };
+    // setActiveRequestData(request_data);
+    // openAutomation();
   };
 
   return (
@@ -210,15 +195,15 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
       footerButtons={({ saveButtonProps }) => (
         <div className="flex w-full">
           {/* <SaveButton
-            {...saveButtonProps}
-            className="flex-grow w-1/3"
-            variant="light"
-            leftIcon={<IconDatabaseShare size={16} />}
-            disabled={mutationIsLoading}
-            onClick={handleSaveOnly}
-          >
-            Save Only
-          </SaveButton> */}
+              {...saveButtonProps}
+              className="flex-grow w-1/3"
+              variant="light"
+              leftIcon={<IconDatabaseShare size={16} />}
+              disabled={mutationIsLoading}
+              onClick={handleSaveOnly}
+            >
+              Save Only
+            </SaveButton> */}
           <SaveButton
             {...saveButtonProps}
             className="flex-grow w-3/3"

@@ -230,11 +230,11 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
           size={200}
           zIndex={1200}
           withCloseButton={false}
-          styles={{
-            drawer: {
-              overflow: "hidden",
-            },
-          }}
+          // styles={{
+          //   drawer: {
+          //     overflow: "hidden",
+          //   },
+          // }}
         >
           <Navbar.Section
             pl={8}
