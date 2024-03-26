@@ -56,11 +56,40 @@ export type ComponentKey =
   | "applications"
   | "tasks";
 
-export type IView = {
-  resource_type: ComponentKey;
+// export type IView = {
+//   resource_type: ComponentKey;
+//   name: string;
+//   order: number;
+// };
+
+export interface IViewItem {
+  actions: IActionsList[];
+  active_query: {
+    credentials: string;
+    query: string;
+    query_language: string;
+  };
+  display_options: any;
+  display_components: string[] | null;
+  display_name: string | null;
   name: string;
+  display_type: string;
+  fields_configuration: FieldConfiguration[];
+  id: string;
+  resource: string;
   order: number;
-};
+  data_field: string | null;
+  resource_type: ComponentKey;
+  render_detail_panel:
+    | "SummaryJson"
+    | "DetailJson"
+    | "SummaryTable"
+    | "DetailTable";
+}
+
+export interface IView extends IViewItem {
+  view: IViewItem[];
+}
 
 export interface TableViewComponentProps<T extends Record<string, any>> {
   // data_columns: any[]; // Define more specific type if possible
@@ -80,7 +109,7 @@ export interface TableViewComponentProps<T extends Record<string, any>> {
 
 export interface TabularViewComponentProps<T extends Record<string, any>> {
   data_columns: any[]; // Define more specific type if possible
-  item: IListItem;
+  item: IView;
   resource: string;
   data_items: T[];
   isLoadingDataItems: boolean;
@@ -190,7 +219,7 @@ export interface ListItem {
 export interface SelectActionComponentProps<T extends Record<string, any>> {
   actions_list: any;
   record: any;
-  view_item: IListItem | null;
+  view_item: IViewItem | null;
 }
 
 export interface SelectActionOptionComponentProps<
@@ -202,7 +231,7 @@ export interface SelectActionOptionComponentProps<
   action_step: any;
   variant?: "inline" | "default";
   data_table: MRT_TableInstance<T>;
-  view_item: IListItem;
+  view_item: IViewItem;
 }
 
 // export type AggregationFn<TData extends AnyData> = (
@@ -231,6 +260,9 @@ export interface FieldConfiguration {
   filter_mode?: string;
   visible: boolean;
   props: any;
+  max_size?: number;
+  min_size?: number;
+  size?: number;
   aggregation_fn?:
     | "sum"
     | "mean"
@@ -370,6 +402,25 @@ export interface IShowItem {
 }
 
 export interface IListItem {
+  actions: IActionsList[];
+  active_query: {
+    credentials: string;
+    query: string;
+    query_language: string;
+  };
+  display_options: any;
+  display_components: string[] | null;
+  display_name: string | null;
+  display_type: string;
+  fields_configuration: FieldConfiguration[];
+  id: string;
+  resource: string;
+  order: number;
+  data_field: string | null;
+  render_detail_panel: "SummaryComponents" | "JSON" | "Table";
+}
+
+export interface IViewItem {
   actions: IActionsList[];
   active_query: {
     credentials: string;

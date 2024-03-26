@@ -84,6 +84,11 @@ const Layout = ({
   //     setActiveApplication(application);
   //   }
   // }, [applicationData?.data]);
+  // return (
+  //   <div>
+  //     <ThemedHeaderV2 sticky={true} />
+  //   </div>
+  // );
 
   if (isLoading) {
     return <>Loading...</> || null;

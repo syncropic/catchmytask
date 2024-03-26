@@ -49,7 +49,7 @@ export function TableView<T extends Record<string, any>>({
     enableColumnFilters: true,
     enableRowActions: true,
     enableStickyHeader: true,
-    enableColumnFilterModes: true,
+    // enableColumnFilterModes: true,
     enableFacetedValues: true,
     enableGrouping: true,
     enablePinning: true,

@@ -1,0 +1,95 @@
+[33mcommit 1a9dad784757af5c260743d615c4c5febf8683b2[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Thu Mar 21 17:28:45 2024 -0700
+
+    fixed to complete typescript build
+
+[33mcommit 67920161634021278b36948febc0fdfb40db503a[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Tue Mar 19 13:32:38 2024 -0700
+
+    dynamic forms draft
+
+[33mcommit ce2f98f1da2c7262018cb96d5b8f1f2f8b683c26[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Fri Mar 15 13:37:42 2024 -0700
+
+    add application at top level resource
+
+[33mcommit e1f37d92dfdfbd33a8813d67bbc29ea3944c55c1[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Wed Mar 13 14:08:50 2024 -0700
+
+    streamline and modularize with fewer pages
+
+[33mcommit b0c0949401ffacf4c3b8d75567325a5dbf751403[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Sun Mar 10 22:45:55 2024 -0700
+
+    update
+
+[33mcommit 71e74353626bd5d333ebe2d77adff43d4df82b2c[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Wed Feb 21 18:35:22 2024 -0800
+
+    update automations
+
+[33mcommit c47cf36420756f903c322790cdb2ec95e4e3168c[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Fri Feb 16 18:22:11 2024 -0800
+
+    update
+
+[33mcommit db15d39ca813589c697410385caa94d1cf946fc0[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Thu Feb 15 10:55:15 2024 -0800
+
+    update
+
+[33mcommit 59420b8b174e3b40b8c19910bc920c083f78abc2[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Wed Feb 14 14:27:48 2024 -0800
+
+    add clear views and clear filters on tabular view
+
+[33mcommit b76a5da8ee6db210a185202ebab6a957c74b073d[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Sun Feb 11 18:23:21 2024 -0800
+
+    major update
+
+[33mcommit e8959f84c9019ceef7dabc64e74af15d07735206[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Mon Feb 5 20:34:03 2024 -0800
+
+    update
+
+[33mcommit 3874bb18facc781914441467f22ab6c844dd206e[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Thu Jan 18 06:50:38 2024 -0800
+
+    bulk update
+
+[33mcommit 3f9aa20d596399ff582e47eedf6ea28f6c985f4f[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Sat Nov 25 08:06:22 2023 -0800
+
+    update
+
+[33mcommit 167be8a6041e68f7ae72dabaaed1ab46622ad81f[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Tue Nov 21 21:41:44 2023 -0800
+
+    update readme
+
+[33mcommit 642fa5c5a4ca2311d6d419b7f7eb143850ac2a52[m
+Author: dpwanjala <dp.wanjala@gmail.com>
+Date:   Mon Nov 20 22:06:06 2023 -0800
+
+    wsl update
+
+[33mcommit 5d10d280343058fea4b19eb3341ee17aac99371e[m
+Author: dpwanjala <david.wanjala@snowstormtech.com>
+Date:   Tue Nov 14 20:30:35 2023 -0800
+
+    Initial commit from create-refine-app

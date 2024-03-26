@@ -32,12 +32,19 @@ import {
   Textarea,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
-import { HttpError, useGetIdentity, useList, useOne } from "@refinedev/core";
+import {
+  HttpError,
+  useCustom,
+  useGetIdentity,
+  useList,
+  useOne,
+} from "@refinedev/core";
 import { MRT_ColumnDef } from "mantine-react-table";
 import { useEffect, useMemo, useState } from "react";
 import DateTime from "src/components/DateTime";
 import { useAppStore } from "src/store";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatDateTime } from "src/utils";
 
 // Adjusted createColumnDef to fit your use case
 export function createColumnDef<RowDataType extends RowData>(
@@ -371,9 +378,15 @@ type RecordIdentifier = {
   name: string;
 };
 
-export function extractIdentifier(activeRecord: any): RecordIdentifier | null {
+export function extractIdentifier(activeRecord: any): RecordIdentifier {
   // Define the keys in the priority order you want to check
-  const keysToCheck: string[] = ["id", "flight_pnr", "trip_id", "test_id"];
+  const keysToCheck: string[] = [
+    "id",
+    "related_record",
+    "flight_pnr",
+    "trip_id",
+    "test_id",
+  ];
 
   for (let key of keysToCheck) {
     if (activeRecord?.[key]) {
@@ -387,14 +400,25 @@ export function extractIdentifier(activeRecord: any): RecordIdentifier | null {
 
 export function useFetchActionById(actionId: string | null) {
   const [action, setAction] = useState<IAction | null>(null);
-  const { data, error, isLoading } = useOne<IAction, HttpError>({
-    resource: "actions",
-    id: `${actionId}`,
+  const active_action_query = {
+    credentials: "surrealdb_catchmytask",
+    query: `SELECT *, show.view_id.* AS show.view, list.view_id.* AS list.view FROM actions WHERE id = '${actionId}'`,
+    query_language: "surrealql",
+  };
+  const { data, isLoading, error } = useCustom({
+    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    method: "post",
+    config: {
+      payload: active_action_query,
+    },
+    queryOptions: {
+      queryKey: [`useFetchActionById_${actionId}`],
+    },
   });
 
   useEffect(() => {
     if (!isLoading && data && !error) {
-      setAction(data.data);
+      setAction(data?.data[0]);
     }
   }, [data, isLoading, error]);
 
@@ -443,6 +467,8 @@ export function selectExecutionStatus(statusList: string[]): string {
 
 // export const queryClient = useQueryClient();
 
+export type ReplacementValues = { [key: string]: string };
+
 // Helper function to get component by resource type
 export function getComponentByResourceType(resourceType: ComponentKey) {
   const Component = componentMapping[resourceType];
@@ -450,4 +476,97 @@ export function getComponentByResourceType(resourceType: ComponentKey) {
     throw new Error(`Component for resource type "${resourceType}" not found`);
   }
   return Component;
+}
+
+export function formatValue(
+  value: string,
+  dataType: string,
+  formatString: string
+): string {
+  // console.log(
+  //   `Formatting value: ${value} as ${dataType} with format: ${formatString}`
+  // );
+  switch (dataType) {
+    case "date":
+      // Use formatDateTime for date values
+      const formattedDate = formatDateTime(value, formatString);
+      if (formattedDate !== undefined) {
+        return formattedDate;
+      } else {
+        console.error(
+          `Failed to format date value: ${value} with format: ${formatString}`
+        );
+        return value; // Return original value if formatting fails
+      }
+    case "number":
+      // Add logic for number formatting if necessary
+      return value;
+    default:
+      return value;
+  }
+}
+
+export function recursiveReplace(
+  currentObj: any,
+  replacementValues: { [key: string]: string },
+  parentFormats: { [key: string]: string } = {}
+): any {
+  if (typeof currentObj === "string") {
+    return currentObj.replace(/\$\{([^}]+)\}/g, (_, variableName) => {
+      // console.log(`Found variable: ${variableName}`);
+      // Directly construct the expected format key based on the variable name
+      const expectedFormatKey = `${variableName}_date_format`;
+      const formatSpec = parentFormats[expectedFormatKey];
+
+      if (formatSpec) {
+        // console.log(`Using format spec: ${formatSpec} for ${variableName}`);
+        // Assuming 'date' as the dataType for simplicity, since that's what's being used
+        const formatString = formatSpec; // In your structure, the spec itself is the format string
+        let replacementValue = formatValue(
+          replacementValues[variableName],
+          "date",
+          formatString
+        );
+        return replacementValue;
+      } else {
+        // console.log(
+        //   `No format spec found for ${variableName} using key ${expectedFormatKey}`
+        // );
+        return replacementValues[variableName] || variableName; // Use original if no format found
+      }
+    });
+  } else if (Array.isArray(currentObj)) {
+    return currentObj.map((item) =>
+      recursiveReplace(item, replacementValues, parentFormats)
+    );
+  } else if (typeof currentObj === "object" && currentObj !== null) {
+    const childFormats = { ...parentFormats };
+    Object.keys(currentObj).forEach((key) => {
+      if (key.includes("_format")) {
+        // console.log(
+        //   `Extracting format for key: ${key}, Format: ${currentObj[key]}`
+        // );
+        // Add the entire format key and its value to childFormats
+        childFormats[key] = currentObj[key];
+      }
+    });
+
+    const replacedObj: any = {};
+    Object.keys(currentObj).forEach((key) => {
+      replacedObj[key] = recursiveReplace(
+        currentObj[key],
+        replacementValues,
+        childFormats
+      );
+    });
+    return replacedObj;
+  }
+  return currentObj;
+}
+
+export function replacePlaceholdersInObject(
+  obj: any,
+  replacementValues: { [key: string]: string }
+) {
+  return recursiveReplace(obj, replacementValues);
 }

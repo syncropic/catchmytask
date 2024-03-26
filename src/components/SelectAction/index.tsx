@@ -8,12 +8,15 @@ import { useForm } from "@refinedev/mantine";
 import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
 
-function UpdateActiveRecord({ activeActionId }: { activeActionId: any }) {
+interface IActiveActionId {
+  id: string;
+}
+
+function UpdateActiveAction({ item }: { item: IActiveActionId }) {
   // const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
-  const { action, isLoading, error } = useFetchActionById(
-    activeActionId?.id || ""
-  );
-  console.log("action", action);
+  // console.log("actionId", item);
+  const { action, isLoading, error } = useFetchActionById(item.id);
+  // console.log("action", action);
   return null;
 }
 
@@ -68,7 +71,10 @@ function SelectAction<T extends Record<string, any>>({
   //   activateSection("rightSection");
   // }, [activeActionId, action, view_item, record]); // when activeActionId changes, fetch action and when action changes, set activeAction
 
-  const handleUserInteraction = (selectedActionId: string) => {
+  interface ISelectedActionItem {
+    id: string;
+  }
+  const handleUserInteraction = (selectedActionItem: ISelectedActionItem) => {
     // Update active action ID based on user selection
     // setActiveActionId({ id: selectedActionId });
 
@@ -78,8 +84,8 @@ function SelectAction<T extends Record<string, any>>({
       setActiveRecord(record);
     }
 
-    if (selectedActionId) {
-      setActiveActionId({ id: selectedActionId });
+    if (selectedActionItem) {
+      setActiveActionId(selectedActionItem);
     }
 
     // Similarly, update any other relevant parts of the global state as necessary,
@@ -97,9 +103,19 @@ function SelectAction<T extends Record<string, any>>({
   //   }
   // };
 
-  const handleActionChange = (value: string[]) => {
+  const handleActionChange = (value: any) => {
+    // console.log("value", value);
+    // find action name from actions_list where id is value[0]
+    const action_name = actions_list?.find(
+      (action: any) => action.id === value[0]
+    )?.name;
+    const action_object = {
+      id: value[0],
+      name: action_name,
+    };
+
     if (value[0]) {
-      handleUserInteraction(value[0]);
+      handleUserInteraction(action_object);
     }
   };
 
@@ -131,7 +147,7 @@ function SelectAction<T extends Record<string, any>>({
           wrapper: { width: "200px" },
         }}
       />
-      <UpdateActiveRecord activeActionId={activeActionId}></UpdateActiveRecord>
+      <UpdateActiveAction item={activeActionId}></UpdateActiveAction>
     </div>
   );
 }
