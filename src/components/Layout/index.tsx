@@ -8,10 +8,16 @@ import {
   useOne,
   useParsed,
 } from "@refinedev/core";
-import { IconAffiliate, IconTableShortcut } from "@tabler/icons-react";
+import {
+  IconAffiliate,
+  IconComponents,
+  IconListSearch,
+  IconTableShortcut,
+} from "@tabler/icons-react";
 import ActionControl from "pages/action_control/create";
+import QueryControl from "pages/query_control/create";
 import SessionList from "pages/sessions";
-// import ShortcutList from "pages/shortcuts";
+import ShortcutList from "pages/shortcuts";
 import React, { useEffect } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { ThemedHeaderV2 } from "src/components/Layout/header";
@@ -130,22 +136,35 @@ const Layout = ({
                 className="overflow-auto h-screen"
                 style={{ height: "calc(100vh - 64px)" }}
               >
-                <Accordion defaultValue="quick_access">
-                  <Accordion.Item key="quick_access" value="quick_access">
-                    <Accordion.Control icon={<IconTableShortcut size={16} />}>
-                      Quick Access
+                <Accordion defaultValue="sessions">
+                  <Accordion.Item key="shortcut" value="shortcut">
+                    <Accordion.Control icon={<IconAffiliate size={16} />}>
+                      Shortcuts
                     </Accordion.Control>
                     <Accordion.Panel>
-                      {/* <ShortcutList /> */}
-                      {/* <ViewList /> */}
+                      <ShortcutList />
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                  <Accordion.Item key="sessions" value="sessions">
+                    <Accordion.Control icon={<IconComponents size={16} />}>
+                      Sessions
+                    </Accordion.Control>
+                    <Accordion.Panel>
                       <SessionList />
                     </Accordion.Panel>
                   </Accordion.Item>
                   <Accordion.Item key="query" value="query">
-                    <Accordion.Control icon={<IconAffiliate size={16} />}>
+                    <Accordion.Control icon={<IconListSearch size={16} />}>
                       Query
                     </Accordion.Control>
-                    <Accordion.Panel>{/* <CreateQuery /> */}</Accordion.Panel>
+                    <Accordion.Panel>
+                      <div
+                        className="overflow-auto h-screen"
+                        style={{ height: "calc(100vh - 64px)" }}
+                      >
+                        <QueryControl />
+                      </div>
+                    </Accordion.Panel>
                   </Accordion.Item>
                 </Accordion>
               </div>
@@ -160,6 +179,7 @@ const Layout = ({
                   style={{ height: "calc(100vh - 64px)" }}
                 >
                   {children}
+                  {/* <div>center content</div> */}
                 </div>
               </Panel>
             </>

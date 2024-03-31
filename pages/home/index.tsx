@@ -1,6 +1,6 @@
 import ListView from "@components/ListView";
 import ResourceHeader from "@components/ResourceHeader";
-import { IListItem } from "@components/interfaces";
+import { IListItem, IView } from "@components/interfaces";
 import { Accordion, Text } from "@mantine/core";
 import { IResourceComponentsProps } from "@refinedev/core";
 // import ShortcutList from "pages/shortcuts/index";
@@ -19,7 +19,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         description={activeApplication?.description}
       />
       <Accordion defaultValue="1">
-        {activeApplication?.show?.map((item: IListItem) => (
+        {activeApplication?.show?.map((item: IView) => (
           <Accordion.Item key={item?.order} value={item?.order?.toString()}>
             <Accordion.Control>{`${item?.resource}`}</Accordion.Control>
             <Accordion.Panel>

@@ -8,7 +8,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   // applications dataset
   const { data, isLoading, isError, error } = useOne<IDataset, HttpError>({
     resource: "datasets",
-    id: "datasets:⟨ba87cd4a-ce75-41e7-901f-047b29c6c725⟩",
+    id: "datasets:⟨018e7ebb-9273-7261-87d1-faf0f75532e5⟩",
   });
   // console.log("applications_dataset", data);
   // create show_item that implements the IShowItem interface from the item in list key where name  == "default"

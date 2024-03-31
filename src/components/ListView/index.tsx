@@ -40,7 +40,19 @@ export const ListView: React.FC<{ item: IView }> = ({ item }) => {
     },
     enableGrouping: false,
     enableRowActions: true,
+    enableTopToolbar: true,
     enableRowSelection: true,
+    enableColumnOrdering: true,
+    enableGlobalFilter: true,
+    enableColumnFilters: true,
+    enableStickyHeader: true,
+    // enableColumnFilterModes: true,
+    enableFacetedValues: true,
+    enablePinning: true,
+    // enableEditing: true,
+    // editDisplayMode: "cell",
+    enableStickyFooter: true,
+    enableColumnResizing: true,
     // mantineTableProps: {
     //   sx: {
     //     tableLayout: "fixed",
@@ -49,7 +61,7 @@ export const ListView: React.FC<{ item: IView }> = ({ item }) => {
     defaultColumn: {
       minSize: 100, //allow columns to get smaller than default
       maxSize: 200, //allow columns to get larger than default
-      size: 200, //make columns wider by default
+      // size: 200, //make columns wider by default
     },
   };
 

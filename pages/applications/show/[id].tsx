@@ -1,7 +1,12 @@
 import ListView from "@components/ListView";
 import ResourceHeader from "@components/ResourceHeader";
 import SelectAction from "@components/SelectAction";
-import { IApplication, IDataset, IListItem } from "@components/interfaces";
+import {
+  IApplication,
+  IDataset,
+  IListItem,
+  IView,
+} from "@components/interfaces";
 import { Accordion, Text } from "@mantine/core";
 import {
   HttpError,
@@ -108,7 +113,7 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
         {/* <div>application stats and useful links i.e installs, author etc</div> */}
         {/* <div>application sessions</div> */}
         <Accordion defaultValue="1">
-          {activeApplication?.show?.map((item: IListItem) => (
+          {activeApplication?.show?.map((item: IView) => (
             <Accordion.Item key={item?.order} value={item?.order?.toString()}>
               <Accordion.Control>{`${item?.resource}`}</Accordion.Control>
               <Accordion.Panel>

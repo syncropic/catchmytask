@@ -40,9 +40,13 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
     // }
     // activateSection("rightSection");
   }, [activeActionId, action]);
+  // if activeAction?.name == "clone" the activeRecordToClone = {record: activeRecord}
+  let activeRecordValues =
+    activeAction?.name === "clone" ? { record: activeRecord } : activeRecord;
+  // console.log("activeRecordToClone", activeRecordToClone);
 
   const actionFormFieldValues = extractFields(
-    activeRecord || {},
+    activeRecordValues || {},
     activeAction?.field_configurations || []
   );
   // console.log("actionFormFieldValues", actionFormFieldValues);

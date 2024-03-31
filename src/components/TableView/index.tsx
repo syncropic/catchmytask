@@ -1,3 +1,4 @@
+import MonacoEditor from "@components/MonacoEditor";
 import SelectAction from "@components/SelectAction";
 import CodeBlock from "@components/codeblock/codeblock";
 import { IIdentity, TabularViewComponentProps } from "@components/interfaces";
@@ -43,20 +44,6 @@ export function TableView<T extends Record<string, any>>({
   const data_table = useMantineReactTable<T>({
     columns: data_columns,
     data: data_items,
-    enableRowSelection: true,
-    enableColumnOrdering: true,
-    enableGlobalFilter: true,
-    enableColumnFilters: true,
-    enableRowActions: true,
-    enableStickyHeader: true,
-    // enableColumnFilterModes: true,
-    enableFacetedValues: true,
-    enableGrouping: true,
-    enablePinning: true,
-    // enableEditing: true,
-    // editDisplayMode: "cell",
-    enableStickyFooter: true,
-    enableColumnResizing: true,
     // layoutMode: "grid",
     // mantineTableHeadCellProps: {
     //   sx: {
@@ -70,6 +57,16 @@ export function TableView<T extends Record<string, any>>({
     // },
     displayColumnDefOptions: {
       "mrt-row-actions": { minSize: 200, maxSize: 200 },
+      "mrt-row-select": {
+        // enableColumnActions: true,
+        // enableHiding: true,
+        size: 50,
+      },
+      "mrt-row-expand": {
+        // enableColumnActions: true,
+        // enableHiding: true,
+        size: 50,
+      },
     },
     state: { isLoading: isLoadingDataItems },
     // mantineEditTextInputProps: ({ cell }) => ({
@@ -172,11 +169,16 @@ export function TableView<T extends Record<string, any>>({
         </Flex>
       );
     },
-    renderDetailPanel: ({ row }) => (
-      <div>
-        <CodeBlock jsonData={row.original} />
-      </div>
-    ),
+    ...(customTableConfig?.enableExpandableRows !== false
+      ? {
+          renderDetailPanel: ({ row }) => (
+            <div>
+              {/* Code block or any other component can go here. */}
+              <MonacoEditor value={row.original} />
+            </div>
+          ),
+        }
+      : {}),
     ...customTableConfig,
   });
 

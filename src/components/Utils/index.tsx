@@ -44,7 +44,10 @@ import { useEffect, useMemo, useState } from "react";
 import DateTime from "src/components/DateTime";
 import { useAppStore } from "src/store";
 import { useQueryClient } from "@tanstack/react-query";
-import { formatDateTime } from "src/utils";
+import { formatDateTime, getCellStyleInline } from "src/utils";
+import ViewJson from "@components/ViewJson";
+import ShortcutLink from "@components/ShortcutLink";
+import MonacoEditor from "@components/MonacoEditor";
 
 // Adjusted createColumnDef to fit your use case
 export function createColumnDef<RowDataType extends RowData>(
@@ -57,8 +60,11 @@ export function createColumnDef<RowDataType extends RowData>(
   const isFilePath = column?.display_component === "FilePath";
   const isReveal = column?.display_component === "Reveal";
   const isSessionLink = column?.display_component === "SessionLink";
+  const isShortcutLink = column?.display_component === "ShortcutLink";
   const isExecutionStatus = column?.display_component === "ExecutionStatus";
   const isRowActions = column?.field_name === "row_actions";
+  const conditionalFormatting = column?.conditional_formatting ?? null;
+
   const isDisplayColumn = [
     "mrt-row-select",
     "mrt-row-expand",
@@ -79,6 +85,15 @@ export function createColumnDef<RowDataType extends RowData>(
   return {
     id: column?.field_name,
     header: column?.field_name,
+    ...(conditionalFormatting && {
+      Cell: ({ row }) => {
+        const style = getCellStyleInline(
+          row.original[column?.conditional_formatting?.field_name],
+          column
+        );
+        return <div style={style}>{row.original[column.field_name] ?? ""}</div>;
+      },
+    }),
     ...(column?.filter_variant && {
       filterVariant: column.filter_variant,
       filterFn: column.filter_fn,
@@ -159,6 +174,16 @@ export function createColumnDef<RowDataType extends RowData>(
         />
       ),
     }),
+    ...(isShortcutLink && {
+      Cell: ({ row }) => (
+        <ShortcutLink
+          {...column}
+          value={row.original[column.field_name]}
+          record={row.original}
+          display_component_content={column.display_component_content ?? null}
+        />
+      ),
+    }),
     ...(isPrimaryKey && {
       Cell: ({ row }) => (
         <PrimaryKey
@@ -186,6 +211,9 @@ export function createColumnDef<RowDataType extends RowData>(
           resource={column?.field_name}
         />
       ),
+    }),
+    ...(column?.max_size && {
+      maxSize: column.max_size,
     }),
   };
 }
@@ -273,6 +301,9 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   files: ViewFile,
   applications: ViewApplication,
   tasks: ViewTask,
+  viewJson: ViewJson,
+  supplier_issues: ViewJson,
+  JsonEditor: MonacoEditor,
 };
 
 export type BaseKey = {
@@ -381,11 +412,12 @@ type RecordIdentifier = {
 export function extractIdentifier(activeRecord: any): RecordIdentifier {
   // Define the keys in the priority order you want to check
   const keysToCheck: string[] = [
-    "id",
-    "related_record",
+    "sst_booking_number",
     "flight_pnr",
+    "related_record",
     "trip_id",
     "test_id",
+    "id",
   ];
 
   for (let key of keysToCheck) {
@@ -395,7 +427,10 @@ export function extractIdentifier(activeRecord: any): RecordIdentifier {
   }
 
   // Return null or any other default value if no keys are found
-  return null;
+  return {
+    id: "",
+    name: "",
+  };
 }
 
 export function useFetchActionById(actionId: string | null) {

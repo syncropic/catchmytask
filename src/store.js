@@ -72,7 +72,7 @@ const useAppStore = create(
           isDisplayed: true,
         },
         rightSection: {
-          isDisplayed: true,
+          isDisplayed: false,
         },
       },
       setActiveLayout: (activeLayout) => set((state) => ({ activeLayout })),
@@ -91,6 +91,8 @@ const useAppStore = create(
         set((state) => ({ activeActionId })),
       activeAction: null,
       setActiveAction: (activeAction) => set((state) => ({ activeAction })),
+      queryAction: null,
+      setQueryAction: (queryAction) => set((state) => ({ queryAction })),
       activeDataModel: null,
       setActiveDataModel: (activeDataModel) =>
         set((state) => ({ activeDataModel })),

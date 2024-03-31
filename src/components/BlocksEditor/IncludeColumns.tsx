@@ -2,24 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { MultiSelect } from "@mantine/core";
 import { useAppStore } from "src/store"; // Note: This import seems unused
-
-// const options = [
-//   {
-//     value: "reporting date",
-//     label: "reporting date",
-//     type: "date",
-//   },
-//   {
-//     value: "booking type",
-//     label: "booking type",
-//     type: "multioptions",
-//   },
-//   {
-//     value: "has issue",
-//     label: "has issue",
-//     type: "multioptions",
-//   },
-// ];
+import { FieldConfiguration } from "@components/interfaces";
 
 interface MultiSelectWrapperProps {
   data: string[];
@@ -30,10 +13,12 @@ const MultiSelectWrapper: React.FC<MultiSelectWrapperProps> = ({
   data,
   onChange,
 }) => {
-  const { activeColumnOptions, setActiveColumnOptions } = useAppStore();
+  const { activeViewItem } = useAppStore();
   return (
     <MultiSelect
-      data={activeColumnOptions}
+      data={activeViewItem?.fields_configuration.map(
+        (item: FieldConfiguration) => item?.field_name
+      )}
       value={data}
       onChange={onChange}
       placeholder="Select items"

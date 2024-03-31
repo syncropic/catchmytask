@@ -1,4 +1,8 @@
-import { ColumnConfig, FilterCondition } from "@components/interfaces";
+import {
+  ColumnConfig,
+  FieldConfiguration,
+  FilterCondition,
+} from "@components/interfaces";
 import { format, parseISO } from "date-fns";
 import { MRT_TableInstance } from "mantine-react-table";
 
@@ -231,22 +235,43 @@ export const getCellStyle = (
   return "";
 };
 
+// export const getCellStyleInline = (
+//   value: string,
+//   activeViews: ActiveView,
+//   columnName: string
+// ): Record<string, string> => {
+//   if (!activeViews || !activeViews.conditional_formatting) {
+//     return {};
+//   }
+//   const columnRule = activeViews.conditional_formatting.find(
+//     (r) => r.column === columnName
+//   );
+//   if (columnRule) {
+//     const rule = columnRule.rules.find((r) => r.value === value);
+//     return rule ? mapClassNameToStyle(rule.class) : {};
+//   }
+//   return {};
+// };
+
+// Function to get the inline style based on value and column definition
 export const getCellStyleInline = (
-  value: string,
-  activeViews: ActiveView,
-  columnName: string
-): Record<string, string> => {
-  if (!activeViews || !activeViews.conditional_formatting) {
+  value: any,
+  columnDefinition: FieldConfiguration
+) => {
+  if (!columnDefinition || !columnDefinition.conditional_formatting) {
     return {};
   }
-  const columnRule = activeViews.conditional_formatting.find(
-    (r) => r.column === columnName
-  );
-  if (columnRule) {
-    const rule = columnRule.rules.find((r) => r.value === value);
-    return rule ? mapClassNameToStyle(rule.class) : {};
-  }
-  return {};
+
+  // Destructuring for clarity
+  const {
+    conditional_formatting: { rules },
+  } = columnDefinition;
+
+  // Find the matching rule based on the value
+  const matchingRule = rules.find((rule) => rule.value === value);
+
+  // Return the corresponding style if a match is found
+  return matchingRule ? mapClassNameToStyle(matchingRule.class) : {};
 };
 
 export const mapClassNameToStyle = (

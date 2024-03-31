@@ -54,7 +54,10 @@ export type ComponentKey =
   | "test_runs"
   | "files"
   | "applications"
-  | "tasks";
+  | "tasks"
+  | "viewJson"
+  | "supplier_issues"
+  | "JsonEditor";
 
 // export type IView = {
 //   resource_type: ComponentKey;
@@ -239,12 +242,18 @@ export interface SelectActionOptionComponentProps<
 //   getChildRows: () => Row<TData>[]
 // ) => any
 
+export interface IConditionalFormatting {
+  field_name: string;
+  rules: any[];
+}
+
 export interface FieldConfiguration {
   field_name: string;
   display_format: string;
   display_component: string;
   display_name: string;
   display_component_content: any;
+  conditional_formatting: IConditionalFormatting;
   data_type?: string;
   filter_variant?:
     | "select"
@@ -436,7 +445,7 @@ export interface IViewItem {
   resource: string;
   order: number;
   data_field: string | null;
-  render_detail_panel: "SummaryComponents" | "JSON" | "Table";
+  // render_detail_panel: "SummaryComponents" | "JSON" | "Table";
 }
 
 // FILTERING WITH VIEWS
@@ -477,6 +486,7 @@ export interface IShortcut {
 export interface IAction {
   created_at: Date | string;
   updated_at: Date | string;
+  show: IView[];
   destination: {
     id: string;
     location: string;

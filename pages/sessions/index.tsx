@@ -182,27 +182,15 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     columns,
     data: data_items,
     enableColumnResizing: true,
-    // enableRowSelection: true,
-    // enableColumnOrdering: true,
-    // enableGlobalFilter: true,
+
     enableColumnFilters: true,
-    // enableRowActions: true,
     enableStickyHeader: true,
-    // enableColumnFilterModes: true,
-    // enableFacetedValues: true,
-    // enableGrouping: true,
-    // enablePinning: true,
+
     initialState: {
       density: "xs",
       // showGlobalFilter: true,
       showColumnFilters: true,
       pagination: { pageSize: 7, pageIndex: 0 },
-      // sorting: [
-      //   {
-      //     id: "updated_at",
-      //     desc: true,
-      //   },
-      // ],
     },
     enablePagination: false,
     enableBottomToolbar: false, //hide the bottom toolbar as well if you want
@@ -216,19 +204,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     //   placeholder: "Search sessions",
     // },
     mantineTableContainerProps: { sx: { maxHeight: "350px" } },
-    // renderDetailPanel: ({ row }) => (
-    //   <div>
-    //     <Text>
-    //       <b>Mail List :</b> {row.original.mail_list}
-    //     </Text>
-    //     <Text>
-    //       <b>Custom Message :</b> {row.original.custom_message}
-    //     </Text>
-    //     <Text>
-    //       <b>Description :</b> {row.original.description}
-    //     </Text>
-    //   </div>
-    // ),
+
     renderTopToolbar: ({ table }) => {
       const handleDelete = () => {
         table.getSelectedRowModel().flatRows.map((row) => {

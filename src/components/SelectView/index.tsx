@@ -3,7 +3,7 @@ import {
   IActionsList,
   SelectActionComponentProps,
 } from "@components/interfaces";
-import { MultiSelect } from "@mantine/core";
+import { MultiSelect, Select, Tabs, Text } from "@mantine/core";
 import { useForm } from "@refinedev/mantine";
 import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
@@ -15,18 +15,25 @@ interface IActiveActionId {
 function UpdateActiveAction({ item }: { item: IActiveActionId }) {
   // const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   // console.log("actionId", item);
-
-  const { action, isLoading, error } = useFetchActionById(item?.id);
-
+  const { action, isLoading, error } = useFetchActionById(item.id);
+  // console.log("action", action);
   return null;
 }
 
-function SelectAction<T extends Record<string, any>>({
+function SelectView<T extends Record<string, any>>({
   actions_list,
   record,
   view_item,
 }: SelectActionComponentProps<T>) {
   // console.log("record - selectaction", record);
+  const {
+    setActiveRecord,
+    setActiveViewItem,
+    activeViewItem,
+    setActiveActionId,
+    activeActionId,
+  } = useAppStore();
+
   const {
     getInputProps,
     saveButtonProps,
@@ -34,18 +41,12 @@ function SelectAction<T extends Record<string, any>>({
     values,
     refineCore: { formLoading, onFinish },
     onSubmit,
+    reset,
   } = useForm({
-    initialValues: {},
+    initialValues: {
+      view: activeViewItem?.name || "",
+    },
   });
-
-  const {
-    setActiveRecord,
-    activeLayout,
-    setActiveLayout,
-    setActiveViewItem,
-    setActiveActionId,
-    activeActionId,
-  } = useAppStore();
 
   // const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   // const { action, isLoading, error } = useFetchActionById(
@@ -70,6 +71,29 @@ function SelectAction<T extends Record<string, any>>({
   //   activateSection("rightSection");
   // }, [activeActionId, action, view_item, record]); // when activeActionId changes, fetch action and when action changes, set activeAction
 
+  useEffect(() => {
+    reset();
+
+    // Step 1: Reset form with only 'author' and 'author_email'
+    // const resetValues = {
+    //   author: identity?.email,
+    //   author_email: identity?.email,
+    // };
+
+    // const resetValues = {
+    //   view: activeViewItem?.name || "",
+    // };
+
+    // // Reinitialize form with base values plus dynamic actionFormFieldValues
+    // Object.entries({
+    //   ...resetValues,
+    //   ...actionFormFieldValues,
+    // }).forEach(([key, value]) => {
+
+    // });
+    setFieldValue("view", activeViewItem?.name || "");
+  }, [activeViewItem?.name]);
+
   interface ISelectedActionItem {
     id: string;
   }
@@ -92,9 +116,6 @@ function SelectAction<T extends Record<string, any>>({
     if (view_item) {
       setActiveViewItem(view_item);
     }
-    if (selectedActionItem) {
-      activateSection("rightSection");
-    }
   };
   // const handleActionChange = (value: string[]) => {
   //   // console.log("value", value[0]);
@@ -104,22 +125,6 @@ function SelectAction<T extends Record<string, any>>({
   //     setActiveActionId({ id: value[0] });
   //   }
   // };
-
-  //handle toggleDisplay
-  const activateSection = (section: string) => {
-    if (activeLayout) {
-      const newLayout = { ...activeLayout };
-      newLayout[section].isDisplayed = true;
-      setActiveLayout(newLayout);
-    }
-  };
-  // console.log("action", action);
-  // activateSection("rightSection") with useEffect
-  // useEffect(() => {
-  //   if (action) {
-  //     activateSection("rightSection");
-  //   }
-  // }, [action]);
 
   const handleActionChange = (value: any) => {
     // console.log("value", value);
@@ -137,30 +142,33 @@ function SelectAction<T extends Record<string, any>>({
     }
   };
 
+  // //handle toggleDisplay
+  // const activateSection = (section: string) => {
+  //   if (activeLayout) {
+  //     const newLayout = { ...activeLayout };
+  //     newLayout[section].isDisplayed = true;
+  //     setActiveLayout(newLayout);
+  //   }
+  // };
+  // console.log("activeviewitem", activeViewItem);
+
   return (
-    <div className="flex items-end space-x-2">
-      {/* <LoadingOverlay visible={dataset.isLoading} /> */}
-      <MultiSelect
-        placeholder="Select action"
-        maxSelectedValues={1}
-        searchable={true}
-        data={actions_list?.map((action: IActionsList) => ({
-          label: action?.name,
-          value: action?.id,
-        }))}
-        value={getInputProps("action").value}
-        onChange={handleActionChange}
-        withinPortal={true}
-        styles={{
-          input: { width: "200px" },
-          wrapper: { width: "200px" },
-        }}
-      />
-      {activeActionId && (
-        <UpdateActiveAction item={activeActionId}></UpdateActiveAction>
-      )}
-    </div>
+    <>
+      <div className="flex w-full">
+        <Select
+          placeholder="Select view"
+          // maxSelectedValues={1}
+          searchable={true}
+          data={[activeViewItem?.name]}
+          // value={getInputProps("view").value}
+          value={activeViewItem?.name}
+          onChange={handleActionChange}
+          withinPortal={true}
+          style={{ width: "100%" }}
+        />
+      </div>
+    </>
   );
 }
 
-export default SelectAction;
+export default SelectView;

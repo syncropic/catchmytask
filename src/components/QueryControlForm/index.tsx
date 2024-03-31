@@ -14,7 +14,7 @@ import {
   IIdentity,
   IView,
 } from "@components/interfaces";
-import { Accordion, Button, Textarea } from "@mantine/core";
+import { Accordion, Button, Tabs, Text, Textarea } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useCustomMutation, useGetIdentity } from "@refinedev/core";
 import { Create, SaveButton, useForm } from "@refinedev/mantine";
@@ -24,8 +24,9 @@ import CreateAutomation from "pages/automations/create";
 import { useEffect } from "react";
 import { useAppStore } from "src/store";
 import { v4 as uuidv4 } from "uuid";
+import BlocksEditor from "@components/BlocksEditor";
 
-export function ActionControlForm<T extends Record<string, any>>({
+export function QueryControlForm<T extends Record<string, any>>({
   activeSession,
   activeAction,
   actionFormFieldValues,
@@ -43,7 +44,6 @@ export function ActionControlForm<T extends Record<string, any>>({
     mutate,
     isLoading: mutationIsLoading,
     isError: mutationIsError,
-    error: mutationError,
   } = useCustomMutation();
   const queryClient = useQueryClient();
   const {
@@ -156,9 +156,6 @@ export function ActionControlForm<T extends Record<string, any>>({
     const Component = componentMapping[activeViewItem.resource_type];
     return <Component item={activeRecord} />;
   };
-  if (!activeAction) {
-    return <div>No active action selected</div>;
-  }
 
   return (
     <Create
@@ -174,15 +171,6 @@ export function ActionControlForm<T extends Record<string, any>>({
       goBack={false}
       footerButtons={({ saveButtonProps }) => (
         <div className="flex w-full gap-4">
-          {/* <SaveButton
-            {...saveButtonProps}
-            className="flex-grow w-2/3"
-            variant="filled"
-            leftIcon={<IconMathFunction size={16} />}
-            disabled={mutationIsLoading}
-          >
-            Run
-          </SaveButton> */}
           <SaveButton
             {...saveButtonProps}
             className="flex-grow w-2/3"
@@ -193,110 +181,58 @@ export function ActionControlForm<T extends Record<string, any>>({
             {activeAction?.display_name || "Run"}
           </SaveButton>
           <Button
-            resource="automations"
+            // resource="automations"
             size="xs"
             variant="light"
-            onClick={() => {
-              if (openedChat) {
-                closeChat();
-              } else {
-                openChat();
-              }
-            }}
+            // onClick={() => {
+            //   if (openedAutomation) {
+            //     closeAutomation();
+            //   } else {
+            //     openAutomation();
+            //   }
+            // }}
           >
-            {openedChat ? "Close Chat" : "Chat"}
-          </Button>
-          <Button
-            resource="automations"
-            size="xs"
-            variant="light"
-            onClick={() => {
-              if (openedAutomation) {
-                closeAutomation();
-              } else {
-                openAutomation();
-              }
-            }}
-          >
-            {openedAutomation ? "Close Automation" : "Automate"}
+            {/* {openedAutomation ? "Close Automation" : "Automate"} */}
+            Save
           </Button>
         </div>
       )}
     >
-      {/* {JSON.stringify(actionFormFieldValues)} */}
-      {/* <div>actioncontrolform</div> */}
-      {/* {JSON.stringify(activeAction)} */}
-      <Accordion multiple defaultValue={["new_action"]}>
-        <Accordion.Item key="action_history" value="action_history">
-          <Accordion.Control>Action History</Accordion.Control>
-          <Accordion.Panel>
-            {/* {activeAction?.show && <ViewActionHistory></ViewActionHistory>} */}
-          </Accordion.Panel>
-        </Accordion.Item>
-        <Accordion.Item key="new_action" value="new_action">
-          <Accordion.Control>New Action</Accordion.Control>
-          <Accordion.Panel>
-            {activeAction?.name === "view"
-              ? viewComponent(activeViewItem, activeRecord)
-              : null}
-            {activeAction?.field_configurations &&
-              activeAction?.field_configurations?.map(
-                (field: FieldConfiguration) => {
-                  const Component = getComponentByResourceType(
-                    field?.display_component as ComponentKey
-                  );
-                  return (
-                    <div key={field.field_name} className="mb-4">
-                      <Component
-                        {...getInputProps(field.field_name)}
-                        {...field.props}
-                        label={field.display_name}
-                      />
-                    </div>
-                  );
-                }
-              )}
-            {openedChat && (
-              <div>
-                <div>Chat History:</div>
-                <Textarea
-                  minRows={5}
-                  required
-                  mt="sm"
-                  label="chat_message"
-                  placeholder="chat_message"
-                  // data={dateTypeOptions} // Replace with your options source
-                  // value={getInputProps("date_type").value}
-                  // onChange={handleNameChange}
-                  {...getInputProps("chat_message")}
-                  // value={record?.contact_email}
-                  // disabled
-                  // required
-                />
-              </div>
-            )}
-            {openedAutomation && <CreateAutomation></CreateAutomation>}
-          </Accordion.Panel>
-        </Accordion.Item>
-        <Accordion.Item key="more_details" value="more_details">
-          <Accordion.Control>More Details</Accordion.Control>
-          <Accordion.Panel>
-            {/* <CodeBlock jsonData={activeRecords[0]}></CodeBlock> */}
-            <MonacoEditor value={activeRecord}></MonacoEditor>
-          </Accordion.Panel>
-        </Accordion.Item>
-        {/* <Accordion.Item key="response" value="response">
-          <Accordion.Control>Response</Accordion.Control>
-          <Accordion.Panel>
-            <MonacoEditor
-              value={mutationError?.response?.data?.detail}
-            ></MonacoEditor>
-            {JSON.stringify(mutationError?.response?.data?.detail)}
-          </Accordion.Panel>
-        </Accordion.Item> */}
-      </Accordion>
+      <Tabs defaultValue="blocks">
+        <Tabs.List>
+          <Tabs.Tab value="blocks">
+            <Text size="xs">Blocks</Text>
+          </Tabs.Tab>
+          <Tabs.Tab value="natural_language">
+            <Text size="xs">Natural Language</Text>
+          </Tabs.Tab>
+
+          <Tabs.Tab value="sql">
+            <Text size="xs">SQL</Text>
+          </Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="blocks">
+          <BlocksEditor values={values} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="natural_language">
+          <Textarea
+            autosize
+            minRows={6}
+            mt="sm"
+            required
+            // label="query"
+            placeholder="Describe the task/query with natural language"
+            {...getInputProps("query")}
+          />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="sql">
+          <MonacoEditor value={values?.query} language="sql" />
+        </Tabs.Panel>
+      </Tabs>
     </Create>
   );
 }
 
-export default ActionControlForm;
+export default QueryControlForm;
