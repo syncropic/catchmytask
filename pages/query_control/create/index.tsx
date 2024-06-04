@@ -50,33 +50,21 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
     // activateSection("rightSection");
   }, [data?.data]);
 
-  const queryFormFieldValues = extractFields(
-    activeViewItem?.active_query || {},
-    queryAction?.field_configurations || []
-  );
-  // console.log("actionFormFieldValues", actionFormFieldValues);
-  if (queryFormFieldValues.length === 0) {
-    return (
-      <div>
-        <Text>No query action fields to display</Text>
-      </div>
-    );
-  }
   // const { subscriptions } = useSubscriptions();
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error: {JSON.stringify(error)}</div>;
+  if (!activeSession) return <div>No active session selected</div>;
   if (!activeAction) return <div>No active action selected</div>;
 
   return (
     <>
       {/* <div>{JSON.stringify(activeViewItem?.active_query?.query)}</div> */}
-      <SelectView actions_list={[]} record={activeSession} view_item={null} />
-      <QueryControlForm
-        activeSession={activeSession}
-        activeAction={queryAction}
+      {/* <SelectView actions_list={[]} record={activeSession} view_item={null} /> */}
+      {/* <QueryControlForm
+        queryAction={queryAction}
         activeRecords={[activeViewItem]}
-        actionFormFieldValues={queryFormFieldValues}
-      ></QueryControlForm>
+      ></QueryControlForm> */}
+      <div>QueryControlForm</div>
     </>
   );
 };

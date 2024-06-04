@@ -9,17 +9,20 @@ import _ from "lodash";
 export const ListView: React.FC<{ item: IView }> = ({ item }) => {
   // console.log("item", item);
   const data_columns_enhanced = useDataColumns(
-    item?.fields_configuration || item?.view?.[0].fields_configuration,
+    item?.fields_configuration || item?.view?.[0]?.fields_configuration || [],
     item?.id
   );
+  // console.log("data_columns_enhanced", data_columns_enhanced);
 
   const query_key = item?.id || item?.view?.[0].id;
 
-  const { data, isLoading, isError, error } = useCustom({
+  const { data, isLoading, isError, error, isFetching } = useCustom({
     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
     method: "post",
     config: {
-      payload: item?.active_query || item?.view?.[0].active_query,
+      payload: {
+        function_arguments: item?.active_query || item?.view?.[0]?.active_query,
+      },
     },
     queryOptions: {
       queryKey: [`${query_key}`],
@@ -46,7 +49,7 @@ export const ListView: React.FC<{ item: IView }> = ({ item }) => {
     enableGlobalFilter: true,
     enableColumnFilters: true,
     enableStickyHeader: true,
-    // enableColumnFilterModes: true,
+    enableColumnFilterModes: true,
     enableFacetedValues: true,
     enablePinning: true,
     // enableEditing: true,
@@ -69,11 +72,18 @@ export const ListView: React.FC<{ item: IView }> = ({ item }) => {
   const customTableConfig = _.merge(
     {},
     defaultConfig,
-    item?.display_options || item?.view?.[0].display_options || {}
+    item?.display_options || item?.view?.[0]?.display_options || {}
   );
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error: {JSON.stringify(error)}</div>;
+  useEffect(() => {
+    console.log("Query Key:", query_key);
+    console.log("Loading:", isLoading);
+  }, [query_key, isLoading]);
+
+  if (isLoading || isFetching) return <div>Loading...</div>;
+  // console.log("error", error);
+  if (isError)
+    return <div>Error: {JSON.stringify(error?.response?.data?.detail)}</div>;
 
   return (
     <>
@@ -88,6 +98,11 @@ export const ListView: React.FC<{ item: IView }> = ({ item }) => {
         customTableConfig={customTableConfig}
         updateTableVisibility={updateTableVisibility}
       />
+      {/* <div>{JSON.stringify(data?.data)}</div> */}
+      {/* <div>{JSON.stringify(item)}</div> */}
+      {/* <div>{JSON.stringify(isFetching)}</div> */}
+      {/* <div>{JSON.stringify(isLoading)}</div> */}
+      {/* <div>{JSON.stringify(data?.data?.length)}</div> */}
     </>
   );
 };

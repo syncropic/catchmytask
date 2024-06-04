@@ -38,9 +38,9 @@ import { useAppStore } from "src/store";
 import { IIdentity } from "@components/interfaces";
 import { CustomSpotlight } from "@components/Spotlight";
 import Link from "next/link";
+import SessionBar from "@components/SessionBar";
 
 export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = ({
-  isSticky,
   sticky,
 }) => {
   const { activeLayout, setActiveLayout } = useAppStore();
@@ -58,7 +58,7 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = ({
     theme.colorScheme === "dark" ? theme.colors.dark[6] : theme.colors.gray[2];
 
   let stickyStyles: Sx = {};
-  if (pickNotDeprecated(sticky, isSticky)) {
+  if (pickNotDeprecated(sticky)) {
     stickyStyles = {
       position: `sticky`,
       top: 0,
@@ -121,49 +121,101 @@ export const ThemedHeaderV2: React.FC<RefineThemedLayoutV2HeaderProps> = ({
             {activeApplication?.name}
           </Anchor>
         </div>
-        <div className="flex gap-4">
-          <Button
-            size="xs"
-            variant={
-              activeLayout?.leftSection?.isDisplayed ? "filled" : "outline"
-            }
-            onClick={() => toggleDisplay("leftSection")}
-          >
-            left
-          </Button>
-          <Button
-            size="xs"
-            variant={
-              activeLayout?.centerSection?.isDisplayed ? "filled" : "outline"
-            }
-            onClick={() => toggleDisplay("centerSection")}
-          >
-            center
-          </Button>
-          <Button
-            size="xs"
-            variant={
-              activeLayout?.rightSection?.isDisplayed ? "filled" : "outline"
-            }
-            onClick={() => toggleDisplay("rightSection")}
-          >
-            right
-          </Button>
-          <CustomSpotlight />
-        </div>
+        <HeaderSectionToggleAndSearch toggleDisplay={toggleDisplay} />
+        {/* <MainSiteNavigation></MainSiteNavigation> */}
         <Flex align="center" gap="sm">
-          {/* {user?.name && (
-            <Title order={6} data-testid="header-user-name">
-              {user?.name}
-            </Title>
-          )}
-          {user?.avatar && (
-            <Avatar src={user?.avatar} alt={user?.name} radius="xl" />
-          )} */}
           <UserMenu user={user} />
         </Flex>
       </Flex>
     </MantineHeader>
+  );
+};
+
+// create simple function component called MainSiteNavigation
+const MainSiteNavigation: React.FC = () => {
+  return (
+    <div className="flex items-center gap-4">
+      <Button
+        size="xs"
+        variant="filled"
+        onClick={() => {
+          console.log("leftSection");
+        }}
+      >
+        Why Catchmytask?
+      </Button>
+      <Menu shadow="md" width={200}>
+        <Menu.Target>
+          <Button>More</Button>
+        </Menu.Target>
+
+        <Menu.Dropdown>
+          <Menu.Item
+          // icon={<IconSettings style={{ width: rem(14), height: rem(14) }} />}
+          >
+            Terms & Conditions
+          </Menu.Item>
+
+          <Menu.Item
+          // icon={<IconSearch style={{ width: rem(14), height: rem(14) }} />}
+          >
+            FAQ
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+    </div>
+  );
+};
+
+// create simple function component called HeaderSectionToggleAndSearch
+type HeaderSectionToggleAndSearchProps = {
+  toggleDisplay: (position: string) => void;
+  // activeLayout?: any;
+};
+
+const HeaderSectionToggleAndSearch: React.FC<
+  HeaderSectionToggleAndSearchProps
+> = ({ toggleDisplay }) => {
+  const { activeLayout, activeApplication } = useAppStore();
+  return (
+    <div className="flex items-center gap-4">
+      <Button
+        size="xs"
+        variant={activeLayout?.leftSection?.isDisplayed ? "filled" : "outline"}
+        onClick={() => {
+          toggleDisplay("leftSection");
+        }}
+      >
+        left
+      </Button>
+      <Button
+        size="xs"
+        variant={
+          activeLayout?.centerSection?.isDisplayed ? "filled" : "outline"
+        }
+        onClick={() => {
+          toggleDisplay("centerSection");
+        }}
+      >
+        center
+      </Button>
+      <Button
+        size="xs"
+        variant={activeLayout?.rightSection?.isDisplayed ? "filled" : "outline"}
+        onClick={() => {
+          toggleDisplay("rightSection");
+        }}
+      >
+        right
+      </Button>
+      {/* <CustomSpotlight /> */}
+      <SessionBar
+        name={activeApplication?.name}
+        heading={activeApplication?.heading}
+        subheading={activeApplication?.subheading}
+        description={activeApplication?.description}
+      />
+    </div>
   );
 };
 
@@ -222,6 +274,16 @@ const UserMenu: React.FC<{ user: IIdentity }> = ({ user }) => {
     localStorage.removeItem("cmt_auth_token");
     logout();
   };
+  if (!user) {
+    return (
+      <button
+        // onClick={() => signIn()}
+        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        <a href="/login">Sign In</a>
+      </button>
+    );
+  }
   return (
     <Group position="center">
       <Menu withArrow withinPortal>

@@ -209,9 +209,11 @@ export const dataProvider = (
     // console.log(formatted_query);
 
     let payload = {
-      query: formatted_query,
-      query_language: meta?.query_language ?? "surrealql",
-      credentials: meta?.credentials ?? "surrealdb_catchmytask",
+      function_arguments: {
+        query: formatted_query,
+        query_language: meta?.query_language ?? "surrealql",
+        credentials: meta?.credentials ?? "surrealdb_catchmytask",
+      },
     };
     // console.log("payload", payload);
 
@@ -318,9 +320,11 @@ export const dataProvider = (
     // console.log(formatted_query);
 
     let payload = {
-      query: formatted_query,
-      query_language: meta?.query_language ?? "surrealql",
-      credentials: meta?.credentials ?? "surrealdb_catchmytask",
+      function_arguments: {
+        query: formatted_query,
+        query_language: meta?.query_language ?? "surrealql",
+        credentials: meta?.credentials ?? "surrealdb_catchmytask",
+      },
     };
 
     // const { data } = await httpClient[requestMethod](url, { headers });

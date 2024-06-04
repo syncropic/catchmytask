@@ -13,12 +13,18 @@ const ViewActionHistory = () => {
   const [listItemFormatted, setListItemFormatted] = useState<IView | null>(
     null
   );
-  console.log("listItemFormatted", listItemFormatted);
+  // console.log("listItemFormatted", listItemFormatted);
 
   useEffect(() => {
-    const listItem = activeAction?.show?.find(
-      (item: IViewItem) => item.name === "action_history"
-    );
+    if (!activeAction) {
+      return;
+    }
+    let listItem = null;
+    if (activeAction?.show.length > 0) {
+      listItem = activeAction?.show?.find(
+        (item: IViewItem) => item.name === "action_history"
+      );
+    }
 
     if (listItem && listItem.view_id) {
       const formatted = replacePlaceholdersInObject(listItem, {
@@ -27,6 +33,7 @@ const ViewActionHistory = () => {
       });
 
       setListItemFormatted(formatted);
+      // console.log("formatted", formatted);
     } else {
       setListItemFormatted(null);
     }

@@ -57,7 +57,14 @@ export type ComponentKey =
   | "tasks"
   | "viewJson"
   | "supplier_issues"
-  | "JsonEditor";
+  | "JsonEditor"
+  // | "LocalAudioPlayer"
+  | "FileInput"
+  | "FileHandler"
+  | "ExcalidrawEditor"
+  // | "MediaPlayerController"
+  // | "MediaPlayerTimeline"
+  | "MonacoEditor";
 
 // export type IView = {
 //   resource_type: ComponentKey;
@@ -73,14 +80,17 @@ export interface IViewItem {
     query_language: string;
   };
   display_options: any;
+  detail_panel_configuration: any;
   display_components: string[] | null;
   display_name: string | null;
   name: string;
   display_type: string;
   fields_configuration: FieldConfiguration[];
+  field_configurations: FieldConfiguration[];
   id: string;
   resource: string;
   order: number;
+  create: any;
   data_field: string | null;
   resource_type: ComponentKey;
   render_detail_panel:
@@ -174,10 +184,35 @@ export interface CompleteActionComponentProps<T extends Record<string, any>> {
   // opened: boolean;
   // action_step: any;
   // variant?: "inline" | "default";
+  activeActionView: IViewItem;
   activeSession: ISession;
   activeAction: IAction;
   activeRecords: any[];
   actionFormFieldValues: any;
+  // activeActionOption: any;
+  // inputFields: FieldConfiguration[];
+  // setActiveActionOption: (item: any) => void;
+  // data_table: MRT_TableInstance<T>;
+}
+
+export interface IAnalyticsComponentProps<T extends Record<string, any>> {
+  table: MRT_TableInstance<T>;
+}
+
+export interface QueryControlComponentProps<T extends Record<string, any>> {
+  // setActionType: (type: string) => void;
+  // action_options: Array<{ value: string; label: string; [key: string]: any }>;
+  // data_items: any[];
+  // identity: any;
+  // open: () => void;
+  // close: () => void;
+  // opened: boolean;
+  // action_step: any;
+  // variant?: "inline" | "default";
+  // activeSession: ISession;
+  queryAction: IAction;
+  activeRecords: any[];
+  // actionFormFieldValues: any;
   // activeActionOption: any;
   // inputFields: FieldConfiguration[];
   // setActiveActionOption: (item: any) => void;
@@ -225,6 +260,12 @@ export interface SelectActionComponentProps<T extends Record<string, any>> {
   view_item: IViewItem | null;
 }
 
+export interface SelectSessionComponentProps<T extends Record<string, any>> {
+  sessions_list: any;
+  record: any;
+  view_item: IViewItem | null;
+}
+
 export interface SelectActionOptionComponentProps<
   T extends Record<string, any>
 > {
@@ -251,7 +292,11 @@ export interface FieldConfiguration {
   field_name: string;
   display_format: string;
   display_component: string;
+  default_value?: any;
   display_name: string;
+  on_change?: any;
+  on_focus?: any;
+  data_prop_query?: any;
   display_component_content: any;
   conditional_formatting: IConditionalFormatting;
   data_type?: string;
@@ -268,10 +313,12 @@ export interface FieldConfiguration {
   filter_fn?: (rowValue: any, filterValue: any) => boolean;
   filter_mode?: string;
   visible: boolean;
-  props: any;
+  props?: any;
   max_size?: number;
   min_size?: number;
   size?: number;
+  on_click?: any;
+  enable_column_filter_modes?: boolean;
   aggregation_fn?:
     | "sum"
     | "mean"
@@ -579,9 +626,94 @@ export type FrequencyOptions =
   | "every-6-months"
   | "every-1-year";
 
+export interface IChannel {
+  id: string;
+  tracks: ITrack[];
+}
+
+export interface ITrack {
+  id: string;
+  name: string;
+  artists: string[];
+  created_at: Date | string;
+  added_at: Date | string;
+  updated_at: Date | string;
+  popularity: number;
+  danceability: number;
+  energy: number;
+  key: number;
+  speechiness: number;
+  instrumentalness: number;
+  loudness: number;
+  genre: string;
+  explicit: boolean;
+  description: string;
+  acousticness: number;
+  goes_well_with: string;
+  time_signature: number;
+  tempo: number;
+  valence: number;
+  author: string;
+  spotify_track_id: string;
+  spotify_uri: string;
+  spotify_album_image_url: string;
+  spotify_duration: number;
+  spotify_external_url: string;
+  spotify_href: string;
+  spotify_key: number;
+  spotify_preview_url: string;
+  audio_url: string;
+  file_id: string;
+}
+
+export interface ITrackLocation {
+  id: string;
+  track_id: string;
+  added_at: Date | string;
+  updated_at: Date | string;
+  path: string;
+  type: string;
+  author: string;
+}
+
+export interface ITrackAnalysisEmbeddings {
+  id: string;
+  track_id: string;
+  added_at: Date | string;
+  updated_at: Date | string;
+  description_embedding: string;
+}
+
+export interface IArtist {
+  id: string;
+  name: string;
+  added_at: Date | string;
+  updated_at: Date | string;
+}
+
+export interface IArtistSpotifyInfo {
+  id: string;
+  artist_id: string;
+  added_at: Date | string;
+  updated_at: Date | string;
+  spotify_artist_id: string;
+}
+
 // export a simple react component
 const Interfaces = () => {
   return "hello interfaces!";
 };
 
 export default Interfaces;
+
+export interface IAirline {
+  airline_carrier_type: string;
+  airline_code: string;
+  airline_customer_support_url: string;
+  airline_find_my_trip_section_label: string;
+  airline_name: string;
+  airline_trip_page_url: string;
+  created_at: string;
+  id: string;
+  updated_at: string;
+}

@@ -25,11 +25,13 @@ import {
 } from "@components/interfaces";
 import {
   Button,
+  FileInput,
   MultiSelect,
   NumberInput,
   Select,
   TextInput,
   Textarea,
+  Text,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import {
@@ -43,11 +45,17 @@ import { MRT_ColumnDef } from "mantine-react-table";
 import { useEffect, useMemo, useState } from "react";
 import DateTime from "src/components/DateTime";
 import { useAppStore } from "src/store";
+import { localDb } from "src/localDb";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDateTime, getCellStyleInline } from "src/utils";
 import ViewJson from "@components/ViewJson";
 import ShortcutLink from "@components/ShortcutLink";
 import MonacoEditor from "@components/MonacoEditor";
+// import LocalAudioPlayer from "@components/LocalAudioPlayer";
+import FileHandler from "@components/FileHandler";
+import ExcalidrawEditor from "@components/ExcalidrawEditor";
+// import MediaPlayerController from "@components/MediaPlayerController";
+// import MediaPlayerTimeline from "@components/MediaPlayerTimeline";
 
 // Adjusted createColumnDef to fit your use case
 export function createColumnDef<RowDataType extends RowData>(
@@ -64,6 +72,8 @@ export function createColumnDef<RowDataType extends RowData>(
   const isExecutionStatus = column?.display_component === "ExecutionStatus";
   const isRowActions = column?.field_name === "row_actions";
   const conditionalFormatting = column?.conditional_formatting ?? null;
+  const enableColumnFilterModes = column?.enable_column_filter_modes ?? false;
+  // const isEnableColumnFilterModes = column?.enable_column_filter_modes ?? false;
 
   const isDisplayColumn = [
     "mrt-row-select",
@@ -207,11 +217,15 @@ export function createColumnDef<RowDataType extends RowData>(
     ...(isReveal && {
       Cell: ({ row }) => (
         <Reveal
+          resource={JSON.stringify(row.original[column.field_name])}
           value={row.original[column.field_name]}
-          resource={column?.field_name}
-        />
+        >
+          {/* <MonacoEditor value={row.original[column.field_name]}></MonacoEditor> */}
+          <Text>{JSON.stringify(row.original[column.field_name])}</Text>
+        </Reveal>
       ),
     }),
+    enableColumnFilterModes: enableColumnFilterModes,
     ...(column?.max_size && {
       maxSize: column.max_size,
     }),
@@ -278,7 +292,7 @@ export function extractFields(
 
   fields.forEach(({ field_name }) => {
     // If the dataObject has the key specified in the field configuration, add it to the result
-    if (dataObject.hasOwnProperty(field_name)) {
+    if (dataObject?.hasOwnProperty(field_name)) {
       result[field_name] = dataObject[field_name];
     }
   });
@@ -294,6 +308,7 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   MultiSelect: MultiSelect,
   Select: Select,
   NumberInput: NumberInput,
+  FileInput: FileInput,
   trips: ViewTrip,
   bookings: ViewBooking,
   payments: ViewPayment,
@@ -304,6 +319,12 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   viewJson: ViewJson,
   supplier_issues: ViewJson,
   JsonEditor: MonacoEditor,
+  MonacoEditor: MonacoEditor,
+  // LocalAudioPlayer: LocalAudioPlayer,
+  FileHandler: FileHandler,
+  ExcalidrawEditor: ExcalidrawEditor,
+  // MediaPlayerController: MediaPlayerController,
+  // MediaPlayerTimeline: MediaPlayerTimeline,
 };
 
 export type BaseKey = {
@@ -412,6 +433,7 @@ type RecordIdentifier = {
 export function extractIdentifier(activeRecord: any): RecordIdentifier {
   // Define the keys in the priority order you want to check
   const keysToCheck: string[] = [
+    "name",
     "sst_booking_number",
     "flight_pnr",
     "related_record",
@@ -444,7 +466,9 @@ export function useFetchActionById(actionId: string | null) {
     url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
     method: "post",
     config: {
-      payload: active_action_query,
+      payload: {
+        function_arguments: active_action_query,
+      },
     },
     queryOptions: {
       queryKey: [`useFetchActionById_${actionId}`],
@@ -458,6 +482,63 @@ export function useFetchActionById(actionId: string | null) {
   }, [data, isLoading, error]);
 
   return { action, isLoading, error };
+}
+
+export function useFetchActionHistoryById(actionId: any | null) {
+  const [action, setAction] = useState<IAction | null>(null);
+  const active_action_query = {
+    credentials: "surrealdb_catchmytask",
+    query: `SELECT * FROM execute WHERE in = 'task:⟨018ebf59-a43a-77ba-9535-c1f2a84ec786⟩'`,
+    query_language: "surrealql",
+  };
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    method: "post",
+    config: {
+      payload: {
+        function_arguments: active_action_query,
+      },
+    },
+    queryOptions: {
+      queryKey: [`useFetchActionHistoryById_${actionId}`],
+    },
+  });
+
+  // useEffect(() => {
+  //   if (!isLoading && data && !error) {
+  //     setAction(data?.data[0]);
+  //   }
+  // }, [data, isLoading, error]);
+
+  return { data, isLoading, error, isError };
+}
+
+export function useFetchSessionById(sessionId: string | null) {
+  // const [data, setAction] = useState<IAction | null>(null);
+  const session_query = {
+    credentials: "surrealdb_catchmytask",
+    query: `SELECT *, show.view_id.* AS show.view, list.view_id.* AS list.view FROM sessions WHERE id = '${sessionId}'`,
+    query_language: "surrealql",
+  };
+  const { data, isLoading, error } = useCustom({
+    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    method: "post",
+    config: {
+      payload: {
+        function_arguments: session_query,
+      },
+    },
+    queryOptions: {
+      queryKey: [`useFetchSessionById_${sessionId}`],
+    },
+  });
+
+  // useEffect(() => {
+  //   if (!isLoading && data && !error) {
+  //     setAction(data?.data[0]);
+  //   }
+  // }, [data, isLoading, error]);
+  return { data, isLoading, error };
 }
 
 export function useFetchApplicationById(applicationId: string | null) {
@@ -604,4 +685,41 @@ export function replacePlaceholdersInObject(
   replacementValues: { [key: string]: string }
 ) {
   return recursiveReplace(obj, replacementValues);
+}
+
+// Define your function to extract default values
+export function extractActiveActionDefaultValues(
+  fieldConfigurations: FieldConfiguration[]
+): Record<string, any> {
+  const defaultValues: Record<string, any> = {};
+
+  fieldConfigurations.forEach((fieldConfig) => {
+    if (fieldConfig.default_value !== undefined) {
+      defaultValues[fieldConfig.field_name] = fieldConfig.default_value;
+    }
+  });
+
+  return defaultValues;
+}
+
+export async function getFileHash(file: any) {
+  const arrayBuffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `file_${hashHex}`;
+}
+
+export async function getFileArrayBufferById(recordId: any) {
+  const fileHandleEntry = await localDb.file_handles
+    .where({ record_id: recordId })
+    .first(); // Assuming record_id is unique or you're only interested in the first match
+
+  if (!fileHandleEntry) {
+    throw new Error("File handle not found for the given record ID.");
+  }
+
+  return fileHandleEntry.file_handle; // This is the ArrayBuffer of the file
 }

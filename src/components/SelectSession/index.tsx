@@ -1,31 +1,46 @@
-import { useFetchActionById } from "@components/Utils";
+import { useFetchSessionById } from "@components/Utils";
 import {
   IActionsList,
   SelectActionComponentProps,
+  SelectSessionComponentProps,
 } from "@components/interfaces";
 import { MultiSelect } from "@mantine/core";
+import { useGo } from "@refinedev/core";
 import { useForm } from "@refinedev/mantine";
 import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
 
-interface IActiveActionId {
+interface IActiveSessionId {
   id: string;
 }
 
-function UpdateActiveAction({ item }: { item: IActiveActionId }) {
+function UpdateActiveSession({ item }: { item: IActiveSessionId }) {
   // const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   // console.log("actionId", item);
+  const go = useGo();
+  const { activeApplication } = useAppStore();
 
-  const { action, isLoading, error } = useFetchActionById(item?.id);
+  const { data, isLoading, error } = useFetchSessionById(item?.id);
+  go({
+    to: {
+      resource: "sessions",
+      action: "show",
+      id: item?.id,
+      meta: {
+        applicationId: activeApplication?.id,
+      },
+    },
+    type: "push",
+  });
 
   return null;
 }
 
-function SelectAction<T extends Record<string, any>>({
-  actions_list,
+function SelectSession<T extends Record<string, any>>({
+  sessions_list,
   record,
   view_item,
-}: SelectActionComponentProps<T>) {
+}: SelectSessionComponentProps<T>) {
   // console.log("record - selectaction", record);
   const {
     getInputProps,
@@ -39,14 +54,16 @@ function SelectAction<T extends Record<string, any>>({
   });
 
   const {
-    setActiveRecord,
-    activeLayout,
-    setActiveLayout,
-    setActiveViewItem,
-    setActiveActionId,
-    activeActionId,
-    setActiveField,
-    setFocusedFields,
+    setActiveSessionId,
+    activeSessionId,
+    // setActiveRecord,
+    // activeLayout,
+    // setActiveLayout,
+    // setActiveViewItem,
+    // setActiveActionId,
+    // activeActionId,
+    // setActiveField,
+    // setFocusedFields,
   } = useAppStore();
 
   // const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
@@ -75,18 +92,18 @@ function SelectAction<T extends Record<string, any>>({
   interface ISelectedActionItem {
     id: string;
   }
-  const handleUserInteraction = (selectedActionItem: ISelectedActionItem) => {
+  const handleUserInteraction = (selectedItem: ISelectedActionItem) => {
     // Update active action ID based on user selection
     // setActiveActionId({ id: selectedActionId });
 
     // Since we want to update the active record and action based on this user interaction,
     // ensure that these updates happen here as well.
-    if (record) {
-      setActiveRecord(record);
-    }
+    // if (record) {
+    //   setActiveRecord(record);
+    // }
 
-    if (selectedActionItem) {
-      setActiveActionId(selectedActionItem);
+    if (selectedItem) {
+      setActiveSessionId(selectedItem);
     }
     // set activeField to null and focusedFields to null // ONLY do this if different action (+ on refresh for new data) otherwise keep the same values (cache)
     // i actually think this is not necessary as i can bind directly to the data return of the query
@@ -95,12 +112,12 @@ function SelectAction<T extends Record<string, any>>({
 
     // Similarly, update any other relevant parts of the global state as necessary,
     // such as the active view item, based on the specific user interaction.
-    if (view_item) {
-      setActiveViewItem(view_item);
-    }
-    if (selectedActionItem) {
-      activateSection("rightSection");
-    }
+    // if (view_item) {
+    //   setActiveViewItem(view_item);
+    // }
+    // if (selectedActionItem) {
+    //   activateSection("rightSection");
+    // }
   };
   // const handleActionChange = (value: string[]) => {
   //   // console.log("value", value[0]);
@@ -112,13 +129,13 @@ function SelectAction<T extends Record<string, any>>({
   // };
 
   //handle toggleDisplay
-  const activateSection = (section: string) => {
-    if (activeLayout) {
-      const newLayout = { ...activeLayout };
-      newLayout[section].isDisplayed = true;
-      setActiveLayout(newLayout);
-    }
-  };
+  // const activateSection = (section: string) => {
+  //   if (activeLayout) {
+  //     const newLayout = { ...activeLayout };
+  //     newLayout[section].isDisplayed = true;
+  //     setActiveLayout(newLayout);
+  //   }
+  // };
   // console.log("action", action);
   // activateSection("rightSection") with useEffect
   // useEffect(() => {
@@ -127,46 +144,46 @@ function SelectAction<T extends Record<string, any>>({
   //   }
   // }, [action]);
 
-  const handleActionChange = (value: any) => {
+  const handleSessionChange = (value: any) => {
     // console.log("value", value);
     // find action name from actions_list where id is value[0]
-    const action_name = actions_list?.find(
+    const session_name = sessions_list?.find(
       (action: any) => action.id === value[0]
     )?.name;
-    const action_object = {
+    const session_object = {
       id: value[0],
-      name: action_name,
+      name: session_name,
     };
 
     if (value[0]) {
-      handleUserInteraction(action_object);
+      handleUserInteraction(session_object);
     }
   };
 
   return (
-    <div className="flex items-end space-x-2">
+    <div className="flex items-end justify-center space-x-2">
       {/* <LoadingOverlay visible={dataset.isLoading} /> */}
       <MultiSelect
-        placeholder="Select action"
+        placeholder="Select session"
         maxSelectedValues={1}
         searchable={true}
-        data={actions_list?.map((action: IActionsList) => ({
+        data={sessions_list?.map((action: IActionsList) => ({
           label: action?.name,
           value: action?.id,
         }))}
         value={getInputProps("action").value}
-        onChange={handleActionChange}
-        withinPortal={true}
+        onChange={handleSessionChange}
+        // withinPortal={true}
         styles={{
-          input: { width: "200px" },
-          wrapper: { width: "200px" },
+          input: { width: "400px" },
+          wrapper: { width: "400px" },
         }}
       />
-      {activeActionId && (
-        <UpdateActiveAction item={activeActionId}></UpdateActiveAction>
+      {activeSessionId && (
+        <UpdateActiveSession item={activeSessionId}></UpdateActiveSession>
       )}
     </div>
   );
 }
 
-export default SelectAction;
+export default SelectSession;

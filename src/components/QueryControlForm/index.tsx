@@ -1,6 +1,7 @@
 import MonacoEditor from "@components/MonacoEditor";
 import {
   componentMapping,
+  extractFields,
   extractIdentifier,
   getComponentByResourceType,
   replacePlaceholdersInObject,
@@ -13,6 +14,7 @@ import {
   FieldConfiguration,
   IIdentity,
   IView,
+  QueryControlComponentProps,
 } from "@components/interfaces";
 import { Accordion, Button, Tabs, Text, Textarea } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -27,12 +29,15 @@ import { v4 as uuidv4 } from "uuid";
 import BlocksEditor from "@components/BlocksEditor";
 
 export function QueryControlForm<T extends Record<string, any>>({
-  activeSession,
-  activeAction,
-  actionFormFieldValues,
-}: CompleteActionComponentProps<T>) {
+  queryAction,
+}: QueryControlComponentProps<T>) {
   // const queryClient = useQueryClient();
-  const { activeViewItem, activeRecord } = useAppStore();
+  const { activeViewItem, activeRecord, activeSession } = useAppStore();
+  const actionFormFieldValues = extractFields(
+    activeViewItem?.active_query || {},
+    queryAction?.field_configurations || []
+  );
+
   // console.log("actionFormFieldValues", actionFormFieldValues);
   // let activeRecordId = activeRecords[0]?.id;
   const [openedAutomation, { open: openAutomation, close: closeAutomation }] =
@@ -96,20 +101,20 @@ export function QueryControlForm<T extends Record<string, any>>({
       input_values: values,
       task_input: {
         ...replacePlaceholdersInObject(
-          activeAction?.task_input || {},
+          queryAction?.task_input || {},
           values || {}
         ),
       },
       task: {
-        ...replacePlaceholdersInObject(activeAction?.task || {}, values || {}),
+        ...replacePlaceholdersInObject(queryAction?.task || {}, values || {}),
       },
     };
-    const activeActionRequestData = _.merge(
+    const queryActionRequestData = _.merge(
       {},
-      activeAction || {},
+      queryAction || {},
       activeActionFormatted || {}
     );
-    return activeActionRequestData;
+    return queryActionRequestData;
   };
 
   const handleSubmit = (e: any) => {
@@ -157,6 +162,15 @@ export function QueryControlForm<T extends Record<string, any>>({
     return <Component item={activeRecord} />;
   };
 
+  // console.log("actionFormFieldValues", actionFormFieldValues);
+  if (actionFormFieldValues.length === 0) {
+    return (
+      <div>
+        <Text>No query action fields to display</Text>
+      </div>
+    );
+  }
+
   return (
     <Create
       // isLoading={formLoading}
@@ -178,7 +192,7 @@ export function QueryControlForm<T extends Record<string, any>>({
             leftIcon={<IconMathFunction size={16} />}
             disabled={mutationIsLoading}
           >
-            {activeAction?.display_name || "Run"}
+            {queryAction?.display_name || "Run"}
           </SaveButton>
           <Button
             // resource="automations"

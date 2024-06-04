@@ -19,6 +19,7 @@ import { Show } from "@refinedev/mantine";
 import React, { useEffect } from "react";
 import { useAppStore } from "src/store";
 import { formatDateTimeAsDateTime } from "src/utils";
+import SessionList from "pages/sessions";
 
 export const PageShow: React.FC<IResourceComponentsProps> = () => {
   const { params } = useParsed();
@@ -112,7 +113,9 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
         </div>
         {/* <div>application stats and useful links i.e installs, author etc</div> */}
         {/* <div>application sessions</div> */}
-        <Accordion defaultValue="1">
+        {/* display application session by default if show is not specified on application record otherwise display that */}
+        {activeApplication?.show ? "show" : <ListSessions />}
+        {/* <Accordion defaultValue="1">
           {activeApplication?.show?.map((item: IView) => (
             <Accordion.Item key={item?.order} value={item?.order?.toString()}>
               <Accordion.Control>{`${item?.resource}`}</Accordion.Control>
@@ -121,9 +124,16 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
               </Accordion.Panel>
             </Accordion.Item>
           ))}
-        </Accordion>
+        </Accordion> */}
       </Show>
     </>
   );
 };
 export default PageShow;
+
+// a simple react component that displays hello world
+// import React from "react";
+//
+const ListSessions = () => {
+  return <SessionList />;
+};

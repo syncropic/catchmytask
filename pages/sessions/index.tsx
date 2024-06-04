@@ -1,32 +1,3 @@
-// import ListView from "@components/ListView";
-// import { IDataset } from "@components/interfaces";
-// import { HttpError, IResourceComponentsProps, useOne } from "@refinedev/core";
-// import React from "react";
-
-// export const PageList: React.FC<IResourceComponentsProps> = () => {
-//   // list of all available applications dataset columns
-//   // sessions dataset
-//   const { data, isLoading, isError, error } = useOne<IDataset, HttpError>({
-//     resource: "datasets",
-//     id: "datasets:⟨0d2b472d-0473-4770-b7f9-0a1c986b824f⟩",
-//   });
-//   // console.log("applications_dataset", data);
-//   // create show_item that implements the IShowItem interface from the item in list key where name  == "default"
-
-//   // const { subscriptions } = useSubscriptions();
-//   if (isLoading) return <div>Loading...</div>;
-//   if (isError) return <div>Error: {JSON.stringify(error)}</div>;
-//   // const list_item = data?.data?.list?.find((item) => item.name == "default");
-//   const list_item = data?.data.list.find((item) => item.name == "sidebar");
-
-//   return (
-//     <>
-//       <ListView item={list_item} />
-//     </>
-//   );
-// };
-// export default PageList;
-
 import {
   HttpError,
   IResourceComponentsProps,
@@ -67,6 +38,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     actionType,
     setActionType,
     activeSession,
+    activeApplication,
     setActiveSession,
     opened,
     setOpened,
@@ -92,7 +64,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
                       size="sm"
                       onClick={() => {
                         // setActionType("setActiveSession");
-                        setActiveSession(row.original);
+                        // setActiveSession(row.original); // do not set here unless you retrieve with the correct query
                         go({
                           to: {
                             resource: "sessions",
@@ -143,7 +115,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
                         );
                       }}
                     >
-                      (+) Add to shortcuts
+                      (+) Add to shortcuts - {row.original.name}
                     </Text>
                   </Anchor>
                 </HoverCard.Dropdown>
@@ -171,6 +143,11 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         field: "session_status",
         operator: "eq",
         value: "published",
+      },
+      {
+        field: "application",
+        operator: "eq",
+        value: activeApplication?.id,
       },
     ],
   });
@@ -234,7 +211,11 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
             {/* import MRT sub-components */}
             {/* <MRT_GlobalFilterTextInput table={table} />
             <MRT_ToggleFiltersButton table={table} /> */}
-            <CreateButton size="xs" resource="sessions">
+            <CreateButton
+              size="xs"
+              resource="sessions"
+              meta={{ applicationId: activeApplication?.id }}
+            >
               Create Session
             </CreateButton>
           </Flex>

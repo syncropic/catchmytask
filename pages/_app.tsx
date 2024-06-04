@@ -12,6 +12,7 @@ import defaultApiDataProvider from "../src/default-api-provider";
 import "../styles/globals.css";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 const API_URL = `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}`;
 
@@ -263,7 +264,7 @@ const App = (props: React.PropsWithChildren) => {
           }}
         >
           <BaseLayout>{props.children}</BaseLayout>
-          <DocumentTitleHandler />
+          {/* <DocumentTitleHandler /> */}
           <ReactQueryDevtools initialIsOpen={false} />
         </Refine>
       </NotificationsProvider>

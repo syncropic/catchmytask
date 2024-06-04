@@ -1,26 +1,5 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import Dexie from "dexie";
-
-export const localStore = new Dexie("CacthmyvibeDB");
-
-localStore.version(1).stores({
-  fileMetadata:
-    "++id, fileId, name, size, type, last_modified, title, artist, artists, album, genre, bpm, key, label, duration, comment, track, codec, codec_profile, container, sample_rate, bit_rate, channels, lossless, number_of_channels, tag_types, tool, track_info, track_peak_level",
-  audioFiles: "++id, fileId, file, name",
-  coverImages: "++id, fileId, image, format",
-});
-
-// export const excludeNonSerializable = (config) => (set, get, api) =>
-//   config((nextSet) => {
-//     return (partial, replace) => {
-//       const nextState =
-//         typeof partial === 'function' ? partial(get()) : partial;
-//       // Exclude the non-serializable parts here, for example:
-//       const { wavesurfer, ...serializable } = nextState;
-//       nextSet(serializable, replace);
-//     };
-//   }, get, api);
 
 export const useInstanceStore = create((set) => ({
   wavesurfer: null,
@@ -60,6 +39,8 @@ const useAppStore = create(
       setChannel1: (channel) => set((state) => ({ channel1: channel })),
       channel2: null,
       setChannel2: (channel) => set((state) => ({ channel2: channel })),
+      timeChannel: null,
+      setTimeChannel: (channel) => set((state) => ({ timeChannel: channel })),
       actionType: null,
       setActionType: (actionType) => set((state) => ({ actionType })),
       activeItem: null,
@@ -81,6 +62,12 @@ const useAppStore = create(
       activeQueryResults: null,
       setActiveQueryResults: (activeQueryResults) =>
         set((state) => ({ activeQueryResults })),
+      activeQueryGraph: null,
+      setActiveQueryGraph: (activeQueryGraph) =>
+        set((state) => ({ activeQueryGraph })),
+      activeStructuredQuery: null,
+      setActiveStructuredQuery: (activeStructuredQuery) =>
+        set((state) => ({ activeStructuredQuery })),
       activeRecord: null,
       setActiveRecord: (activeRecord) => set((state) => ({ activeRecord })),
       activeActionOption: null,
@@ -89,8 +76,16 @@ const useAppStore = create(
       activeActionId: null,
       setActiveActionId: (activeActionId) =>
         set((state) => ({ activeActionId })),
+      activeSessionId: null,
+      setActiveSessionId: (activeSessionId) =>
+        set((state) => ({ activeSessionId })),
       activeAction: null,
       setActiveAction: (activeAction) => set((state) => ({ activeAction })),
+      activeDataset: null,
+      setActiveDataset: (activeDataset) => set((state) => ({ activeDataset })),
+      activeActionView: null,
+      setActiveActionView: (activeActionView) =>
+        set((state) => ({ activeActionView })),
       queryAction: null,
       setQueryAction: (queryAction) => set((state) => ({ queryAction })),
       activeDataModel: null,
@@ -134,6 +129,20 @@ const useAppStore = create(
       activeSession: {},
       setActiveSession: (session) =>
         set((state) => ({ ...state, activeSession: session })),
+      activeActionActiveView: {},
+      setActiveActionActiveView: (view) =>
+        set((state) => ({ ...state, activeActionActiveView: view })),
+      activeField: {},
+      setActiveField: (field) =>
+        set((state) => ({ ...state, activeField: field })),
+      focusedFields: {},
+      setFocusedFields: (fields) =>
+        set((state) => ({ ...state, focusedFields: fields })),
+      selectedItems: {},
+      setSelectedItems: (items) =>
+        set((state) => ({ ...state, selectedItems: items })),
+      analytics: {},
+      setAnalytics: (analytics) => set((state) => ({ analytics })),
       activeDataset: {},
       setActiveDataset: (dataset) =>
         set((state) => ({ ...state, activeDataset: dataset })),

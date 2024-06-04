@@ -1,8 +1,10 @@
+import Analytics, { CategoricalAnalytics } from "@components/Analytics";
+import MessageDetail from "@components/MessageDetail";
 import MonacoEditor from "@components/MonacoEditor";
 import SelectAction from "@components/SelectAction";
 import CodeBlock from "@components/codeblock/codeblock";
 import { IIdentity, TabularViewComponentProps } from "@components/interfaces";
-import { Button, Flex, MantineProvider } from "@mantine/core";
+import { Button, Flex, MantineProvider, Text } from "@mantine/core";
 import { useGetIdentity } from "@refinedev/core";
 import { CreateButton } from "@refinedev/mantine";
 import { IconDownload } from "@tabler/icons";
@@ -35,10 +37,52 @@ export function TableView<T extends Record<string, any>>({
     activeSession: global_activeSession,
     setActiveSession,
     opened: global_opened,
+    setSelectedItems,
+    analytics,
+    setAnalytics,
+    activeLayout,
+    setActiveLayout,
   } = useAppStore();
   // if view passed as prop is not null then activeViews is set to view otherwise it is set to global_activeViews
   const activeSession = session ? session : global_activeSession;
   // console.log("customTableConfig", customTableConfig);
+
+  interface IClickActionItem {
+    action_id: string;
+    action_view_id: string;
+  }
+  const handleClickAction = (selectedActionItem: IClickActionItem) => {
+    // if (record) {
+    //   setActiveRecord(record);
+    // }
+    // if (selectedActionItem) {
+    //   setActiveActionId(selectedActionItem);
+    // }
+    // // such as the active view item, based on the specific user interaction.
+    // if (view_item) {
+    //   setActiveViewItem(view_item);
+    // }
+    // if (selectedActionItem) {
+    //   activateSection("rightSection");
+    // }
+  };
+  // const handleActionChange = (value: string[]) => {
+  //   // console.log("value", value[0]);
+  //   setFieldValue("action", value);
+  //   if (value[0]) {
+  //     // setSelectedActionId(value[0]);
+  //     setActiveActionId({ id: value[0] });
+  //   }
+  // };
+
+  //handle toggleDisplay
+  const activateSection = (section: string) => {
+    if (activeLayout) {
+      const newLayout = { ...activeLayout };
+      newLayout[section].isDisplayed = true;
+      setActiveLayout(newLayout);
+    }
+  };
 
   // useMantineReactTable hook
   const data_table = useMantineReactTable<T>({
@@ -103,7 +147,7 @@ export function TableView<T extends Record<string, any>>({
       //   view_item={item}
       // />
       <SelectAction
-        actions_list={item?.actions ? item?.actions : []}
+        actions_list={actions_list ? actions_list : []}
         record={row.original}
         view_item={item}
       />
@@ -120,7 +164,18 @@ export function TableView<T extends Record<string, any>>({
           <Flex gap="xs">
             <MRT_GlobalFilterTextInput table={table} />
             <MRT_ToggleFiltersButton table={table} />
-            <CreateButton size="xs"></CreateButton>
+            {/* <CreateButton size="xs"></CreateButton> */}
+            <Button
+              size="xs"
+              onClick={() =>
+                handleClickAction({
+                  action_id: "actions:⟨018ea244-1082-749d-80a9-d9b080b74005⟩",
+                  action_view_id: item?.view[0]?.create.view_id,
+                })
+              }
+            >
+              Create
+            </Button>
           </Flex>
           <Flex sx={{ gap: "8px" }}>
             <Button
@@ -174,7 +229,15 @@ export function TableView<T extends Record<string, any>>({
           renderDetailPanel: ({ row }) => (
             <div>
               {/* Code block or any other component can go here. */}
-              <MonacoEditor value={row.original} />
+
+              {/* <MessageDetail value={row.original} /> */}
+              {item?.detail_panel_configuration?.display_component ||
+              item?.view?.[0]?.detail_panel_configuration?.display_component ==
+                "MessageDetail" ? (
+                <MessageDetail value={row.original} />
+              ) : (
+                <MonacoEditor value={row.original} />
+              )}
             </div>
           ),
         }
@@ -182,15 +245,51 @@ export function TableView<T extends Record<string, any>>({
     ...customTableConfig,
   });
 
+  // useEffect(() => {
+  //   const columnFilters = data_table.getState().columnFilters;
+  //   const filtered_items = data_table.getFilteredRowModel().flatRows;
+  //   if (columnFilters.length > 0 && filtered_items.length === 0) {
+  //     console.log("Column filters array has items.", columnFilters);
+  //     // console.log("Filtered items array has 0 items.");
+  //     // handleAddToCollection(resource, columnFilters);
+  //   }
+  // }, [data_table.getState().columnFilters]); // Dependency array
+
+  // get access to the row selection model
   useEffect(() => {
-    const columnFilters = data_table.getState().columnFilters;
-    const filtered_items = data_table.getFilteredRowModel().flatRows;
-    if (columnFilters.length > 0 && filtered_items.length === 0) {
-      console.log("Column filters array has items.", columnFilters);
-      // console.log("Filtered items array has 0 items.");
-      // handleAddToCollection(resource, columnFilters);
-    }
-  }, [data_table.getState().columnFilters]); // Dependency array
+    //fetch data based on row selection state or something
+    // console.log("rowSelection", data_table.getState().rowSelection);
+    // rowmodel.flatRows
+    const selectedRows = data_table
+      .getSelectedRowModel()
+      .flatRows.map((item) => item.original); //or read entire rows
+    // console.log("item", item);
+    setSelectedItems({
+      [item.id]: selectedRows,
+    });
+  }, [data_table.getState().rowSelection]);
+
+  // calculate analytics
+  // get access to the row selection model
+  // useEffect(() => {
+  //   //fetch data based on row selection state or something
+  //   // console.log("rowSelection", data_table.getState().rowSelection);
+  //   // rowmodel.flatRows
+  //   // const selectedRows = data_table.getSelectedRowModel().flatRows; //or read entire rows
+  //   // console.log("selectedRows", selectedRows);
+  //   // setSelectedItems(selectedRows);
+  //   const data_table_filtered_items = data_table.getFilteredRowModel().flatRows;
+  //   console.log("data_table_filtered_items", data_table_filtered_items);
+  //   let analytics = {
+  //     total_items: data_items.length,
+  //     total_filtered_items: data_table_filtered_items.length,
+  //     selected_items: data_table.getState().rowSelection.length,
+  //   };
+  //   setAnalytics(analytics);
+  // }, [
+  //   data_table.getState().rowSelection,
+  //   data_table.getFilteredRowModel().flatRows,
+  // ]);
 
   // HANDLE DOWNLOAD
   const handleDownload = async (items: any[]) => {
@@ -230,15 +329,27 @@ export function TableView<T extends Record<string, any>>({
     saveAs(blob, activeSession?.name + fileExtension);
   };
 
+  const display_components =
+    item?.display_components || item?.view?.[0].display_components;
+
+  const actions_list = item?.actions || item?.view?.[0]?.actions || [];
+
   return (
     <div className="flex flex-col gap-4">
-      {item?.display_components?.includes("ListHeader") && (
+      {display_components?.includes("ListHeader") && (
         <div className="flex justify-center">
           <div>{item?.resource}</div>
         </div>
       )}
+      {display_components?.includes("Analytics") && (
+        <Analytics table={data_table}></Analytics>
+      )}
 
-      {item?.display_components?.includes("ListActions") && (
+      {display_components?.includes("CategoricalAnalytics") && (
+        <CategoricalAnalytics table={data_table}></CategoricalAnalytics>
+      )}
+
+      {display_components?.includes("ListActions") && (
         <div className="flex flex-row justify-center">
           {/* <SelectTaskComponent
             action_step={null}
@@ -247,7 +358,7 @@ export function TableView<T extends Record<string, any>>({
             data_table={data_table}
           /> */}
           <SelectAction
-            actions_list={item?.actions ? item?.actions : []}
+            actions_list={actions_list ? actions_list : []}
             // record={activeSession} get the row model for selected items
             record={activeSession}
             view_item={item}
@@ -255,7 +366,7 @@ export function TableView<T extends Record<string, any>>({
         </div>
       )}
 
-      {item?.display_components?.includes("TableList") && (
+      {display_components?.includes("TableList") && (
         <MantineProvider
           theme={{
             colorScheme: "light",

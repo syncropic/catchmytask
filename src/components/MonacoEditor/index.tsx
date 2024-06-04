@@ -4,10 +4,17 @@ import React, { useEffect, useRef, useState } from "react";
 interface IEditor {
   value: any;
   language?: string;
+  setFieldValue: (field: string, value: any) => void;
+  height?: string;
 }
 
-const MonacoEditor: React.FC<IEditor> = ({ value, language = "json" }) => {
-  console.log("value", value);
+const MonacoEditor: React.FC<IEditor> = ({
+  value,
+  setFieldValue,
+  language = "json",
+  height = "30vh",
+}) => {
+  // console.log("value", value);
   const monaco = useMonaco();
   const editorRef = useRef(null);
   const [code, setCode] = useState(() => {
@@ -62,15 +69,18 @@ const MonacoEditor: React.FC<IEditor> = ({ value, language = "json" }) => {
     //   editorRef.current = editor;
   }
 
-  function handleEditorChange() {
+  function handleEditorChange(value: string | undefined) {
     // console.log("here is the current model value:", value);
-    // setFieldValue("query", value);
-    // console.log("here is the current model value:", value);
+    setFieldValue("query", value);
   }
 
   return (
     <Editor
-      height="50vh"
+      // height="50vh"
+      height={height}
+      // height={400}
+      // height="100%"
+      // width={800}
       defaultLanguage={language}
       value={code}
       theme="vs-dark"

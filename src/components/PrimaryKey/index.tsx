@@ -5,6 +5,7 @@ import { useGo } from "@refinedev/core";
 import { IFieldConfigurationWithValue } from "@components/interfaces";
 
 const PrimaryKey: React.FC<IFieldConfigurationWithValue> = ({
+  on_click,
   value,
   record,
   display_format,
@@ -23,10 +24,10 @@ const PrimaryKey: React.FC<IFieldConfigurationWithValue> = ({
       <Text
         size="sm"
         onClick={() => {
-          setActiveItem_2(record);
+          // setActiveItem_2(record);
           go({
             to: {
-              resource: "datasets",
+              resource: on_click?.resource ? on_click.resource : "",
               action: "show",
               id: value,
             },

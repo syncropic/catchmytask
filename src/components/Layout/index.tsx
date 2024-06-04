@@ -1,6 +1,10 @@
+import GlobalVariables from "@components/GlobalVariables";
+import MonacoEditor from "@components/MonacoEditor";
+import NaturalLanguageQuery from "@components/NaturalLanguageQuery";
+import StructuredQuery from "@components/StructuredQuery";
 import { useAuthToken } from "@components/Utils";
 import { IApplication } from "@components/interfaces";
-import { Accordion } from "@mantine/core";
+import { Accordion, Textarea } from "@mantine/core";
 import {
   Authenticated,
   HttpError,
@@ -11,7 +15,11 @@ import {
 import {
   IconAffiliate,
   IconComponents,
+  IconFilter,
+  IconLanguage,
+  IconListCheck,
   IconListSearch,
+  IconSql,
   IconTableShortcut,
 } from "@tabler/icons-react";
 import ActionControl from "pages/action_control/create";
@@ -108,6 +116,17 @@ const Layout = ({
   if (!data?.authenticated && parsed?.pathname == "/login") {
     return <>{children}</>;
   }
+
+  // for homepage if not logged authenticated
+  if (!data?.authenticated && parsed?.pathname == "/") {
+    return (
+      <>
+        <ThemedHeaderV2 sticky={true} />
+        <p className="mb-4 text-lg text-gray-700">Not signed in</p>
+        <div>Homepage</div>
+      </>
+    );
+  }
   // show login button if not authenticated
   if (!data?.authenticated && parsed?.pathname !== "/login") {
     return (
@@ -136,36 +155,90 @@ const Layout = ({
                 className="overflow-auto h-screen"
                 style={{ height: "calc(100vh - 64px)" }}
               >
-                <Accordion defaultValue="sessions">
-                  <Accordion.Item key="shortcut" value="shortcut">
+                <Accordion defaultValue="natural_language_query">
+                  <Accordion.Item key="global_filters" value="global_filters">
+                    <Accordion.Control icon={<IconFilter size={16} />}>
+                      Global Filters
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      {/* <div>
+                        filters from individual views are pushed to global //
+                        configure // quick reset
+                      </div> */}
+                      <GlobalVariables />
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                  <Accordion.Item
+                    key="natural_language_query"
+                    value="natural_language_query"
+                  >
+                    <Accordion.Control icon={<IconLanguage size={16} />}>
+                      Natural Language Query
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <NaturalLanguageQuery></NaturalLanguageQuery>
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                  <Accordion.Item
+                    key="structured_query"
+                    value="structured_query"
+                  >
+                    <Accordion.Control icon={<IconSql size={16} />}>
+                      Structured Query
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      {/* <div
+                        className="overflow-auto h-screen"
+                        style={{ height: "calc(100vh - 64px)" }}
+                      >
+                        <QueryControl />
+                      </div> */}
+                      <StructuredQuery />
+                      {/* <div>
+                        Manually written or AI generated structured query that
+                        is resolved by the orchestration engine and the user
+                        interface engine.
+                      </div> */}
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                  <Accordion.Item key="query_graph" value="query_graph">
+                    <Accordion.Control icon={<IconAffiliate size={16} />}>
+                      Query Graph
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <div>
+                        a navigable and resolvable syntax tree // formatted
+                        graph generated from structured query
+                      </div>
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                  <Accordion.Item key="execution_trace" value="execution_trace">
+                    <Accordion.Control icon={<IconListCheck size={16} />}>
+                      Execution Trace
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <div>
+                        see live execution trace, status and artifacts,
+                        interrupt and provide feedback if needed.
+                      </div>
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                  {/* <Accordion.Item key="shortcut" value="shortcut">
                     <Accordion.Control icon={<IconAffiliate size={16} />}>
                       Shortcuts
                     </Accordion.Control>
                     <Accordion.Panel>
                       <ShortcutList />
                     </Accordion.Panel>
-                  </Accordion.Item>
-                  <Accordion.Item key="sessions" value="sessions">
+                  </Accordion.Item> */}
+                  {/* <Accordion.Item key="sessions" value="sessions">
                     <Accordion.Control icon={<IconComponents size={16} />}>
                       Sessions
                     </Accordion.Control>
                     <Accordion.Panel>
                       <SessionList />
                     </Accordion.Panel>
-                  </Accordion.Item>
-                  <Accordion.Item key="query" value="query">
-                    <Accordion.Control icon={<IconListSearch size={16} />}>
-                      Query
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      <div
-                        className="overflow-auto h-screen"
-                        style={{ height: "calc(100vh - 64px)" }}
-                      >
-                        <QueryControl />
-                      </div>
-                    </Accordion.Panel>
-                  </Accordion.Item>
+                  </Accordion.Item> */}
                 </Accordion>
               </div>
             </Panel>
@@ -179,7 +252,6 @@ const Layout = ({
                   style={{ height: "calc(100vh - 64px)" }}
                 >
                   {children}
-                  {/* <div>center content</div> */}
                 </div>
               </Panel>
             </>
