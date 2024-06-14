@@ -1,4 +1,6 @@
+import { ColumnDef } from "@tanstack/react-table";
 import { MRT_TableInstance } from "mantine-react-table";
+import { Table as TanStackTable } from "@tanstack/react-table";
 
 export interface IApplication {
   id: string;
@@ -104,21 +106,21 @@ export interface IView extends IViewItem {
   view: IViewItem[];
 }
 
-export interface TableViewComponentProps<T extends Record<string, any>> {
-  // data_columns: any[]; // Define more specific type if possible
-  resource: string;
-  data_columns: T[];
-  activeQueryResults: any;
-  // data_items: T[];
-  // isLoadingDataItems: boolean;
-  // view?: IView;
-  // // initialStateColumnPinningLeft: string[];
-  // customTableConfig?: any;
-  // updateTableVisibility: (
-  //   tableInstance: MRT_TableInstance<T>,
-  //   columnsConfig: ColumnConfig[] | null
-  // ) => void;
-}
+// export interface TableViewComponentProps<T extends Record<string, any>> {
+//   // data_columns: any[]; // Define more specific type if possible
+//   resource: string;
+//   data_columns: T[];
+//   activeQueryResults: any;
+//   // data_items: T[];
+//   // isLoadingDataItems: boolean;
+//   // view?: IView;
+//   // // initialStateColumnPinningLeft: string[];
+//   // customTableConfig?: any;
+//   // updateTableVisibility: (
+//   //   tableInstance: MRT_TableInstance<T>,
+//   //   columnsConfig: ColumnConfig[] | null
+//   // ) => void;
+// }
 
 export interface TabularViewComponentProps<T extends Record<string, any>> {
   data_columns: any[]; // Define more specific type if possible
@@ -133,6 +135,90 @@ export interface TabularViewComponentProps<T extends Record<string, any>> {
     tableInstance: MRT_TableInstance<T>,
     columnsConfig: ColumnConfig[] | null
   ) => void;
+}
+
+interface ResultsViewProps<T extends object> {
+  tableInstance: TanStackTable<T>;
+  data_items: T[];
+  data_columns: T[];
+}
+
+export interface TableViewComponentProps<T extends Record<string, any>> {
+  // data_columns: T[]; // Define more specific type if possible
+  // item: IView;
+  // resource: string;
+  data_items: T[];
+
+  // isLoadingDataItems: boolean;
+  // session?: ISession;
+  // // initialStateColumnPinningLeft: string[];
+  // customTableConfig?: any;
+  // updateTableVisibility: (
+  //   tableInstance: MRT_TableInstance<T>,
+  //   columnsConfig: ColumnConfig[] | null
+  // ) => void;
+}
+
+export interface SpreadsheetViewComponentProps<T extends Record<string, any>> {
+  // data_columns: any[]; // Define more specific type if possible
+  // item: IView;
+  // resource: string;
+  data_items: T[];
+  isLoadingDataItems: boolean;
+  data_columns: ColumnDef<RowData>[];
+  tableInstance?: TanStackTable<T>;
+  results?: any;
+  resource_group: string;
+  view_data: any;
+  // session?: ISession;
+  // // initialStateColumnPinningLeft: string[];
+  // customTableConfig?: any;
+  // updateTableVisibility: (
+  //   tableInstance: MRT_TableInstance<T>,
+  //   columnsConfig: ColumnConfig[] | null
+  // ) => void;
+}
+
+// export interface DataItem {
+//   reporting_date: string;
+//   payment_status: string;
+//   payment_amount_captured_total: number;
+//   related_record: string;
+// }
+export interface ResultsComponentProps<T extends Record<string, any>> {
+  // data_columns: any[]; // Define more specific type if possible
+  // item: IView;
+  // resource: string;
+  results?: any;
+  isLoadingDataItems?: boolean;
+  data_columns: ColumnDef<RowData>[];
+  tableInstance?: TanStackTable<T>;
+  data_items: T[];
+  resource_group: string;
+  view_data: any;
+  // data_columns: T[];
+  // session?: ISession;
+  // // initialStateColumnPinningLeft: string[];
+  // customTableConfig?: any;
+  // updateTableVisibility: (
+  //   tableInstance: MRT_TableInstance<T>,
+  //   columnsConfig: ColumnConfig[] | null
+  // ) => void;
+}
+
+export interface WebBrowserViewComponentProps<T extends Record<string, any>> {
+  // data_columns: any[]; // Define more specific type if possible
+  // item: IView;
+  url: string;
+  // data_items: T[];
+  // isLoadingDataItems: boolean;
+  // session?: ISession;
+  // // initialStateColumnPinningLeft: string[];
+  // customTableConfig?: any;
+  // updateTableVisibility: (
+  //   tableInstance: MRT_TableInstance<T>,
+  //   columnsConfig: ColumnConfig[] | null
+  // ) => void;
 }
 
 export interface AutomationActionConfigurationProps<
@@ -184,11 +270,12 @@ export interface CompleteActionComponentProps<T extends Record<string, any>> {
   // opened: boolean;
   // action_step: any;
   // variant?: "inline" | "default";
-  activeActionView: IViewItem;
-  activeSession: ISession;
-  activeAction: IAction;
-  activeRecords: any[];
+  // activeActionView: IViewItem;
+  // activeSession: ISession;
+  // activeAction: IAction;
+  // activeRecords: any[];
   actionFormFieldValues: any;
+  actionFieldConfigurations: FieldConfiguration[];
   // activeActionOption: any;
   // inputFields: FieldConfiguration[];
   // setActiveActionOption: (item: any) => void;
@@ -261,9 +348,9 @@ export interface SelectActionComponentProps<T extends Record<string, any>> {
 }
 
 export interface SelectSessionComponentProps<T extends Record<string, any>> {
-  sessions_list: any;
-  record: any;
-  view_item: IViewItem | null;
+  sessions_list?: any;
+  record?: any;
+  view_item?: IViewItem | null;
 }
 
 export interface SelectActionOptionComponentProps<
@@ -289,16 +376,20 @@ export interface IConditionalFormatting {
 }
 
 export interface FieldConfiguration {
-  field_name: string;
-  display_format: string;
-  display_component: string;
+  name: string;
+  visible_on_create?: boolean;
+  placeholder?: string;
+  field_name?: string;
+  display_format?: string;
+  display_component?: string;
   default_value?: any;
-  display_name: string;
+  searchable?: boolean;
+  display_name?: string;
   on_change?: any;
   on_focus?: any;
   data_prop_query?: any;
-  display_component_content: any;
-  conditional_formatting: IConditionalFormatting;
+  display_component_content?: any;
+  conditional_formatting?: IConditionalFormatting;
   data_type?: string;
   filter_variant?:
     | "select"
@@ -310,7 +401,10 @@ export interface FieldConfiguration {
     | "multi-select"
     | "range"
     | "range-slider";
-  filter_fn?: (rowValue: any, filterValue: any) => boolean;
+  // // filter_fn?: (rowValue: any, filterValue: any) => boolean;
+  filter_fn?: any;
+  sorting_fn?: any;
+  pin?: "left" | "right";
   filter_mode?: string;
   visible: boolean;
   props?: any;
@@ -716,4 +810,18 @@ export interface IAirline {
   created_at: string;
   id: string;
   updated_at: string;
+}
+
+// Define the type of your query data
+export interface QueryDataType {
+  data: any; // Adjust the type according to your actual data structure
+}
+
+export interface DataItem {
+  id: number;
+  name: string;
+}
+
+export interface FieldData {
+  data?: DataItem[];
 }

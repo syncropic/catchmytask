@@ -32,6 +32,7 @@ import {
   TextInput,
   Textarea,
   Text,
+  ActionIcon,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import {
@@ -54,183 +55,439 @@ import MonacoEditor from "@components/MonacoEditor";
 // import LocalAudioPlayer from "@components/LocalAudioPlayer";
 import FileHandler from "@components/FileHandler";
 import ExcalidrawEditor from "@components/ExcalidrawEditor";
+import { ColumnDef } from "@tanstack/react-table";
+import { Checkbox } from "@components/Checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@components/DropdownMenu";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { IconDots, IconFunction } from "@tabler/icons-react";
+import ActivateActionsSelection from "@components/ActivateActionsSelection";
 // import MediaPlayerController from "@components/MediaPlayerController";
 // import MediaPlayerTimeline from "@components/MediaPlayerTimeline";
+
+// declare module "@tanstack/react-table" {
+//   //allows us to define custom properties for our columns
+//   interface ColumnMeta<TData extends RowData, TValue> {
+//     filterVariant?: "text" | "range" | "select";
+//   }
+// }
 
 // Adjusted createColumnDef to fit your use case
 export function createColumnDef<RowDataType extends RowData>(
   column: FieldConfiguration
-): MRT_ColumnDef<RowDataType> {
-  const isDateTime = column.data_type === "datetime";
-  const isDecimal = column.data_type === "decimal";
-  const isExternalLink = column?.display_component === "ExternalLink";
-  const isPrimaryKey = column?.display_component === "PrimaryKey";
-  const isFilePath = column?.display_component === "FilePath";
-  const isReveal = column?.display_component === "Reveal";
-  const isSessionLink = column?.display_component === "SessionLink";
-  const isShortcutLink = column?.display_component === "ShortcutLink";
-  const isExecutionStatus = column?.display_component === "ExecutionStatus";
-  const isRowActions = column?.field_name === "row_actions";
-  const conditionalFormatting = column?.conditional_formatting ?? null;
-  const enableColumnFilterModes = column?.enable_column_filter_modes ?? false;
-  // const isEnableColumnFilterModes = column?.enable_column_filter_modes ?? false;
+): ColumnDef<RowDataType> {
+  const isRowSelect = column.display_component === "RowSelect";
+  const isRowActionsSelect = column.display_component === "RowActionsSelect";
+  const isItemDetails = column.display_component === "ItemDetails";
+  // const isDateTime = column.data_type === "datetime";
+  // const isDecimal = column.data_type === "decimal";
+  // const isExternalLink = column?.display_component === "ExternalLink";
+  // const isPrimaryKey = column?.display_component === "PrimaryKey";
+  // const isFilePath = column?.display_component === "FilePath";
+  // const isReveal = column?.display_component === "Reveal";
+  // const isSessionLink = column?.display_component === "SessionLink";
+  // const isShortcutLink = column?.display_component === "ShortcutLink";
+  // const isExecutionStatus = column?.display_component === "ExecutionStatus";
+  // const isRowActions = column?.field_name === "row_actions";
+  // const conditionalFormatting = column?.conditional_formatting ?? null;
+  // const enableColumnFilterModes = column?.enable_column_filter_modes ?? false;
+  // // const isEnableColumnFilterModes = column?.enable_column_filter_modes ?? false;
 
-  const isDisplayColumn = [
-    "mrt-row-select",
-    "mrt-row-expand",
-    "mrt-row-actions",
-  ].includes(column?.field_name);
-  // default is when it is not a datetime or decimal
-  const isDefault =
-    !isDateTime &&
-    !isDecimal &&
-    !isExternalLink &&
-    !isPrimaryKey &&
-    !isFilePath &&
-    !isDisplayColumn &&
-    !isReveal &&
-    !isSessionLink &&
-    !isExecutionStatus &&
-    !isRowActions;
+  // const isDisplayColumn = [
+  //   "mrt-row-select",
+  //   "mrt-row-expand",
+  //   "mrt-row-actions",
+  // ].includes(column?.field_name);
+  // // default is when it is not a datetime or decimal
+  // const isDefault =
+  //   !isDateTime &&
+  //   !isDecimal &&
+  //   !isExternalLink &&
+  //   !isPrimaryKey &&
+  //   !isFilePath &&
+  //   !isDisplayColumn &&
+  //   !isReveal &&
+  //   !isSessionLink &&
+  //   !isExecutionStatus &&
+  //   !isRowActions;
+  const isOther = !isRowSelect && !isRowActionsSelect;
   return {
-    id: column?.field_name,
-    header: column?.field_name,
-    ...(conditionalFormatting && {
-      Cell: ({ row }) => {
-        const style = getCellStyleInline(
-          row.original[column?.conditional_formatting?.field_name],
-          column
+    id: column?.name,
+    enableColumnFilter: true,
+    ...(isOther && {
+      accessor: column?.name,
+      cell: ({ row }) => row.original[column?.name],
+      header: column?.name,
+    }),
+    ...(isRowSelect && {
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    }),
+    ...(isRowActionsSelect && {
+      enableHiding: false,
+      cell: ({ row }) => {
+        return (
+          <ActivateActionsSelection
+            record={row.original}
+            resultsSection={{ name: row.original?.resultsSection }}
+          ></ActivateActionsSelection>
         );
-        return <div style={style}>{row.original[column.field_name] ?? ""}</div>;
       },
     }),
+    ...(isItemDetails && {
+      // enableHiding: false,
+      cell: ({ row }) => {
+        return (
+          <Reveal
+            target={
+              <ActionIcon aria-label="Settings">
+                <IconDots size={16} />
+              </ActionIcon>
+            }
+            trigger="click"
+          >
+            <MonacoEditor value={row.original}></MonacoEditor>
+          </Reveal>
+        );
+      },
+    }),
+    // ...(conditionalFormatting && {
+    //   Cell: ({ row }) => {
+    //     const style = getCellStyleInline(
+    //       row.original[column?.conditional_formatting?.field_name],
+    //       column
+    //     );
+    //     return <div style={style}>{row.original[column.field_name] ?? ""}</div>;
+    //   },
+    // }),
+    // ...(column?.filter_variant && {
+    //   filterVariant: column.filter_variant,
+    //   filterFn: column.filter_fn,
+    // }),
     ...(column?.filter_variant && {
-      filterVariant: column.filter_variant,
       filterFn: column.filter_fn,
     }),
-    ...(isDefault && {
-      accessorKey: column?.field_name,
-    }),
-    ...(column?.aggregation_fn && {
-      aggregationFn: column?.aggregation_fn,
-      AggregatedCell: ({ cell }) => {
-        if (isDateTime) {
-          return (
-            <DateTime
-              {...column}
-              value={cell.getValue()}
-              display_format={column.display_format ?? "yyyy-MM-dd"}
-              record={cell.row.original}
-            />
-          );
-        } else {
-          return <div>{JSON.stringify(cell.getValue())}</div>;
-        }
-      },
-    }),
-    ...(isDisplayColumn && {
-      columnDefType: "display",
-    }),
-    ...(isRowActions && {
-      columnDefType: "display", //turns off data column features like sorting, filtering, etc.
-      enableColumnOrdering: true, //but you can turn back any of those features on if you want like this
-      Cell: ({ row }) => <RowActions record={row.original}></RowActions>,
-    }),
-    ...(isDateTime && {
-      accessorFn: (row) => new Date(row[column.field_name] ?? ""),
-      Cell: ({ row }) => (
-        <DateTime
-          {...column}
-          value={row.original[column.field_name]}
-          record={row.original}
-          display_format={column.display_format ?? "yyyy-MM-dd"}
-        />
-      ),
-    }),
-    ...(isDecimal && {
-      // Convert strings to numbers and replace null or undefined with 0
-      accessorFn: (row) => {
-        const value = row[column.field_name];
-        return value ? Number(value) : 0;
-      },
-      Cell: ({ row }) => (
-        <Decimal
-          {...column}
-          value={row.original[column.field_name]}
-          display_format={column.display_format ?? ""}
-          record={row.original}
-        />
-      ),
-    }),
-    ...(isExternalLink && {
-      Cell: ({ row }) => (
-        <ExternalLink
-          {...column}
-          value={row.original[column.field_name]}
-          display_format={column.display_format ?? ""}
-          display_component_content={column.display_component_content}
-          record={row.original}
-        />
-      ),
-    }),
+    // ...(isDefault && {
+    //   accessorKey: column?.field_name,
+    // }),
+    // ...(column?.aggregation_fn && {
+    //   aggregationFn: column?.aggregation_fn,
+    //   AggregatedCell: ({ cell }) => {
+    //     if (isDateTime) {
+    //       return (
+    //         <DateTime
+    //           {...column}
+    //           value={cell.getValue()}
+    //           display_format={column.display_format ?? "yyyy-MM-dd"}
+    //           record={cell.row.original}
+    //         />
+    //       );
+    //     } else {
+    //       return <div>{JSON.stringify(cell.getValue())}</div>;
+    //     }
+    //   },
+    // }),
+    // ...(isDisplayColumn && {
+    //   columnDefType: "display",
+    // }),
+    // ...(isRowActions && {
+    //   columnDefType: "display", //turns off data column features like sorting, filtering, etc.
+    //   enableColumnOrdering: true, //but you can turn back any of those features on if you want like this
+    //   Cell: ({ row }) => <RowActions record={row.original}></RowActions>,
+    // }),
+    // ...(isDateTime && {
+    //   accessorFn: (row) => new Date(row[column.field_name] ?? ""),
+    //   Cell: ({ row }) => (
+    //     <DateTime
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       record={row.original}
+    //       display_format={column.display_format ?? "yyyy-MM-dd"}
+    //     />
+    //   ),
+    // }),
+    // ...(isDecimal && {
+    //   // Convert strings to numbers and replace null or undefined with 0
+    //   accessorFn: (row) => {
+    //     const value = row[column.field_name];
+    //     return value ? Number(value) : 0;
+    //   },
+    //   Cell: ({ row }) => (
+    //     <Decimal
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       display_format={column.display_format ?? ""}
+    //       record={row.original}
+    //     />
+    //   ),
+    // }),
+    // ...(isExternalLink && {
+    //   Cell: ({ row }) => (
+    //     <ExternalLink
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       display_format={column.display_format ?? ""}
+    //       display_component_content={column.display_component_content}
+    //       record={row.original}
+    //     />
+    //   ),
+    // }),
 
-    ...(isSessionLink && {
-      Cell: ({ row }) => (
-        <SessionLink
-          {...column}
-          value={row.original[column.field_name]}
-          record={row.original}
-          display_component_content={column.display_component_content ?? null}
-        />
-      ),
-    }),
-    ...(isShortcutLink && {
-      Cell: ({ row }) => (
-        <ShortcutLink
-          {...column}
-          value={row.original[column.field_name]}
-          record={row.original}
-          display_component_content={column.display_component_content ?? null}
-        />
-      ),
-    }),
-    ...(isPrimaryKey && {
-      Cell: ({ row }) => (
-        <PrimaryKey
-          {...column}
-          value={row.original[column.field_name]}
-          record={row.original}
-          display_component_content={column.display_component_content ?? null}
-        />
-      ),
-    }),
-    ...(isFilePath && {
-      Cell: ({ row }) => (
-        <FilePath
-          {...column}
-          value={row.original[column.field_name]}
-          record={row.original}
-          display_component_content={column.display_component_content ?? null}
-        />
-      ),
-    }),
-    ...(isReveal && {
-      Cell: ({ row }) => (
-        <Reveal
-          resource={JSON.stringify(row.original[column.field_name])}
-          value={row.original[column.field_name]}
-        >
-          {/* <MonacoEditor value={row.original[column.field_name]}></MonacoEditor> */}
-          <Text>{JSON.stringify(row.original[column.field_name])}</Text>
-        </Reveal>
-      ),
-    }),
-    enableColumnFilterModes: enableColumnFilterModes,
-    ...(column?.max_size && {
-      maxSize: column.max_size,
-    }),
+    // ...(isSessionLink && {
+    //   Cell: ({ row }) => (
+    //     <SessionLink
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       record={row.original}
+    //       display_component_content={column.display_component_content ?? null}
+    //     />
+    //   ),
+    // }),
+    // ...(isShortcutLink && {
+    //   Cell: ({ row }) => (
+    //     <ShortcutLink
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       record={row.original}
+    //       display_component_content={column.display_component_content ?? null}
+    //     />
+    //   ),
+    // }),
+    // ...(isPrimaryKey && {
+    //   Cell: ({ row }) => (
+    //     <PrimaryKey
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       record={row.original}
+    //       display_component_content={column.display_component_content ?? null}
+    //     />
+    //   ),
+    // }),
+    // ...(isFilePath && {
+    //   Cell: ({ row }) => (
+    //     <FilePath
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       record={row.original}
+    //       display_component_content={column.display_component_content ?? null}
+    //     />
+    //   ),
+    // }),
+    // ...(isReveal && {
+    //   Cell: ({ row }) => (
+    //     <Reveal
+    //       resource={JSON.stringify(row.original[column.field_name])}
+    //       value={row.original[column.field_name]}
+    //     >
+    //       {/* <MonacoEditor value={row.original[column.field_name]}></MonacoEditor> */}
+    //       <Text>{JSON.stringify(row.original[column.field_name])}</Text>
+    //     </Reveal>
+    //   ),
+    // }),
+    // enableColumnFilterModes: enableColumnFilterModes,
+    // ...(column?.max_size && {
+    //   maxSize: column.max_size,
+    // }),
   };
 }
+
+// // Adjusted createColumnDef to fit your use case
+// export function createColumnDef<RowDataType extends RowData>(
+//   column: FieldConfiguration
+// ): MRT_ColumnDef<RowDataType> {
+//   const isDateTime = column.data_type === "datetime";
+//   const isDecimal = column.data_type === "decimal";
+//   const isExternalLink = column?.display_component === "ExternalLink";
+//   const isPrimaryKey = column?.display_component === "PrimaryKey";
+//   const isFilePath = column?.display_component === "FilePath";
+//   const isReveal = column?.display_component === "Reveal";
+//   const isSessionLink = column?.display_component === "SessionLink";
+//   const isShortcutLink = column?.display_component === "ShortcutLink";
+//   const isExecutionStatus = column?.display_component === "ExecutionStatus";
+//   const isRowActions = column?.field_name === "row_actions";
+//   const conditionalFormatting = column?.conditional_formatting ?? null;
+//   const enableColumnFilterModes = column?.enable_column_filter_modes ?? false;
+//   // const isEnableColumnFilterModes = column?.enable_column_filter_modes ?? false;
+
+//   const isDisplayColumn = [
+//     "mrt-row-select",
+//     "mrt-row-expand",
+//     "mrt-row-actions",
+//   ].includes(column?.field_name);
+//   // default is when it is not a datetime or decimal
+//   const isDefault =
+//     !isDateTime &&
+//     !isDecimal &&
+//     !isExternalLink &&
+//     !isPrimaryKey &&
+//     !isFilePath &&
+//     !isDisplayColumn &&
+//     !isReveal &&
+//     !isSessionLink &&
+//     !isExecutionStatus &&
+//     !isRowActions;
+//   return {
+//     id: column?.field_name,
+//     header: column?.field_name,
+//     ...(conditionalFormatting && {
+//       Cell: ({ row }) => {
+//         const style = getCellStyleInline(
+//           row.original[column?.conditional_formatting?.field_name],
+//           column
+//         );
+//         return <div style={style}>{row.original[column.field_name] ?? ""}</div>;
+//       },
+//     }),
+//     ...(column?.filter_variant && {
+//       filterVariant: column.filter_variant,
+//       filterFn: column.filter_fn,
+//     }),
+//     ...(isDefault && {
+//       accessorKey: column?.field_name,
+//     }),
+//     ...(column?.aggregation_fn && {
+//       aggregationFn: column?.aggregation_fn,
+//       AggregatedCell: ({ cell }) => {
+//         if (isDateTime) {
+//           return (
+//             <DateTime
+//               {...column}
+//               value={cell.getValue()}
+//               display_format={column.display_format ?? "yyyy-MM-dd"}
+//               record={cell.row.original}
+//             />
+//           );
+//         } else {
+//           return <div>{JSON.stringify(cell.getValue())}</div>;
+//         }
+//       },
+//     }),
+//     ...(isDisplayColumn && {
+//       columnDefType: "display",
+//     }),
+//     ...(isRowActions && {
+//       columnDefType: "display", //turns off data column features like sorting, filtering, etc.
+//       enableColumnOrdering: true, //but you can turn back any of those features on if you want like this
+//       Cell: ({ row }) => <RowActions record={row.original}></RowActions>,
+//     }),
+//     ...(isDateTime && {
+//       accessorFn: (row) => new Date(row[column.field_name] ?? ""),
+//       Cell: ({ row }) => (
+//         <DateTime
+//           {...column}
+//           value={row.original[column.field_name]}
+//           record={row.original}
+//           display_format={column.display_format ?? "yyyy-MM-dd"}
+//         />
+//       ),
+//     }),
+//     ...(isDecimal && {
+//       // Convert strings to numbers and replace null or undefined with 0
+//       accessorFn: (row) => {
+//         const value = row[column.field_name];
+//         return value ? Number(value) : 0;
+//       },
+//       Cell: ({ row }) => (
+//         <Decimal
+//           {...column}
+//           value={row.original[column.field_name]}
+//           display_format={column.display_format ?? ""}
+//           record={row.original}
+//         />
+//       ),
+//     }),
+//     ...(isExternalLink && {
+//       Cell: ({ row }) => (
+//         <ExternalLink
+//           {...column}
+//           value={row.original[column.field_name]}
+//           display_format={column.display_format ?? ""}
+//           display_component_content={column.display_component_content}
+//           record={row.original}
+//         />
+//       ),
+//     }),
+
+//     ...(isSessionLink && {
+//       Cell: ({ row }) => (
+//         <SessionLink
+//           {...column}
+//           value={row.original[column.field_name]}
+//           record={row.original}
+//           display_component_content={column.display_component_content ?? null}
+//         />
+//       ),
+//     }),
+//     ...(isShortcutLink && {
+//       Cell: ({ row }) => (
+//         <ShortcutLink
+//           {...column}
+//           value={row.original[column.field_name]}
+//           record={row.original}
+//           display_component_content={column.display_component_content ?? null}
+//         />
+//       ),
+//     }),
+//     ...(isPrimaryKey && {
+//       Cell: ({ row }) => (
+//         <PrimaryKey
+//           {...column}
+//           value={row.original[column.field_name]}
+//           record={row.original}
+//           display_component_content={column.display_component_content ?? null}
+//         />
+//       ),
+//     }),
+//     ...(isFilePath && {
+//       Cell: ({ row }) => (
+//         <FilePath
+//           {...column}
+//           value={row.original[column.field_name]}
+//           record={row.original}
+//           display_component_content={column.display_component_content ?? null}
+//         />
+//       ),
+//     }),
+//     ...(isReveal && {
+//       Cell: ({ row }) => (
+//         <Reveal
+//           resource={JSON.stringify(row.original[column.field_name])}
+//           value={row.original[column.field_name]}
+//         >
+//           {/* <MonacoEditor value={row.original[column.field_name]}></MonacoEditor> */}
+//           <Text>{JSON.stringify(row.original[column.field_name])}</Text>
+//         </Reveal>
+//       ),
+//     }),
+//     enableColumnFilterModes: enableColumnFilterModes,
+//     ...(column?.max_size && {
+//       maxSize: column.max_size,
+//     }),
+//   };
+// }
 
 // export function useDataColumns(columns: FieldConfiguration[]) {
 //   return useMemo(() => {
@@ -247,7 +504,7 @@ export function useDataColumns(columns: FieldConfiguration[], tableId: string) {
       .map((column, index) => ({
         ...createColumnDef<RowData>(column),
         // id: `${tableId}-${column.field_name}-${index}`, // Adjusting the ID to include the tableId
-        id: `${tableId}-${column.field_name}`, // Adjusting the ID to include the tableId
+        id: `${tableId}-${column.name}`, // Adjusting the ID to include the tableId
       }));
   }, [columns, tableId]);
 }
@@ -290,15 +547,27 @@ export function extractFields(
 ): Record<string, any> {
   const result: Record<string, any> = {};
 
-  fields.forEach(({ field_name }) => {
+  fields.forEach(({ name }) => {
     // If the dataObject has the key specified in the field configuration, add it to the result
-    if (dataObject?.hasOwnProperty(field_name)) {
-      result[field_name] = dataObject[field_name];
+    if (dataObject?.hasOwnProperty(name)) {
+      result[name] = dataObject[name];
     }
   });
 
   return result;
 }
+
+// map typescript types to display_component strings i.e string -> TextInput
+export const typescriptToDisplayComponent: Record<string, string> = {
+  string: "TextInput",
+  // text: "Textarea",
+  datetime: "DateInput",
+  date: "DateInput",
+  number: "NumberInput",
+  // file: "FileInput",
+  // array: "MultiSelect",
+  // object: "JsonEditor",
+};
 
 // Adjust your componentMapping to explicitly use this type for its keys
 export const componentMapping: Record<ComponentKey, React.ElementType> = {
@@ -541,6 +810,62 @@ export function useFetchSessionById(sessionId: string | null) {
   return { data, isLoading, error };
 }
 
+export function useFetchViewById(viewId: string | null) {
+  // const [data, setAction] = useState<IAction | null>(null);
+  const view_query = {
+    credentials: "surrealdb_catchmytask",
+    query: `SELECT ->includes_field_configuration.*.out.* AS field_configurations FROM '${viewId}';`,
+    query_language: "surrealql",
+  };
+  const { data, isLoading, error } = useCustom({
+    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    method: "post",
+    config: {
+      payload: {
+        function_arguments: view_query,
+      },
+    },
+    queryOptions: {
+      queryKey: [`useFetchViewById_${viewId}`],
+    },
+  });
+
+  // useEffect(() => {
+  //   if (!isLoading && data && !error) {
+  //     setAction(data?.data[0]);
+  //   }
+  // }, [data, isLoading, error]);
+  return { data, isLoading, error };
+}
+
+export function useFetchViewByName(viewName: string | null) {
+  // const [data, setAction] = useState<IAction | null>(null);
+  const view_query = {
+    credentials: "surrealdb_catchmytask",
+    query: `SELECT ->includes_field_configuration.*.out.* AS field_configurations, ->includes_action_configuration.*.out.* AS action_configurations, * FROM views WHERE name = '${viewName}';`,
+    query_language: "surrealql",
+  };
+  const { data, isLoading, error } = useCustom({
+    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    method: "post",
+    config: {
+      payload: {
+        function_arguments: view_query,
+      },
+    },
+    queryOptions: {
+      queryKey: [`useFetchViewByName_${viewName}`],
+    },
+  });
+
+  // useEffect(() => {
+  //   if (!isLoading && data && !error) {
+  //     setAction(data?.data[0]);
+  //   }
+  // }, [data, isLoading, error]);
+  return { data, isLoading, error };
+}
+
 export function useFetchApplicationById(applicationId: string | null) {
   const [application, setApplication] = useState<IApplication | null>(null);
   const { data, error, isLoading } = useOne<IApplication, HttpError>({
@@ -695,7 +1020,7 @@ export function extractActiveActionDefaultValues(
 
   fieldConfigurations.forEach((fieldConfig) => {
     if (fieldConfig.default_value !== undefined) {
-      defaultValues[fieldConfig.field_name] = fieldConfig.default_value;
+      defaultValues[fieldConfig.name] = fieldConfig.default_value;
     }
   });
 
@@ -723,3 +1048,94 @@ export async function getFileArrayBufferById(recordId: any) {
 
   return fileHandleEntry.file_handle; // This is the ArrayBuffer of the file
 }
+
+// export function useTableColumns(field_configurations: FieldConfiguration[]) {
+//   const tableColumns = useMemo<ColumnDef<RowData, any>[]>(
+//     () => [...field_configurations].map((item) => item)],
+//     []
+//   );
+
+//   // useEffect(() => {
+//   //   if (!isLoading && data && !error) {
+//   //     setAction(data?.data[0]);
+//   //   }
+//   // }, [data, isLoading, error]);
+//   return { tableColumns };
+// }
+
+interface UseTableColumnsProps {
+  field_configurations: FieldConfiguration[];
+  table_id: string;
+}
+
+export function useTableColumns({
+  field_configurations,
+  table_id,
+}: UseTableColumnsProps) {
+  const tableColumns = useMemo<ColumnDef<RowData, any>[]>(
+    () =>
+      field_configurations.map((item) => ({
+        id: `${table_id}-${item.name}`,
+        accessorKey: item.name, // Assuming each FieldConfiguration has a 'name' property
+        header: item.name, // Assuming each FieldConfiguration has a 'name' property
+        // Add more properties as needed from item
+      })),
+    [field_configurations, table_id]
+  );
+
+  return { tableColumns };
+}
+
+export const RetrieveFieldData = ({ field }: { field: FieldConfiguration }) => {
+  // const queryClient = useQueryClient();
+  // const fieldData = queryClient.getQueryData<FieldData>([field]) || {};
+  console.log("field", field);
+  const { activeField } = useAppStore();
+
+  const { data, isLoading, error } = useCustom({
+    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    method: "post",
+    config: {
+      payload: {
+        // Here, ensure that you're constructing your payload correctly without circular references
+        // For example, use the focusedFieldName directly if it's part of the payload
+        function_arguments: {
+          credentials: "surrealdb_catchmytask",
+          query: field?.data_prop_query || "SELECT * FROM sessions",
+          query_language: "surrealdb",
+        },
+      },
+    },
+    queryOptions: {
+      queryKey: [`field_data_for_${field?.name}`], // simply change the query key to trigger call for that field
+      // enabled: !!focusedField?.field_name, // This query runs only if focusedFieldName is not null
+      // there is a field and it is not in focusedFields // should dynamically create new query keys for each field
+      // enabled:
+      //   !!activeField?.field_name && !focusedFields?.[activeField?.field_name],
+      // enabled:
+      // !!isTouched(activeField?.field_name) && !focusedFields?.[activeField?.field_name],
+      // enabled:
+      //   activeField?.field_name && !focusedFields?.[activeField?.field_name]
+      //     ? true
+      //     : false, // as long as there is a activefield with field name, run the query
+      // enabled: touchedFields.includes(field?.name),
+    },
+    successNotification: (data, values) => {
+      // console.log("successNotification", data);
+      // data is the response from the query
+      // setFocusedFields({
+      //   ...focusedFields,
+      //   [activeField?.field_name]: {
+      //     ...activeField,
+      //     data: data?.data,
+      //   },
+      // }); // Reset focused field after successful query
+      return {
+        message: `successfully retrieved ${activeField?.field_name}s.`,
+        description: "Success with no errors",
+        type: "success",
+      };
+    },
+  });
+  return null;
+};

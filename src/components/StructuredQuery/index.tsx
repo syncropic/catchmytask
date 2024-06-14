@@ -1,27 +1,11 @@
 import MonacoEditor from "@components/MonacoEditor";
-// import {
-//   componentMapping,
-//   extractIdentifier,
-//   getComponentByResourceType,
-//   replacePlaceholdersInObject,
-// } from "@components/Utils";
 import { useQueryClient } from "@tanstack/react-query";
-// import ViewActionHistory from "@components/ViewActionHistory";
-import {
-  CompleteActionComponentProps,
-  ComponentKey,
-  FieldConfiguration,
-  IIdentity,
-  IView,
-} from "@components/interfaces";
 import { Accordion, Button, Textarea } from "@mantine/core";
 // import { useDisclosure } from "@mantine/hooks";
 import { useCustom, useCustomMutation, useGetIdentity } from "@refinedev/core";
 import { Create, SaveButton, useForm } from "@refinedev/mantine";
 // import { IconMathFunction } from "@tabler/icons-react";
 import _, { set } from "lodash";
-// import CreateAutomation from "pages/automations/create";
-// import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
 // import { v4 as uuidv4 } from "uuid";
 
@@ -31,15 +15,8 @@ export function StructuredQuery() {
   // let fieldDataMappings = {};
   // const queryClient = useQueryClient();
   const {
-    // activeViewItem,
-    // activeRecord,
-    // selectedItems,
-    // activeField,
-    // setActiveField,
-    // focusedFields,
-    // setFocusedFields,
-    // activeApplication,
     setActiveStructuredQuery,
+    activeStructuredQuery,
     setActiveQueryGraph,
     activeSession,
   } = useAppStore();
@@ -107,7 +84,7 @@ export function StructuredQuery() {
   //   }
   // }, [selectedItems]);
 
-  const generateRequestData = (values: any) => {
+  const generateRequestData = (request_params: any) => {
     // console.log("values", values);
     // console.log("activeViewItem", activeViewItem);
     // console.log("activeRecord", activeRecord);
@@ -134,32 +111,118 @@ export function StructuredQuery() {
     //     ...replacePlaceholdersInObject(activeAction?.task || {}, values || {}),
     //   },
     // };
-    const queryData = {
-      global_variables: {},
-      include_execution_orders: [1],
-      action_steps: [
-        {
-          id: "1",
-          execution_order: 1,
-          tool: "generate_query_graph",
-          tool_arguments: {
-            query: values.query,
+    let queryData = {};
+    if ((request_params.name = "generate_query_graph")) {
+      queryData = {
+        global_variables: {},
+        include_execution_orders: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            tool: "generate_query_graph",
+            tool_arguments: {
+              query: request_params.values.query,
+            },
           },
-        },
-      ],
-    };
-    const activeActionRequestData = _.merge(
-      {},
-      queryData || {}
-      // activeAction || {},
-      // activeActionFormatted || {}
-    );
-    return activeActionRequestData;
+        ],
+      };
+    }
+
+    if ((request_params.name = "update_structured_query")) {
+      queryData = {
+        global_variables: {},
+        include_execution_orders: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            tool: "update",
+            tool_arguments: {
+              ids: [activeSession?.id],
+              config: "surrealdb_catchmytask",
+              resource: "sessions",
+              values: {
+                structured_query: {
+                  content: request_params.values.query,
+                  type: "text",
+                  language: "sql",
+                },
+              },
+            },
+          },
+        ],
+      };
+    }
+    // const activeActionRequestData = _.merge(
+    //   {},
+    //   queryData || {}
+    //   // activeAction || {},
+    //   // activeActionFormatted || {}
+    // );
+    // return activeActionRequestData;
+    return queryData;
   };
 
   const handleSubmit = (e: any) => {
     // set the active structured query
     setActiveStructuredQuery(values.query);
+    // const activeActionRequestData = _.merge(
+    //   {},
+    //   queryData || {}
+    //   // activeAction || {},
+    //   // activeActionFormatted || {}
+    // );
+    // save the values to the backend
+    mutate(
+      {
+        url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/catch`,
+        method: "post",
+        values: generateRequestData({
+          name: "update_structured_query",
+          values: values,
+        }),
+        // successNotification: (data, values) => {
+        //   // console.log("successNotification", data);
+        //   // invalidate query
+        //   // invalidate this so that the query graph is retriggered
+        //   // queryClient.invalidateQueries([activeViewItem?.id]); // invalidate the active view query to retrigger refresh of values
+
+        //   return {
+        //     message: `successfully executed.`,
+        //     description: "Success with no errors",
+        //     type: "success",
+        //   };
+        // },
+        errorNotification: (data, values) => {
+          // console.log("successNotification", data?.response.status);
+          // console.log("errorNotification values", values);
+          return {
+            message: `${data?.response.status} : ${
+              data?.response.statusText
+            } : ${JSON.stringify(data?.response.data)}`,
+            description: "Error",
+            type: "error",
+          };
+        },
+      },
+      {
+        onError: (error, variables, context) => {
+          // An error occurred!
+          console.log("error", error);
+        },
+        onSuccess: (data, variables, context) => {
+          // Let's celebrate!
+          // console.log("succeess", "query graph generated successfully");
+          // set active query graph as the response
+          // setActiveQueryGraph(data?.data);
+          // invalidate the queries that are dependent on the query graph
+          // queryClient.invalidateQueries(["execute-query-graph-key"]);
+        },
+      }
+    );
+
+    // console.log("values", values);
     // -> GENERATE QUERY GRAPH AND THE INVALIDATE THE queries that are dependent on the query graph
     // let generatedRequestData = generateRequestData(values);
     // console.log("generatedRequestData", generatedRequestData);
@@ -167,20 +230,25 @@ export function StructuredQuery() {
       {
         url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/catch`,
         method: "post",
-        values: generateRequestData(values),
-        successNotification: (data, values) => {
-          // console.log("successNotification", data);
-          // invalidate query
+        // values: generateRequestData({
+        //   values: values,
+        // }),
+        values: generateRequestData({
+          name: "generate_query_graph",
+          values: values,
+        }),
+        // successNotification: (data, values) => {
+        //   // console.log("successNotification", data);
+        //   // invalidate query
+        //   // invalidate this so that the query graph is retriggered
+        //   // queryClient.invalidateQueries([activeViewItem?.id]); // invalidate the active view query to retrigger refresh of values
 
-          // queryClient.invalidateQueries(["list_action_history_1"]);
-          // queryClient.invalidateQueries([activeViewItem?.id]); // invalidate the active view query to retrigger refresh of values
-
-          return {
-            message: `successfully executed.`,
-            description: "Success with no errors",
-            type: "success",
-          };
-        },
+        //   return {
+        //     message: `successfully executed.`,
+        //     description: "Success with no errors",
+        //     type: "success",
+        //   };
+        // },
         errorNotification: (data, values) => {
           // console.log("successNotification", data?.response.status);
           // console.log("errorNotification values", values);
@@ -204,197 +272,11 @@ export function StructuredQuery() {
           // set active query graph as the response
           setActiveQueryGraph(data?.data);
           // invalidate the queries that are dependent on the query graph
+          // queryClient.invalidateQueries(["execute-query-graph-key"]);
         },
       }
     );
-    // const { data, isLoading } = useCustom({
-    //   url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/catch`,
-    //   queryOptions: {
-    //     queryKey: ["structured-query-key"],
-    //   },
-    //   method: "post",
-    //   config: {
-    //     payload: generateRequestData(values),
-    //   },
-    //   successNotification: (data, values) => {
-    //     // console.log("successNotification", data);
-    //     // invalidate query
-
-    //     // queryClient.invalidateQueries(["list_action_history_1"]);
-    //     // queryClient.invalidateQueries([activeViewItem?.id]); // invalidate the active view query to retrigger refresh of values
-
-    //     return {
-    //       message: `successfully executed.`,
-    //       description: "Success with no errors",
-    //       type: "success",
-    //     };
-    //   },
-    //   errorNotification: (data, values) => {
-    //     // console.log("successNotification", data?.response.status);
-    //     // console.log("errorNotification values", values);
-    //     return {
-    //       message: `${data?.response.status} : ${
-    //         data?.response.statusText
-    //       } : ${JSON.stringify(data?.response.data)}`,
-    //       description: "Error",
-    //       type: "error",
-    //     };
-    //   },
-    // });
   };
-
-  // const viewComponent = (activeViewItem: IView, activeRecord: any) => {
-  //   // console.log("activeViewItem", activeViewItem);
-  //   // return "";
-  //   if (!activeViewItem) {
-  //     return null;
-  //   }
-  //   if (!activeViewItem.resource_type) {
-  //     return null;
-  //   }
-  //   const Component = componentMapping[activeViewItem.resource_type];
-  //   return <Component item={activeRecord} />;
-  // };
-  // if (!activeAction) {
-  //   return <div>No active action selected</div>;
-  // }
-
-  // let activeFieldConfigurationsObject = activeViewItem ? activeSession
-  //   ? activeAction
-  //   : activeRecord;
-
-  // let activeFieldConfigurationsObject =
-  //   activeActionView ?? activeSession ?? activeAction ?? activeRecord;
-
-  // let activeFieldConfigurationsObject = activeAction;
-
-  // const actionFieldConfigurations =
-  //   activeActionView?.field_configurations ||
-  //   // activeViewItem?.fields_configuration ||
-  //   // activeViewItem?.view?.[0]?.fields_configuration ||
-  //   activeAction?.field_configurations ||
-  //   [];
-  // console.log("actionFieldConfigurations", actionFieldConfigurations);
-
-  // FormFieldValues = extractFields(
-  //   activeRecord || {},
-  //   activeViewItem?.fields_configuration ||
-  //     activeViewItem?.view?.[0]?.fields_configuration ||
-  //     activeAction?.field_configurations ||
-  //     []
-  // );
-
-  // console.log(
-  //   "activeFieldConfigurationsObject",
-  //   activeFieldConfigurationsObject
-  // );
-
-  // sometimes we want to use the fields configuration on the activeRecord i.e activeSession instead of the activeRecord
-  // handleFileSelection
-  // const handleFileSelection = (value: any) => {
-  //   console.log("value", value);
-
-  //   // const file = e.target.files[0];
-  //   // console.log("file", file);
-  //   // const reader = new FileReader();
-  //   // reader.onload = (event) => {
-  //   //   // console.log("event.target.result", event.target.result);
-  //   //   setFieldValue("file", event.target.result);
-  //   // };
-  //   // reader.readAsDataURL(file);
-  // };
-  // const handleFileHandlerSelection = (value: any) => {
-  //   console.log("value", value);
-  //   // const file = e.target.files[0];
-  //   // console.log("file", file);
-  //   // const reader = new FileReader();
-  //   // reader.onload = (event) => {
-  //   //   // console.log("event.target.result", event.target.result);
-  //   //   setFieldValue("file", event.target.result);
-  //   // };
-  //   // reader.readAsDataURL(file);
-  // };
-
-  // interface FunctionMappings {
-  //   handleFileSelection: (value: any) => void;
-  //   handleFileHandlerSelection: (value: any) => void;
-  //   handleFocus: (value: any) => void;
-  // }
-
-  // // using a type guard to check if the key is in the functionMappings object
-  // function isFunctionMappingKey(key: any): key is keyof FunctionMappings {
-  //   return key in functionMappings;
-  // }
-
-  // get data triggered by eventHandlers + utilize reactquery for caching instead of adding another value to zustand, keep that clean
-
-  // const { data, isLoading, error } = useCustom({
-  //   url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
-  //   method: "post",
-  //   config: {
-  //     payload: {
-  //       // Here, ensure that you're constructing your payload correctly without circular references
-  //       // For example, use the focusedFieldName directly if it's part of the payload
-  //       function_arguments: activeField?.data_prop_query,
-  //     },
-  //   },
-  //   queryOptions: {
-  //     queryKey: [`field_data_for_${activeField?.field_name}`], // simply change the query key to trigger call for that field
-  //     // enabled: !!focusedField?.field_name, // This query runs only if focusedFieldName is not null
-  //     // there is a field and it is not in focusedFields // should dynamically create new query keys for each field
-  //     // enabled:
-  //     //   !!activeField?.field_name && !focusedFields?.[activeField?.field_name],
-  //     // enabled:
-  //     // !!isTouched(activeField?.field_name) && !focusedFields?.[activeField?.field_name],
-  //     enabled:
-  //       activeField?.field_name && !focusedFields?.[activeField?.field_name]
-  //         ? true
-  //         : false, // as long as there is a activefield with field name, run the query
-  //   },
-  //   successNotification: (data, values) => {
-  //     // console.log("successNotification", data);
-  //     // data is the response from the query
-  //     setFocusedFields({
-  //       ...focusedFields,
-  //       [activeField?.field_name]: {
-  //         ...activeField,
-  //         data: data?.data,
-  //       },
-  //     }); // Reset focused field after successful query
-  //     return {
-  //       message: `successfully retrieved ${activeField?.field_name}s.`,
-  //       description: "Success with no errors",
-  //       type: "success",
-  //     };
-  //   },
-  // });
-
-  // // This event handler now expects a field name (or some simple identifier) as an argument
-  // const handleFocus = (event: any, field: any) => {
-  //   // const fieldIsTouched = isTouched(field.field_name);
-  //   // console.log("fieldIsTouched", fieldIsTouched);
-  //   // console.log("field", field);
-  //   // set the activeField
-  //   setActiveField(field);
-
-  //   // console.log("fieldIsTouched", fieldIsTouched);
-  //   // if (fieldIsTouched) {
-  //   //   // If the field is already touched, don't refetch the data
-  //   //   return;
-  //   // }
-  //   // // console.log("fieldIsTouched", fieldIsTouched);
-  //   // setFocusedFields({
-  //   //   ...focusedFields,
-  //   //   [field.field_name]: field,
-  //   // }); // Set the name of the focused field
-  // };
-
-  // const functionMappings = {
-  //   handleFileSelection: handleFileSelection,
-  //   handleFileHandlerSelection: handleFileHandlerSelection,
-  //   // handleFocus: handleFocus,
-  //   // add more mappings as needed
-  // };
 
   return (
     <>
@@ -411,18 +293,7 @@ export function StructuredQuery() {
         goBack={false}
         footerButtons={({ saveButtonProps }) => (
           <div className="flex w-full gap-4">
-            <Button
-              resource="automations"
-              size="xs"
-              variant="light"
-              // onClick={() => {
-              //   if (openedChat) {
-              //     closeChat();
-              //   } else {
-              //     openChat();
-              //   }
-              // }}
-            >
+            <Button resource="automations" size="xs" variant="light">
               Generate Query Graph
             </Button>
             <SaveButton
@@ -435,26 +306,13 @@ export function StructuredQuery() {
             >
               Run
             </SaveButton>
-
-            {/* <Button
-              resource="automations"
-              size="xs"
-              variant="light"
-              // onClick={() => {
-              //   if (openedAutomation) {
-              //     closeAutomation();
-              //   } else {
-              //     openAutomation();
-              //   }
-              // }}
-            >
-              {openedAutomation ? "Close Automation" : "Automate"}
-            </Button> */}
           </div>
         )}
       >
         <MonacoEditor
-          value={activeSession?.structured_query?.content}
+          value={
+            activeStructuredQuery || activeSession?.structured_query?.content
+          }
           language={activeSession?.structured_query?.language}
           setFieldValue={setFieldValue}
         />

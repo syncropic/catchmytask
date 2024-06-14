@@ -1,4 +1,5 @@
-import { NotificationsProvider } from "@mantine/notifications";
+// import { NotificationsProvider } from "@mantine/notifications";
+import { Notifications } from "@mantine/notifications";
 import { AuthBindings, Refine } from "@refinedev/core";
 import { useNotificationProvider } from "@refinedev/mantine";
 import routerProvider, { DocumentTitleHandler } from "@refinedev/nextjs-router";
@@ -9,10 +10,31 @@ import { useRouter } from "next/router";
 import { accessControlProvider } from "src/access-control-provider";
 import BaseLayout from "src/components/Layout";
 import defaultApiDataProvider from "../src/default-api-provider";
+import { createTheme, MantineProvider } from "@mantine/core";
+// core styles are required for all packages
+import "@mantine/core/styles.css";
+// other css files are required only if
+// you are using components from the corresponding package
+import "@mantine/notifications/styles.css";
+// import '@mantine/dates/styles.css';
+// import '@mantine/dropzone/styles.css';
+// import '@mantine/code-highlight/styles.css';
+// import "@mantine/core/styles.layer.css";
+import "mantine-datatable/styles.layer.css";
 import "../styles/globals.css";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { registerLicense } from "@syncfusion/ej2-base";
+
+// Registering Syncfusion license key
+registerLicense(
+  "Ngo9BigBOggjHTQxAR8/V1NBaF5cXmZCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdnWXlfcnRdRGZfU0NyX0o="
+);
+
+const theme = createTheme({
+  /** Put your mantine theme override here */
+});
 
 const API_URL = `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}`;
 
@@ -199,7 +221,8 @@ const App = (props: React.PropsWithChildren) => {
 
   return (
     <>
-      <NotificationsProvider position="top-right">
+      <MantineProvider theme={theme} defaultColorScheme="auto">
+        <Notifications position="top-right" />
         <Refine
           routerProvider={routerProvider}
           dataProvider={{
@@ -267,7 +290,7 @@ const App = (props: React.PropsWithChildren) => {
           {/* <DocumentTitleHandler /> */}
           <ReactQueryDevtools initialIsOpen={false} />
         </Refine>
-      </NotificationsProvider>
+      </MantineProvider>
     </>
   );
 };

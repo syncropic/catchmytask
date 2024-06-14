@@ -376,7 +376,8 @@ export function GlobalVariables() {
               variant="filled"
               // leftIcon={<IconMathFunction size={16} />}
               leftIcon={false}
-              disabled={mutationIsLoading}
+              // disabled={mutationIsLoading}
+              disabled={true}
             >
               Save
             </SaveButton>

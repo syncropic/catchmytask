@@ -1,12 +1,12 @@
 // ResourceHeader.tsx
 import React from "react";
-import { Title, Text, ActionIcon } from "@mantine/core";
+import { Title, Text, ActionIcon, Button } from "@mantine/core";
 import SelectSession from "@components/SelectSession";
 import { HttpError, useList, useOne } from "@refinedev/core";
 import { IDataset, ISession } from "@components/interfaces";
 import { useAppStore } from "src/store";
 import { CreateButton } from "@refinedev/mantine";
-import { IconCopy, IconEdit } from "@tabler/icons-react";
+import { IconCopy, IconEdit, IconPlus } from "@tabler/icons-react";
 
 interface SessionBarProps {
   name: string;
@@ -72,17 +72,27 @@ const SessionBar: React.FC<SessionBarProps> = ({
         record={activeSession}
         view_item={null}
       />
-      <CreateButton
+      {/* <CreateButton
         size="xs"
         resource="sessions"
         meta={{ applicationId: activeApplication?.id }}
+        disabled={true}
       >
         Create Session
-      </CreateButton>
-      <ActionIcon variant="filled" aria-label="Settings">
+      </CreateButton> */}
+      <Button
+        size="xs"
+        leftSection={<IconPlus style={{ width: "70%", height: "70%" }} />}
+        // resource="sessions"
+        // meta={{ applicationId: activeApplication?.id }}
+        disabled={true}
+      >
+        Create Session
+      </Button>
+      <ActionIcon variant="filled" aria-label="Settings" disabled={true}>
         <IconCopy style={{ width: "70%", height: "70%" }} stroke={1.5} />
       </ActionIcon>
-      <ActionIcon variant="filled" aria-label="Settings">
+      <ActionIcon variant="filled" aria-label="Settings" disabled={true}>
         <IconEdit style={{ width: "70%", height: "70%" }} stroke={1.5} />
       </ActionIcon>
     </div>

@@ -65,6 +65,9 @@ const useAppStore = create(
       activeQueryGraph: null,
       setActiveQueryGraph: (activeQueryGraph) =>
         set((state) => ({ activeQueryGraph })),
+      // touchedFields: [],
+      // setTouchedFields: (touchedFields) =>
+      //   set((state) => ({ touchedFields })),
       activeStructuredQuery: null,
       setActiveStructuredQuery: (activeStructuredQuery) =>
         set((state) => ({ activeStructuredQuery })),
@@ -76,11 +79,20 @@ const useAppStore = create(
       activeActionId: null,
       setActiveActionId: (activeActionId) =>
         set((state) => ({ activeActionId })),
+      activeResultsSection: null,
+      setActiveResultsSection: (activeResultsSection) =>
+        set((state) => ({ activeResultsSection })),
+      activeMouseCoordinates: null,
+      setActiveMouseCoordinates: (activeMouseCoordinates) =>
+        set((state) => ({ activeMouseCoordinates })),
       activeSessionId: null,
       setActiveSessionId: (activeSessionId) =>
         set((state) => ({ activeSessionId })),
       activeAction: null,
       setActiveAction: (activeAction) => set((state) => ({ activeAction })),
+      isActionsSelectionOpen: false,
+      setIsActionsSelectionOpen: (isActionsSelectionOpen) =>
+        set((state) => ({ isActionsSelectionOpen })),
       activeDataset: null,
       setActiveDataset: (activeDataset) => set((state) => ({ activeDataset })),
       activeActionView: null,

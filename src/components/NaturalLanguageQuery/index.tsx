@@ -346,6 +346,7 @@ export function NaturalLanguageQuery() {
               resource="automations"
               size="xs"
               variant="light"
+              disabled={true}
               // onClick={() => {
               //   if (openedChat) {
               //     closeChat();
@@ -362,7 +363,8 @@ export function NaturalLanguageQuery() {
               variant="filled"
               // leftIcon={<IconMathFunction size={16} />}
               leftIcon={false}
-              disabled={mutationIsLoading}
+              // disabled={mutationIsLoading}
+              disabled={true}
             >
               Run
             </SaveButton>

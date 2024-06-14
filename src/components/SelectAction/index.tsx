@@ -1,115 +1,48 @@
-import { useFetchActionById } from "@components/Utils";
-import {
-  IActionsList,
-  SelectActionComponentProps,
-} from "@components/interfaces";
-import { MultiSelect } from "@mantine/core";
-import { useForm } from "@refinedev/mantine";
-import { useEffect, useState } from "react";
+import { Badge, Button, Popover, TextInput, Text } from "@mantine/core";
+import { useQueryClient } from "@tanstack/react-query";
+import { useClickOutside } from "@mantine/hooks";
+import { IconEdit, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
+import { useState } from "react";
 import { useAppStore } from "src/store";
+import { QueryDataType } from "@components/interfaces";
 
-interface IActiveActionId {
-  id: string;
-}
-
-function UpdateActiveAction({ item }: { item: IActiveActionId }) {
-  // const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
-  // console.log("actionId", item);
-
-  const { action, isLoading, error } = useFetchActionById(item?.id);
-
-  return null;
-}
-
-function SelectAction<T extends Record<string, any>>({
-  actions_list,
-  record,
-  view_item,
-}: SelectActionComponentProps<T>) {
-  // console.log("record - selectaction", record);
+export const SelectAction = () => {
   const {
-    getInputProps,
-    saveButtonProps,
-    setFieldValue,
-    values,
-    refineCore: { formLoading, onFinish },
-    onSubmit,
-  } = useForm({
-    initialValues: {},
-  });
-
-  const {
-    setActiveRecord,
+    isActionsSelectionOpen,
+    setIsActionsSelectionOpen,
+    activeMouseCoordinates,
     activeLayout,
     setActiveLayout,
-    setActiveViewItem,
-    setActiveActionId,
-    activeActionId,
-    setActiveField,
-    setFocusedFields,
+    activeResultsSection,
+    // activeAction,
+    setActiveAction,
   } = useAppStore();
+  const queryClient = useQueryClient();
 
-  // const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
-  // const { action, isLoading, error } = useFetchActionById(
-  //   activeActionId?.id || ""
-  // );
+  const viewData = queryClient.getQueryData<QueryDataType>([
+    `useFetchViewByName_${activeResultsSection?.name}`,
+  ]);
 
-  // useEffect(() => {
-  //   // when action changes set activeAction
-  //   if (action) {
-  //     setActiveAction(action);
-  //     // console.log("action", action);
-  //   }
-  //   // // Handle other dependencies like record and view_item here
-  //   // use the passed in record and save that as active record
-  //   if (record) {
-  //     setActiveRecord(record);
-  //     console.log("record", record);
-  //   }
-  //   if (view_item) {
-  //     setActiveViewItem(view_item);
-  //   }
-  //   activateSection("rightSection");
-  // }, [activeActionId, action, view_item, record]); // when activeActionId changes, fetch action and when action changes, set activeAction
+  console.log("viewData", viewData);
 
-  interface ISelectedActionItem {
-    id: string;
-  }
-  const handleUserInteraction = (selectedActionItem: ISelectedActionItem) => {
-    // Update active action ID based on user selection
-    // setActiveActionId({ id: selectedActionId });
+  // const ref = useClickOutside(() => setIsActionsSelectionOpen(false));
+  const { x, y } = activeMouseCoordinates;
+  const [searchTerm, setSearchTerm] = useState("");
 
-    // Since we want to update the active record and action based on this user interaction,
-    // ensure that these updates happen here as well.
-    if (record) {
-      setActiveRecord(record);
-    }
+  const actions = [
+    { icon: <IconPlus size={10} />, label: "Create" },
+    { icon: <IconEdit size={10} />, label: "Edit" },
+    { icon: <IconTrash size={10} />, label: "Delete" },
+    // { icon: <FaceIcon className="mr-2 h-4 w-4" />, label: "Search Emoji" },
+    // { icon: <RocketIcon className="mr-2 h-4 w-4" />, label: "Launch" },
+    // { icon: <PersonIcon className="mr-2 h-4 w-4" />, label: "Profile" },
+    // { icon: <EnvelopeClosedIcon className="mr-2 h-4 w-4" />, label: "Mail" },
+    // { icon: <GearIcon className="mr-2 h-4 w-4" />, label: "Settings" },
+  ];
 
-    if (selectedActionItem) {
-      setActiveActionId(selectedActionItem);
-    }
-    // set activeField to null and focusedFields to null // ONLY do this if different action (+ on refresh for new data) otherwise keep the same values (cache)
-    // i actually think this is not necessary as i can bind directly to the data return of the query
-    // setActiveField({});
-    // setFocusedFields({});
-
-    // Similarly, update any other relevant parts of the global state as necessary,
-    // such as the active view item, based on the specific user interaction.
-    if (view_item) {
-      setActiveViewItem(view_item);
-    }
-    if (selectedActionItem) {
-      activateSection("rightSection");
-    }
-  };
-  // const handleActionChange = (value: string[]) => {
-  //   // console.log("value", value[0]);
-  //   setFieldValue("action", value);
-  //   if (value[0]) {
-  //     // setSelectedActionId(value[0]);
-  //     setActiveActionId({ id: value[0] });
-  //   }
-  // };
+  const filteredActions = actions.filter((action) =>
+    action.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   //handle toggleDisplay
   const activateSection = (section: string) => {
@@ -119,54 +52,60 @@ function SelectAction<T extends Record<string, any>>({
       setActiveLayout(newLayout);
     }
   };
-  // console.log("action", action);
-  // activateSection("rightSection") with useEffect
-  // useEffect(() => {
-  //   if (action) {
-  //     activateSection("rightSection");
-  //   }
-  // }, [action]);
 
-  const handleActionChange = (value: any) => {
-    // console.log("value", value);
-    // find action name from actions_list where id is value[0]
-    const action_name = actions_list?.find(
-      (action: any) => action.id === value[0]
-    )?.name;
-    const action_object = {
-      id: value[0],
-      name: action_name,
-    };
-
-    if (value[0]) {
-      handleUserInteraction(action_object);
-    }
+  const handleSelectAction = (action: any) => {
+    // console.log(`Clicked on ${action.label}`);
+    // setIsActionsSelectionOpen(false);
+    // setActiveAction(action);
+    setActiveAction({ name: action.label });
+    activateSection("rightSection");
+    // close the popover
+    setIsActionsSelectionOpen(false);
   };
-
   return (
-    <div className="flex items-end space-x-2">
-      {/* <LoadingOverlay visible={dataset.isLoading} /> */}
-      <MultiSelect
-        placeholder="Select action"
-        maxSelectedValues={1}
-        searchable={true}
-        data={actions_list?.map((action: IActionsList) => ({
-          label: action?.name,
-          value: action?.id,
-        }))}
-        value={getInputProps("action").value}
-        onChange={handleActionChange}
-        withinPortal={true}
-        styles={{
-          input: { width: "200px" },
-          wrapper: { width: "200px" },
-        }}
-      />
-      {activeActionId && (
-        <UpdateActiveAction item={activeActionId}></UpdateActiveAction>
-      )}
+    <div>
+      <Popover
+        opened={isActionsSelectionOpen}
+        // position={{ top: y, left: x }}
+        onClose={() => setIsActionsSelectionOpen(false)}
+      >
+        <Popover.Target>
+          <div style={{ position: "absolute", top: y, left: x, zIndex: -1 }} />
+        </Popover.Target>
+        <Popover.Dropdown>
+          {/* searchable list of actions. at the top a search bar and below a list
+          of actions */}
+          <div className="mb-4">
+            <TextInput
+              type="text"
+              placeholder="Search actions..."
+              size="xs"
+              // className="w-full p-2 border border-gray-300 rounded"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {filteredActions.map((action, index) => (
+              <Button
+                key={index}
+                // className="flex items-center"
+                size="compact"
+                variant="outline"
+                onClick={() => handleSelectAction(action)}
+                // onClick={() => console.log(`Clicked on ${action.label}`)}
+                leftIcon={action.icon}
+              >
+                <Text size="xs" color="gray">
+                  {action.label}
+                </Text>
+              </Button>
+            ))}
+          </div>
+        </Popover.Dropdown>
+      </Popover>
     </div>
   );
-}
+};
 
 export default SelectAction;

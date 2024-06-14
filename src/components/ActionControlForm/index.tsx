@@ -11,6 +11,7 @@ import {
   CompleteActionComponentProps,
   ComponentKey,
   FieldConfiguration,
+  FieldData,
   IIdentity,
   IView,
 } from "@components/interfaces";
@@ -24,41 +25,48 @@ import CreateAutomation from "pages/automations/create";
 import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
 import { v4 as uuidv4 } from "uuid";
+import { Combobox } from "@components/Combobox";
+import { inputs } from "@data/index";
 
 export function ActionControlForm<T extends Record<string, any>>({
-  activeActionView,
-  activeSession,
-  activeAction,
+  actionFieldConfigurations,
   actionFormFieldValues,
-}: CompleteActionComponentProps<T>) {
+}: // activeActionView,
+CompleteActionComponentProps<T>) {
   // create a state object called fieldDataMappings
   // this object will be used to store the data fetched from the backend
   // let fieldDataMappings = {};
-  // const queryClient = useQueryClient();
   const {
     activeViewItem,
     activeRecord,
     selectedItems,
-    activeField,
+    // activeField,
     setActiveField,
-    focusedFields,
-    setFocusedFields,
+    // focusedFields,
+    // setFocusedFields,
     activeApplication,
+    activeAction,
+    activeSession,
   } = useAppStore();
   // console.log("actionFormFieldValues", actionFormFieldValues);
   // let activeRecordId = activeRecords[0]?.id;
-  const [openedAutomation, { open: openAutomation, close: closeAutomation }] =
-    useDisclosure(false);
-  const [openedChat, { open: openChat, close: closeChat }] =
-    useDisclosure(false);
-  const { data: identity } = useGetIdentity<IIdentity>();
+  // const [openedAutomation, { open: openAutomation, close: closeAutomation }] =
+  //   useDisclosure(false);
+  // const [openedChat, { open: openChat, close: closeChat }] =
+  //   useDisclosure(false);
+  // const { data: identity } = useGetIdentity<IIdentity>();
+  // maintained touchedFields to keep track of fields that have been touched in useState
+  const [touchedFields, setTouchedFields] = useState<string[]>([]);
   const {
     mutate,
     isLoading: mutationIsLoading,
     isError: mutationIsError,
     error: mutationError,
   } = useCustomMutation();
+  const [inputAsvalue, setInputAsValue] = useState("");
   const queryClient = useQueryClient();
+  // const queryData = queryClient.getQueryData(["field_data_for_service"]);
+  // // console.log("queryData", queryData?.data);
   const {
     getInputProps,
     saveButtonProps,
@@ -85,7 +93,7 @@ export function ActionControlForm<T extends Record<string, any>>({
     // };
 
     const resetValues = {
-      task_id: uuidv4(),
+      // task_id: uuidv4(),
     };
 
     // Reinitialize form with base values plus dynamic actionFormFieldValues
@@ -96,7 +104,7 @@ export function ActionControlForm<T extends Record<string, any>>({
       setFieldValue(key, value);
     });
     // console.log("actionFormFieldValues", actionFormFieldValues);
-  }, [actionFormFieldValues, identity?.email]);
+  }, [actionFormFieldValues]);
 
   // useEffect when selectedItems changes set the field item called selectedItems
   // useEffect(() => {
@@ -105,40 +113,40 @@ export function ActionControlForm<T extends Record<string, any>>({
   //   }
   // }, [selectedItems]);
 
-  const generateRequestData = (values: any) => {
-    // console.log("values", values);
-    // console.log("activeViewItem", activeViewItem);
-    // console.log("activeRecord", activeRecord);
-    // Merge the activeAction with activeActionFormatted, with activeActionFormatted taking precedence
-    let activeActionFormatted = {
-      active_query: {
-        ...(activeViewItem?.active_query || {}),
-        record_identifier: extractIdentifier(activeRecord),
-      },
-      input_values: {
-        ...values,
-        selected_items: selectedItems[activeViewItem?.id], // pass this to the backend for bulk operations
-        active_record: activeRecord, // pass this to the backend as well for downstream operations
-        active_application: activeApplication, // pass this to the backend as well for downstream operations
-        active_session: activeSession, // pass this to the
-      },
-      task_input: {
-        ...replacePlaceholdersInObject(
-          activeAction?.task_input || {},
-          values || {}
-        ),
-      },
-      task: {
-        ...replacePlaceholdersInObject(activeAction?.task || {}, values || {}),
-      },
-    };
-    const activeActionRequestData = _.merge(
-      {},
-      activeAction || {},
-      activeActionFormatted || {}
-    );
-    return activeActionRequestData;
-  };
+  // const generateRequestData = (values: any) => {
+  //   // console.log("values", values);
+  //   // console.log("activeViewItem", activeViewItem);
+  //   // console.log("activeRecord", activeRecord);
+  //   // Merge the activeAction with activeActionFormatted, with activeActionFormatted taking precedence
+  //   let activeActionFormatted = {
+  //     active_query: {
+  //       ...(activeViewItem?.active_query || {}),
+  //       record_identifier: extractIdentifier(activeRecord),
+  //     },
+  //     input_values: {
+  //       ...values,
+  //       selected_items: selectedItems[activeViewItem?.id], // pass this to the backend for bulk operations
+  //       active_record: activeRecord, // pass this to the backend as well for downstream operations
+  //       active_application: activeApplication, // pass this to the backend as well for downstream operations
+  //       active_session: activeSession, // pass this to the
+  //     },
+  //     task_input: {
+  //       ...replacePlaceholdersInObject(
+  //         activeAction?.task_input || {},
+  //         values || {}
+  //       ),
+  //     },
+  //     task: {
+  //       ...replacePlaceholdersInObject(activeAction?.task || {}, values || {}),
+  //     },
+  //   };
+  //   const activeActionRequestData = _.merge(
+  //     {},
+  //     activeAction || {},
+  //     activeActionFormatted || {}
+  //   );
+  //   return activeActionRequestData;
+  // };
 
   const handleSubmit = (e: any) => {
     // let generatedRequestData = generateRequestData(values);
@@ -146,7 +154,8 @@ export function ActionControlForm<T extends Record<string, any>>({
     mutate({
       url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
       method: "post",
-      values: generateRequestData(values),
+      // values: generateRequestData(values),
+      values: {},
       successNotification: (data, values) => {
         // console.log("successNotification", data);
         // invalidate query
@@ -174,18 +183,18 @@ export function ActionControlForm<T extends Record<string, any>>({
     });
   };
 
-  const viewComponent = (activeViewItem: IView, activeRecord: any) => {
-    // console.log("activeViewItem", activeViewItem);
-    // return "";
-    if (!activeViewItem) {
-      return null;
-    }
-    if (!activeViewItem.resource_type) {
-      return null;
-    }
-    const Component = componentMapping[activeViewItem.resource_type];
-    return <Component item={activeRecord} />;
-  };
+  // const viewComponent = (activeViewItem: IView, activeRecord: any) => {
+  //   // console.log("activeViewItem", activeViewItem);
+  //   // return "";
+  //   if (!activeViewItem) {
+  //     return null;
+  //   }
+  //   if (!activeViewItem.resource_type) {
+  //     return null;
+  //   }
+  //   const Component = componentMapping[activeViewItem.resource_type];
+  //   return <Component item={activeRecord} />;
+  // };
   if (!activeAction) {
     return <div>No active action selected</div>;
   }
@@ -199,12 +208,12 @@ export function ActionControlForm<T extends Record<string, any>>({
 
   // let activeFieldConfigurationsObject = activeAction;
 
-  const actionFieldConfigurations =
-    activeActionView?.field_configurations ||
-    // activeViewItem?.fields_configuration ||
-    // activeViewItem?.view?.[0]?.fields_configuration ||
-    activeAction?.field_configurations ||
-    [];
+  // const actionFieldConfigurations =
+  //   activeActionView?.field_configurations ||
+  //   // activeViewItem?.fields_configuration ||
+  //   // activeViewItem?.view?.[0]?.fields_configuration ||
+  //   activeAction?.field_configurations ||
+  //   [];
   // console.log("actionFieldConfigurations", actionFieldConfigurations);
 
   // FormFieldValues = extractFields(
@@ -246,67 +255,30 @@ export function ActionControlForm<T extends Record<string, any>>({
     // reader.readAsDataURL(file);
   };
 
-  interface FunctionMappings {
-    handleFileSelection: (value: any) => void;
-    handleFileHandlerSelection: (value: any) => void;
-    handleFocus: (value: any) => void;
-  }
+  // interface FunctionMappings {
+  //   handleFileSelection: (value: any) => void;
+  //   handleFileHandlerSelection: (value: any) => void;
+  //   handleFocus: (value: any) => void;
+  // }
 
-  // using a type guard to check if the key is in the functionMappings object
-  function isFunctionMappingKey(key: any): key is keyof FunctionMappings {
-    return key in functionMappings;
-  }
+  // // using a type guard to check if the key is in the functionMappings object
+  // function isFunctionMappingKey(key: any): key is keyof FunctionMappings {
+  //   return key in functionMappings;
+  // }
 
   // get data triggered by eventHandlers + utilize reactquery for caching instead of adding another value to zustand, keep that clean
 
-  const { data, isLoading, error } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
-    method: "post",
-    config: {
-      payload: {
-        // Here, ensure that you're constructing your payload correctly without circular references
-        // For example, use the focusedFieldName directly if it's part of the payload
-        function_arguments: activeField?.data_prop_query,
-      },
-    },
-    queryOptions: {
-      queryKey: [`field_data_for_${activeField?.field_name}`], // simply change the query key to trigger call for that field
-      // enabled: !!focusedField?.field_name, // This query runs only if focusedFieldName is not null
-      // there is a field and it is not in focusedFields // should dynamically create new query keys for each field
-      // enabled:
-      //   !!activeField?.field_name && !focusedFields?.[activeField?.field_name],
-      // enabled:
-      // !!isTouched(activeField?.field_name) && !focusedFields?.[activeField?.field_name],
-      enabled:
-        activeField?.field_name && !focusedFields?.[activeField?.field_name]
-          ? true
-          : false, // as long as there is a activefield with field name, run the query
-    },
-    successNotification: (data, values) => {
-      // console.log("successNotification", data);
-      // data is the response from the query
-      setFocusedFields({
-        ...focusedFields,
-        [activeField?.field_name]: {
-          ...activeField,
-          data: data?.data,
-        },
-      }); // Reset focused field after successful query
-      return {
-        message: `successfully retrieved ${activeField?.field_name}s.`,
-        description: "Success with no errors",
-        type: "success",
-      };
-    },
-  });
-
   // This event handler now expects a field name (or some simple identifier) as an argument
   const handleFocus = (event: any, field: any) => {
-    // const fieldIsTouched = isTouched(field.field_name);
+    console.log("field", field);
+    console.log("event", event);
+    // add it to the touchedFields
+    setTouchedFields([...touchedFields, field.field_name]);
+    const fieldIsTouched = isTouched(field.field_name);
     // console.log("fieldIsTouched", fieldIsTouched);
     // console.log("field", field);
     // set the activeField
-    setActiveField(field);
+    // setActiveField(field);
 
     // console.log("fieldIsTouched", fieldIsTouched);
     // if (fieldIsTouched) {
@@ -326,6 +298,14 @@ export function ActionControlForm<T extends Record<string, any>>({
     handleFocus: handleFocus,
     // add more mappings as needed
   };
+  // interface DataItem {
+  //   id: number;
+  //   name: string;
+  // }
+
+  // interface FieldData {
+  //   data?: DataItem[];
+  // }
 
   return (
     <>
@@ -360,7 +340,7 @@ export function ActionControlForm<T extends Record<string, any>>({
             >
               {activeAction?.display_name || "Run"}
             </SaveButton>
-            <Button
+            {/* <Button
               resource="automations"
               size="xs"
               variant="light"
@@ -373,8 +353,8 @@ export function ActionControlForm<T extends Record<string, any>>({
               }}
             >
               {openedChat ? "Close Chat" : "Chat"}
-            </Button>
-            <Button
+            </Button> */}
+            {/* <Button
               resource="automations"
               size="xs"
               variant="light"
@@ -387,7 +367,7 @@ export function ActionControlForm<T extends Record<string, any>>({
               }}
             >
               {openedAutomation ? "Close Automation" : "Automate"}
-            </Button>
+            </Button> */}
           </div>
         )}
       >
@@ -398,83 +378,101 @@ export function ActionControlForm<T extends Record<string, any>>({
         {/* {JSON.stringify(activeField)}
       {JSON.stringify(focusedFields)} */}
         <Accordion multiple defaultValue={["new_action"]}>
-          <Accordion.Item key="action_history" value="action_history">
+          {/* <Accordion.Item key="action_history" value="action_history">
             <Accordion.Control>Action History</Accordion.Control>
             <Accordion.Panel>
               {activeAction && <ViewActionHistory></ViewActionHistory>}
             </Accordion.Panel>
-          </Accordion.Item>
+          </Accordion.Item> */}
           <Accordion.Item key="new_action" value="new_action">
             <Accordion.Control>New Action</Accordion.Control>
             <Accordion.Panel>
               {/* {activeFieldConfigurationsObject?.name === "view"
                 ? viewComponent(activeViewItem, activeRecord)
                 : null} */}
-              {actionFieldConfigurations &&
-                actionFieldConfigurations?.map((field: FieldConfiguration) => {
-                  const Component = getComponentByResourceType(
-                    field?.display_component as ComponentKey
-                  );
-                  // console.log("field", field);
-                  // if there is a data_prop_query in a field, retrieve the data before rendering or on focus?// add on_focus to the field configuration
-                  // improve later to allow onfocus on search etc
-                  return (
-                    <div key={field.field_name} className="mb-4">
-                      <Component
-                        {...getInputProps(field.field_name)}
-                        {...field.props}
-                        label={field?.display_name}
-                        {...(field.on_change &&
-                        isFunctionMappingKey(field.on_change)
-                          ? { onChange: functionMappings[field.on_change] }
-                          : {})}
-                        {...(field.data_prop_query && {
-                          onFocus: (e: any) => handleFocus(e, field),
-                          // data: focusedFields[field.field_name]?.data || [],
-                          data: data?.data || [],
-                        })}
-                      />
-                    </div>
-                  );
-                })}
-              {openedChat && (
+              <div className="flex justify-end">
+                {" "}
+                <Combobox
+                  data_items={inputs}
+                  resource="input"
+                  value={inputAsvalue}
+                  setValue={setInputAsValue}
+                ></Combobox>
+              </div>
+              {(inputAsvalue === "" || inputAsvalue === "form") && (
                 <div>
-                  <div>Chat History:</div>
-                  <Textarea
-                    minRows={5}
-                    required
-                    mt="sm"
-                    label="chat_message"
-                    placeholder="chat_message"
-                    // data={dateTypeOptions} // Replace with your options source
-                    // value={getInputProps("date_type").value}
-                    // onChange={handleNameChange}
-                    {...getInputProps("chat_message")}
-                    // value={record?.contact_email}
-                    // disabled
-                    // required
-                  />
+                  {" "}
+                  {actionFieldConfigurations &&
+                    actionFieldConfigurations?.map(
+                      (field: FieldConfiguration) => {
+                        const Component = getComponentByResourceType(
+                          field?.display_component as ComponentKey
+                        );
+                        let data_query_key = `field_data_for_${field?.field_name}`;
+                        // let fieldData: FieldData = queryClient.getQueryData([data_query_key]) || {data: []};
+                        const fieldData =
+                          queryClient.getQueryData<FieldData>([
+                            data_query_key,
+                          ]) || {};
+                        console.log("fieldData", fieldData);
+                        // console.log("field", field);
+                        // if there is a data_prop_query in a field, retrieve the data before rendering or on focus?// add on_focus to the field configuration
+                        // improve later to allow onfocus on search etc
+                        return (
+                          <>
+                            <div key={field.field_name} className="mb-4">
+                              <Component
+                                {...getInputProps(field.name)}
+                                {...field?.props}
+                                label={field?.display_name}
+                                placeholder={field?.placeholder}
+                                searchable={true}
+                                // {...(field.on_change &&
+                                // isFunctionMappingKey(field.on_change)
+                                //   ? { onChange: functionMappings[field.on_change] }
+                                //   : {})}
+                                {...(field?.data_prop_query && {
+                                  onFocus: (e: any) => handleFocus(e, field),
+                                  data: (fieldData?.data || []).map(
+                                    (data_item: any) => ({
+                                      value: data_item["id"],
+                                      label: data_item["name"],
+                                    })
+                                  ),
+                                })}
+                              />
+                            </div>
+                            {field?.data_prop_query && (
+                              <FieldDataQuery
+                                field={field}
+                                touchedFields={touchedFields}
+                              />
+                            )}
+                          </>
+                        );
+                      }
+                    )}
                 </div>
               )}
-              {openedAutomation && <CreateAutomation></CreateAutomation>}
+              {inputAsvalue === "json" && (
+                <MonacoEditor value={values} language="json" height="100vh" />
+              )}
+              {inputAsvalue === "structured_query" && (
+                <MonacoEditor
+                  value={`${activeAction?.name} ${JSON.stringify(values)}`}
+                  language="json"
+                  height="100vh"
+                />
+              )}
+              {inputAsvalue === "natural_language" && (
+                <MonacoEditor
+                  value={`${activeAction?.name} ${JSON.stringify(values)}`}
+                  language="json"
+                  height="100vh"
+                />
+              )}
             </Accordion.Panel>
           </Accordion.Item>
-          <Accordion.Item key="more_details" value="more_details">
-            <Accordion.Control>More Details</Accordion.Control>
-            <Accordion.Panel>
-              {/* <CodeBlock jsonData={activeRecords[0]}></CodeBlock> */}
-              <MonacoEditor value={activeRecord}></MonacoEditor>
-            </Accordion.Panel>
-          </Accordion.Item>
-          {/* <Accordion.Item key="response" value="response">
-          <Accordion.Control>Response</Accordion.Control>
-          <Accordion.Panel>
-            <MonacoEditor
-              value={mutationError?.response?.data?.detail}
-            ></MonacoEditor>
-            {JSON.stringify(mutationError?.response?.data?.detail)}
-          </Accordion.Panel>
-        </Accordion.Item> */}
         </Accordion>
       </Create>
       <div className="h-[400px]"></div>
@@ -483,8 +481,67 @@ export function ActionControlForm<T extends Record<string, any>>({
   );
 }
 
-// export const HelloWorldComponent = () => {
-//   return <div>Hello ActionControlForm</div>;
-// };
-
 export default ActionControlForm;
+
+// component to make query request for field data
+const FieldDataQuery = ({
+  field,
+  touchedFields,
+}: {
+  field: FieldConfiguration;
+  touchedFields: string[];
+}) => {
+  const { activeField } = useAppStore();
+
+  const { data, isLoading, error } = useCustom({
+    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    method: "post",
+    config: {
+      payload: {
+        // Here, ensure that you're constructing your payload correctly without circular references
+        // For example, use the focusedFieldName directly if it's part of the payload
+        function_arguments: {
+          credentials: "surrealdb_catchmytask",
+          query: field?.data_prop_query,
+          query_language: "surrealdb",
+        },
+      },
+    },
+    queryOptions: {
+      queryKey: [`field_data_for_${field?.field_name}`], // simply change the query key to trigger call for that field
+      // enabled: !!focusedField?.field_name, // This query runs only if focusedFieldName is not null
+      // there is a field and it is not in focusedFields // should dynamically create new query keys for each field
+      // enabled:
+      //   !!activeField?.field_name && !focusedFields?.[activeField?.field_name],
+      // enabled:
+      // !!isTouched(activeField?.field_name) && !focusedFields?.[activeField?.field_name],
+      // enabled:
+      //   activeField?.field_name && !focusedFields?.[activeField?.field_name]
+      //     ? true
+      //     : false, // as long as there is a activefield with field name, run the query
+      enabled: touchedFields.includes(field?.name),
+    },
+    successNotification: (data, values) => {
+      // console.log("successNotification", data);
+      // data is the response from the query
+      // setFocusedFields({
+      //   ...focusedFields,
+      //   [activeField?.field_name]: {
+      //     ...activeField,
+      //     data: data?.data,
+      //   },
+      // }); // Reset focused field after successful query
+      return {
+        message: `successfully retrieved ${activeField?.field_name}s.`,
+        description: "Success with no errors",
+        type: "success",
+      };
+    },
+  });
+  return (
+    <div>
+      div field data queries:{" "}
+      {JSON.stringify(touchedFields.includes(field?.name))}
+    </div>
+  );
+};

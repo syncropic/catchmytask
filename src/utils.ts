@@ -356,3 +356,13 @@ export function updateTableVisibility<T extends Record<string, any>>(
     tableInstance.setColumnPinning(pinning);
   }
 }
+
+export const getColumnIdWithoutResourceGroup = (
+  columnId: string,
+  resourceGroup: string
+) => {
+  const resourceGroupPrefix = `${resourceGroup}-`;
+  return columnId.startsWith(resourceGroupPrefix)
+    ? columnId.substring(resourceGroupPrefix.length)
+    : columnId;
+};
