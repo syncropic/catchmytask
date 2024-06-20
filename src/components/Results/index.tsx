@@ -1,52 +1,13 @@
 "use client";
 import MonacoEditor from "@components/MonacoEditor";
-import {
-  componentMapping,
-  createColumnDef,
-  extractIdentifier,
-  getComponentByResourceType,
-  replacePlaceholdersInObject,
-  useDataColumns,
-  useFetchViewByName,
-  useTableColumns,
-} from "@components/Utils";
+import { mergeEdgeWithEntityValues, useTableColumns } from "@components/Utils";
 import { useQueryClient } from "@tanstack/react-query";
 // import ViewActionHistory from "@components/ViewActionHistory";
-import { DataTable } from "mantine-datatable";
-import {
-  CompleteActionComponentProps,
-  ComponentKey,
-  FieldConfiguration,
-  IIdentity,
-  IView,
-  ResultsComponentProps,
-} from "@components/interfaces";
+import { ResultsComponentProps } from "@components/interfaces";
 import { aggregate_views, views } from "@data/index";
-import {
-  Accordion,
-  ActionIcon,
-  Modal,
-  Popover,
-  TextInput,
-  Textarea,
-  Tooltip,
-} from "@mantine/core";
-import { useClickOutside, useDisclosure } from "@mantine/hooks";
-import { useCustom, useCustomMutation, useGetIdentity } from "@refinedev/core";
-import { Create, SaveButton, useForm } from "@refinedev/mantine";
-import {
-  IconColumns,
-  IconEye,
-  IconFilter,
-  IconMathFunction,
-  IconSearch,
-} from "@tabler/icons-react";
+import { ActionIcon, Tooltip, rem } from "@mantine/core";
+import { IconColumns, IconEye } from "@tabler/icons-react";
 import _, { set } from "lodash";
-import CreateAutomation from "pages/automations/create";
-import { useEffect, useMemo, useState } from "react";
-import { useAppStore } from "src/store";
-import { v4 as uuidv4 } from "uuid";
-import QueryBar from "@components/QueryBar";
 import {
   ColumnDef,
   createColumnHelper,
@@ -85,6 +46,9 @@ import {
   rankItem,
   compareItems,
 } from "@tanstack/match-sorter-utils";
+import { useEffect, useState } from "react";
+import ConversationView from "@components/ConversationView";
+import { useElementSize } from "@mantine/hooks";
 
 declare module "@tanstack/react-table" {
   //add fuzzy filter to the filterFns
@@ -138,21 +102,67 @@ export function Results<T extends Record<string, any>>({
   resource_group,
   view_data,
 }: ResultsComponentProps<T>) {
+  const { ref, width } = useElementSize();
+  const [isLarge, setIsLarge] = useState(true);
   const { tableColumns } = useTableColumns({
-    field_configurations: view_data?.data[0]?.field_configurations,
+    field_configurations: view_data?.data[0]?.field_configurations?.map(
+      (nested_field: any) => mergeEdgeWithEntityValues(nested_field)
+    ),
     table_id: resource_group,
   });
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [viewAsvalue, setViewAsValue] = React.useState(
-    view_data?.data[0]?.main_results_view_as ?? ""
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [viewAsvalue, setViewAsValue] = useState(
+    view_data?.data[0]?.view_as ?? ""
   );
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [globalFilter, setGlobalFilter] = React.useState("");
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  let view_data_visible_fields =
+    view_data?.data[0]?.visible_fields?.map(
+      (item: any) => `${resource_group}-${item}`
+    ) ?? [];
+  const [visibleFields, setVisibleFields] = useState<string[]>(
+    view_data_visible_fields
+  ); // List to store initial visible columns
+
+  // Function to initialize column visibility based on visibleFields
+  useEffect(() => {
+    const initialVisibility: VisibilityState = {};
+    // if data_columns is not in visible fields, set it to false
+    data_columns.forEach((column) => {
+      initialVisibility[`${column.id}`] = visibleFields.includes(column.id);
+    });
+
+    // console.log("data_columns", data_columns);
+    // console.log("initialVisibility", initialVisibility);
+    // visibleFields.forEach((field) => {
+    //   initialVisibility[`${resource_group}-${field}`] = false;
+    // });
+    setColumnVisibility(initialVisibility);
+  }, [visibleFields, resource_group]);
+
+  // Function to update visibleFields list when column visibility changes
+  // const handleColumnVisibilityChange = (
+  //   updaterOrValue:
+  //     | VisibilityState
+  //     | ((old: VisibilityState) => VisibilityState)
+  // ) => {
+  //   setColumnVisibility((oldVisibility) => {
+  //     const newVisibility =
+  //       typeof updaterOrValue === "function"
+  //         ? updaterOrValue(oldVisibility)
+  //         : updaterOrValue;
+  //     const newVisibleFields = Object.keys(newVisibility)
+  //       .filter((key) => newVisibility[key])
+  //       .map((key) => getColumnIdWithoutResourceGroup(key, resource_group));
+  //     setVisibleFields(newVisibleFields);
+  //     return newVisibility;
+  //   });
+  //   // Here you would add logic to store this state remotely
+  // };
+
+  // console.log("columnVisibility", columnVisibility);
 
   const table = useReactTable({
     data: data_items,
@@ -164,6 +174,7 @@ export function Results<T extends Record<string, any>>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
+    // onColumnVisibilityChange: handleColumnVisibilityChange,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: "fuzzy", //apply fuzzy filter to the global filter (most common use case for fuzzy filter)
@@ -191,108 +202,96 @@ export function Results<T extends Record<string, any>>({
   // console.log("data_columns", data_columns);
   // console.log("view_data", view_data?.data[0]);
   // console.log(table.getState().columnFilters) // access the column filters state from the table instance
-  console.log("columnFilters", columnFilters);
+  // console.log("columnFilters", columnFilters);
   // let visibleColumns = table?.getVisibleFlatColumns() ?? [];
+  // console.log("data_items", data_items);
   // console.log("tableColumns", tableColumns);
   // console.log(
   //   "visibleColumns",
   //   visibleColumns.map((column) => column.getCanFilter())
   // );
 
+  // console log all visible columns
+  // console.log("table visible columns", table?.getVisibleFlatColumns());
+  // console.log("data_items", data_items);
+
+  useEffect(() => {
+    setIsLarge(width >= 700);
+  }, [width]);
+
   return (
     <>
       <div className="w-full">
-        <div className="flex py-4 gap-8 justify-between">
-          <div className="flex gap-2">
-            {/* <Input
-              placeholder="Search results ..."
-              // value={
-              //   (table
-              //     .getColumn(`${table_id}-sst_booking_number`)
-              //     ?.getFilterValue() as string) ?? ""
-              // }
-              // onChange={(event) =>
-              //   table
-              //     .getColumn(`${table_id}-sst_booking_number`)
-              //     ?.setFilterValue(event.target.value)
-              // }
-              // className="max-w-sm"
-            /> */}
+        {/* <div>{width}</div> */}
+        {/* <div>{JSON.stringify(isLarge)}</div> */}
+        {/* {JSON.stringify(table.getVisibleFlatColumns().map((column) => column))} */}
+        <div
+          ref={ref}
+          className={`flex ${
+            isLarge ? "flex-row" : "flex-col"
+          } py-1 gap-1 justify-between items-center`}
+        >
+          {/* Row 1: Debounced Input */}
+          <div className={`w-full ${isLarge ? "lg:w-auto" : "mb-4"}`}>
             <DebouncedInput
               value={globalFilter ?? ""}
               onChange={(value) => setGlobalFilter(String(value))}
-              className="p-2 font-lg shadow border border-block"
+              className="w-full p-2 font-lg shadow border border-block"
               placeholder="Search all columns..."
             />
-            {/* <Tooltip label="sort & filter">
-              <ActionIcon
-                aria-label="Settings"
-                // onClick={() => handleRecordSelection(record)}
-              >
-                <IconFilter size={16} />
-              </ActionIcon>
-            </Tooltip> */}
           </div>
 
-          <ActivateActionsSelection
-            record={{}}
-            resultsSection={results}
-          ></ActivateActionsSelection>
-
-          <div className="flex gap-3">
-            <Reveal
-              target={
-                <Tooltip label="Toggle and/or sort custom views">
-                  <ActionIcon aria-label="Settings">
-                    <IconEye />
-                  </ActionIcon>
-                </Tooltip>
-              }
-              trigger="click"
-            >
-              {/* include aggregate views such as dj decks, graphs, results lists
-              etc. */}
-              {aggregate_views.map((item) => {
-                return (
-                  <div
-                    className="flex items-center space-x-2 p-1"
-                    key={item.value}
-                  >
-                    <Checkbox
-                      id={item.value}
-                      checked={item.visible}
-                      // checked={column.getIsVisible()}
-                      // onCheckedChange={(value) =>
-                      //   column.toggleVisibility(!!value)
-                      // }
-                    />
+          {/* Row 2: Other Elements */}
+          <div
+            className={`flex ${
+              isLarge ? "flex-row" : "flex-row"
+            } w-full lg:w-auto gap-3`}
+          >
+            <div>
+              <ActivateActionsSelection
+                record={{}}
+                resultsSection={results}
+              ></ActivateActionsSelection>
+            </div>
+            <div>
+              <Reveal
+                target={
+                  <Tooltip label="Toggle and/or sort custom views">
+                    <ActionIcon aria-label="Settings">
+                      <IconEye />
+                    </ActionIcon>
+                  </Tooltip>
+                }
+                trigger="click"
+              >
+                {aggregate_views.map((item) => (
+                  <div className="flex items-center" key={item.value}>
+                    <Checkbox id={item.value} checked={item.visible} />
                     <label
-                      htmlFor="terms"
+                      htmlFor={item.value}
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
                       {item.label}
                     </label>
                   </div>
-                );
-              })}
-            </Reveal>
-
-            <Reveal
-              target={
-                <Tooltip label="Toggle and/or order columns/fields">
-                  <ActionIcon aria-label="Settings">
-                    <IconColumns />
-                  </ActionIcon>
-                </Tooltip>
-              }
-              trigger="click"
-            >
-              {/* <div>columns selection and ordering</div> */}
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
+                ))}
+              </Reveal>
+            </div>
+            <div>
+              <Reveal
+                target={
+                  <Tooltip label="Toggle and/or order columns/fields">
+                    <ActionIcon aria-label="Settings">
+                      <IconColumns />
+                    </ActionIcon>
+                  </Tooltip>
+                }
+                trigger="click"
+              >
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => (
                     <div
                       className="flex items-center space-x-2 p-1"
                       key={column.id}
@@ -305,7 +304,7 @@ export function Results<T extends Record<string, any>>({
                         }
                       />
                       <label
-                        htmlFor="terms"
+                        htmlFor={column.id}
                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
                         {getColumnIdWithoutResourceGroup(
@@ -314,9 +313,10 @@ export function Results<T extends Record<string, any>>({
                         )}
                       </label>
                     </div>
-                  );
-                })}
-            </Reveal>
+                  ))}
+              </Reveal>
+            </div>
+
             <div>
               <SelectViewAs
                 viewAsValue={viewAsvalue}
@@ -325,82 +325,87 @@ export function Results<T extends Record<string, any>>({
             </div>
           </div>
         </div>
-        <div className="rounded-md border">
-          {/* loop through through included custom views */}
-          {(viewAsvalue === "" || viewAsvalue === "table") && (
-            <TableView
-              data_items={data_items}
-              isLoadingDataItems={isLoadingDataItems ?? false}
-              data_columns={data_columns}
-              tableInstance={table}
-              resource_group={resource_group}
-              view_data={view_data}
-            />
-          )}
-          {viewAsvalue === "json" && (
-            <MonacoEditor
-              value={table
-                ?.getFilteredRowModel()
-                .rows.map((row) => row.original)}
-              language="json"
-              height="100vh"
-            />
-          )}
-          {viewAsvalue === "code_editor" && (
-            <MonacoEditor
-              value={table
-                ?.getFilteredRowModel()
-                .rows.map((row) => row.original)}
-              language="json"
-              height="100vh"
-            />
-          )}
-          {viewAsvalue === "text_editor" && (
-            <MonacoEditor
-              value={table
-                ?.getFilteredRowModel()
-                .rows.map((row) => row.original)}
-              language="json"
-              height="100vh"
-            />
-          )}
-          {viewAsvalue === "application_embeds" && <div>coming soon...</div>}
-          {viewAsvalue === "spreadsheet" && (
-            <SpreadsheetView
-              data_items={table
-                ?.getFilteredRowModel()
-                .rows.map((row) => row.original)}
-              isLoadingDataItems={isLoadingDataItems ?? false}
-              data_columns={data_columns}
-              tableInstance={table}
-              resource_group={resource_group}
-              view_data={view_data}
-            ></SpreadsheetView>
-          )}
+      </div>
+
+      <div className="rounded-md border">
+        {/* loop through through included custom views */}
+        {(viewAsvalue === "" || viewAsvalue === "table") && (
+          <TableView
+            data_items={data_items}
+            isLoadingDataItems={isLoadingDataItems ?? false}
+            data_columns={data_columns}
+            tableInstance={table}
+            resource_group={resource_group}
+            view_data={view_data}
+          />
+        )}
+        {viewAsvalue === "conversation" && (
+          <ConversationView
+            data_items={data_items}
+            isLoadingDataItems={isLoadingDataItems ?? false}
+            data_columns={data_columns}
+            tableInstance={table}
+            resource_group={resource_group}
+            view_data={view_data}
+          />
+        )}
+        {viewAsvalue === "json" && (
+          <MonacoEditor
+            value={table?.getFilteredRowModel().rows.map((row) => row.original)}
+            language="json"
+            height="100vh"
+          />
+        )}
+        {viewAsvalue === "code_editor" && (
+          <MonacoEditor
+            value={table?.getFilteredRowModel().rows.map((row) => row.original)}
+            language="json"
+            height="100vh"
+          />
+        )}
+        {viewAsvalue === "text_editor" && (
+          <MonacoEditor
+            value={table?.getFilteredRowModel().rows.map((row) => row.original)}
+            language="json"
+            height="100vh"
+          />
+        )}
+        {viewAsvalue === "application_embeds" && <div>coming soon...</div>}
+        {viewAsvalue === "spreadsheet" && (
+          <SpreadsheetView
+            data_items={table
+              ?.getFilteredRowModel()
+              .rows.map((row) => row.original)}
+            isLoadingDataItems={isLoadingDataItems ?? false}
+            data_columns={data_columns}
+            tableInstance={table}
+            resource_group={resource_group}
+            view_data={view_data}
+          ></SpreadsheetView>
+        )}
+      </div>
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex-1 text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
-          <div className="space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
-          </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
         </div>
       </div>
     </>
@@ -455,83 +460,4 @@ function DebouncedInput({
       onChange={(e) => setValue(e.target.value)}
     />
   );
-}
-
-{
-  /* <EmbedComponent></EmbedComponent> */
-}
-{
-  /* <WebBrowserView
-        url={`${
-          process.env.NEXT_PUBLIC_CMT_API_BASEURL
-        }/web-browser?url=${encodeURIComponent(url)}`}
-      ></WebBrowserView> */
-}
-{
-  /* <iframe
-        src={url}
-        style={{ flex: 1, border: "none" }}
-        title="Web Browser"
-        height={"100%"}
-        width={"100%"}
-      /> */
-}
-
-// const EmbedComponent = () => {
-//   const [url, setUrl] = useState("");
-//   const [embedHtml, setEmbedHtml] = useState("");
-
-//   let embedAPIEndpoint = `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/embed`;
-
-//   const handleSubmit = async (e: any) => {
-//     e.preventDefault();
-//     try {
-//       const response = await fetch(embedAPIEndpoint, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           url,
-//           maxwidth: 800,
-//           autoplay: true,
-//         }),
-//       });
-
-//       if (!response.ok) {
-//         throw new Error("Network response was not ok");
-//       }
-
-//       const data = await response.json();
-//       setEmbedHtml(data.html);
-//     } catch (error) {
-//       console.error("Error fetching embed:", error);
-//     }
-//   };
-
-//   return (
-//     <div>
-//       <form onSubmit={handleSubmit}>
-//         <input
-//           type="text"
-//           value={url}
-//           onChange={(e) => setUrl(e.target.value)}
-//           placeholder="Enter URL"
-//           required
-//         />
-//         <button type="submit">Embed</button>
-//       </form>
-//       {embedHtml && <div dangerouslySetInnerHTML={{ __html: embedHtml }} />}
-//     </div>
-//   );
-// };
-
-{
-  /* <TableView
-results={results}
-data_items={data_items}
-data_columns={data_columns}
-tableInstance={table}
-isLoadingDataItems={isLoadingDataItems}
-/> */
 }

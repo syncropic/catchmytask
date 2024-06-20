@@ -94,7 +94,7 @@ export const SelectAction = () => {
                 variant="outline"
                 onClick={() => handleSelectAction(action)}
                 // onClick={() => console.log(`Clicked on ${action.label}`)}
-                leftIcon={action.icon}
+                leftSection={action.icon}
               >
                 <Text size="xs" color="gray">
                   {action.label}

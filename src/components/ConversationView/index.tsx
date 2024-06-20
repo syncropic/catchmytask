@@ -1,11 +1,3 @@
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@components/Table";
 import { ResultsComponentProps } from "@components/interfaces";
 import { useViewportSize } from "@mantine/hooks";
 import { flexRender } from "@tanstack/react-table";
@@ -15,8 +7,10 @@ import { useState } from "react";
 import { getColumnIdWithoutResourceGroup } from "src/utils";
 import { Column } from "@tanstack/react-table";
 import React from "react";
+import MonacoEditor from "@components/MonacoEditor";
+import { Avatar, ScrollArea } from "@mantine/core";
 
-export function TableView<T extends Record<string, any>>({
+export function ConversationView<T extends Record<string, any>>({
   tableInstance,
   data_columns,
   data_items,
@@ -86,7 +80,7 @@ export function TableView<T extends Record<string, any>>({
             return !columns_to_filter_out.includes(column.accessor);
           })
       )} */}
-      <DataTable
+      {/* <DataTable
         columns={tableInstance
           ?.getVisibleFlatColumns()
           ?.map((column) => {
@@ -118,16 +112,25 @@ export function TableView<T extends Record<string, any>>({
         height={height - 200}
         selectedRecords={selectedRecords}
         onSelectedRecordsChange={setSelectedRecords}
-        defaultColumnRender={(row, _, accessor) => {
-          const data = row[accessor as keyof typeof row];
-          return typeof data === "string" ? data : JSON.stringify(data);
-        }}
+      /> */}
+      {/* <MonacoEditor
+        value={tableInstance
+          ?.getFilteredRowModel()
+          .rows.map((row) => row.original)}
+        language="json"
+        height="100vh"
+      /> */}
+
+      <ChatContainer
+        messages={tableInstance
+          ?.getFilteredRowModel()
+          .rows.map((row) => row.original)}
       />
-      {/* <div>table</div> */}
+      {/* <div>conversationview</div> */}
     </>
   );
 }
-export default TableView;
+export default ConversationView;
 
 {
   /* <TableBody>
@@ -157,88 +160,69 @@ export default TableView;
 </TableBody> */
 }
 
-function Filter({ column }: { column: Column<any, unknown> }) {
-  const columnFilterValue = column.getFilterValue();
-  const { filterVariant } = column.columnDef.meta ?? {};
-
-  return filterVariant === "range" ? (
-    <div>
-      <div className="flex space-x-2">
-        {/* See faceted column filters example for min max values functionality */}
-        <DebouncedInput
-          type="number"
-          value={(columnFilterValue as [number, number])?.[0] ?? ""}
-          onChange={(value) =>
-            column.setFilterValue((old: [number, number]) => [value, old?.[1]])
-          }
-          placeholder={`Min`}
-          className="w-24 border shadow rounded"
-        />
-        <DebouncedInput
-          type="number"
-          value={(columnFilterValue as [number, number])?.[1] ?? ""}
-          onChange={(value) =>
-            column.setFilterValue((old: [number, number]) => [old?.[0], value])
-          }
-          placeholder={`Max`}
-          className="w-24 border shadow rounded"
-        />
-      </div>
-      <div className="h-1" />
-    </div>
-  ) : filterVariant === "select" ? (
-    <select
-      onChange={(e) => column.setFilterValue(e.target.value)}
-      value={columnFilterValue?.toString()}
-    >
-      {/* See faceted column filters example for dynamic select options */}
-      <option value="">All</option>
-      <option value="complicated">complicated</option>
-      <option value="relationship">relationship</option>
-      <option value="single">single</option>
-    </select>
-  ) : (
-    <DebouncedInput
-      className="w-36 border shadow rounded"
-      onChange={(value) => column.setFilterValue(value)}
-      placeholder={`Search...`}
-      type="text"
-      value={(columnFilterValue ?? "") as string}
-    />
-    // See faceted column filters example for datalist search suggestions
-  );
-}
-
-// A typical debounced input react component
-function DebouncedInput({
-  value: initialValue,
-  onChange,
-  debounce = 500,
-  ...props
-}: {
-  value: string | number;
-  onChange: (value: string | number) => void;
-  debounce?: number;
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
-  const [value, setValue] = React.useState(initialValue);
-
-  React.useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
-
-  React.useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value);
-    }, debounce);
-
-    return () => clearTimeout(timeout);
-  }, [value]);
-
+const ChatContainer = ({ messages }) => {
   return (
-    <input
-      {...props}
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-    />
+    <div className="bg-gray-100 flex flex-col">
+      <ScrollArea h={250}>
+        {/* Message List */}
+        <div className="flex-1 overflow-y-auto">
+          {messages?.map((message) => (
+            <ChatMessage message={message} />
+          ))}
+        </div>
+      </ScrollArea>
+
+      {/* Message Templates */}
+      {/* <MessageTemplatesContainer templates={message_templates} /> */}
+
+      {/* Message Input */}
+      {/* <div className="bg-white p-4 border-t border-gray-200">
+        <MessageInput />
+      </div> */}
+    </div>
   );
-}
+};
+
+const ChatMessage = ({ message }) => {
+  return (
+    <div className="w-full border-b border-gray-300">
+      <div
+        className={`rounded-t-sm px-4 py-2 ${
+          message?.author_role == "user"
+            ? "bg-gray-200 text-black"
+            : "bg-gray-100 text-black"
+        }`}
+      >
+        <div className="flex justify-center">
+          <div className="max-w-xl w-full">
+            <div></div> {/* Left empty column */}
+            <div className="flex items-start space-x-2">
+              {/* Avatar */}
+              {/* <img
+                src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
+                alt="avatar"
+                className="w-6 h-6 rounded-full mt-1"
+              /> */}
+              <Avatar src={""} radius="xl" />
+              {/* Message */}
+              <div className="flex-col">
+                <div className="flex">
+                  <span className="text-sm align-top">
+                    {JSON.stringify(message?.author_id)}
+                  </span>
+                  <span className="text-sm align-top">
+                    {JSON.stringify(message?.created_datetime)}
+                  </span>
+                </div>
+                <span className="text-sm align-top">
+                  {JSON.stringify(message?.output?.content)}
+                </span>
+              </div>
+            </div>
+            <div></div> {/* Right empty column */}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

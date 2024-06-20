@@ -39,7 +39,7 @@ const ActivateActionsSelection: React.FC<ActivateActionsSelectionProps> = ({
           aria-label="Settings"
           onClick={() => handleRecordSelection(record)}
         >
-          <IconFunction size={16} />
+          <IconFunction />
         </ActionIcon>
       </Tooltip>
     </>

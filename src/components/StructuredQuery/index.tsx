@@ -113,6 +113,7 @@ export function StructuredQuery() {
     // };
     let queryData = {};
     if ((request_params.name = "generate_query_graph")) {
+      console.log("generate_query_graph", request_params);
       queryData = {
         global_variables: {},
         include_execution_orders: [1],
@@ -130,6 +131,7 @@ export function StructuredQuery() {
     }
 
     if ((request_params.name = "update_structured_query")) {
+      console.log("update_structure_query", request_params);
       queryData = {
         global_variables: {},
         include_execution_orders: [1],
@@ -178,22 +180,36 @@ export function StructuredQuery() {
       {
         url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/catch`,
         method: "post",
-        values: generateRequestData({
-          name: "update_structured_query",
-          values: values,
-        }),
-        // successNotification: (data, values) => {
-        //   // console.log("successNotification", data);
-        //   // invalidate query
-        //   // invalidate this so that the query graph is retriggered
-        //   // queryClient.invalidateQueries([activeViewItem?.id]); // invalidate the active view query to retrigger refresh of values
-
-        //   return {
-        //     message: `successfully executed.`,
-        //     description: "Success with no errors",
-        //     type: "success",
-        //   };
-        // },
+        values: {
+          global_variables: {},
+          include_execution_orders: [1],
+          action_steps: [
+            {
+              id: "1",
+              execution_order: 1,
+              tool: "update",
+              tool_arguments: {
+                ids: [activeSession?.id],
+                config: "surrealdb_catchmytask",
+                resource: "sessions",
+                values: {
+                  structured_query: {
+                    content: values.query,
+                    type: "text",
+                    language: "sql",
+                  },
+                },
+              },
+            },
+          ],
+        },
+        successNotification: (data, values) => {
+          return {
+            message: `successfully updated structured query.`,
+            description: "successfully updated structured query.",
+            type: "success",
+          };
+        },
         errorNotification: (data, values) => {
           // console.log("successNotification", data?.response.status);
           // console.log("errorNotification values", values);
@@ -210,6 +226,7 @@ export function StructuredQuery() {
         onError: (error, variables, context) => {
           // An error occurred!
           console.log("error", error);
+          return null;
         },
         onSuccess: (data, variables, context) => {
           // Let's celebrate!
@@ -233,25 +250,33 @@ export function StructuredQuery() {
         // values: generateRequestData({
         //   values: values,
         // }),
-        values: generateRequestData({
-          name: "generate_query_graph",
-          values: values,
-        }),
-        // successNotification: (data, values) => {
-        //   // console.log("successNotification", data);
-        //   // invalidate query
-        //   // invalidate this so that the query graph is retriggered
-        //   // queryClient.invalidateQueries([activeViewItem?.id]); // invalidate the active view query to retrigger refresh of values
+        values: {
+          global_variables: {},
+          include_execution_orders: [1],
+          action_steps: [
+            {
+              id: "1",
+              execution_order: 1,
+              tool: "generate_query_graph",
+              tool_arguments: {
+                query: values.query,
+              },
+            },
+          ],
+        },
+        successNotification: (data, values) => {
+          // console.log("successNotification", data);
+          // invalidate query
+          // invalidate this so that the query graph is retriggered
+          // queryClient.invalidateQueries([activeViewItem?.id]); // invalidate the active view query to retrigger refresh of values
 
-        //   return {
-        //     message: `successfully executed.`,
-        //     description: "Success with no errors",
-        //     type: "success",
-        //   };
-        // },
+          return {
+            message: `successfully generated query graph.`,
+            description: "successfully generated query graph",
+            type: "success",
+          };
+        },
         errorNotification: (data, values) => {
-          // console.log("successNotification", data?.response.status);
-          // console.log("errorNotification values", values);
           return {
             message: `${data?.response.status} : ${
               data?.response.statusText
@@ -265,8 +290,11 @@ export function StructuredQuery() {
         onError: (error, variables, context) => {
           // An error occurred!
           console.log("error", error);
+          return null;
         },
         onSuccess: (data, variables, context) => {
+          console.log("succeess", "query graph generated successfully");
+          console.log("data", data);
           // Let's celebrate!
           // console.log("succeess", "query graph generated successfully");
           // set active query graph as the response
@@ -283,6 +311,17 @@ export function StructuredQuery() {
       <Create
         // isLoading={formLoading}
         // isLoading={mutationIsLoading}
+        headerProps={{
+          style: {
+            display: "none",
+          },
+        }}
+        wrapperProps={{
+          style: {
+            margin: "0",
+            padding: "0",
+          },
+        }}
         saveButtonProps={{
           disabled: saveButtonProps?.disabled,
           onClick: handleSubmit,

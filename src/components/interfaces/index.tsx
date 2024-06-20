@@ -406,6 +406,8 @@ export interface FieldConfiguration {
   sorting_fn?: any;
   pin?: "left" | "right";
   filter_mode?: string;
+  accessor_fn?: any;
+  accessor_key?: string;
   visible: boolean;
   props?: any;
   max_size?: number;

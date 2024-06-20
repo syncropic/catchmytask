@@ -1,3 +1,4 @@
+import ExecutionTrace from "@components/ExecutionTrace";
 import GlobalVariables from "@components/GlobalVariables";
 import MonacoEditor from "@components/MonacoEditor";
 import NaturalLanguageQuery from "@components/NaturalLanguageQuery";
@@ -53,7 +54,7 @@ function InitializeApplication({
     resource: "applications",
     id: `${activeApplicationId}`,
   });
-  const { setActiveApplication } = useAppStore();
+  const { setActiveApplication, setIsFloatingWindowOpen } = useAppStore();
 
   // console.log("action", applicationData);
   const application = applicationData?.data;
@@ -160,7 +161,10 @@ const Layout = ({
                   className="overflow-auto h-screen"
                   style={{ height: "calc(100vh - 64px)" }}
                 >
-                  <Accordion defaultValue="structured_query">
+                  <Accordion
+                    defaultValue={["natural_language_query", "execution_trace"]}
+                    multiple={true}
+                  >
                     <Accordion.Item key="global_filters" value="global_filters">
                       <Accordion.Control icon={<IconFilter size={16} />}>
                         Global Filters
@@ -170,7 +174,7 @@ const Layout = ({
                         global variables from individual views are pushed to global //
                         configure // quick reset
                       </div> */}
-                        {/* <GlobalVariables /> */}
+                        <GlobalVariables />
                       </Accordion.Panel>
                     </Accordion.Item>
                     <Accordion.Item
@@ -181,7 +185,7 @@ const Layout = ({
                         Natural Language Query
                       </Accordion.Control>
                       <Accordion.Panel>
-                        {/* <NaturalLanguageQuery></NaturalLanguageQuery> */}
+                        <NaturalLanguageQuery></NaturalLanguageQuery>
                       </Accordion.Panel>
                     </Accordion.Item>
                     <Accordion.Item
@@ -222,10 +226,7 @@ const Layout = ({
                         Execution Trace
                       </Accordion.Control>
                       <Accordion.Panel>
-                        <div>
-                          see live execution trace, status and artifacts,
-                          interrupt and provide feedback if needed.
-                        </div>
+                        <ExecutionTrace></ExecutionTrace>
                       </Accordion.Panel>
                     </Accordion.Item>
                     <Accordion.Item

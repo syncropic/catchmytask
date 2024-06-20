@@ -12,18 +12,13 @@ const Excalidraw = dynamic(
   }
 );
 
-const ExcalidrawEditor: React.FC<IFieldConfigurationWithValue> = ({
-  value,
-  record,
-  display_format,
-  display_component,
-  display_component_content,
-}) => {
+interface IExcalidrawEditorProps {}
+
+const ExcalidrawEditor: React.FC<IExcalidrawEditorProps> = ({}) => {
   // const { activeApplication, setActiveSession, activeRecord } = useAppStore();
 
   return (
     <>
-      <h5 style={{ textAlign: "left" }}>Visual Input</h5>
       <div style={{ height: "400px" }}>
         <Excalidraw />
       </div>

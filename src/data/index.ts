@@ -27,6 +27,10 @@ export const views = [
     value: "code_editor",
     label: "Code Editor",
   },
+  {
+    value: "conversation",
+    label: "Conversation",
+  },
   // {
   //   value: "image_editor",
   //   label: "Image Editor",

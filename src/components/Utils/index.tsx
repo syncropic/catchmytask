@@ -499,13 +499,15 @@ export function createColumnDef<RowDataType extends RowData>(
 
 export function useDataColumns(columns: FieldConfiguration[], tableId: string) {
   return useMemo(() => {
-    return columns
-      .filter((column) => column?.visible)
-      .map((column, index) => ({
-        ...createColumnDef<RowData>(column),
-        // id: `${tableId}-${column.field_name}-${index}`, // Adjusting the ID to include the tableId
-        id: `${tableId}-${column.name}`, // Adjusting the ID to include the tableId
-      }));
+    return (
+      columns
+        // .filter((column) => column?.visible)
+        .map((column, index) => ({
+          ...createColumnDef<RowData>(column),
+          // id: `${tableId}-${column.field_name}-${index}`, // Adjusting the ID to include the tableId
+          id: `${tableId}-${column.name}`, // Adjusting the ID to include the tableId
+        }))
+    );
   }, [columns, tableId]);
 }
 
@@ -842,7 +844,7 @@ export function useFetchViewByName(viewName: string | null) {
   // const [data, setAction] = useState<IAction | null>(null);
   const view_query = {
     credentials: "surrealdb_catchmytask",
-    query: `SELECT ->includes_field_configuration.*.out.* AS field_configurations, ->includes_action_configuration.*.out.* AS action_configurations, * FROM views WHERE name = '${viewName}';`,
+    query: `SELECT (SELECT *, out.* FROM includes_field_configuration WHERE in == $parent.id) AS field_configurations, (SELECT *, out.* FROM includes_action_configuration WHERE in == $parent.id) AS action_configurations, * FROM views WHERE name = '${viewName}';`,
     query_language: "surrealql",
   };
   const { data, isLoading, error } = useCustom({
@@ -863,6 +865,83 @@ export function useFetchViewByName(viewName: string | null) {
   //     setAction(data?.data[0]);
   //   }
   // }, [data, isLoading, error]);
+  return { data, isLoading, error };
+}
+
+export function useFetchActionByName(actionName: string | null) {
+  // const [data, setAction] = useState<IAction | null>(null);
+  const view_query = {
+    credentials: "surrealdb_catchmytask",
+    query: `SELECT (SELECT *, out.* FROM includes_field_configuration WHERE in == $parent.id) AS field_configurations, (SELECT *, out.* FROM includes_action_configuration WHERE in == $parent.id) AS action_configurations, * FROM views WHERE name = '${viewName}';`,
+    query_language: "surrealql",
+  };
+  const { data, isLoading, error } = useCustom({
+    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    method: "post",
+    config: {
+      payload: {
+        function_arguments: view_query,
+      },
+    },
+    queryOptions: {
+      queryKey: [`useFetchActionByName_${actionName}`],
+    },
+  });
+
+  return { data, isLoading, error };
+}
+
+export function useFetchExecutionTraceBySessionId(sessionId: string | null) {
+  // const [data, setAction] = useState<IAction | null>(null);
+  const view_query = {
+    credentials: "surrealdb_catchmytask",
+    query: `SELECT * FROM execution_traces WHERE session_id = '${sessionId}';`,
+    query_language: "surrealql",
+  };
+  const { data, isLoading, error } = useCustom({
+    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    method: "post",
+    config: {
+      payload: {
+        function_arguments: view_query,
+      },
+    },
+    queryOptions: {
+      queryKey: [`useFetchExecutionTraceBySessionId_${sessionId}`],
+    },
+  });
+
+  return { data, isLoading, error };
+}
+
+export function useFetchResourceByField(item: {
+  resource: string;
+  field: string;
+  value: string | number | boolean | undefined | null;
+  operator: string;
+}) {
+  // const [data, setAction] = useState<IAction | null>(null);
+  const { resource, field, value, operator } = item;
+  const view_query = {
+    credentials: "surrealdb_catchmytask",
+    query: `SELECT * FROM ${resource} WHERE ${field} ${operator} '${value}';`,
+    query_language: "surrealql",
+  };
+  const { data, isLoading, error } = useCustom({
+    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    method: "post",
+    config: {
+      payload: {
+        function_arguments: view_query,
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `useFetchResource_${resource}_where_${field}_${operator}_${value}`,
+      ],
+    },
+  });
+
   return { data, isLoading, error };
 }
 
@@ -1072,14 +1151,17 @@ export function useTableColumns({
   field_configurations,
   table_id,
 }: UseTableColumnsProps) {
+  // console.log("field_configurations", field_configurations);
   const tableColumns = useMemo<ColumnDef<RowData, any>[]>(
     () =>
-      field_configurations.map((item) => ({
-        id: `${table_id}-${item.name}`,
-        accessorKey: item.name, // Assuming each FieldConfiguration has a 'name' property
-        header: item.name, // Assuming each FieldConfiguration has a 'name' property
-        // Add more properties as needed from item
-      })),
+      field_configurations.map((item) => {
+        return {
+          id: `${table_id}-${item.name}`,
+          accessorKey: item.accessor_key || item.name, // Assuming each FieldConfiguration has a 'name' property
+          header: item.name, // Assuming each FieldConfiguration has a 'name' property
+          // Add more properties as needed from item
+        };
+      }),
     [field_configurations, table_id]
   );
 
@@ -1138,4 +1220,18 @@ export const RetrieveFieldData = ({ field }: { field: FieldConfiguration }) => {
     },
   });
   return null;
+};
+
+export const mergeEdgeWithEntityValues = (edge_and_entity: any) => {
+  // pop the key out from the object
+  let { out, ...edge } = edge_and_entity;
+  // pop the key id from rest object
+  let { id, ...edge_without_id } = edge;
+  // console.log("edge_without_id", edge_without_id);
+  // return and merge the rest object with the out object
+  return {
+    ...out,
+    edge_id: id,
+    ...edge_without_id,
+  };
 };

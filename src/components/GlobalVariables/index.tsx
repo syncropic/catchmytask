@@ -343,68 +343,7 @@ export function GlobalVariables() {
 
   return (
     <>
-      <Create
-        // isLoading={formLoading}
-        // isLoading={mutationIsLoading}
-        // saveButtonProps={{
-        //   disabled: saveButtonProps?.disabled,
-        //   onClick: handleSubmit,
-        //   size: "xs",
-        // }}
-        breadcrumb={false}
-        title={false}
-        goBack={false}
-        footerButtons={({ saveButtonProps }) => (
-          <div className="flex w-full gap-4">
-            {/* <Button
-              resource="automations"
-              size="xs"
-              variant="light"
-              // onClick={() => {
-              //   if (openedChat) {
-              //     closeChat();
-              //   } else {
-              //     openChat();
-              //   }
-              // }}
-            >
-              Generate Query Graph
-            </Button> */}
-            <SaveButton
-              {...saveButtonProps}
-              className="flex-grow w-2/3"
-              variant="filled"
-              // leftIcon={<IconMathFunction size={16} />}
-              leftIcon={false}
-              // disabled={mutationIsLoading}
-              disabled={true}
-            >
-              Save
-            </SaveButton>
-
-            {/* <Button
-              resource="automations"
-              size="xs"
-              variant="light"
-              // onClick={() => {
-              //   if (openedAutomation) {
-              //     closeAutomation();
-              //   } else {
-              //     openAutomation();
-              //   }
-              // }}
-            >
-              {openedAutomation ? "Close Automation" : "Automate"}
-            </Button> */}
-          </div>
-        )}
-      >
-        <MonacoEditor
-          value={activeSession?.global_variables}
-          language="json"
-          setFieldValue={setFieldValue}
-        />
-      </Create>
+      <div>Global Variables</div>
     </>
   );
 }

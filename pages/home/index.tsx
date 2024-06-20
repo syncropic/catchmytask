@@ -13,12 +13,19 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
   const { activeApplication } = useAppStore();
 
   return (
-    <SessionBar
-      name={activeApplication?.name}
-      heading={activeApplication?.heading}
-      subheading={activeApplication?.subheading}
-      description={activeApplication?.description}
-    />
+    <div className="flex-col align-middle">
+      <div className="flex justify-center">
+        <Text>Get Important Things Done</Text>
+      </div>
+      <div className="flex justify-center">
+        <SessionBar
+          name={activeApplication?.name}
+          heading={activeApplication?.heading}
+          subheading={activeApplication?.subheading}
+          description={activeApplication?.description}
+        />
+      </div>
+    </div>
     // <div className="flex flex-col gap-3">
     //   <ResourceHeader
     //     name={activeApplication?.name}

@@ -82,7 +82,10 @@ const useAppStore = create(
       activeResultsSection: null,
       setActiveResultsSection: (activeResultsSection) =>
         set((state) => ({ activeResultsSection })),
-      activeMouseCoordinates: null,
+      activeMouseCoordinates: {
+        x: 0,
+        y: 0,
+      },
       setActiveMouseCoordinates: (activeMouseCoordinates) =>
         set((state) => ({ activeMouseCoordinates })),
       activeSessionId: null,
@@ -93,6 +96,12 @@ const useAppStore = create(
       isActionsSelectionOpen: false,
       setIsActionsSelectionOpen: (isActionsSelectionOpen) =>
         set((state) => ({ isActionsSelectionOpen })),
+      isFloatingWindowOpen: false,
+      setIsFloatingWindowOpen: (isFloatingWindowOpen) =>
+        set((state) => ({ isFloatingWindowOpen })),
+      activeFloatingWindow: null,
+      setActiveFloatingWindow: (activeFloatingWindow) =>
+        set((state) => ({ activeFloatingWindow })),
       activeDataset: null,
       setActiveDataset: (activeDataset) => set((state) => ({ activeDataset })),
       activeActionView: null,

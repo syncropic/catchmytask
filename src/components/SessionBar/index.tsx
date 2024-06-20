@@ -28,7 +28,7 @@ const SessionBar: React.FC<SessionBarProps> = ({
   //   isLoading: sessionIsLoading,
   //   error: sessionError,
   // } = useFetchSessionById(params?.id);
-  const { activeSession, activeApplication } = useAppStore();
+  const { activeSession, activeApplication, setActiveAction } = useAppStore();
 
   // const sessionDataset = useOne<IDataset, HttpError>({
   //   resource: "datasets",
@@ -64,6 +64,11 @@ const SessionBar: React.FC<SessionBarProps> = ({
 
   const session_data_items = data?.data ?? [];
 
+  const handleSelectAction = (action: any) => {
+    // console.log(`Clicked on ${action.name}`);
+    setActiveAction(action);
+  };
+
   return (
     <div className="flex gap-3 items-center m-2">
       {/* <Title order={4}>{name}</Title> */}
@@ -83,9 +88,10 @@ const SessionBar: React.FC<SessionBarProps> = ({
       <Button
         size="xs"
         leftSection={<IconPlus style={{ width: "70%", height: "70%" }} />}
+        onClick={() => handleSelectAction({ name: "create_session" })}
         // resource="sessions"
         // meta={{ applicationId: activeApplication?.id }}
-        disabled={true}
+        // disabled={true}
       >
         Create Session
       </Button>

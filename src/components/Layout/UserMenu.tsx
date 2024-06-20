@@ -8,15 +8,20 @@ import { IIdentity } from "@components/interfaces";
 import { Group, Menu } from "@mantine/core";
 import {
   IconApps,
+  IconClipboard,
   IconComponents,
   IconDatabase,
+  IconFiles,
+  IconListCheck,
   IconLogout,
   IconMail,
   IconSearch,
   IconSettings,
   IconUserCircle,
+  IconUserPlus,
 } from "@tabler/icons-react";
 import UserButton from "./UserButton";
+import { useAppStore } from "src/store";
 
 export const UserMenu = () => {
   const { list } = useNavigation();
@@ -25,6 +30,8 @@ export const UserMenu = () => {
   const { data: user } = useGetIdentity({
     v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
   });
+  const { setIsFloatingWindowOpen, setActiveFloatingWindow } = useAppStore();
+
   // handle logout
   const handleLogout = () => {
     // deleteToken from localStorage
@@ -41,6 +48,11 @@ export const UserMenu = () => {
       </button>
     );
   }
+
+  const handleFloatingWindowMenuSelection = (section: string) => {
+    setActiveFloatingWindow({ name: section });
+    setIsFloatingWindowOpen(true);
+  };
   return (
     <Group align="center">
       <Menu withArrow withinPortal>
@@ -61,21 +73,51 @@ export const UserMenu = () => {
               {/* navigate to connections view */}
               <Menu.Item
                 leftSection={<IconComponents size={14} />}
-                // onClick={() => list("sessions")}
+                onClick={() => handleFloatingWindowMenuSelection("connections")}
               >
                 Connections
               </Menu.Item>
               <Menu.Item
                 leftSection={<IconMail size={14} />}
-                // onClick={() => list("sessions")}
+                onClick={() => handleFloatingWindowMenuSelection("messages")}
               >
                 Messages
               </Menu.Item>
               <Menu.Item
                 leftSection={<IconSettings size={14} />}
-                // onClick={() => list("sessions")}
+                onClick={() => handleFloatingWindowMenuSelection("automations")}
               >
                 Automations
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconFiles size={14} />}
+                onClick={() =>
+                  handleFloatingWindowMenuSelection("file_browser")
+                }
+              >
+                File Browser
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconClipboard size={14} />}
+                onClick={() => handleFloatingWindowMenuSelection("scratchpad")}
+              >
+                Scratchpad
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconListCheck size={14} />}
+                onClick={() =>
+                  handleFloatingWindowMenuSelection("execution_trace")
+                }
+              >
+                Execution Trace
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconUserPlus size={14} />}
+                onClick={() =>
+                  handleFloatingWindowMenuSelection("recommendations")
+                }
+              >
+                Recommendations
               </Menu.Item>
               {/* <Menu.Item
                 leftSection={<IconApps size={14} />}
