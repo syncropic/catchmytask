@@ -240,17 +240,17 @@ const App = (props: React.PropsWithChildren) => {
               name: "profile",
               list: "/profile",
             },
-            {
-              name: "datasets",
-              list: "/datasets",
-              create: "/datasets/create",
-              edit: "/datasets/edit/:id",
-              show: "/datasets/show/:id",
-              meta: {
-                credentials: "surrealdb_catchmytask",
-                query_language: "surrealql",
-              },
-            },
+            // {
+            //   name: "datasets",
+            //   list: "/datasets",
+            //   create: "/datasets/create",
+            //   edit: "/datasets/edit/:id",
+            //   show: "/datasets/show/:id",
+            //   meta: {
+            //     credentials: "surrealdb_catchmytask",
+            //     query_language: "surrealql",
+            //   },
+            // },
             {
               name: "applications",
               list: "/applications",
@@ -266,19 +266,19 @@ const App = (props: React.PropsWithChildren) => {
               edit: "/:applicationId/sessions/:id/edit",
               show: "/:applicationId/sessions/:id",
             },
-            {
-              name: "shortcuts",
-              list: "/shortcuts",
-              create: "/shortcuts/create",
-              edit: "/shortcuts/edit/:id",
-              show: "/shortcuts/show/:id",
-              meta: {
-                canDelete: true,
-                hide: true,
-                credentials: "surrealdb_catchmytask",
-                query_language: "surrealql",
-              },
-            },
+            // {
+            //   name: "shortcuts",
+            //   list: "/shortcuts",
+            //   create: "/shortcuts/create",
+            //   edit: "/shortcuts/edit/:id",
+            //   show: "/shortcuts/show/:id",
+            //   meta: {
+            //     canDelete: true,
+            //     hide: true,
+            //     credentials: "surrealdb_catchmytask",
+            //     query_language: "surrealql",
+            //   },
+            // },
           ]}
           options={{
             syncWithLocation: true,

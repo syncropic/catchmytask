@@ -68,6 +68,10 @@ import {
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 import { IconDots, IconFunction } from "@tabler/icons-react";
 import ActivateActionsSelection from "@components/ActivateActionsSelection";
+import Hero from "@components/Hero";
+import FaqSimple from "@components/Faq/FaqSimple";
+import Benefits from "@components/Benefits/Benefits";
+import { FeaturesGrid } from "@components/Features/FeaturesGrid";
 // import MediaPlayerController from "@components/MediaPlayerController";
 // import MediaPlayerTimeline from "@components/MediaPlayerTimeline";
 
@@ -594,6 +598,9 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   // LocalAudioPlayer: LocalAudioPlayer,
   FileHandler: FileHandler,
   ExcalidrawEditor: ExcalidrawEditor,
+  hero: Hero,
+  frequently_asked_questions: FaqSimple,
+  benefits: FeaturesGrid,
   // MediaPlayerController: MediaPlayerController,
   // MediaPlayerTimeline: MediaPlayerTimeline,
 };
@@ -772,6 +779,40 @@ export function useFetchActionHistoryById(actionId: any | null) {
     },
     queryOptions: {
       queryKey: [`useFetchActionHistoryById_${actionId}`],
+    },
+  });
+
+  // useEffect(() => {
+  //   if (!isLoading && data && !error) {
+  //     setAction(data?.data[0]);
+  //   }
+  // }, [data, isLoading, error]);
+
+  return { data, isLoading, error, isError };
+}
+
+export function useFetchDomainDataByDomain(domain: string) {
+  const variables = {
+    domain: domain,
+  };
+  // const [action, setAction] = useState<IAction | null>(null);
+  const active_action_query = {
+    credentials: "surrealdb_catchmytask",
+    query: `SELECT * FROM fn::execute_query('domain_data', '${JSON.stringify(
+      variables
+    )}')`,
+    query_language: "surrealql",
+  };
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    method: "post",
+    config: {
+      payload: {
+        function_arguments: active_action_query,
+      },
+    },
+    queryOptions: {
+      queryKey: [`useFetchDomainDataByDomain_${domain}`],
     },
   });
 
@@ -996,6 +1037,22 @@ export function getComponentByResourceType(resourceType: ComponentKey) {
     throw new Error(`Component for resource type "${resourceType}" not found`);
   }
   return Component;
+}
+
+export const ComponentNotFoundComponent = (props: any) => {
+  return <div>{props?.section} component not found</div>;
+};
+
+// Helper function to get component by resource type
+export function getComponentByKey(key: ComponentKey) {
+  const Component = componentMapping[key];
+  // const Component = false;
+  if (!Component) {
+    // throw new Error(`Component "${key}" not found`);
+    return ComponentNotFoundComponent;
+  }
+  return Component;
+  // return <div>Returned component</div>;
 }
 
 export function formatValue(

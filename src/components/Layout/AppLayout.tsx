@@ -13,10 +13,14 @@ import classes from "./MobileNavbar.module.css";
 import { useAppStore } from "src/store";
 import LayoutToggleAndSearch from "./LayoutToggleAndSearch";
 import UserMenu from "./UserMenu";
+import { useIsAuthenticated } from "@refinedev/core";
+import Footer from "@components/Footer";
+import Header from "@components/Header";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [opened, { toggle }] = useDisclosure();
   const { activeApplication } = useAppStore();
+  const { isLoading, data: authenticatedData } = useIsAuthenticated();
 
   return (
     <AppShell
@@ -29,24 +33,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       padding="md"
     >
       <AppShell.Header>
-        <div className="flex justify-between align-middle pl-3 pr-3">
-          {/* <HamburgerMenu /> */}
-          {/* <div>{null}</div> */}
+        {/* <div className="flex justify-between align-middle pl-3 pr-3">
           <div className="flex items-center">
-            {/* <ActionIcon>
-            <IconComponents
-              style={{ width: "70%", height: "70%" }}
-              stroke={1.5}
-              // color="blue"
-              gradientTransform="rotate(90)"
-              onClick={() => {
-                go({
-                  to: "/home",
-                  type: "push",
-                });
-              }}
-            />
-          </ActionIcon> */}
 
             <Anchor
               variant="gradient"
@@ -59,10 +47,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {activeApplication?.name}
             </Anchor>
           </div>
-          <LayoutToggleAndSearch />
-          {/* <MainSiteNavigation></MainSiteNavigation> */}
+          {authenticatedData?.authenticated && <LayoutToggleAndSearch />}
           <UserMenu />
-        </div>
+        </div> */}
+        <Header authenticatedData={authenticatedData}></Header>
       </AppShell.Header>
 
       <AppShell.Navbar py="md" px={4}>
@@ -79,6 +67,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         instead. */}
         {children}
       </AppShell.Main>
+      <AppShell.Footer>
+        <Footer></Footer>
+        {/* <Footer
+              companyName="dpwanjala"
+              companyURL="https://dpwanjala.com"
+              year="2023"
+            ></Footer> */}
+        {/* <FooterCentered
+                links={links}
+                actionItems={actionItems}
+              ></FooterCentered> */}
+      </AppShell.Footer>
     </AppShell>
   );
 }

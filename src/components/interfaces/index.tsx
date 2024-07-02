@@ -64,6 +64,9 @@ export type ComponentKey =
   | "FileInput"
   | "FileHandler"
   | "ExcalidrawEditor"
+  | "hero"
+  | "frequently_asked_questions"
+  | "benefits"
   // | "MediaPlayerController"
   // | "MediaPlayerTimeline"
   | "MonacoEditor";
@@ -817,6 +820,8 @@ export interface IAirline {
 // Define the type of your query data
 export interface QueryDataType {
   data: any; // Adjust the type according to your actual data structure
+  error: any;
+  isLoading: boolean;
 }
 
 export interface DataItem {
@@ -826,4 +831,27 @@ export interface DataItem {
 
 export interface FieldData {
   data?: DataItem[];
+}
+
+export interface HeroItem {
+  heading: string;
+  subheading: string;
+  hero_image_url: string;
+  CTAComponent?: React.ReactNode;
+  key_features?: { name: string; description: string }[];
+}
+
+export interface ContentBlockProps {
+  // CTAComponent: any;
+  entity_type: string;
+  title: {
+    name: string;
+    description: string;
+    type: string;
+    hero_image_url?: string;
+  };
+  items: {
+    name: string;
+    description: string;
+  }[];
 }

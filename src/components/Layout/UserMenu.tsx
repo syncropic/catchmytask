@@ -1,11 +1,12 @@
 import {
   useActiveAuthProvider,
   useGetIdentity,
+  useGo,
   useLogout,
   useNavigation,
 } from "@refinedev/core";
 import { IIdentity } from "@components/interfaces";
-import { Group, Menu } from "@mantine/core";
+import { Button, Group, Menu } from "@mantine/core";
 import {
   IconApps,
   IconClipboard,
@@ -25,6 +26,7 @@ import { useAppStore } from "src/store";
 
 export const UserMenu = () => {
   const { list } = useNavigation();
+  const go = useGo();
   const { mutate: logout } = useLogout();
   const authProvider = useActiveAuthProvider();
   const { data: user } = useGetIdentity({
@@ -40,12 +42,17 @@ export const UserMenu = () => {
   };
   if (!user) {
     return (
-      <button
-        // onClick={() => signIn()}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      <Button
+        size="xs"
+        onClick={() => {
+          go({
+            to: "/login",
+            type: "push",
+          });
+        }}
       >
-        <a href="/login">Sign In</a>
-      </button>
+        Sign In
+      </Button>
     );
   }
 
