@@ -5,7 +5,7 @@ export function Hero(props: ContentBlockProps) {
   return (
     <>
       <HeroBullets {...props} />
-      {/* <div>{JSON.stringify(item)}</div> */}
+      {/* <div>{JSON.stringify(props.items)}</div> */}
     </>
   );
 }

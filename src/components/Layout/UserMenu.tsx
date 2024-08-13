@@ -16,6 +16,7 @@ import {
   IconListCheck,
   IconLogout,
   IconMail,
+  IconPuzzle,
   IconSearch,
   IconSettings,
   IconUserCircle,
@@ -78,54 +79,54 @@ export const UserMenu = () => {
             <>
               <Menu.Label>Quick Access</Menu.Label>
               {/* navigate to connections view */}
-              <Menu.Item
+              {/* <Menu.Item
                 leftSection={<IconComponents size={14} />}
                 onClick={() => handleFloatingWindowMenuSelection("connections")}
               >
-                Connections
-              </Menu.Item>
+                Resources
+              </Menu.Item> */}
               <Menu.Item
                 leftSection={<IconMail size={14} />}
-                onClick={() => handleFloatingWindowMenuSelection("messages")}
+                // onClick={() => handleFloatingWindowMenuSelection("messages")}
               >
-                Messages
+                Mailbox
               </Menu.Item>
-              <Menu.Item
+              {/* <Menu.Item
                 leftSection={<IconSettings size={14} />}
                 onClick={() => handleFloatingWindowMenuSelection("automations")}
               >
                 Automations
-              </Menu.Item>
-              <Menu.Item
+              </Menu.Item> */}
+              {/* <Menu.Item
                 leftSection={<IconFiles size={14} />}
                 onClick={() =>
                   handleFloatingWindowMenuSelection("file_browser")
                 }
               >
                 File Browser
-              </Menu.Item>
-              <Menu.Item
+              </Menu.Item> */}
+              {/* <Menu.Item
                 leftSection={<IconClipboard size={14} />}
                 onClick={() => handleFloatingWindowMenuSelection("scratchpad")}
               >
                 Scratchpad
-              </Menu.Item>
-              <Menu.Item
+              </Menu.Item> */}
+              {/* <Menu.Item
                 leftSection={<IconListCheck size={14} />}
                 onClick={() =>
                   handleFloatingWindowMenuSelection("execution_trace")
                 }
               >
                 Execution Trace
-              </Menu.Item>
-              <Menu.Item
+              </Menu.Item> */}
+              {/* <Menu.Item
                 leftSection={<IconUserPlus size={14} />}
                 onClick={() =>
                   handleFloatingWindowMenuSelection("recommendations")
                 }
               >
                 Recommendations
-              </Menu.Item>
+              </Menu.Item> */}
               {/* <Menu.Item
                 leftSection={<IconApps size={14} />}
                 onClick={() => list("applications")}
@@ -151,13 +152,26 @@ export const UserMenu = () => {
               </Menu.Item> */}
             </>
           )}
+          <Menu.Label>Profile</Menu.Label>
+          <Menu.Item
+            leftSection={<IconUserCircle size={14} />}
+            // onClick={() => list("profile")}
+          >
+            Switch
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconPuzzle size={14} />}
+            // onClick={() => handleFloatingWindowMenuSelection("connections")}
+          >
+            Resources
+          </Menu.Item>
 
           <Menu.Label>Account</Menu.Label>
           <Menu.Item
-            leftSection={<IconUserCircle size={14} />}
-            onClick={() => list("profile")}
+            leftSection={<IconSettings size={14} />}
+            // onClick={() => list("profile")}
           >
-            Profile
+            Settings
           </Menu.Item>
           <Menu.Item
             leftSection={<IconLogout size={14} />}

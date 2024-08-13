@@ -163,7 +163,7 @@ function SelectView<T extends Record<string, any>>({
           // value={getInputProps("view").value}
           value={activeViewItem?.name}
           onChange={handleActionChange}
-          withinPortal={true}
+          // withinPortal={true}
           style={{ width: "100%" }}
         />
       </div>

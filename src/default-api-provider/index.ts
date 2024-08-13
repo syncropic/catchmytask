@@ -164,7 +164,7 @@ export const dataProvider = (
 > => ({
   getList: async ({ resource, pagination, filters, sorters, meta }) => {
     // const url = `${apiUrl}/${resource}`;
-    const url = `${apiUrl}/query`;
+    const url = `${apiUrl}/catch-read`;
 
     // const { current = 1, pageSize = 10, mode = "server" } = pagination ?? {};
 
@@ -208,13 +208,48 @@ export const dataProvider = (
 
     // console.log(formatted_query);
 
+    // let payload = {
+    //   global_variables: {},
+    //   include_action_steps: [1],
+    //   action_steps: [
+    //     {
+    //       id: "1",
+    //       execution_order: 1,
+    //       tool: "retrieve",
+    //       tool_arguments: {
+    //         queries: [
+    //           {
+    //             query: formatted_query,
+    //             credential: meta?.credentials ?? "surrealdb_catchmytask",
+    //             params: {},
+    //           },
+    //         ],
+    //       },
+    //     },
+    //   ],
+    // };
     let payload = {
-      function_arguments: {
-        query: formatted_query,
-        query_language: meta?.query_language ?? "surrealql",
-        credentials: meta?.credentials ?? "surrealdb_catchmytask",
-      },
+      task_variables: {},
+      global_variables: {},
+      include_action_steps: [1],
+      action_steps: [
+        {
+          id: "1",
+          execution_order: 1,
+          description: "Retrieve data",
+          name: "retrieve_data",
+          job: "retrieve data",
+          action_step_query: formatted_query,
+          method: "get",
+          type: "main",
+          select: {
+            query: formatted_query,
+            credential: meta?.credentials ?? "surrealdb_catchmytask",
+          },
+        },
+      ],
     };
+
     // console.log("payload", payload);
 
     // const { data, headers } = await httpClient[requestMethod](
@@ -296,7 +331,7 @@ export const dataProvider = (
   },
 
   getOne: async ({ resource, id, meta }) => {
-    const url = `${apiUrl}/query`;
+    const url = `${apiUrl}/catch-read`;
     const { headers: headersFromMeta, method } = meta ?? {};
 
     // const { headers, method } = meta ?? {};
@@ -319,12 +354,46 @@ export const dataProvider = (
 
     // console.log(formatted_query);
 
+    // let payload = {
+    //   global_variables: {},
+    //   include_execution_orders: [1],
+    //   action_steps: [
+    //     {
+    //       id: "1",
+    //       execution_order: 1,
+    //       tool: "retrieve",
+    //       tool_arguments: {
+    //         queries: [
+    //           {
+    //             query: formatted_query,
+    //             credential: meta?.credentials ?? "surrealdb_catchmytask",
+    //             params: {},
+    //           },
+    //         ],
+    //       },
+    //     },
+    //   ],
+    // };
     let payload = {
-      function_arguments: {
-        query: formatted_query,
-        query_language: meta?.query_language ?? "surrealql",
-        credentials: meta?.credentials ?? "surrealdb_catchmytask",
-      },
+      task_variables: {},
+      global_variables: {},
+      include_action_steps: [1],
+      action_steps: [
+        {
+          id: "1",
+          execution_order: 1,
+          description: "Retrieve data",
+          name: "retrieve_data",
+          job: "retrieve data",
+          action_step_query: formatted_query,
+          method: "get",
+          type: "main",
+          select: {
+            query: formatted_query,
+            credential: meta?.credentials ?? "surrealdb_catchmytask",
+          },
+        },
+      ],
     };
 
     // const { data } = await httpClient[requestMethod](url, { headers });

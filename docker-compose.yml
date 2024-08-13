@@ -2,13 +2,16 @@ version: "3"
 services:
   catchmytask:
     container_name: catchmytask
+    image: catchmytask:latest
     # hostname: redis-commander
-    # image: ghcr.io/joeferner/redis-commander:latest
-    # # restart: always
-    # environment:
-    #   - REDIS_HOSTS=redis:dpwanjala.com:6379
-    # ports:
-    #   - "8081:8081"
+    # restart: always
+    environment:
+      - NEXT_PUBLIC_CMT_API_BASEURL=http://localhost:8001
+    ports:
+      - "3000:3000"
+    networks:
+      - web
+    command: cross-env NEXT_PUBLIC_CMT_API_BASEURL=http://localhost:8001 npm run start
   # sst-tools:
   #   image: devspace:latest
   # image: us-central1-docker.pkg.dev/dpwanjala-app/images/catchmyvibe-api:latest
@@ -22,12 +25,12 @@ services:
   #       - 'traefik.http.routers.catchmyvibe-api.tls.certresolver=letsencrypt'
   # ports:
   #   - 81:80
-  #     networks:
-  #       - web
+  # networks:
+  #   - web
   # command: streamlit run main-generate-schedule-change-email.py --server.port 8501
   # command: python main.py
   # environment:
   #   - PORT=80
-# networks:
-#   web:
-#     external: true
+networks:
+  web:
+    external: true

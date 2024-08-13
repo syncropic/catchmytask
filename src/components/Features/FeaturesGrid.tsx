@@ -14,6 +14,8 @@ import {
   IconLock,
 } from "@tabler/icons-react";
 import classes from "./FeaturesGrid.module.css";
+import { ContentBlockProps } from "@components/interfaces";
+import { iconMapping } from "@components/Utils";
 
 // export const MOCKDATA = [
 //   {
@@ -76,23 +78,38 @@ interface FeaturesGridProps {
   items: FeatureProps[];
 }
 
-export function FeaturesGrid({
-  heading,
-  items,
-  subheading,
-}: FeaturesGridProps) {
-  const features = items.map((feature, index) => (
-    <Feature {...feature} key={index} />
-  ));
+export function FeaturesGrid({ title, items }: ContentBlockProps) {
+  const items_components = items.map((item, index) => {
+    const IconComponent = iconMapping[item.metadata?.illustration];
+    return (
+      <div key={index}>
+        <ThemeIcon variant="light" size={40} radius={40}>
+          {/* <Icon style={{ width: rem(18), height: rem(18) }} stroke={1.5} /> */}
+          {IconComponent && (
+            <IconComponent
+              // color={theme.colors[item.metadata?.color][6]}
+              size="2rem"
+            />
+          )}
+        </ThemeIcon>
+        <Text mt="sm" mb={7}>
+          {item.name}
+        </Text>
+        <Text size="sm" c="dimmed" lh={1.6}>
+          {item.description}
+        </Text>
+      </div>
+    );
+  });
 
   return (
     <div className="bg-gray-200">
       <Container className={classes.wrapper}>
-        <Title className={classes.title}>{heading}</Title>
+        <Title className={classes.title}>{title.name}</Title>
 
         <Container size={560} p={0}>
           <Text size="sm" className={classes.description}>
-            {subheading}
+            {title.description}
           </Text>
         </Container>
 
@@ -102,7 +119,7 @@ export function FeaturesGrid({
           spacing={{ base: "xl", md: 50 }}
           verticalSpacing={{ base: "xl", md: 50 }}
         >
-          {features}
+          {items_components}
         </SimpleGrid>
       </Container>
     </div>

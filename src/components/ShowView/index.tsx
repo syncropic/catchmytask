@@ -3,6 +3,7 @@ import { IListItem } from "@components/interfaces";
 import { Title } from "@mantine/core";
 import { useCustom } from "@refinedev/core";
 import { EditButton, Show } from "@refinedev/mantine";
+import config from "src/config";
 
 interface IActionStep {
   request_object: any;
@@ -24,7 +25,7 @@ type IIdentity = {
 
 export const PageShow = ({ active_query, resource }: IListItem) => {
   const { data, isLoading } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/query`,
     dataProviderName: "catchmytaskApiDataProvider",
     method: "post",
     config: {

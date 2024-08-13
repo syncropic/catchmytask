@@ -131,7 +131,9 @@ export function Results<T extends Record<string, any>>({
     const initialVisibility: VisibilityState = {};
     // if data_columns is not in visible fields, set it to false
     data_columns.forEach((column) => {
-      initialVisibility[`${column.id}`] = visibleFields.includes(column.id);
+      initialVisibility[`${column.id}`] = visibleFields.includes(
+        column?.id ?? ""
+      );
     });
 
     // console.log("data_columns", data_columns);

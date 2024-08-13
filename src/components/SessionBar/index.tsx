@@ -1,11 +1,10 @@
 // ResourceHeader.tsx
 import React from "react";
-import { Title, Text, ActionIcon, Button } from "@mantine/core";
+import { ActionIcon } from "@mantine/core";
 import SelectSession from "@components/SelectSession";
-import { HttpError, useList, useOne } from "@refinedev/core";
-import { IDataset, ISession } from "@components/interfaces";
+import { HttpError, useList } from "@refinedev/core";
+import { ISession } from "@components/interfaces";
 import { useAppStore } from "src/store";
-import { CreateButton } from "@refinedev/mantine";
 import { IconCopy, IconEdit, IconPlus } from "@tabler/icons-react";
 
 interface SessionBarProps {
@@ -21,27 +20,8 @@ const SessionBar: React.FC<SessionBarProps> = ({
   subheading,
   description,
 }) => {
-  // console.log("params.id", params?.id);
-  // getSessionById
-  // const {
-  //   data: session,
-  //   isLoading: sessionIsLoading,
-  //   error: sessionError,
-  // } = useFetchSessionById(params?.id);
   const { activeSession, activeApplication, setActiveAction } = useAppStore();
 
-  // const sessionDataset = useOne<IDataset, HttpError>({
-  //   resource: "datasets",
-  //   id: "datasets:⟨0d2b472d-0473-4770-b7f9-0a1c986b824f⟩",
-  // });
-
-  // // console.log("sessionDataset", sessionDataset);
-  // const defaultDatasetListItem = sessionDataset.data?.data.list.find(
-  //   (item) => item.name == "default"
-  // );
-  // // console.log("defaultSessionListItem", defaultSessionListItem);
-
-  // const actionsList = defaultDatasetListItem?.actions;
   const {
     data,
     isLoading: isLoadingReports,
@@ -65,42 +45,31 @@ const SessionBar: React.FC<SessionBarProps> = ({
   const session_data_items = data?.data ?? [];
 
   const handleSelectAction = (action: any) => {
-    // console.log(`Clicked on ${action.name}`);
     setActiveAction(action);
   };
 
   return (
-    <div className="flex gap-3 items-center m-2">
-      {/* <Title order={4}>{name}</Title> */}
+    <div className="flex w-full items-center pl-4 pr-4 space-x-4">
       <SelectSession
         sessions_list={session_data_items || []}
         record={activeSession}
         view_item={null}
       />
-      {/* <CreateButton
-        size="xs"
-        resource="sessions"
-        meta={{ applicationId: activeApplication?.id }}
-        disabled={true}
-      >
-        Create Session
-      </CreateButton> */}
-      <Button
-        size="xs"
-        leftSection={<IconPlus style={{ width: "70%", height: "70%" }} />}
-        onClick={() => handleSelectAction({ name: "create_session" })}
-        // resource="sessions"
-        // meta={{ applicationId: activeApplication?.id }}
-        // disabled={true}
-      >
-        Create Session
-      </Button>
-      <ActionIcon variant="filled" aria-label="Settings" disabled={true}>
-        <IconCopy style={{ width: "70%", height: "70%" }} stroke={1.5} />
-      </ActionIcon>
-      <ActionIcon variant="filled" aria-label="Settings" disabled={true}>
-        <IconEdit style={{ width: "70%", height: "70%" }} stroke={1.5} />
-      </ActionIcon>
+      <div className="flex items-center space-x-2">
+        <ActionIcon
+          variant="filled"
+          aria-label="Create Session"
+          onClick={() => handleSelectAction({ name: "create_session" })}
+        >
+          <IconPlus />
+        </ActionIcon>
+        <ActionIcon variant="filled" aria-label="Copy" disabled>
+          <IconCopy />
+        </ActionIcon>
+        <ActionIcon variant="filled" aria-label="Edit" disabled>
+          <IconEdit />
+        </ActionIcon>
+      </div>
     </div>
   );
 };

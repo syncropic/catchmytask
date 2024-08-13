@@ -1,53 +1,91 @@
-import { Accordion } from "@mantine/core";
 import React, { useState } from "react";
 import { IconCheck } from "@tabler/icons-react";
+import { ContentBlockProps } from "@components/interfaces";
+import { FaqWithImage } from "@components/Faq/FaqWithImage";
+import { Container, Title, Accordion, Text, Grid } from "@mantine/core";
+import classes from "./FaqSimple.module.css";
 
-export const Procedure = ({ procedure, heading, subheading }) => {
+export const Procedure = ({ title, items }: ContentBlockProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const handleActiveIndexChange = (index) => {
+  const handleActiveIndexChange = (index: any) => {
     setActiveIndex(index === activeIndex ? null : index);
   };
 
   return (
-    <section className="bg-gray-300 py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900">{heading}</h2>
-        </div>
-        <div className="mt-12">
-          <div className="flex flex-col">
-            <Accordion value="value" onChange={handleActiveIndexChange}>
-              {procedure.map((step, index) => (
-                <Accordion.Item key={index} value={step.title}>
+    <Container size="lg" className={classes.wrapper}>
+      {/* <Title ta="center" className={classes.title}>
+        {title.name}
+      </Title> */}
+
+      <Grid id="faq-grid" gutter={50}>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          {/* <Image src={imageURL} alt="Getting started" /> */}
+          <img
+            className="object-contain w-64 h-64"
+            src={title.metadata?.illustration}
+            alt="main content illustration"
+          ></img>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Title order={2} ta="left" className={classes.title}>
+            {title.name}
+          </Title>
+
+          <Accordion variant="separated">
+            {items.map((item, index) => {
+              return (
+                <Accordion.Item
+                  className={classes.item}
+                  value={item.name}
+                  key={index}
+                >
                   <Accordion.Control>
-                    <div className="flex items-center justify-between cursor-pointer">
-                      <h4 className="text-xl font-semibold text-gray-800">
-                        {step.title}
-                      </h4>
-                      <div className="ml-4">
-                        <IconCheck
-                          size={24}
-                          strokeWidth={2}
-                          className={`${
-                            activeIndex === index
-                              ? "text-green-500"
-                              : "text-gray-300"
-                          }`}
-                        />
-                      </div>
-                    </div>
+                    <Text
+                      size="sm"
+                      fw={700}
+                      variant="gradient"
+                      gradient={{ from: "blue", to: "cyan", deg: 90 }}
+                    >
+                      {item.name}
+                    </Text>
                   </Accordion.Control>
-                  <Accordion.Panel>
-                    <p className="text-gray-500 mb-4">{step.description}</p>
-                  </Accordion.Panel>
+                  <Accordion.Panel>{item.description}</Accordion.Panel>
                 </Accordion.Item>
-              ))}
-            </Accordion>
-          </div>
-        </div>
-      </div>
-    </section>
+              );
+            })}
+          </Accordion>
+        </Grid.Col>
+      </Grid>
+    </Container>
   );
 };
 export default Procedure;
+
+// <Container size="lg">
+
+// <Grid id="faq-grid" gutter={50}>
+//   <Grid.Col span={{ base: 12, md: 6 }}>
+//     {/* <Image src={imageURL} alt="Getting started" /> */}
+//     <img
+//       className="object-contain w-96 h-72"
+//       src={imageURL}
+//       alt="catchmyvibe hero"
+//     ></img>
+//   </Grid.Col>
+//   <Grid.Col span={{ base: 12, md: 6 }}>
+//     <Title order={2} ta="left" className={classes.title}>
+//       {heading}
+//     </Title>
+
+//     <Accordion
+//       chevronPosition="right"
+//       defaultValue="reset-password"
+//       variant="separated"
+//     >
+//       {steps}
+//     </Accordion>
+//   </Grid.Col>
+// </Grid>
+
+// </Container>

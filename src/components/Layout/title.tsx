@@ -55,14 +55,14 @@ export const ThemedTitleV2: React.FC<RefineLayoutThemedTitleProps> = ({
         <Text
           lh={0}
           fz="inherit"
-          color={theme.colorScheme === "dark" ? "brand.5" : "brand.6"}
+          // color={theme.colorScheme === "dark" ? "brand.5" : "brand.6"}
         >
           {icon}
         </Text>
         {!collapsed && (
           <Text
             fz="inherit"
-            color={theme.colorScheme === "dark" ? "white" : "black"}
+            // color={theme.colorScheme === "dark" ? "white" : "black"}
           >
             {text}
           </Text>

@@ -1,10 +1,11 @@
+export {};
 {
   /* <EmbedComponent></EmbedComponent> */
 }
 {
   /* <WebBrowserView
           url={`${
-            process.env.NEXT_PUBLIC_CMT_API_BASEURL
+            config.API_URL
           }/web-browser?url=${encodeURIComponent(url)}`}
         ></WebBrowserView> */
 }
@@ -22,7 +23,7 @@
 //   const [url, setUrl] = useState("");
 //   const [embedHtml, setEmbedHtml] = useState("");
 
-//   let embedAPIEndpoint = `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/embed`;
+//   let embedAPIEndpoint = `${config.API_URL}/embed`;
 
 //   const handleSubmit = async (e: any) => {
 //     e.preventDefault();

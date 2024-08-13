@@ -19,18 +19,18 @@ export const views = [
   //   value: "grid",
   //   label: "Grid",
   // },
-  {
-    value: "text_editor",
-    label: "Text Editor",
-  },
-  {
-    value: "code_editor",
-    label: "Code Editor",
-  },
-  {
-    value: "conversation",
-    label: "Conversation",
-  },
+  // {
+  //   value: "text_editor",
+  //   label: "Text Editor",
+  // },
+  // {
+  //   value: "code_editor",
+  //   label: "Code Editor",
+  // },
+  // {
+  //   value: "conversation",
+  //   label: "Conversation",
+  // },
   // {
   //   value: "image_editor",
   //   label: "Image Editor",
@@ -43,10 +43,10 @@ export const views = [
   //   value: "video_editor",
   //   label: "video Editor",
   // },
-  {
-    value: "application_embeds",
-    label: "Application Embeds",
-  },
+  // {
+  //   value: "application_embeds",
+  //   label: "Application Embeds",
+  // },
 ];
 
 export const inputs = [
@@ -58,14 +58,14 @@ export const inputs = [
     value: "json",
     label: "Json",
   },
-  {
-    value: "natural_language",
-    label: "Natural Language",
-  },
-  {
-    value: "structured_query",
-    label: "Structured Query",
-  },
+  // {
+  //   value: "natural_language",
+  //   label: "Natural Language",
+  // },
+  // {
+  //   value: "structured_query",
+  //   label: "Structured Query",
+  // },
 ];
 
 export const aggregate_views = [

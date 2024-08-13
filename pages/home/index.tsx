@@ -1,54 +1,17 @@
-import ListView from "@components/ListView";
-import ResourceHeader from "@components/ResourceHeader";
-import { IListItem, IView } from "@components/interfaces";
-import { Accordion, Text } from "@mantine/core";
+import { Text, Title } from "@mantine/core";
 import { IResourceComponentsProps } from "@refinedev/core";
-// import ShortcutList from "pages/shortcuts/index";
 import React from "react";
 import { useAppStore } from "src/store";
-import ListSessions from "pages/sessions";
-import SessionBar from "@components/SessionBar";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const { activeApplication } = useAppStore();
 
   return (
-    <div className="flex-col align-middle">
-      <div className="flex justify-center">
-        <Text>Get Important Things Done</Text>
-      </div>
-      <div className="flex justify-center">
-        <SessionBar
-          name={activeApplication?.name}
-          heading={activeApplication?.heading}
-          subheading={activeApplication?.subheading}
-          description={activeApplication?.description}
-        />
+    <div className="flex flex-col items-center justify-center mt-12">
+      <div className="flex justify-center items-center">
+        <Title order={3}>Get Important Things Done.</Title>
       </div>
     </div>
-    // <div className="flex flex-col gap-3">
-    //   <ResourceHeader
-    //     name={activeApplication?.name}
-    //     heading={activeApplication?.heading}
-    //     subheading={activeApplication?.subheading}
-    //     description={activeApplication?.description}
-    //   />
-
-    //   {activeApplication?.show ? (
-    //     <Accordion defaultValue="1">
-    //       {activeApplication?.show?.map((item: IView) => (
-    //         <Accordion.Item key={item?.order} value={item?.order?.toString()}>
-    //           <Accordion.Control>{`${item?.resource}`}</Accordion.Control>
-    //           <Accordion.Panel>
-    //             <ListView item={item} />
-    //           </Accordion.Panel>
-    //         </Accordion.Item>
-    //       ))}
-    //     </Accordion>
-    //   ) : (
-    //     <ListSessions />
-    //   )}
-    // </div>
   );
 };
 export default PageList;

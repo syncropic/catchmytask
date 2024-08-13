@@ -23,6 +23,7 @@ import _, { set } from "lodash";
 // import CreateAutomation from "pages/automations/create";
 // import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
+import config from "src/config";
 // import { v4 as uuidv4 } from "uuid";
 
 export function QueryGraph() {
@@ -97,7 +98,7 @@ export function QueryGraph() {
     // console.log("generatedRequestData", generatedRequestData);
     mutate(
       {
-        url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/catch`,
+        url: `${config.API_URL}/catch`,
         method: "post",
         values: generateRequestData(values),
         successNotification: (data, values) => {

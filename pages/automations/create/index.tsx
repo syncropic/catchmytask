@@ -226,7 +226,7 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
       <MultiSelect
         required
         searchable
-        maxSelectedValues={1}
+        // maxSelectedValues={1}
         mt="sm"
         label="automation_types"
         placeholder="automation_types"
@@ -263,7 +263,7 @@ export const PageCreate: React.FC<IResourceComponentsProps> = () => {
             data={frequency_options} // Replace with your options source
             // value={getInputProps("date_type").value}
             {...getInputProps("frequency")}
-            onChange={handleChangeFrequencyOption}
+            // onChange={handleChangeFrequencyOption}
             // required
           />
         </Tabs.Panel>

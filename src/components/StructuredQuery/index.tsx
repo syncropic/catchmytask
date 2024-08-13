@@ -7,6 +7,7 @@ import { Create, SaveButton, useForm } from "@refinedev/mantine";
 // import { IconMathFunction } from "@tabler/icons-react";
 import _, { set } from "lodash";
 import { useAppStore } from "src/store";
+import config from "src/config";
 // import { v4 as uuidv4 } from "uuid";
 
 export function StructuredQuery() {
@@ -178,7 +179,7 @@ export function StructuredQuery() {
     // save the values to the backend
     mutate(
       {
-        url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/catch`,
+        url: `${config.API_URL}/catch`,
         method: "post",
         values: {
           global_variables: {},
@@ -245,7 +246,7 @@ export function StructuredQuery() {
     // console.log("generatedRequestData", generatedRequestData);
     mutate(
       {
-        url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/catch`,
+        url: `${config.API_URL}/catch`,
         method: "post",
         // values: generateRequestData({
         //   values: values,
@@ -316,12 +317,12 @@ export function StructuredQuery() {
             display: "none",
           },
         }}
-        wrapperProps={{
-          style: {
-            margin: "0",
-            padding: "0",
-          },
-        }}
+        // wrapperProps={{
+        //   style: {
+        //     margin: "0",
+        //     padding: "0",
+        //   },
+        // }}
         saveButtonProps={{
           disabled: saveButtonProps?.disabled,
           onClick: handleSubmit,

@@ -1,547 +1,218 @@
-import MonacoEditor from "@components/MonacoEditor";
-import {
-  componentMapping,
-  extractIdentifier,
-  getComponentByResourceType,
-  replacePlaceholdersInObject,
-} from "@components/Utils";
-import { useQueryClient } from "@tanstack/react-query";
-import ViewActionHistory from "@components/ViewActionHistory";
-import {
-  CompleteActionComponentProps,
-  ComponentKey,
-  FieldConfiguration,
-  FieldData,
-  IIdentity,
-  IView,
-} from "@components/interfaces";
-import { Accordion, Button, Textarea } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { useCustom, useCustomMutation, useGetIdentity } from "@refinedev/core";
-import { Create, SaveButton, useForm } from "@refinedev/mantine";
-import { IconMathFunction } from "@tabler/icons-react";
-import _, { set } from "lodash";
-import CreateAutomation from "pages/automations/create";
-import { useEffect, useState } from "react";
-import { useAppStore } from "src/store";
-import { v4 as uuidv4 } from "uuid";
-import { Combobox } from "@components/Combobox";
-import { inputs } from "@data/index";
+import { useFetchActionDataByName } from "@components/Utils";
+import ActionControlForm from "./ActionControlForm";
+import DynamicForm from "./DynamicForm";
 
-export function ActionControlForm<T extends Record<string, any>>({
-  actionFieldConfigurations,
-  actionFormFieldValues,
-}: // activeActionView,
-CompleteActionComponentProps<T>) {
-  // create a state object called fieldDataMappings
-  // this object will be used to store the data fetched from the backend
-  // let fieldDataMappings = {};
-  const {
-    activeViewItem,
-    activeRecord,
-    selectedItems,
-    // activeField,
-    setActiveField,
-    // focusedFields,
-    // setFocusedFields,
-    activeApplication,
-    activeAction,
-    activeSession,
-  } = useAppStore();
-  // console.log("actionFormFieldValues", actionFormFieldValues);
-  // let activeRecordId = activeRecords[0]?.id;
-  // const [openedAutomation, { open: openAutomation, close: closeAutomation }] =
-  //   useDisclosure(false);
-  // const [openedChat, { open: openChat, close: closeChat }] =
-  //   useDisclosure(false);
-  // const { data: identity } = useGetIdentity<IIdentity>();
-  // maintained touchedFields to keep track of fields that have been touched in useState
-  const [touchedFields, setTouchedFields] = useState<string[]>([]);
-  const {
-    mutate,
-    isLoading: mutationIsLoading,
-    isError: mutationIsError,
-    error: mutationError,
-  } = useCustomMutation();
-  const [inputAsvalue, setInputAsValue] = useState("");
-  const queryClient = useQueryClient();
-  // const queryData = queryClient.getQueryData(["field_data_for_service"]);
-  // // console.log("queryData", queryData?.data);
-  const {
-    getInputProps,
-    saveButtonProps,
-    setFieldValue,
-    values,
-    refineCore: { formLoading, onFinish },
-    onSubmit,
-    reset,
-    isTouched,
-  } = useForm({
-    initialValues: {
-      ...actionFormFieldValues,
-    },
-    refineCoreProps: {},
-  });
-
-  useEffect(() => {
-    reset();
-
-    // Step 1: Reset form with only 'author' and 'author_email'
-    // const resetValues = {
-    //   author: identity?.email,
-    //   author_email: identity?.email,
-    // };
-
-    const resetValues = {
-      // task_id: uuidv4(),
-    };
-
-    // Reinitialize form with base values plus dynamic actionFormFieldValues
-    Object.entries({
-      ...resetValues,
-      ...actionFormFieldValues,
-    }).forEach(([key, value]) => {
-      setFieldValue(key, value);
-    });
-    // console.log("actionFormFieldValues", actionFormFieldValues);
-  }, [actionFormFieldValues]);
-
-  // useEffect when selectedItems changes set the field item called selectedItems
-  // useEffect(() => {
-  //   if (selectedItems) {
-  //     setFieldValue("selected_items", selectedItems[activeViewItem?.id]);
-  //   }
-  // }, [selectedItems]);
-
-  // const generateRequestData = (values: any) => {
-  //   // console.log("values", values);
-  //   // console.log("activeViewItem", activeViewItem);
-  //   // console.log("activeRecord", activeRecord);
-  //   // Merge the activeAction with activeActionFormatted, with activeActionFormatted taking precedence
-  //   let activeActionFormatted = {
-  //     active_query: {
-  //       ...(activeViewItem?.active_query || {}),
-  //       record_identifier: extractIdentifier(activeRecord),
-  //     },
-  //     input_values: {
-  //       ...values,
-  //       selected_items: selectedItems[activeViewItem?.id], // pass this to the backend for bulk operations
-  //       active_record: activeRecord, // pass this to the backend as well for downstream operations
-  //       active_application: activeApplication, // pass this to the backend as well for downstream operations
-  //       active_session: activeSession, // pass this to the
-  //     },
-  //     task_input: {
-  //       ...replacePlaceholdersInObject(
-  //         activeAction?.task_input || {},
-  //         values || {}
-  //       ),
-  //     },
-  //     task: {
-  //       ...replacePlaceholdersInObject(activeAction?.task || {}, values || {}),
-  //     },
-  //   };
-  //   const activeActionRequestData = _.merge(
-  //     {},
-  //     activeAction || {},
-  //     activeActionFormatted || {}
-  //   );
-  //   return activeActionRequestData;
-  // };
-
-  const handleSubmit = (e: any) => {
-    // let generatedRequestData = generateRequestData(values);
-    // console.log("generatedRequestData", generatedRequestData);
-    mutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
-      method: "post",
-      // values: generateRequestData(values),
-      values: {},
-      successNotification: (data, values) => {
-        // console.log("successNotification", data);
-        // invalidate query
-
-        queryClient.invalidateQueries(["list_action_history_1"]);
-        queryClient.invalidateQueries([activeViewItem?.id]); // invalidate the active view query to retrigger refresh of values
-
-        return {
-          message: `successfully executed.`,
-          description: "Success with no errors",
-          type: "success",
-        };
-      },
-      errorNotification: (data, values) => {
-        // console.log("successNotification", data?.response.status);
-        // console.log("errorNotification values", values);
-        return {
-          message: `${data?.response.status} : ${
-            data?.response.statusText
-          } : ${JSON.stringify(data?.response.data)}`,
-          description: "Error",
-          type: "error",
-        };
-      },
-    });
-  };
-
-  // const viewComponent = (activeViewItem: IView, activeRecord: any) => {
-  //   // console.log("activeViewItem", activeViewItem);
-  //   // return "";
-  //   if (!activeViewItem) {
-  //     return null;
-  //   }
-  //   if (!activeViewItem.resource_type) {
-  //     return null;
-  //   }
-  //   const Component = componentMapping[activeViewItem.resource_type];
-  //   return <Component item={activeRecord} />;
-  // };
-  if (!activeAction) {
-    return <div>No active action selected</div>;
-  }
-
-  // let activeFieldConfigurationsObject = activeViewItem ? activeSession
-  //   ? activeAction
-  //   : activeRecord;
-
-  // let activeFieldConfigurationsObject =
-  //   activeActionView ?? activeSession ?? activeAction ?? activeRecord;
-
-  // let activeFieldConfigurationsObject = activeAction;
-
-  // const actionFieldConfigurations =
-  //   activeActionView?.field_configurations ||
-  //   // activeViewItem?.fields_configuration ||
-  //   // activeViewItem?.view?.[0]?.fields_configuration ||
-  //   activeAction?.field_configurations ||
-  //   [];
-  // console.log("actionFieldConfigurations", actionFieldConfigurations);
-
-  // FormFieldValues = extractFields(
-  //   activeRecord || {},
-  //   activeViewItem?.fields_configuration ||
-  //     activeViewItem?.view?.[0]?.fields_configuration ||
-  //     activeAction?.field_configurations ||
-  //     []
-  // );
-
-  // console.log(
-  //   "activeFieldConfigurationsObject",
-  //   activeFieldConfigurationsObject
-  // );
-
-  // sometimes we want to use the fields configuration on the activeRecord i.e activeSession instead of the activeRecord
-  // handleFileSelection
-  const handleFileSelection = (value: any) => {
-    console.log("value", value);
-
-    // const file = e.target.files[0];
-    // console.log("file", file);
-    // const reader = new FileReader();
-    // reader.onload = (event) => {
-    //   // console.log("event.target.result", event.target.result);
-    //   setFieldValue("file", event.target.result);
-    // };
-    // reader.readAsDataURL(file);
-  };
-  const handleFileHandlerSelection = (value: any) => {
-    console.log("value", value);
-    // const file = e.target.files[0];
-    // console.log("file", file);
-    // const reader = new FileReader();
-    // reader.onload = (event) => {
-    //   // console.log("event.target.result", event.target.result);
-    //   setFieldValue("file", event.target.result);
-    // };
-    // reader.readAsDataURL(file);
-  };
-
-  // interface FunctionMappings {
-  //   handleFileSelection: (value: any) => void;
-  //   handleFileHandlerSelection: (value: any) => void;
-  //   handleFocus: (value: any) => void;
-  // }
-
-  // // using a type guard to check if the key is in the functionMappings object
-  // function isFunctionMappingKey(key: any): key is keyof FunctionMappings {
-  //   return key in functionMappings;
-  // }
-
-  // get data triggered by eventHandlers + utilize reactquery for caching instead of adding another value to zustand, keep that clean
-
-  // This event handler now expects a field name (or some simple identifier) as an argument
-  const handleFocus = (event: any, field: any) => {
-    console.log("field", field);
-    console.log("event", event);
-    // add it to the touchedFields
-    setTouchedFields([...touchedFields, field.field_name]);
-    const fieldIsTouched = isTouched(field.field_name);
-    // console.log("fieldIsTouched", fieldIsTouched);
-    // console.log("field", field);
-    // set the activeField
-    // setActiveField(field);
-
-    // console.log("fieldIsTouched", fieldIsTouched);
-    // if (fieldIsTouched) {
-    //   // If the field is already touched, don't refetch the data
-    //   return;
-    // }
-    // // console.log("fieldIsTouched", fieldIsTouched);
-    // setFocusedFields({
-    //   ...focusedFields,
-    //   [field.field_name]: field,
-    // }); // Set the name of the focused field
-  };
-
-  const functionMappings = {
-    handleFileSelection: handleFileSelection,
-    handleFileHandlerSelection: handleFileHandlerSelection,
-    handleFocus: handleFocus,
-    // add more mappings as needed
-  };
-  // interface DataItem {
-  //   id: number;
-  //   name: string;
-  // }
-
-  // interface FieldData {
-  //   data?: DataItem[];
-  // }
-
-  return (
-    <>
-      <Create
-        // isLoading={formLoading}
-        isLoading={mutationIsLoading}
-        saveButtonProps={{
-          disabled: saveButtonProps?.disabled,
-          onClick: handleSubmit,
-          size: "xs",
-        }}
-        breadcrumb={false}
-        title={false}
-        goBack={false}
-        footerButtons={({ saveButtonProps }) => (
-          <div className="flex w-full gap-4">
-            {/* <SaveButton
-            {...saveButtonProps}
-            className="flex-grow w-2/3"
-            variant="filled"
-            leftIcon={<IconMathFunction size={16} />}
-            disabled={mutationIsLoading}
-          >
-            Run
-          </SaveButton> */}
-            <SaveButton
-              {...saveButtonProps}
-              className="flex-grow w-2/3"
-              variant="filled"
-              leftIcon={<IconMathFunction size={16} />}
-              disabled={mutationIsLoading}
-            >
-              {activeAction?.display_name || "Run"}
-            </SaveButton>
-            {/* <Button
-              resource="automations"
-              size="xs"
-              variant="light"
-              onClick={() => {
-                if (openedChat) {
-                  closeChat();
-                } else {
-                  openChat();
-                }
-              }}
-            >
-              {openedChat ? "Close Chat" : "Chat"}
-            </Button> */}
-            {/* <Button
-              resource="automations"
-              size="xs"
-              variant="light"
-              onClick={() => {
-                if (openedAutomation) {
-                  closeAutomation();
-                } else {
-                  openAutomation();
-                }
-              }}
-            >
-              {openedAutomation ? "Close Automation" : "Automate"}
-            </Button> */}
-          </div>
-        )}
-      >
-        {/* {JSON.stringify(actionFormFieldValues)} */}
-        {/* <div>actioncontrolform</div> */}
-        {/* {JSON.stringify(activeAction)} */}
-        {/* {JSON.stringify(activeFieldConfigurationsObject?.field_configurations)} */}
-        {/* {JSON.stringify(activeField)}
-      {JSON.stringify(focusedFields)} */}
-        <Accordion multiple defaultValue={["new_action"]}>
-          {/* <Accordion.Item key="action_history" value="action_history">
-            <Accordion.Control>Action History</Accordion.Control>
-            <Accordion.Panel>
-              {activeAction && <ViewActionHistory></ViewActionHistory>}
-            </Accordion.Panel>
-          </Accordion.Item> */}
-          <Accordion.Item key="new_action" value="new_action">
-            <Accordion.Control>New Action</Accordion.Control>
-            <Accordion.Panel>
-              {/* {activeFieldConfigurationsObject?.name === "view"
-                ? viewComponent(activeViewItem, activeRecord)
-                : null} */}
-              <div className="flex justify-end">
-                {" "}
-                <Combobox
-                  data_items={inputs}
-                  resource="input"
-                  value={inputAsvalue}
-                  setValue={setInputAsValue}
-                ></Combobox>
-              </div>
-              {(inputAsvalue === "" || inputAsvalue === "form") && (
-                <div>
-                  {" "}
-                  {actionFieldConfigurations &&
-                    actionFieldConfigurations?.map(
-                      (field: FieldConfiguration) => {
-                        const Component = getComponentByResourceType(
-                          field?.display_component as ComponentKey
-                        );
-                        let data_query_key = `field_data_for_${field?.field_name}`;
-                        // let fieldData: FieldData = queryClient.getQueryData([data_query_key]) || {data: []};
-                        const fieldData =
-                          queryClient.getQueryData<FieldData>([
-                            data_query_key,
-                          ]) || {};
-                        console.log("fieldData", fieldData);
-                        // console.log("field", field);
-                        // if there is a data_prop_query in a field, retrieve the data before rendering or on focus?// add on_focus to the field configuration
-                        // improve later to allow onfocus on search etc
-                        return (
-                          <>
-                            <div key={field.field_name} className="mb-4">
-                              <Component
-                                {...getInputProps(field.name)}
-                                {...field?.props}
-                                label={field?.display_name}
-                                placeholder={field?.placeholder}
-                                searchable={true}
-                                // {...(field.on_change &&
-                                // isFunctionMappingKey(field.on_change)
-                                //   ? { onChange: functionMappings[field.on_change] }
-                                //   : {})}
-                                {...(field?.data_prop_query && {
-                                  onFocus: (e: any) => handleFocus(e, field),
-                                  data: (fieldData?.data || []).map(
-                                    (data_item: any) => ({
-                                      value: data_item["id"],
-                                      label: data_item["name"],
-                                    })
-                                  ),
-                                })}
-                              />
-                            </div>
-                            {field?.data_prop_query && (
-                              <FieldDataQuery
-                                field={field}
-                                touchedFields={touchedFields}
-                              />
-                            )}
-                          </>
-                        );
-                      }
-                    )}
-                </div>
-              )}
-              {inputAsvalue === "json" && (
-                <MonacoEditor value={values} language="json" height="100vh" />
-              )}
-              {inputAsvalue === "structured_query" && (
-                <MonacoEditor
-                  value={`${activeAction?.name} ${JSON.stringify(values)}`}
-                  language="json"
-                  height="100vh"
-                />
-              )}
-              {inputAsvalue === "natural_language" && (
-                <MonacoEditor
-                  value={`${activeAction?.name} ${JSON.stringify(values)}`}
-                  language="json"
-                  height="100vh"
-                />
-              )}
-            </Accordion.Panel>
-          </Accordion.Item>
-        </Accordion>
-      </Create>
-      <div className="h-[400px]"></div>
-      {/* for spacing and making the action buttons visible */}
-    </>
-  );
+interface ActionControlFormWrapperProps {
+  action_type?: string;
+  entity?: string;
+  record?: any;
 }
 
-export default ActionControlForm;
-
-// component to make query request for field data
-const FieldDataQuery = ({
-  field,
-  touchedFields,
-}: {
-  field: FieldConfiguration;
-  touchedFields: string[];
+export const ActionControlFormWrapper: React.FC<
+  ActionControlFormWrapperProps
+> = ({
+  record,
+  action_type,
+  entity,
 }) => {
-  const { activeField } = useAppStore();
+  let state = {
+    action_type: action_type,
+    entity: entity,
+  };
+  const {
+    data: actionData,
+    isLoading: actionDataIsLoading,
+    error: actionDataError,
+  } = useFetchActionDataByName(state);
+  // const {
+  //   data: activeActionView,
+  //   isLoading: isLoadingView,
+  //   isError: isErrorView,
+  // } = useOne<IViewItem, HttpError>({
+  //   resource: "views",
+  //   id: `${activeActionActiveView?.id}`,
+  // });
 
-  const { data, isLoading, error } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
-    method: "post",
-    config: {
-      payload: {
-        // Here, ensure that you're constructing your payload correctly without circular references
-        // For example, use the focusedFieldName directly if it's part of the payload
-        function_arguments: {
-          credentials: "surrealdb_catchmytask",
-          query: field?.data_prop_query,
-          query_language: "surrealdb",
-        },
-      },
-    },
-    queryOptions: {
-      queryKey: [`field_data_for_${field?.field_name}`], // simply change the query key to trigger call for that field
-      // enabled: !!focusedField?.field_name, // This query runs only if focusedFieldName is not null
-      // there is a field and it is not in focusedFields // should dynamically create new query keys for each field
-      // enabled:
-      //   !!activeField?.field_name && !focusedFields?.[activeField?.field_name],
-      // enabled:
-      // !!isTouched(activeField?.field_name) && !focusedFields?.[activeField?.field_name],
-      // enabled:
-      //   activeField?.field_name && !focusedFields?.[activeField?.field_name]
-      //     ? true
-      //     : false, // as long as there is a activefield with field name, run the query
-      enabled: touchedFields.includes(field?.name),
-    },
-    successNotification: (data, values) => {
-      // console.log("successNotification", data);
-      // data is the response from the query
-      // setFocusedFields({
-      //   ...focusedFields,
-      //   [activeField?.field_name]: {
-      //     ...activeField,
-      //     data: data?.data,
-      //   },
-      // }); // Reset focused field after successful query
-      return {
-        message: `successfully retrieved ${activeField?.field_name}s.`,
-        description: "Success with no errors",
-        type: "success",
-      };
-    },
-  });
+  // const {
+  //   activeSession,
+  //   activeAction,
+  //   activeRecord,
+  //   activeViewItem,
+  //   setActiveActionView,
+  //   activeResultsSection,
+  //   activeQueryGraph,
+  // } = useAppStore();
+  // const queryClient = useQueryClient();
+  // // Provide the type when calling getQueryData
+  // const queryData = queryClient.getQueryData<QueryDataType>([
+  //   "execute-query-graph-key",
+  //   activeQueryGraph,
+  // ]);
+
+  // const defaultViewData = queryClient.getQueryData<QueryDataType>([
+  //   "useFetchViewById_views:⟨018fff37-21c0-707f-b7f0-928c4c9412b5⟩",
+  // ]);
+
+  // // read field configurations from the query data
+
+  // let field_configurations: FieldConfiguration[] = [];
+  // // if (activeResultsSection?.name === "main_query") {
+  // //   field_configurations =
+  // //     queryData?.data[0]["main_query"]["field_configurations"] || [];
+  // // } else {
+  // //   field_configurations =
+  // //     queryData?.data[0]["ctes"][activeResultsSection?.name][
+  // //       "field_configurations"
+  // //     ] || [];
+  // // }
+
+  // // console.log("queryData", queryData?.data);
+  // // // use effect to set active action view if activeActionActiveView changes
+  // // useEffect(() => {
+  // //   setActiveActionView(activeActionView?.data);
+  // // }, [activeActionView]);
+  // // if (isLoadingView) return <div>Loading...</div>;
+  // // if (isErrorView) return <div>Error: {JSON.stringify(activeActionView)}</div>;
+  // // if (!activeSession) return <div>No active session selected</div>;
+  // if (!activeAction) return <div>No active action selected</div>;
+  // // get form field values by order of preference
+  // // get the values from the action named ovalues on the record or the record itself in that order
+
+  // // enrich it with display_component and display_name where missing ues the typescriptToDisplayComponent map
+  // // enrich it with display_component and display_name where missing, using the typescriptToDisplayComponent map
+  // // map data_prop_query to public_data_mapping with the field name as the key
+  // // field_configurations = field_configurations?.map((field: any) => {
+  // //   return {
+  // //     ...field,
+  // //     display_component:
+  // //       field.display_component ||
+  // //       typescriptToDisplayComponent[field.data_type] ||
+  // //       "TextInput",
+  // //     display_name: field.display_name || field.field_name,
+  // //     placeholder: field.placeholder || field.field_name,
+  // //     data_prop_query:
+  // //       field.field_name in public_data_mapping
+  // //         ? public_data_mapping[field?.field_name]
+  // //         : field.data_prop_query,
+  // //   };
+  // // });
+  // // // custom map some field name to some display component
+  // // let customFieldMapping: { [key: string]: string } = {
+  // //   service_id: "Select",
+  // //   service: "Select",
+  // // };
+  // // // map the customFieldMapping to the field_configurations
+  // // field_configurations = field_configurations?.map((field: any) => {
+  // //   return {
+  // //     ...field,
+  // //     display_component:
+  // //       field.display_component ||
+  // //       customFieldMapping[field.field_name] ||
+  // //       "TextInput",
+  // //   };
+  // // });
+  // let view_field_configurations =
+  //   defaultViewData?.data[0]?.field_configurations;
+
+  // let field_configurations_with_defaults = field_configurations.map(
+  //   (field: FieldConfiguration) => {
+  //     // find the field in view_field_configurations by name
+  //     // const view_field = view_field_configurations.find(
+  //     //   (view_field: any) => view_field.name
+  //     // );
+  //     // console.log("view_field", view_field);
+  //     // console.log(
+  //     //   "found field in view_field_configurations",
+  //     //   view_field_configurations.find((item: any) => (item.name = field.name))
+  //     // );
+  //     let found_field = view_field_configurations.find(
+  //       (item: any) => item.name === field.name
+  //     );
+  //     // console.log("field", field);
+  //     // console.log("found_field", found_field);
+  //     return {
+  //       ...found_field, // default
+  //       ...field, // data
+  //       // user view configurations override default configurations
+  //       // visible: field.visible || true,
+  //     };
+  //   }
+  // );
+
+  // // filter items where visible_on_create is true from the field_configurations
+  // let create_field_configurations = field_configurations_with_defaults.filter(
+  //   (field: FieldConfiguration) => field.visible_on_create
+  // );
+
+  // // field_configurations = field_configurations?.map((field: any) => {
+  // //   const customFieldMapping: { [key: string]: string } = {
+  // //     service_id: "Select",
+  // //     service: "Select",
+  // //     created_datetime: "TextInput",
+  // //     updated_datetime: "TextInput",
+  // //   };
+
+  // //   return {
+  // //     ...field,
+  // //     display_component:
+  // //       customFieldMapping[field.field_name] || // Prioritize customFieldMapping
+  // //       typescriptToDisplayComponent[field.data_type] ||
+  // //       field.display_component || // Fallback to the existing display_component if none found
+  // //       "TextInput",
+  // //     display_name: field.display_name || field.field_name,
+  // //     placeholder: field.placeholder || field.field_name,
+  // //     data_prop_query:
+  // //       field.field_name in public_data_mapping
+  // //         ? public_data_mapping[field.field_name]
+  // //         : field.data_prop_query,
+  // //   };
+  // // });
+
+  // const actionFormFieldValues = extractFields(
+  //   activeRecord?.[activeAction?.name] || activeRecord || {},
+  //   // activeActionView?.data?.field_configurations ||
+  //   //   activeViewItem?.fields_configuration ||
+  //   //   activeViewItem?.view?.[0]?.fields_configuration ||
+  //   field_configurations || []
+  // );
+
+  // console.log("actionFormFieldValues", actionFormFieldValues);
+  if (actionDataError)
+    return <div>Error: {JSON.stringify(actionDataError)}</div>;
+  if (actionDataIsLoading) return <div>Loading...</div>;
+
   return (
+    // <>{JSON.stringify(activeActionView?.data?.field_configurations)}</>
+    // <div>hello</div>
+    // <ActionControlForm
+    //   activeSession={activeSession}
+    //   activeActionView={activeActionView?.data}
+    //   activeAction={activeAction}
+    //   activeRecords={[activeRecord]}
+    //   actionFormFieldValues={actionFormFieldValues}
+    // ></ActionControlForm>
     <div>
-      div field data queries:{" "}
-      {JSON.stringify(touchedFields.includes(field?.name))}
+      {/* action control form inputs */}
+      {/* <div>{JSON.stringify(actionData)}</div> */}
+      {/* <div>{JSON.stringify(field_configurations)}</div> */}
+      {/* <div>{JSON.stringify(actionFormFieldValues)}</div> */}
+      {/* <div>action input</div>
+      {JSON.stringify(
+        actionData?.data?.find(
+          (item: any) => item?.message?.code === "query_success_results"
+        )?.data
+      )} */}
+      {actionData?.data && (
+        <ActionControlForm
+          data_model={
+            actionData?.data?.find(
+              (item: any) => item?.message?.code === "query_success_results"
+            )?.data[0]?.data_model
+          }
+          record={record}
+          // actionFormFieldValues={[]}
+        ></ActionControlForm>
+      )}
     </div>
   );
 };

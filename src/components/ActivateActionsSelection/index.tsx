@@ -4,7 +4,7 @@ import { Title, Text, ActionIcon, Button, Tooltip } from "@mantine/core";
 import { IconFunction } from "@tabler/icons-react";
 import { useAppStore } from "src/store";
 import { useMouse } from "@mantine/hooks";
-import { set } from "lodash";
+// import { set } from "lodash";
 
 interface ActivateActionsSelectionProps {
   record: any;
@@ -16,16 +16,18 @@ const ActivateActionsSelection: React.FC<ActivateActionsSelectionProps> = ({
   resultsSection,
 }) => {
   const {
-    isActionsSelectionOpen,
+    // isActionsSelectionOpen,
     setIsActionsSelectionOpen,
     setActiveMouseCoordinates,
     setActiveResultsSection,
+    // setActiveActionSelectionComponent,
     setActiveRecord,
   } = useAppStore();
   const { ref, x, y } = useMouse();
 
-  const handleRecordSelection = (record: any) => {
-    // console.log("record", record);
+  const handleActivateActionsSelection = (record: any) => {
+    console.log("resultsSection", resultsSection);
+    console.log("record", record);
     setIsActionsSelectionOpen(true);
     setActiveMouseCoordinates({ x, y });
     setActiveRecord(record);
@@ -37,7 +39,7 @@ const ActivateActionsSelection: React.FC<ActivateActionsSelectionProps> = ({
       <Tooltip label="select action">
         <ActionIcon
           aria-label="Settings"
-          onClick={() => handleRecordSelection(record)}
+          onClick={() => handleActivateActionsSelection(record)}
         >
           <IconFunction />
         </ActionIcon>

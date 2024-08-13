@@ -50,8 +50,8 @@ function SelectSession<T extends Record<string, any>>({
   // set fieldFocused state variable to track which field is currently focused
   const [fieldFocused, setFieldFocused] = useState({} as FieldConfiguration);
   const {
-    setActiveSessionId,
-    activeSessionId,
+    // setActiveSessionId,
+    // activeSessionId,
     setActiveSession,
     activeApplication,
     // activeSession,
@@ -128,9 +128,23 @@ function SelectSession<T extends Record<string, any>>({
       // handleUserInteraction(session_object);
       setFieldValue("session", value);
       // set active session
-      let selectedSession = fieldData?.data?.find(
-        (session: any) => session.id === value
-      );
+      // let selectedSession = fieldData?.data[0]
+      //   ?.find((item: any) => item?.message === "Query successfully executed")
+      //   .results[0]["result"].find((session: any) => session.id === value);
+      //   // Ensure fieldData is not undefined before accessing its properties
+      let selectedSession = null;
+      if (fieldData && fieldData.data && fieldData.data.length > 0) {
+        selectedSession = fieldData?.data
+          ?.find((item: any) => item?.message?.code === "query_success_results")
+          ?.data?.find((session: any) => session.id === value);
+
+        console.log(selectedSession);
+      } else {
+        // Handle the case where fieldData or its properties are undefined
+        console.log(
+          "fieldData is undefined or does not have the expected structure."
+        );
+      }
       // console.log("selectedSesstion", selectedSesstion);
       setActiveSession(selectedSession);
       // navigate to the session
@@ -171,12 +185,23 @@ function SelectSession<T extends Record<string, any>>({
     setFieldFocused({ name: "session", visible: true });
   };
 
-  const fieldData =
+  // const fieldData =
+  //   queryClient.getQueryData<FieldData>([`field_data_for_session`]) || {};
+  // // console.log("fieldData", fieldData);
+  // // Define your field data type
+
+  const fieldData: FieldData =
     queryClient.getQueryData<FieldData>([`field_data_for_session`]) || {};
-  // console.log("fieldData", fieldData);
 
   return (
-    <div className="flex items-end justify-center space-x-2">
+    <div className="flex-grow">
+      {/* <div>
+        {JSON.stringify(
+          fieldData?.data[0]?.find(
+            (item: any) => item?.message === "Query successfully executed"
+          ).results[0]["result"]
+        )}
+      </div> */}
       {/* <LoadingOverlay visible={dataset.isLoading} /> */}
       <Select
         placeholder="Select session"
@@ -185,17 +210,24 @@ function SelectSession<T extends Record<string, any>>({
         searchable={true}
         onFocus={(e: any) => handleFocus(e)}
         // data={[]}
-        data={(fieldData?.data || []).map((data_item: any) => ({
+        data={(
+          (fieldData?.data &&
+            fieldData?.data?.find(
+              (item: any) => item?.message?.code === "query_success_results"
+            )?.data) ||
+          []
+        ).map((data_item: any) => ({
           value: data_item["id"],
           label: data_item["name"],
         }))}
+        // data={[]}
         // value={getInputProps("action").value}
         onChange={handleSessionChange}
         // withinPortal={true}
-        styles={{
-          input: { width: "400px" },
-          wrapper: { width: "400px" },
-        }}
+        // styles={{
+        //   input: { width: "400px" },
+        //   wrapper: { width: "400px" },
+        // }}
       />
       {fieldFocused?.name === "session" && (
         <RetrieveFieldData field={fieldFocused} />

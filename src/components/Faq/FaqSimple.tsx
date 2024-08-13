@@ -1,20 +1,12 @@
 import { Container, Title, Accordion, Text } from "@mantine/core";
 import classes from "./FaqSimple.module.css";
+import { ContentBlockProps } from "@components/interfaces";
 
-interface FaqSimpleProps {
-  heading?: string;
-  subheading?: string;
-  items: {
-    name: string;
-    description: string;
-  }[];
-}
-
-export function FaqSimple({ heading, subheading, items }: FaqSimpleProps) {
+export function FaqSimple({ title, items }: ContentBlockProps) {
   return (
     <Container size="sm" className={classes.wrapper}>
       <Title ta="center" className={classes.title}>
-        Frequently Asked Questions
+        {title.name}
       </Title>
 
       <Accordion variant="separated">

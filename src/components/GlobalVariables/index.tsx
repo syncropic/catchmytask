@@ -24,6 +24,7 @@ import CreateAutomation from "pages/automations/create";
 import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
 import { v4 as uuidv4 } from "uuid";
+import config from "src/config";
 
 export function GlobalVariables() {
   // create a state object called fieldDataMappings
@@ -158,7 +159,7 @@ export function GlobalVariables() {
     // let generatedRequestData = generateRequestData(values);
     // console.log("generatedRequestData", generatedRequestData);
     mutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/catch`,
+      url: `${config.API_URL}/catch`,
       method: "post",
       values: generateRequestData(values),
       successNotification: (data, values) => {
@@ -274,7 +275,7 @@ export function GlobalVariables() {
   // get data triggered by eventHandlers + utilize reactquery for caching instead of adding another value to zustand, keep that clean
 
   const { data, isLoading, error } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -341,9 +342,15 @@ export function GlobalVariables() {
     // add more mappings as needed
   };
 
+  let content = {
+    application_id: activeSession?.application_id,
+    session_id: activeSession?.id,
+  };
+
   return (
     <>
-      <div>Global Variables</div>
+      {/* <div>Global Variables</div> */}
+      <MonacoEditor value={content} language="json"></MonacoEditor>
     </>
   );
 }

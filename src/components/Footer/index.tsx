@@ -4,6 +4,7 @@ import { Text } from "@mantine/core";
 import Link from "next/link";
 import { Anchor } from "@mantine/core";
 import { FooterCentered } from "./FooterCentered";
+import { useDomain, useFetchDomainDataByDomain } from "@components/Utils";
 
 export function SimpleFooter() {
   return (
@@ -21,17 +22,36 @@ export function SimpleFooter() {
 }
 
 export function Footer() {
-  const links = [
-    // { link: "#", label: "Contact" },
-    // { link: "#", label: "Privacy" },
-    // { link: "#", label: "Blog" },
-  ] as { link: string; label: string }[];
+  // const go = useGo();
+  const domain = useDomain();
+  // const { activeApplication } = useAppStore();
+  const {
+    data: domainData,
+    isLoading: domainDataIsLoading,
+    error: domainDataError,
+  } = useFetchDomainDataByDomain(domain);
+  // const links = [
+  //   // { link: "#", label: "Contact" },
+  //   // { link: "#", label: "Privacy" },
+  //   // { link: "#", label: "Blog" },
+  // ] as { link: string; label: string }[];
 
-  const actionItems = [{ link: "#", label: "Contact" }];
+  const links = [{ link: "#", label: "Contact" }];
   return (
     <>
       {/* <SimpleFooter /> */}
-      <FooterCentered links={links} actionItems={actionItems} />
+      <FooterCentered
+        links={
+          domainData?.data?.find(
+            (item: any) => item?.message?.code === "query_success_results"
+          )?.data[0]?.["application"]["footer_links"]
+        }
+        copywright={
+          domainData?.data?.find(
+            (item: any) => item?.message?.code === "query_success_results"
+          )?.data[0]?.["application"]["copywright"]
+        }
+      />
     </>
   );
 }

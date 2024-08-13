@@ -22,7 +22,7 @@ const ShortcutLink: React.FC<IFieldConfigurationWithValue> = ({
     <Group>
       <HoverCard width={280} shadow="md" withinPortal={true} openDelay={1000}>
         <HoverCard.Target>
-          <Anchor component={Text}>
+          <Anchor>
             <Text
               size="sm"
               onClick={() => {
@@ -46,7 +46,7 @@ const ShortcutLink: React.FC<IFieldConfigurationWithValue> = ({
           </Anchor>
         </HoverCard.Target>
         <HoverCard.Dropdown>
-          <Anchor component={Text}>
+          <Anchor>
             <Text
               size="sm"
               // onClick={() => {

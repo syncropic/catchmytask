@@ -67,9 +67,15 @@ export type ComponentKey =
   | "hero"
   | "frequently_asked_questions"
   | "benefits"
+  | "get_started"
+  | "integrations"
+  | "social_proof"
+  | "showcase"
+  | "email_list_signup"
   // | "MediaPlayerController"
   // | "MediaPlayerTimeline"
-  | "MonacoEditor";
+  | "MonacoEditor"
+  | "MonacoEditorFormInput";
 
 // export type IView = {
 //   resource_type: ComponentKey;
@@ -192,14 +198,19 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   // data_columns: any[]; // Define more specific type if possible
   // item: IView;
   // resource: string;
-  results?: any;
+  // results?: any;
   isLoadingDataItems?: boolean;
-  data_columns: ColumnDef<RowData>[];
+  read_write_mode?: string;
+  ui?: Record<string, any>;
+  // data_columns: ColumnDef<RowData>[];
+  name?: string;
   tableInstance?: TanStackTable<T>;
   data_items: T[];
   resource_group: string;
-  view_data: any;
+  execlude_components?: string[];
+  // view_data: any;
   // data_columns: T[];
+  data_fields: T[];
   // session?: ISession;
   // // initialStateColumnPinningLeft: string[];
   // customTableConfig?: any;
@@ -277,8 +288,9 @@ export interface CompleteActionComponentProps<T extends Record<string, any>> {
   // activeSession: ISession;
   // activeAction: IAction;
   // activeRecords: any[];
-  actionFormFieldValues: any;
-  actionFieldConfigurations: FieldConfiguration[];
+  // actionFormFieldValues: any;
+  data_model: any;
+  // actionFieldConfigurations: FieldConfiguration[];
   // activeActionOption: any;
   // inputFields: FieldConfiguration[];
   // setActiveActionOption: (item: any) => void;
@@ -825,13 +837,27 @@ export interface QueryDataType {
 }
 
 export interface DataItem {
+  find(arg0: (item: any) => boolean): unknown;
   id: number;
   name: string;
 }
 
+// export interface FieldData {
+//   data?: DataItem[];
+// }
+
 export interface FieldData {
-  data?: DataItem[];
+  data?: Array<{
+    find: (callback: (item: any) => boolean) => any;
+  }>;
 }
+
+// export interface FieldData {
+//   data: {
+//     message: string;
+//     results: { result: { id: string; name: string }[] }[];
+//   }[];
+// }
 
 export interface HeroItem {
   heading: string;
@@ -848,10 +874,16 @@ export interface ContentBlockProps {
     name: string;
     description: string;
     type: string;
-    hero_image_url?: string;
+    metadata: {
+      [key: string]: any;
+    };
+    image_url?: string;
   };
   items: {
     name: string;
     description: string;
+    metadata: {
+      [key: string]: any;
+    };
   }[];
 }

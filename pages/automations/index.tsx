@@ -17,6 +17,7 @@ import {
   updateTableVisibility,
 } from "src/utils";
 import { IAutomation } from "./interfaces";
+import config from "src/config";
 
 export const PageList: React.FC<IResourceComponentsProps> = () => {
   const go = useGo();
@@ -49,7 +50,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
         accessorKey: "name",
         header: "name",
         Cell: ({ row }) => (
-          <Anchor component={Text}>
+          <Anchor>
             <Text
               size="sm"
               onClick={() => {
@@ -208,7 +209,7 @@ export const PageList: React.FC<IResourceComponentsProps> = () => {
     //   },
     // };
     mutateCustom({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/activate-automation`,
+      url: `${config.API_URL}/activate-automation`,
       method: "post",
       values: data,
       successNotification: (data, values) => {

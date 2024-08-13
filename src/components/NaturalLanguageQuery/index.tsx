@@ -1,51 +1,17 @@
-import MonacoEditor from "@components/MonacoEditor";
-import {
-  componentMapping,
-  extractIdentifier,
-  getComponentByResourceType,
-  replacePlaceholdersInObject,
-} from "@components/Utils";
 import { useQueryClient } from "@tanstack/react-query";
-// import ViewActionHistory from "@components/ViewActionHistory";
-import {
-  CompleteActionComponentProps,
-  ComponentKey,
-  FieldConfiguration,
-  IIdentity,
-  IView,
-} from "@components/interfaces";
-import { Accordion, Button, Textarea } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { useCustom, useCustomMutation, useGetIdentity } from "@refinedev/core";
 import { Create, SaveButton, useForm } from "@refinedev/mantine";
-import { IconMathFunction } from "@tabler/icons-react";
-import _, { set } from "lodash";
-import CreateAutomation from "pages/automations/create";
 import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
-import { v4 as uuidv4 } from "uuid";
+import config from "src/config";
 import Editor from "@components/TiptapEditor";
-// this example loads the EditorState class from the ProseMirror state package
-// import { EditorState } from '@tiptap/pm/state';
 
 export function NaturalLanguageQuery() {
-  // create a state object called fieldDataMappings
-  // this object will be used to store the data fetched from the backend
-  // let fieldDataMappings = {};
-  // const queryClient = useQueryClient();
   const {
-    setActiveStructuredQuery,
-    activeStructuredQuery,
-    setActiveQueryGraph,
+    activeApplication,
     activeSession,
+    setNaturalLanguageQueryFormValues,
   } = useAppStore();
-  // console.log("actionFormFieldValues", actionFormFieldValues);
-  // let activeRecordId = activeRecords[0]?.id;
-  // const [openedAutomation, { open: openAutomation, close: closeAutomation }] =
-  //   useDisclosure(false);
-  // const [openedChat, { open: openChat, close: closeChat }] =
-  //   useDisclosure(false);
-  // const { data: identity } = useGetIdentity<IIdentity>();
   const {
     mutate,
     isLoading: mutationIsLoading,
@@ -55,15 +21,15 @@ export function NaturalLanguageQuery() {
   } = useCustomMutation();
   const queryClient = useQueryClient();
   const actionFormFieldValues = {
-    query: activeSession?.natural_language_query?.content,
-    language:
-      activeSession?.natural_language_query?.language || "natural_language",
+    content_json: activeSession?.natural_language_query?.content_json || "",
+    content_text: activeSession?.natural_language_query?.content_text || "",
     type: activeSession?.natural_language_query?.type || "json",
   };
   const {
     getInputProps,
     saveButtonProps,
     setFieldValue,
+    setValues,
     values,
     refineCore: { formLoading, onFinish },
     onSubmit,
@@ -76,35 +42,10 @@ export function NaturalLanguageQuery() {
     refineCoreProps: {},
   });
 
-  // useEffect(() => {
-  //   reset();
-
-  //   // Step 1: Reset form with only 'author' and 'author_email'
-  //   // const resetValues = {
-  //   //   author: identity?.email,
-  //   //   author_email: identity?.email,
-  //   // };
-
-  //   const resetValues = {
-  //     task_id: uuidv4(),
-  //   };
-
-  //   // Reinitialize form with base values plus dynamic actionFormFieldValues
-  //   Object.entries({
-  //     ...resetValues,
-  //     ...actionFormFieldValues,
-  //   }).forEach(([key, value]) => {
-  //     setFieldValue(key, value);
-  //   });
-  //   // console.log("actionFormFieldValues", actionFormFieldValues);
-  // }, [actionFormFieldValues, identity?.email]);
-
-  // useEffect when selectedItems changes set the field item called selectedItems
-  // useEffect(() => {
-  //   if (selectedItems) {
-  //     setFieldValue("selected_items", selectedItems[activeViewItem?.id]);
-  //   }
-  // }, [selectedItems]);
+  useEffect(() => {
+    // Update the form state in the global store whenever it changes
+    setNaturalLanguageQueryFormValues(values);
+  }, [values, setNaturalLanguageQueryFormValues]);
 
   const handleSubmit = (e: any) => {
     // console.log("values", values);
@@ -112,30 +53,16 @@ export function NaturalLanguageQuery() {
     // setActiveStructuredQuery(values.query);
     mutate(
       {
-        url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/catch`,
+        url: `${config.API_URL}/catch-nlp`,
         method: "post",
         values: {
-          global_variables: {},
-          include_execution_orders: [1],
-          action_steps: [
-            {
-              id: "1",
-              execution_order: 1,
-              tool: "update",
-              tool_arguments: {
-                ids: [activeSession?.id],
-                config: "surrealdb_catchmytask",
-                resource: "sessions",
-                values: {
-                  natural_language_query: {
-                    content: values.query,
-                    type: values.type,
-                    language: values.language,
-                  },
-                },
-              },
-            },
-          ],
+          input_values: values,
+          application: {
+            ...activeApplication,
+          },
+          session: {
+            ...activeSession,
+          },
         },
         successNotification: (data, values) => {
           return {
@@ -173,178 +100,24 @@ export function NaturalLanguageQuery() {
       }
     );
 
-    // console.log("values", values);
-    // -> GENERATE QUERY GRAPH AND THE INVALIDATE THE queries that are dependent on the query graph
-    // let generatedRequestData = generateRequestData(values);
-    // console.log("generatedRequestData", generatedRequestData);
-    mutate(
-      {
-        url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/catch`,
-        method: "post",
-        values: {
-          global_variables: {},
-          include_execution_orders: [1],
-          action_steps: [
-            {
-              id: "1",
-              execution_order: 1,
-              tool: "generate_completion",
-              tool_arguments: {
-                session_id: activeSession?.id,
-                ids: [activeSession?.id],
-                config: "surrealdb_catchmytask",
-                resource: "messages",
-                values: {
-                  natural_language_query: {
-                    content: values.query,
-                    type: values.type,
-                    language: values.language,
-                  },
-                },
-              },
-            },
-          ],
-        },
-        successNotification: (data, values) => {
-          // console.log("successNotification", data);
-          // invalidate query
-          // invalidate this so that the query graph is retriggered
-          // queryClient.invalidateQueries([activeViewItem?.id]); // invalidate the active view query to retrigger refresh of values
-
-          return {
-            message: `successfully generated completion.`,
-            description: "successfully generated completion",
-            type: "success",
-          };
-        },
-        errorNotification: (data, values) => {
-          return {
-            message: `${data?.response.status} : ${
-              data?.response.statusText
-            } : ${JSON.stringify(data?.response.data)}`,
-            description: "Error",
-            type: "error",
-          };
-        },
-      },
-      {
-        onError: (error, variables, context) => {
-          // An error occurred!
-          console.log("error", error);
-          return null;
-        },
-        onSuccess: (data, variables, context) => {
-          console.log("succeess", "completion generated successfully");
-          console.log("data", data);
-          queryClient.invalidateQueries(["execute-query-graph-key"]);
-          // Let's celebrate!
-          // console.log("succeess", "query graph generated successfully");
-          // set active query graph as the response
-          // setActiveQueryGraph(data?.data);
-          // invalidate the queries that are dependent on the query graph
-          // queryClient.invalidateQueries(["execute-query-graph-key"]);
-        },
-      }
-    );
+    // );
   };
 
   return (
-    <Create
-      headerProps={{
-        style: {
-          display: "none",
-        },
-      }}
-      wrapperProps={{
-        style: {
-          margin: "0",
-          padding: "0",
-        },
-      }}
-      saveButtonProps={{
-        disabled: saveButtonProps?.disabled,
-        onClick: handleSubmit,
-        size: "xs",
-      }}
-      footerButtons={({ saveButtonProps }) => (
-        <div className="flex w-full gap-4">
-          <Button
-            resource="automations"
-            size="xs"
-            variant="light"
-            disabled={true}
-            // onClick={() => {
-            //   if (openedChat) {
-            //     closeChat();
-            //   } else {
-            //     openChat();
-            //   }
-            // }}
-          >
-            Generate Structured Query
-          </Button>
-          <SaveButton
-            {...saveButtonProps}
-            className="flex-grow w-1/3"
-            variant="filled"
-            // leftIcon={<IconMathFunction size={16} />}
-            leftIcon={false}
-            disabled={mutationIsLoading}
-          >
-            Run
-          </SaveButton>
-        </div>
-      )}
-    >
+    <>
+      {/* {" "}
+      {JSON.stringify(values)} */}
       <Editor
         value={
           // activeStructuredQuery ||
           activeSession?.natural_language_query?.content?.[0] || ""
         }
         setFieldValue={setFieldValue}
+        setValues={setValues}
+        handleSubmit={handleSubmit}
       ></Editor>
-      {/* {JSON.stringify(activeSession?.natural_language_query?.content[0])} */}
-      {/* <div>
-        task query assessment and improvement suggestions list - list with
-        checkmarks next to met criteria - prompt user to keep improving task
-        definition. design a task definition language or optimize with textgrad?
-      </div> */}
-    </Create>
+    </>
   );
 }
 
 export default NaturalLanguageQuery;
-
-// return (
-//   <>
-//     <Create
-//       // isLoading={formLoading}
-//       // isLoading={mutationIsLoading}
-//       // saveButtonProps={{
-//       //   disabled: saveButtonProps?.disabled,
-//       //   onClick: handleSubmit,
-//       //   size: "xs",
-//       // }}
-//       breadcrumb={false}
-//       title={false}
-//       goBack={false}
-
-//     >
-//       {/* <Textarea
-//         minRows={5}
-//         // required
-//         mt="sm"
-//         // label="chat_message"
-//         placeholder="Ask questions in natural language"
-//         // data={dateTypeOptions} // Replace with your options source
-//         // value={getInputProps("date_type").value}
-//         // onChange={handleNameChange}
-//         // {...getInputProps("chat_message")}
-//         // value={record?.contact_email}
-//         // disabled
-//         // required
-//       /> */}
-//       <Editor></Editor>
-//     </Create>
-//   </>
-// );

@@ -1,7 +1,13 @@
 import { Badge, Button, Popover, TextInput, Text } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { useClickOutside } from "@mantine/hooks";
-import { IconEdit, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconPencil,
+  IconPlus,
+  IconSend,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { useAppStore } from "src/store";
 import { QueryDataType } from "@components/interfaces";
@@ -13,17 +19,17 @@ export const SelectAction = () => {
     activeMouseCoordinates,
     activeLayout,
     setActiveLayout,
-    activeResultsSection,
+    // activeResultsSection,
     // activeAction,
     setActiveAction,
   } = useAppStore();
   const queryClient = useQueryClient();
 
-  const viewData = queryClient.getQueryData<QueryDataType>([
-    `useFetchViewByName_${activeResultsSection?.name}`,
-  ]);
+  // const viewData = queryClient.getQueryData<QueryDataType>([
+  //   `useFetchViewByName_${activeResultsSection?.name}`,
+  // ]);
 
-  console.log("viewData", viewData);
+  // console.log("viewData", viewData);
 
   // const ref = useClickOutside(() => setIsActionsSelectionOpen(false));
   const { x, y } = activeMouseCoordinates;
@@ -33,6 +39,7 @@ export const SelectAction = () => {
     { icon: <IconPlus size={10} />, label: "Create" },
     { icon: <IconEdit size={10} />, label: "Edit" },
     { icon: <IconTrash size={10} />, label: "Delete" },
+    { icon: <IconSend size={10} />, label: "Follow Up" },
     // { icon: <FaceIcon className="mr-2 h-4 w-4" />, label: "Search Emoji" },
     // { icon: <RocketIcon className="mr-2 h-4 w-4" />, label: "Launch" },
     // { icon: <PersonIcon className="mr-2 h-4 w-4" />, label: "Profile" },
@@ -90,15 +97,16 @@ export const SelectAction = () => {
               <Button
                 key={index}
                 // className="flex items-center"
-                size="compact"
+                size="compact-xs"
                 variant="outline"
                 onClick={() => handleSelectAction(action)}
                 // onClick={() => console.log(`Clicked on ${action.label}`)}
                 leftSection={action.icon}
               >
-                <Text size="xs" color="gray">
+                {/* <Text size="xs" color="gray">
                   {action.label}
-                </Text>
+                </Text> */}
+                {action.label}
               </Button>
             ))}
           </div>

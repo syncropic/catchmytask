@@ -21,6 +21,7 @@ import {
   ColumnDirective,
 } from "@syncfusion/ej2-react-spreadsheet";
 import { useEffect, useRef, useState } from "react";
+import config from "src/config";
 import { useAppStore } from "src/store";
 
 export function SpreadsheetView<T extends Record<string, any>>({
@@ -31,22 +32,10 @@ export function SpreadsheetView<T extends Record<string, any>>({
   isLoadingDataItems,
   resource_group,
 }: SpreadsheetViewComponentProps<T>) {
-  // // data_columns
-  // console.log("spreadsheet data_columns", data_columns);
-  // // results
-  // console.log("spreadsheet results", results);
-
   const { activeQueryGraph } = useAppStore();
 
-  // Define pixels per character (adjust as needed)
-  const pixelsPerChar = 10; // Example value
+  const pixelsPerChar = 10;
 
-  // Function to calculate width based on the number of characters
-  // const calculateWidth = (header) => {
-  //   const charCount = header.column.columnDef.header.length;
-  //   return charCount * pixelsPerChar;
-  // };
-  // find the corresponding spreadsheet column range is A1:E1 given the number of data columns array
   const findSpreadsheetColumn = (
     data_columns: any[],
     row_number: number
@@ -70,46 +59,20 @@ export function SpreadsheetView<T extends Record<string, any>>({
 
     return `${startColumn}:${endColumn}`;
   };
-  let columns_range = findSpreadsheetColumn(data_columns, 2); // this has display columns too fix later
-  let title_range = findSpreadsheetColumn(data_columns, 1);
-  // get all visible columns from the tanstack table instance
-  // const visibleTableColumns = tableInstance?.getVisibleFlatColumns();
-  // console.log("visibleFlatColumns", visibleTableColumns);
 
-  // {tableInstance.getHeaderGroups().map((headerGroup) => (
-  //   <tr key={headerGroup.id} className="flex">
-  //     {headerGroup.headers.map((header) => {
-  //       return (
-  //         <th
-  //           key={header.id}
-  //           className="[&:has([role=checkbox])]:pr-0"
-  //           style={{ width: `${calculateWidth(header)}px` }}
-  //         >
-  //           {header.isPlaceholder
-  //             ? null
-  //             : flexRender(
-  //                 header.column.columnDef.header,
-  //                 header.getContext()
-  //               )}
-  //           {/* {header.column.columnDef.header} */}
-  //         </th>
-  //       );
-  //     })}
-  //   </tr>
-  // ))}
-  // console.log("columns_range", columns_range);
-  const spreadsheetRef = useRef(null);
-  // to get the formatting. 1) get the index of all the columns the table. get the index of interested cells. loop and apply formatting
-  // loop through the data and crete cell format for each record
+  let columns_range = findSpreadsheetColumn(data_columns, 2);
+  let title_range = findSpreadsheetColumn(data_columns, 1);
+
+  const spreadsheetRef = useRef<SpreadsheetComponent>(null);
 
   const onCreated = () => {
     let spreadsheet = spreadsheetRef.current;
     if (spreadsheet) {
-      spreadsheet.cellFormat(
+      spreadsheet?.cellFormat(
         { fontWeight: "bold", textAlign: "left" },
         `${columns_range}`
       );
-      spreadsheet.cellFormat(
+      spreadsheet?.cellFormat(
         {
           fontWeight: "bold",
           textAlign: "left",
@@ -122,67 +85,27 @@ export function SpreadsheetView<T extends Record<string, any>>({
       data_items.forEach((item, index) => {
         let rowStart = index + 3;
         if (item["payment_type"] === "Prepaid") {
-          spreadsheet.cellFormat(
+          spreadsheet?.cellFormat(
             { borderTop: "1px solid #e0e0e0", backgroundColor: "#FFC300" },
             `E${rowStart}:E${rowStart}`
           );
         }
       });
-
-      // spreadsheet.numberFormat("$#,##0.00", "G3:G5");
-      // // format date columns
-      // spreadsheet.numberFormat("m/d/yyyy", "A3:A5");
-      // // format as text
-      // spreadsheet.numberFormat("@", "D3:D5");
-      // // set background color conditional formatting
-      // spreadsheet.conditionalFormat({
-      //   type: "Expression",
-      //   format: { backgroundColor: "#009999" },
-      //   value: "value = Prepaid",
-      //   range: "E2:E100",
-      // });
-      // spreadsheet.cellFormat(
-      //   { borderTop: "1px solid #e0e0e0", backgroundColor: "#FFC300" },
-      //   "E3:E100"
-      // );
-
-      // spreadsheet.conditionalFormat({
-      //   type: "ContainsText",
-      //   value: "Prepaid",
-      //   format: {
-      //     style: {
-      //       color: "#ffffff",
-      //       backgroundColor: "#009999",
-      //       fontWeight: "bold",
-      //     },
-      //   },
-      //   range: "E3:E100",
-      // });
-      // // deleting the rows from 8th to 10th index. To delete row, the third argument of enum type is passed as 'Row', the last argument specifies the sheet name or index in which the delete operation will perform. By default,active sheet will be considered. It is applicable only for model type Row and Column.
-      // spreadsheet.delete(8, 10, "Row", 0); // startIndex, endIndex, Row, sheet index
-      // // deleting the 2nd and 5th indexed columns
-      // spreadsheet.delete(2, 2, "Column", "Sheet2");
-      // spreadsheet.delete(5, 5, "Column");
-      // spreadsheet.delete(0, 0, "Sheet"); // delete the first sheet. sheet index starts from 0
-      // // Applies style formatting after deleted the rows and columns
-      // spreadsheet.cellFormat({ textAlign: "center" }, "A2:A8");
-      // spreadsheet.cellFormat({ textAlign: "center" }, "D2:G8");
     }
   };
 
   return (
     <>
-      {/* <div>{JSON.stringify(data_items)}</div> */}
       <div className="relative h-full w-full">
         <LoadingOverlay visible={isLoadingDataItems} />
 
         <SpreadsheetComponent
-          key={JSON.stringify(activeQueryGraph)} // Add key to force re-render
+          key={JSON.stringify(activeQueryGraph)}
           height="100%"
           allowOpen={true}
-          openUrl={`${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/api/spreadsheet/open`}
+          openUrl={`${config.API_URL}/api/spreadsheet/open`}
           allowSave={true}
-          saveUrl={`${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/api/spreadsheet/save`}
+          saveUrl={`${config.API_URL}/api/spreadsheet/save`}
           showRibbon={false}
           showFormulaBar={false}
           allowCellFormatting={true}
@@ -211,25 +134,14 @@ export function SpreadsheetView<T extends Record<string, any>>({
                 ></RangeDirective>
               </RangesDirective>
 
-              {tableInstance.getHeaderGroups().map((headerGroup) => (
+              {tableInstance?.getHeaderGroups().map((headerGroup) => (
                 <ColumnsDirective>
                   {headerGroup.headers.map((header, index) => {
                     return (
                       <ColumnDirective
-                        // width={calculateWidth(header)}
                         width={150}
                         index={index}
-                        // field={column.field}
-                        // headerText={column.headerText}
-                      >
-                        {/* {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )} */}
-                        {/* {header.column.columnDef.header} */}
-                      </ColumnDirective>
+                      ></ColumnDirective>
                     );
                   })}
                 </ColumnsDirective>
@@ -241,4 +153,5 @@ export function SpreadsheetView<T extends Record<string, any>>({
     </>
   );
 }
+
 export default SpreadsheetView;

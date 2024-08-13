@@ -14,6 +14,7 @@ import ViewTask from "@components/ViewTask";
 import ViewTestRun from "@components/ViewTestRun";
 import ViewTrip from "@components/ViewTrip";
 import { ComponentKey } from "@components/interfaces";
+import config from "src/config";
 import {
   Column,
   FieldConfiguration,
@@ -52,6 +53,7 @@ import { formatDateTime, getCellStyleInline } from "src/utils";
 import ViewJson from "@components/ViewJson";
 import ShortcutLink from "@components/ShortcutLink";
 import MonacoEditor from "@components/MonacoEditor";
+import { MonacoEditorFormInput } from "@components/MonacoEditor";
 // import LocalAudioPlayer from "@components/LocalAudioPlayer";
 import FileHandler from "@components/FileHandler";
 import ExcalidrawEditor from "@components/ExcalidrawEditor";
@@ -66,12 +68,43 @@ import {
   DropdownMenuTrigger,
 } from "@components/DropdownMenu";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
-import { IconDots, IconFunction } from "@tabler/icons-react";
+import {
+  IconBooks,
+  IconBrandAirtable,
+  IconBrandAzure,
+  IconBrandGit,
+  IconBrandGithub,
+  IconBrandGoogleDrive,
+  IconBrandOpenai,
+  IconBrandSpotify,
+  IconBrandStripe,
+  IconCircle,
+  IconCode,
+  IconCurrencyDollar,
+  IconDatabase,
+  IconDots,
+  IconFunction,
+  IconMessageCircle,
+  IconNotification,
+  IconPlane,
+  IconPlug,
+  IconPresentation,
+  IconRobot,
+  IconServer,
+  IconTopologyStar3,
+  IconTransform,
+  IconUsersGroup,
+} from "@tabler/icons-react";
 import ActivateActionsSelection from "@components/ActivateActionsSelection";
 import Hero from "@components/Hero";
 import FaqSimple from "@components/Faq/FaqSimple";
 import Benefits from "@components/Benefits/Benefits";
 import { FeaturesGrid } from "@components/Features/FeaturesGrid";
+import Procedure from "@components/Procedure/Procedure";
+import List from "@components/List/List";
+import { EmailBanner } from "@components/EmailBanner/EmailBanner";
+import React from "react";
+import { render } from "react-dom";
 // import MediaPlayerController from "@components/MediaPlayerController";
 // import MediaPlayerTimeline from "@components/MediaPlayerTimeline";
 
@@ -575,6 +608,31 @@ export const typescriptToDisplayComponent: Record<string, string> = {
   // object: "JsonEditor",
 };
 
+export const iconMapping: Record<string, React.ElementType> = {
+  IconBrandOpenai,
+  IconCode,
+  IconBrandGithub,
+  IconBrandGoogleDrive,
+  IconCircle,
+  IconBrandSpotify,
+  IconBrandAirtable,
+  IconBrandStripe,
+  IconPresentation,
+  IconNotification,
+  IconPlug,
+  IconMessageCircle,
+  IconRobot,
+  IconBrandAzure,
+  IconServer,
+  IconDatabase,
+  IconPlane,
+  IconCurrencyDollar,
+  IconUsersGroup,
+  IconTransform,
+  IconTopologyStar3,
+  IconBooks,
+};
+
 // Adjust your componentMapping to explicitly use this type for its keys
 export const componentMapping: Record<ComponentKey, React.ElementType> = {
   TextInput: TextInput,
@@ -595,12 +653,18 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   supplier_issues: ViewJson,
   JsonEditor: MonacoEditor,
   MonacoEditor: MonacoEditor,
+  MonacoEditorFormInput: MonacoEditorFormInput,
   // LocalAudioPlayer: LocalAudioPlayer,
   FileHandler: FileHandler,
   ExcalidrawEditor: ExcalidrawEditor,
   hero: Hero,
   frequently_asked_questions: FaqSimple,
   benefits: FeaturesGrid,
+  get_started: Procedure,
+  integrations: List,
+  social_proof: List,
+  showcase: List,
+  email_list_signup: EmailBanner,
   // MediaPlayerController: MediaPlayerController,
   // MediaPlayerTimeline: MediaPlayerTimeline,
 };
@@ -671,16 +735,13 @@ export function useAuthToken() {
         formData.append("username", identity?.email);
         formData.append("password", identity?.email);
 
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/token`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: formData,
-          }
-        );
+        const response = await fetch(`${config.API_URL}/token`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: formData,
+        });
 
         if (!response.ok) throw new Error("Failed to fetch auth token");
 
@@ -735,17 +796,34 @@ export function extractIdentifier(activeRecord: any): RecordIdentifier {
 
 export function useFetchActionById(actionId: string | null) {
   const [action, setAction] = useState<IAction | null>(null);
-  const active_action_query = {
-    credentials: "surrealdb_catchmytask",
-    query: `SELECT *, show.view_id.* AS show.view, list.view_id.* AS list.view FROM actions WHERE id = '${actionId}'`,
-    query_language: "surrealql",
-  };
+  // const active_action_query = {
+  //   credentials: "surrealdb_catchmytask",
+  //   query: `SELECT *, show.view_id.* AS show.view, list.view_id.* AS list.view FROM actions WHERE id = '${actionId}'`,
+  //   query_language: "surrealql",
+  // };
   const { data, isLoading, error } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/catch`,
     method: "post",
     config: {
       payload: {
-        function_arguments: active_action_query,
+        global_variables: {},
+        include_execution_orders: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            tool: "retrieve",
+            tool_arguments: {
+              queries: [
+                {
+                  query: `SELECT *, show.view_id.* AS show.view, list.view_id.* AS list.view FROM actions WHERE id = '${actionId}'`,
+                  credential: "surrealdb_catchmytask",
+                  params: {},
+                },
+              ],
+            },
+          },
+        ],
       },
     },
     queryOptions: {
@@ -770,7 +848,7 @@ export function useFetchActionHistoryById(actionId: any | null) {
     query_language: "surrealql",
   };
   const { data, isLoading, error, isError } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -791,24 +869,79 @@ export function useFetchActionHistoryById(actionId: any | null) {
   return { data, isLoading, error, isError };
 }
 
+// export function useFetchDomainDataByDomain(domain: string) {
+//   const variables = {
+//     domain: domain,
+//   };
+
+//   const { data, isLoading, error, isError } = useCustom({
+//     url: `${config.API_URL}/catch-read`,
+//     method: "post",
+//     config: {
+//       payload: {
+//         global_variables: {},
+//         include_execution_orders: [1],
+//         action_steps: [
+//           {
+//             id: "1",
+//             execution_order: 1,
+//             tool: "retrieve",
+//             tool_arguments: {
+//               queries: [
+//                 {
+//                   query: `SELECT * FROM fn::execute_query('domain_data', '${JSON.stringify(
+//                     variables
+//                   )}')`,
+//                   credential: "surrealdb_catchmytask",
+//                   params: {},
+//                 },
+//               ],
+//             },
+//           },
+//         ],
+//       },
+//     },
+//     queryOptions: {
+//       queryKey: [`useFetchDomainDataByDomain_${domain}`],
+//     },
+//   });
+
+//   return { data, isLoading, error, isError };
+// }
+
 export function useFetchDomainDataByDomain(domain: string) {
   const variables = {
     domain: domain,
   };
-  // const [action, setAction] = useState<IAction | null>(null);
-  const active_action_query = {
-    credentials: "surrealdb_catchmytask",
-    query: `SELECT * FROM fn::execute_query('domain_data', '${JSON.stringify(
-      variables
-    )}')`,
-    query_language: "surrealql",
-  };
+
   const { data, isLoading, error, isError } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/catch-read`,
     method: "post",
     config: {
       payload: {
-        function_arguments: active_action_query,
+        task_variables: {},
+        global_variables: {},
+        include_action_steps: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            description: "get domain data",
+            name: "domain_data",
+            job: "get domain data",
+            action_step_query: `SELECT * FROM fn::execute_query('domain_data', '${JSON.stringify(
+              variables
+            )}')`,
+            method: "get",
+            type: "main",
+            select: {
+              query: `SELECT * FROM fn::execute_query('domain_data', '${JSON.stringify(
+                variables
+              )}')`,
+              credential: "surrealdb_catchmytask",
+            },
+          },
+        ],
       },
     },
     queryOptions: {
@@ -816,28 +949,250 @@ export function useFetchDomainDataByDomain(domain: string) {
     },
   });
 
-  // useEffect(() => {
-  //   if (!isLoading && data && !error) {
-  //     setAction(data?.data[0]);
-  //   }
-  // }, [data, isLoading, error]);
+  return { data, isLoading, error, isError };
+}
+
+export function useFetchRecommendationDataByState(state: any) {
+  // const variables = state;
+
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config.API_URL}/catch-recommendation`,
+    method: "post",
+    config: {
+      payload: {
+        task_variables: {},
+        global_variables: {},
+        include_action_steps: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            description: "get recommendation data",
+            name: "recommendation_data",
+            job: "get recommendation data",
+            action_step_query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+              state
+            )}')`,
+            method: "get",
+            type: "main",
+            select: {
+              query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+                state
+              )}')`,
+              credential: "surrealdb_catchmytask",
+            },
+          },
+        ],
+      },
+    },
+    queryOptions: {
+      queryKey: [`useFetchRecommendationDataByState_${JSON.stringify(state)}`],
+    },
+  });
+
+  return { data, isLoading, error, isError };
+}
+
+interface useFetchGenerativeRecommendationDataByStateProps {
+  state: any;
+  response_model?: string;
+  type?: string;
+}
+
+export function useFetchGenerativeRecommendationDataByState({
+  state,
+  response_model = "GenerativeRecommendation",
+  type = "recommendations",
+}: useFetchGenerativeRecommendationDataByStateProps) {
+  // const variables = state;
+
+  let query_key_variables = {
+    state: state,
+    response_model: response_model,
+    type: type,
+  };
+
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config.API_URL}/catch-generative-recommendation`,
+    method: "post",
+    config: {
+      payload: {
+        task_variables: {},
+        global_variables: {},
+        include_action_steps: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            description: "get generative recommendation data",
+            name: "generative_recommendation_data",
+            job: "get generative recommendation data",
+            action_step_query: `${JSON.stringify(state)}`,
+            method: "get",
+            type: "main",
+            select: {
+              query: `${JSON.stringify(state)}`,
+              response_model: response_model,
+              type: type,
+              credential: "openapi_dpwanjala_35turbo1106",
+            },
+          },
+        ],
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `useFetchGenerativeRecommendationDataByState_${JSON.stringify(
+          query_key_variables
+        )}`,
+      ],
+    },
+  });
+
+  return { data, isLoading, error, isError };
+}
+
+interface useFetchGenerativeComponentDataByStateAndModelProps {
+  state: any;
+  response_model?: string;
+  type?: string;
+  instruction?: string;
+}
+
+export function useFetchGenerativeComponentDataByStateAndModel({
+  state,
+  response_model = "GenerativeRecommendation",
+  type = "recommendations",
+  instruction = "",
+}: useFetchGenerativeComponentDataByStateAndModelProps) {
+  let query_key_variables = {
+    state: state,
+    response_model: response_model,
+    type: type,
+    instruction: instruction,
+  };
+
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config.API_URL}/catch-generate`,
+    method: "post",
+    config: {
+      payload: {
+        task_variables: {},
+        global_variables: {},
+        include_action_steps: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            description: "get generative component data",
+            name: "generative_component_data",
+            job: "get generative component data",
+            action_step_query: `${JSON.stringify(state)}`,
+            method: "get",
+            type: "main",
+            select: {
+              query: `${JSON.stringify(state)}`,
+              response_model: response_model,
+              type: type,
+              instruction: instruction,
+              credential: "openapi_dpwanjala_35turbo1106",
+            },
+          },
+        ],
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `useFetchGenerativeComponentDataByStateAndModel_${JSON.stringify(
+          query_key_variables
+        )}`,
+      ],
+    },
+  });
+
+  return { data, isLoading, error, isError };
+}
+
+export function useFetchActionDataByName(state: any) {
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config.API_URL}/catch-read`,
+    method: "post",
+    config: {
+      payload: {
+        task_variables: {},
+        global_variables: {},
+        include_action_steps: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            description: "get action data",
+            name: "action_data",
+            job: "get action data",
+            action_step_query: `SELECT * FROM fn::execute_query('action_data', '${JSON.stringify(
+              state
+            )}')`,
+            method: "get",
+            type: "main",
+            select: {
+              query: `SELECT * FROM fn::execute_query('action_data', '${JSON.stringify(
+                state
+              )}')`,
+              credential: "surrealdb_catchmytask",
+            },
+          },
+        ],
+      },
+    },
+    queryOptions: {
+      queryKey: [`useFetchActionDataByName_${state}`],
+    },
+  });
 
   return { data, isLoading, error, isError };
 }
 
 export function useFetchSessionById(sessionId: string | null) {
-  // const [data, setAction] = useState<IAction | null>(null);
-  const session_query = {
-    credentials: "surrealdb_catchmytask",
-    query: `SELECT *, show.view_id.* AS show.view, list.view_id.* AS list.view FROM sessions WHERE id = '${sessionId}'`,
-    query_language: "surrealql",
-  };
   const { data, isLoading, error } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/catch-read`,
     method: "post",
     config: {
       payload: {
-        function_arguments: session_query,
+        task_variables: {},
+        global_variables: {},
+        include_execution_orders: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            description: "Retrieve session data",
+            name: "retrieve_session_data",
+            job: "retrieve session data",
+            action_step_query: `RETURN {
+                LET $session_id = '${sessionId}';
+                LET $task_ids = SELECT VALUE out FROM execute_task WHERE in = $session_id;
+                RETURN {
+                    'session': (SELECT *, show.view_id.* AS show.view, list.view_id.* AS list.view FROM ONLY sessions WHERE id = $session_id LIMIT 1),
+                    'task_ids': $task_ids,
+                    'action_steps': SELECT * FROM action_steps WHERE task_id IN $task_ids
+                }
+            }`,
+            method: "get",
+            type: "main",
+            select: {
+              query: `RETURN {
+                        LET $session_id = '${sessionId}';
+                        LET $task_ids = SELECT VALUE out FROM execute_task WHERE in = $session_id;
+                        RETURN {
+                            'session': (SELECT *, show.view_id.* AS show.view, list.view_id.* AS list.view FROM ONLY sessions WHERE id = $session_id LIMIT 1),
+                            'task_ids': $task_ids,
+                            'action_steps': SELECT * FROM action_steps WHERE task_id IN $task_ids
+                        }
+                    }`,
+              credential: "surrealdb_catchmytask",
+            },
+          },
+        ],
       },
     },
     queryOptions: {
@@ -855,17 +1210,34 @@ export function useFetchSessionById(sessionId: string | null) {
 
 export function useFetchViewById(viewId: string | null) {
   // const [data, setAction] = useState<IAction | null>(null);
-  const view_query = {
-    credentials: "surrealdb_catchmytask",
-    query: `SELECT ->includes_field_configuration.*.out.* AS field_configurations FROM '${viewId}';`,
-    query_language: "surrealql",
-  };
+  // const view_query = {
+  //   credentials: "surrealdb_catchmytask",
+  //   query: `SELECT ->includes_field_configuration.*.out.* AS field_configurations FROM '${viewId}';`,
+  //   query_language: "surrealql",
+  // };
   const { data, isLoading, error } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/catch`,
     method: "post",
     config: {
       payload: {
-        function_arguments: view_query,
+        global_variables: {},
+        include_execution_orders: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            tool: "retrieve",
+            tool_arguments: {
+              queries: [
+                {
+                  query: `SELECT ->includes_field_configuration.*.out.* AS field_configurations FROM '${viewId}';`,
+                  credential: "surrealdb_catchmytask",
+                  params: {},
+                },
+              ],
+            },
+          },
+        ],
       },
     },
     queryOptions: {
@@ -889,7 +1261,7 @@ export function useFetchViewByName(viewName: string | null) {
     query_language: "surrealql",
   };
   const { data, isLoading, error } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -913,11 +1285,11 @@ export function useFetchActionByName(actionName: string | null) {
   // const [data, setAction] = useState<IAction | null>(null);
   const view_query = {
     credentials: "surrealdb_catchmytask",
-    query: `SELECT (SELECT *, out.* FROM includes_field_configuration WHERE in == $parent.id) AS field_configurations, (SELECT *, out.* FROM includes_action_configuration WHERE in == $parent.id) AS action_configurations, * FROM views WHERE name = '${viewName}';`,
+    query: `SELECT (SELECT *, out.* FROM includes_field_configuration WHERE in == $parent.id) AS field_configurations, (SELECT *, out.* FROM includes_action_configuration WHERE in == $parent.id) AS action_configurations, * FROM views WHERE name = '${actionName}';`,
     query_language: "surrealql",
   };
   const { data, isLoading, error } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -940,7 +1312,7 @@ export function useFetchExecutionTraceBySessionId(sessionId: string | null) {
     query_language: "surrealql",
   };
   const { data, isLoading, error } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -969,7 +1341,7 @@ export function useFetchResourceByField(item: {
     query_language: "surrealql",
   };
   const { data, isLoading, error } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -1030,11 +1402,25 @@ export function selectExecutionStatus(statusList: string[]): string {
 
 export type ReplacementValues = { [key: string]: string };
 
+// // Helper function to get component by resource type
+// export function getComponentByResourceType(resourceType: ComponentKey) {
+//   const Component = componentMapping[resourceType];
+//   if (!Component) {
+//     throw new Error(`Component for resource type "${resourceType}" not found`);
+//   }
+//   return Component;
+// }
+
+// Define a fallback component that accepts the resource type as a prop
+const ComponentNotFound = ({ resourceType }: { resourceType: string }) => {
+  return <div>Component not found: "{resourceType}"</div>;
+};
+
 // Helper function to get component by resource type
 export function getComponentByResourceType(resourceType: ComponentKey) {
   const Component = componentMapping[resourceType];
   if (!Component) {
-    throw new Error(`Component for resource type "${resourceType}" not found`);
+    return () => <ComponentNotFound resourceType={resourceType} />;
   }
   return Component;
 }
@@ -1199,6 +1585,41 @@ export async function getFileArrayBufferById(recordId: any) {
 //   return { tableColumns };
 // }
 
+const renderContent = (content: string) => {
+  return useMemo(() => {
+    const parts = content.split(/(```[\s\S]*?```)/g); // Splits content into code blocks and plain text
+
+    return parts.map((part, index) => {
+      if (part.startsWith("```") && part.endsWith("```")) {
+        // Extract code block language if specified
+        const codeContent = part.slice(3, -3);
+        const language = "sql"; // Default to 'sql', or extract from the code block if specified
+
+        return (
+          <MonacoEditor
+            key={`${index}-${language}`} // Ensure the key is stable
+            value={codeContent.trim()}
+            language={language}
+            // options={{
+            //   readOnly: true,
+            //   minimap: { enabled: false },
+            //   automaticLayout: true,
+            // }}
+            // height="100px" // Adjust height as needed
+          />
+        );
+      } else {
+        // Render the rest of the content with dangerouslySetInnerHTML
+        return <div key={index} dangerouslySetInnerHTML={{ __html: part }} />;
+      }
+    });
+  }, [content]); // Only recalculate if content changes
+};
+
+const MemoizedCell = React.memo(({ content }: { content: string }) => (
+  <div>{renderContent(content)}</div>
+));
+
 interface UseTableColumnsProps {
   field_configurations: FieldConfiguration[];
   table_id: string;
@@ -1211,11 +1632,16 @@ export function useTableColumns({
   // console.log("field_configurations", field_configurations);
   const tableColumns = useMemo<ColumnDef<RowData, any>[]>(
     () =>
-      field_configurations.map((item) => {
+      field_configurations?.map((item) => {
         return {
           id: `${table_id}-${item.name}`,
           accessorKey: item.accessor_key || item.name, // Assuming each FieldConfiguration has a 'name' property
           header: item.name, // Assuming each FieldConfiguration has a 'name' property
+          cell: (row: RowData) => (
+            <div dangerouslySetInnerHTML={{ __html: row[item.name] }} />
+            // {renderContent(row[item.name])}
+            // <div>{renderContent(row[item.name])}</div>
+          ),
           // Add more properties as needed from item
         };
       }),
@@ -1232,17 +1658,30 @@ export const RetrieveFieldData = ({ field }: { field: FieldConfiguration }) => {
   const { activeField } = useAppStore();
 
   const { data, isLoading, error } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/catch-read`,
     method: "post",
     config: {
       payload: {
-        // Here, ensure that you're constructing your payload correctly without circular references
-        // For example, use the focusedFieldName directly if it's part of the payload
-        function_arguments: {
-          credentials: "surrealdb_catchmytask",
-          query: field?.data_prop_query || "SELECT * FROM sessions",
-          query_language: "surrealdb",
-        },
+        task_variables: {},
+        global_variables: {},
+        include_execution_orders: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            description: "Retrieve field data",
+            name: "retrieve_field_data",
+            job: "retrieve field data",
+            action_step_query:
+              field?.data_prop_query || "SELECT * FROM sessions",
+            method: "get",
+            type: "main",
+            select: {
+              query: field?.data_prop_query || "SELECT * FROM sessions",
+              credential: "surrealdb_catchmytask",
+            },
+          },
+        ],
       },
     },
     queryOptions: {
@@ -1292,3 +1731,50 @@ export const mergeEdgeWithEntityValues = (edge_and_entity: any) => {
     ...edge_without_id,
   };
 };
+
+export const useDomain = () => {
+  const [domain, setDomain] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // This includes the protocol and domain up to the extension
+      setDomain(window.location.origin);
+    }
+  }, []);
+
+  return domain;
+};
+
+// A typical debounced input react component
+export function DebouncedInput({
+  value: initialValue,
+  onChange,
+  debounce = 500,
+  ...props
+}: {
+  value: string | number;
+  onChange: (value: string | number) => void;
+  debounce?: number;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
+  const [value, setValue] = React.useState(initialValue);
+
+  React.useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      onChange(value);
+    }, debounce);
+
+    return () => clearTimeout(timeout);
+  }, [value]);
+
+  return (
+    <input
+      {...props}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+    />
+  );
+}

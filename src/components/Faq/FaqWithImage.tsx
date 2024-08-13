@@ -1,15 +1,13 @@
 import { Image, Accordion, Grid, Container, Title } from "@mantine/core";
 // import image from "./image.svg";
 import classes from "./FaqWithImage.module.css";
+import { ContentBlockProps } from "@components/interfaces";
 
-const placeholder =
-  "It can’t help but hear a pin drop from over half a mile away, so it lives deep in the mountains where there aren’t many people or Pokémon.";
-
-export function FaqWithImage({ imageURL, items, heading }) {
+export function FaqWithImage({ title, items }: ContentBlockProps) {
   const steps = items.map((item, index) => {
     return (
-      <Accordion.Item className={classes.item} value={item.title} key={index}>
-        <Accordion.Control>{item.title}</Accordion.Control>
+      <Accordion.Item className={classes.item} value={item.name} key={index}>
+        <Accordion.Control>{item.name}</Accordion.Control>
         <Accordion.Panel>{item.description}</Accordion.Panel>
       </Accordion.Item>
     );
@@ -22,13 +20,13 @@ export function FaqWithImage({ imageURL, items, heading }) {
             {/* <Image src={imageURL} alt="Getting started" /> */}
             <img
               className="object-contain w-96 h-72"
-              src={imageURL}
+              // src={imageURL}
               alt="catchmyvibe hero"
             ></img>
           </Grid.Col>
           <Grid.Col span={{ base: 12, md: 6 }}>
             <Title order={2} ta="left" className={classes.title}>
-              {heading}
+              {title.name}
             </Title>
 
             <Accordion

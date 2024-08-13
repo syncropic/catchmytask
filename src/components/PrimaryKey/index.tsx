@@ -20,7 +20,7 @@ const PrimaryKey: React.FC<IFieldConfigurationWithValue> = ({
   }
 
   return (
-    <Anchor component={Text}>
+    <Anchor>
       <Text
         size="sm"
         onClick={() => {

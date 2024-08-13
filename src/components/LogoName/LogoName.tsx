@@ -1,15 +1,42 @@
 import { Anchor, Avatar, Button } from "@mantine/core";
+import { IconLetterC } from "@tabler/icons-react";
 import Link from "next/link";
 
-export function LogoName({ logoLink, companyName, logoURL, handleClickHome }) {
+interface LogoNameProps {
+  logoLink: string;
+  companyName?: string;
+  logoURL?: string;
+  handleClickHome: () => void;
+  iconName?: string;
+}
+
+export function LogoName({
+  logoLink,
+  companyName = "COMPANY NAME",
+  logoURL,
+  handleClickHome,
+  iconName,
+}: LogoNameProps) {
   return (
     <Anchor component={Link} href={logoLink}>
       <Button
         variant="transparent"
-        leftSection={<Avatar src={logoURL} alt="company logo" size="sm" />}
-        onClick={() => handleClickHome()}
+        leftSection={
+          logoURL ? (
+            <Avatar src={logoURL} alt="company logo" size="sm" />
+          ) : iconName ? (
+            <Avatar color="blue" radius="sm">
+              <IconLetterC />
+            </Avatar>
+          ) : (
+            <Avatar color="blue" radius="sm">
+              <IconLetterC />
+            </Avatar>
+          )
+        }
+        onClick={handleClickHome}
       >
-        {companyName || "COMPANY NAME"}
+        {companyName}
       </Button>
     </Anchor>
   );

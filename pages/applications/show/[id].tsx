@@ -19,7 +19,7 @@ import { Show } from "@refinedev/mantine";
 import React, { useEffect } from "react";
 import { useAppStore } from "src/store";
 import { formatDateTimeAsDateTime } from "src/utils";
-import SessionList from "pages/sessions";
+// import SessionList from "pages/sessions";
 
 export const PageShow: React.FC<IResourceComponentsProps> = () => {
   const { params } = useParsed();
@@ -78,9 +78,9 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
         headerButtons={({ defaultButtons }) => (
           <>
             <SelectAction
-              actions_list={actionsList || []}
-              record={activeDataset}
-              view_item={null}
+            // actions_list={actionsList || []}
+            // record={activeDataset}
+            // view_item={null}
             />
           </>
         )}
@@ -135,5 +135,6 @@ export default PageShow;
 // import React from "react";
 //
 const ListSessions = () => {
-  return <SessionList />;
+  // return <SessionList />;
+  return <div>SessionList</div>;
 };

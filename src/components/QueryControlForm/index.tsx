@@ -26,7 +26,8 @@ import CreateAutomation from "pages/automations/create";
 import { useEffect } from "react";
 import { useAppStore } from "src/store";
 import { v4 as uuidv4 } from "uuid";
-import BlocksEditor from "@components/BlocksEditor";
+import config from "src/config";
+// import BlocksEditor from "@components/BlocksEditor";
 
 export function QueryControlForm<T extends Record<string, any>>({
   queryAction,
@@ -121,7 +122,7 @@ export function QueryControlForm<T extends Record<string, any>>({
     // let generatedRequestData = generateRequestData(values);
     // console.log("generatedRequestData", generatedRequestData);
     mutate({
-      url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/execute`,
+      url: `${config.API_URL}/execute`,
       method: "post",
       values: generateRequestData(values),
       successNotification: (data, values) => {
@@ -226,7 +227,9 @@ export function QueryControlForm<T extends Record<string, any>>({
           </Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="blocks">
-          <BlocksEditor values={values} />
+          {/* <BlocksEditor values={values} />
+           */}
+          <div>blocks editor</div>
         </Tabs.Panel>
 
         <Tabs.Panel value="natural_language">

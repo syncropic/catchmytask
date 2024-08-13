@@ -1,5 +1,6 @@
 import Editor, { useMonaco } from "@monaco-editor/react";
 import React, { useEffect, useRef, useState } from "react";
+import { Text } from "@mantine/core";
 
 interface IEditor {
   value: any;
@@ -80,3 +81,19 @@ const MonacoEditor: React.FC<IEditor> = ({
 };
 
 export default MonacoEditor;
+
+export const MonacoEditorFormInput = ({ ...props }: any) => {
+  console.log("monaco editor form input props", props);
+  return (
+    <>
+      {props?.schema?.title && <Text>{props?.schema?.title}</Text>}
+      <MonacoEditor
+        {...props?.schema}
+        value={props?.value}
+        // setFieldValue={form.setFieldValue}
+        // {...props}
+      />
+    </>
+    // <div>monaco editor form input</div>
+  );
+};

@@ -5,6 +5,7 @@ import { useCustom } from "@refinedev/core";
 import React, { useEffect, useState } from "react";
 import { updateTableVisibility } from "src/utils";
 import _ from "lodash";
+import config from "src/config";
 
 export const ListView: React.FC<{ item: IView }> = ({ item }) => {
   // console.log("item", item);
@@ -17,7 +18,7 @@ export const ListView: React.FC<{ item: IView }> = ({ item }) => {
   const query_key = item?.id || item?.view?.[0].id;
 
   const { data, isLoading, isError, error, isFetching } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/query`,
+    url: `${config.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -87,7 +88,7 @@ export const ListView: React.FC<{ item: IView }> = ({ item }) => {
 
   return (
     <>
-      <TableView
+      {/* <TableView
         resource={item?.resource}
         data_columns={data_columns_enhanced}
         data_items={
@@ -97,7 +98,8 @@ export const ListView: React.FC<{ item: IView }> = ({ item }) => {
         isLoadingDataItems={isLoading}
         customTableConfig={customTableConfig}
         updateTableVisibility={updateTableVisibility}
-      />
+      /> */}
+      <div>tableview</div>
       {/* <div>{JSON.stringify(data?.data)}</div> */}
       {/* <div>{JSON.stringify(item)}</div> */}
       {/* <div>{JSON.stringify(isFetching)}</div> */}

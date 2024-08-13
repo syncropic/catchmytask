@@ -41,6 +41,7 @@ import Results from "@components/Results";
 import SelectAction from "@components/SelectAction";
 import { Item } from "@radix-ui/react-context-menu";
 import FloatingWindow from "@components/FloatingWindow";
+import config from "src/config";
 
 export const RetrieveAndRenderResults: React.FC<
   IResourceComponentsProps
@@ -116,7 +117,7 @@ export const RetrieveAndRenderResults: React.FC<
   // const session = data?.data;
   // when session changes, set activeSession
   const { data, isLoading, isFetching } = useCustom({
-    url: `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}/catch`,
+    url: `${config.API_URL}/catch`,
     queryOptions: {
       queryKey: ["execute-query-graph-key", activeQueryGraph],
       enabled: true,

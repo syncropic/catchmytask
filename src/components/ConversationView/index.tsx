@@ -122,9 +122,11 @@ export function ConversationView<T extends Record<string, any>>({
       /> */}
 
       <ChatContainer
-        messages={tableInstance
-          ?.getFilteredRowModel()
-          .rows.map((row) => row.original)}
+        messages={
+          tableInstance
+            ?.getFilteredRowModel()
+            .rows.map((row) => row.original) as unknown as Message[]
+        }
       />
       {/* <div>conversationview</div> */}
     </>
@@ -160,7 +162,16 @@ export default ConversationView;
 </TableBody> */
 }
 
-const ChatContainer = ({ messages }) => {
+export interface Message {
+  author_id: string;
+  author_role: string;
+  created_datetime: string;
+  output: {
+    content: string;
+  };
+}
+
+const ChatContainer = ({ messages }: { messages: Message[] }) => {
   return (
     <div className="bg-gray-100 flex flex-col">
       <ScrollArea h={250}>
@@ -183,7 +194,7 @@ const ChatContainer = ({ messages }) => {
   );
 };
 
-const ChatMessage = ({ message }) => {
+const ChatMessage = ({ message }: { message: Message }) => {
   return (
     <div className="w-full border-b border-gray-300">
       <div

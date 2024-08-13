@@ -1,9 +1,9 @@
-import { ErrorComponent } from "@refinedev/mantine";
+// import { ErrorComponent } from "@refinedev/mantine";
 import { GetServerSideProps } from "next";
 import { authProvider } from "src/authProvider";
 
 export default function CatchAll() {
-  return <ErrorComponent />;
+  return <>ErrorComponent</>;
 }
 
 export const getServerSideProps: GetServerSideProps<{}> = async (context) => {

@@ -306,7 +306,7 @@ const ActionControlFormWrapper: React.FC<ActionControlFormWrapperProps> = (
 
   // read field configurations from the query data
 
-  let field_configurations = [];
+  let field_configurations: FieldConfiguration[] = [];
   // if (activeResultsSection?.name === "main_query") {
   //   field_configurations =
   //     queryData?.data[0]["main_query"]["field_configurations"] || [];

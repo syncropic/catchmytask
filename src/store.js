@@ -82,6 +82,9 @@ const useAppStore = create(
       activeResultsSection: null,
       setActiveResultsSection: (activeResultsSection) =>
         set((state) => ({ activeResultsSection })),
+      activeActionSelectionComponent: null,
+      setActiveActionSelectionComponent: (activeActionSelectionComponent) =>
+        set((state) => ({ activeActionSelectionComponent })),
       activeMouseCoordinates: {
         x: 0,
         y: 0,
@@ -176,6 +179,18 @@ const useAppStore = create(
       activeColumnOptions: [],
       setActiveColumnOptions: (view) =>
         set((state) => ({ ...state, activeColumnOptions: view })),
+      natural_language_query_form_values: {},
+      setNaturalLanguageQueryFormValues: (values) =>
+        set((state) => ({
+          ...state,
+          natural_language_query_form_values: values,
+        })),
+      action_input_form_values: {},
+      setActionInputFormValues: (values) =>
+        set((state) => ({ ...state, action_input_form_values: values })),
+      activeActionStep: null,
+      setActiveActionStep: (step) =>
+        set((state) => ({ ...state, activeActionStep: step })),
     }),
     {
       name: "catchmytask-store",

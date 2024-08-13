@@ -9,23 +9,36 @@
 import { ResultsComponentProps } from "@components/interfaces";
 import { useViewportSize } from "@mantine/hooks";
 import { flexRender } from "@tanstack/react-table";
-import { Table as TanStackTable } from "@tanstack/react-table";
-import { DataTable } from "mantine-datatable";
+import { Table as TanStackTable, ColumnDef } from "@tanstack/react-table";
+import { DataTable, DataTableColumn } from "mantine-datatable";
 import { useState } from "react";
 import { getColumnIdWithoutResourceGroup } from "src/utils";
 import { Column } from "@tanstack/react-table";
 import React from "react";
+import { DebouncedInput } from "@components/Utils";
+import ActionInput from "@components/ActionInput";
+import ActionStepEditor from "@components/ActionStepEditor";
+import { ActionIcon, Box, Group } from "@mantine/core";
+import { useAppStore } from "src/store";
+
+import {
+  IconCursorText,
+  IconEdit,
+  IconEye,
+  IconLock,
+} from "@tabler/icons-react";
 
 export function TableView<T extends Record<string, any>>({
   tableInstance,
-  data_columns,
   data_items,
   resource_group,
+  ui,
 }: ResultsComponentProps<T>) {
   // Define pixels per character (adjust as needed)
   const pixelsPerChar = 10; // Example value
   const { height, width } = useViewportSize();
   const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
+  const { setActiveRecord } = useAppStore();
 
   // Function to calculate width based on the number of characters
   // const calculateWidth = (header) => {
@@ -70,6 +83,44 @@ export function TableView<T extends Record<string, any>>({
     ?.getFilteredRowModel()
     .rows.map((row) => row.original);
   // console.log("filteredRows", filteredRows);
+  // return <div>{JSON.stringify(tableInstance?.getVisibleFlatColumns())}</div>;
+
+  let additional_default_columns = [
+    {
+      accessor: "actions",
+      // title: <Box mr={6}>Row actions</Box>,
+      // textAlign: 'right',
+      // render: (company) => (
+      //   <Group gap={4} justify="right" wrap="nowrap">
+      //     <ActionIcon
+      //       size="sm"
+      //       variant="subtle"
+      //       color="green"
+      //       onClick={() => showModal({ company, action: 'view' })}
+      //     >
+      //       <IconEye size={16} />
+      //     </ActionIcon>
+      //     <ActionIcon
+      //       size="sm"
+      //       variant="subtle"
+      //       color="blue"
+      //       onClick={() => showModal({ company, action: 'edit' })}
+      //     >
+      //       <IconEdit size={16} />
+      //     </ActionIcon>
+      //     <ActionIcon
+      //       size="sm"
+      //       variant="subtle"
+      //       color="red"
+      //       onClick={() => showModal({ company, action: 'delete' })}
+      //     >
+      //       <IconTrash size={16} />
+      //     </ActionIcon>
+      //   </Group>
+      // ),
+    },
+  ];
+
   return (
     <>
       {/* {JSON.stringify(
@@ -86,41 +137,114 @@ export function TableView<T extends Record<string, any>>({
             return !columns_to_filter_out.includes(column.accessor);
           })
       )} */}
-      <DataTable
-        columns={tableInstance
-          ?.getVisibleFlatColumns()
-          ?.map((column) => {
-            return {
-              id: column.id,
-              accessor:
-                column?.accessor ||
-                getColumnIdWithoutResourceGroup(column.id, resource_group),
-              sortable: column.getCanSort(),
-              filter: (
-                <>
-                  {column.getCanFilter() ? (
-                    <div>
-                      <Filter column={column} />
-                    </div>
-                  ) : null}
-                </>
-              ),
-            };
-          })
-          .filter((column) => {
-            return !columns_to_filter_out.includes(column.accessor);
-          })}
-        records={tableInstance
-          ?.getFilteredRowModel()
-          .rows.map((row) => row.original)}
+      <DataTable<T>
+        // columns={[]}
+        columns={[
+          ...(tableInstance
+            ?.getVisibleFlatColumns()
+            ?.map((column) => {
+              return {
+                id: column.id,
+                accessor: column.columnDef.header,
+                // accessor:
+                //   column?.accessorFn ||
+                //   getColumnIdWithoutResourceGroup(column.id, resource_group),
+                render: column.columnDef.cell,
+                sortable: column.getCanSort(),
+                filter: (
+                  <>
+                    {column.getCanFilter() ? (
+                      <div>
+                        <Filter column={column} />
+                      </div>
+                    ) : null}
+                  </>
+                ),
+              } as DataTableColumn<T>;
+            })
+            .filter((column) => {
+              return !columns_to_filter_out.includes(String(column?.accessor));
+            }) || []),
+          {
+            // id: 'actions',
+            accessor: "actions",
+            title: <Box mr={6}>actions</Box>,
+            textAlign: "right",
+            render: (company: T) => (
+              <Group gap={4} justify="right" wrap="nowrap">
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="green"
+                  // onClick={() => showModal({ company, action: 'view' })}
+                >
+                  <IconLock size={12} />
+                </ActionIcon>
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="green"
+                  // onClick={() => showModal({ company, action: 'view' })}
+                >
+                  <IconCursorText size={12} />
+                </ActionIcon>
+                {/* <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="blue"
+                  // onClick={() => showModal({ company, action: 'edit' })}
+                >
+                  <IconEdit size={16} />
+                </ActionIcon> */}
+                {/* <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="red"
+                    onClick={() => showModal({ company, action: 'delete' })}
+                  >
+                    <IconTrash size={16} />
+                  </ActionIcon> */}
+              </Group>
+            ),
+          },
+        ]} // Assign an empty array as the default value for columns
+        records={
+          (tableInstance
+            ?.getFilteredRowModel()
+            .rows?.map((row) => row.original) as T[]) || []
+        }
         highlightOnHover={true}
         withColumnBorders={true}
-        height={height - 200}
+        striped={true}
+        // height={height - 200}
+        fz="xs"
         selectedRecords={selectedRecords}
         onSelectedRecordsChange={setSelectedRecords}
         defaultColumnRender={(row, _, accessor) => {
           const data = row[accessor as keyof typeof row];
           return typeof data === "string" ? data : JSON.stringify(data);
+        }}
+        onRowClick={({ record, index, event }) => {
+          // console.log("onRowClick", record, index, event);
+          setActiveRecord(record);
+        }}
+        rowExpansion={{
+          // trigger: ui?.rowExpansionTrigger,
+          allowMultiple: true,
+          content: ({ record, collapse }) => (
+            // <CompanyEditor
+            //   initialData={record}
+            //   onDone={(data) => {
+            //     const index = companies.findIndex((c) => c.id === data.id);
+            //     setCompanies([...companies.slice(0, index), data, ...companies.slice(index + 1)]);
+            //     collapse(); // 👈 collapse the row after editing
+            //   }}
+            //   onCancel={collapse} // 👈 collapse the row if editing is cancelled
+            // />
+            // <div>{JSON.stringify(record)}</div>
+            // <ActionInput></ActionInput>
+            <ActionStepEditor record={record}></ActionStepEditor>
+          ),
         }}
       />
       {/* <div>table</div> */}
@@ -157,11 +281,15 @@ export default TableView;
 </TableBody> */
 }
 
-function Filter({ column }: { column: Column<any, unknown> }) {
-  const columnFilterValue = column.getFilterValue();
-  const { filterVariant } = column.columnDef.meta ?? {};
+interface ColumnMeta {
+  filter_variant?: string;
+}
 
-  return filterVariant === "range" ? (
+function Filter<TData>({ column }: { column: Column<TData, unknown> }) {
+  const columnFilterValue = column.getFilterValue();
+  const { filter_variant } = (column.columnDef.meta as ColumnMeta) ?? {};
+
+  return filter_variant === "range" ? (
     <div>
       <div className="flex space-x-2">
         {/* See faceted column filters example for min max values functionality */}
@@ -186,7 +314,7 @@ function Filter({ column }: { column: Column<any, unknown> }) {
       </div>
       <div className="h-1" />
     </div>
-  ) : filterVariant === "select" ? (
+  ) : filter_variant === "select" ? (
     <select
       onChange={(e) => column.setFilterValue(e.target.value)}
       value={columnFilterValue?.toString()}
@@ -206,39 +334,5 @@ function Filter({ column }: { column: Column<any, unknown> }) {
       value={(columnFilterValue ?? "") as string}
     />
     // See faceted column filters example for datalist search suggestions
-  );
-}
-
-// A typical debounced input react component
-function DebouncedInput({
-  value: initialValue,
-  onChange,
-  debounce = 500,
-  ...props
-}: {
-  value: string | number;
-  onChange: (value: string | number) => void;
-  debounce?: number;
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
-  const [value, setValue] = React.useState(initialValue);
-
-  React.useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
-
-  React.useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value);
-    }, debounce);
-
-    return () => clearTimeout(timeout);
-  }, [value]);
-
-  return (
-    <input
-      {...props}
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-    />
   );
 }

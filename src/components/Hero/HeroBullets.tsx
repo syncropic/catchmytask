@@ -82,14 +82,14 @@ export function HeroBullets({ title, items }: ContentBlockProps) {
         <img
           className="object-contain max-w-sm hidden md:block"
           // className={classes.image}
-          src={title.hero_image_url}
+          src={title.metadata.illustration}
           alt="catchmyvibe hero"
         ></img>
       </div>
       <img
         className="object-contain max-w-sm md:hidden"
         // className={classes.image}
-        src={title.hero_image_url}
+        src={title.metadata.illustration}
         // alt="catchmyvibe hero"
       ></img>
     </Container>

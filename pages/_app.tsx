@@ -11,8 +11,10 @@ import { accessControlProvider } from "src/access-control-provider";
 import BaseLayout from "src/components/Layout";
 import defaultApiDataProvider from "../src/default-api-provider";
 import { createTheme, MantineProvider } from "@mantine/core";
+import config from "src/config";
 // core styles are required for all packages
 import "@mantine/core/styles.css";
+import "@mantine/tiptap/styles.css";
 // other css files are required only if
 // you are using components from the corresponding package
 import "@mantine/notifications/styles.css";
@@ -22,9 +24,9 @@ import "@mantine/notifications/styles.css";
 // import "@mantine/core/styles.layer.css";
 import "mantine-datatable/styles.layer.css";
 import "../styles/globals.css";
-import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
+// import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+// import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { registerLicense } from "@syncfusion/ej2-base";
 
 // Registering Syncfusion license key
@@ -36,7 +38,7 @@ const theme = createTheme({
   /** Put your mantine theme override here */
 });
 
-const API_URL = `${process.env.NEXT_PUBLIC_CMT_API_BASEURL}`;
+const API_URL = config.API_URL;
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   noLayout?: boolean;
@@ -240,17 +242,6 @@ const App = (props: React.PropsWithChildren) => {
               name: "profile",
               list: "/profile",
             },
-            // {
-            //   name: "datasets",
-            //   list: "/datasets",
-            //   create: "/datasets/create",
-            //   edit: "/datasets/edit/:id",
-            //   show: "/datasets/show/:id",
-            //   meta: {
-            //     credentials: "surrealdb_catchmytask",
-            //     query_language: "surrealql",
-            //   },
-            // },
             {
               name: "applications",
               list: "/applications",
@@ -266,19 +257,6 @@ const App = (props: React.PropsWithChildren) => {
               edit: "/:applicationId/sessions/:id/edit",
               show: "/:applicationId/sessions/:id",
             },
-            // {
-            //   name: "shortcuts",
-            //   list: "/shortcuts",
-            //   create: "/shortcuts/create",
-            //   edit: "/shortcuts/edit/:id",
-            //   show: "/shortcuts/show/:id",
-            //   meta: {
-            //     canDelete: true,
-            //     hide: true,
-            //     credentials: "surrealdb_catchmytask",
-            //     query_language: "surrealql",
-            //   },
-            // },
           ]}
           options={{
             syncWithLocation: true,
