@@ -5,7 +5,7 @@ import { Tabs } from "@mantine/core";
 import DataDisplay from "@components/DataDisplay";
 import { useFetchQueryDataByState } from "@components/Utils";
 
-interface FileBrowserProps {
+interface TemplatesViewProps {
   entity?: string;
   record?: any;
   // types?: string[];
@@ -14,10 +14,10 @@ interface FileBrowserProps {
   // ui?: Record<string, any>;
 }
 
-export function FileBrowser({
+export function TemplatesView({
   entity = "action_steps",
   record,
-}: FileBrowserProps) {
+}: TemplatesViewProps) {
   const {
     // activeSession,
     activeAction,
@@ -38,12 +38,12 @@ export function FileBrowser({
 
   return (
     <>
-      <div>FileBrowser</div>
+      <div>templatesview</div>
     </>
   );
 }
 
-interface FileBrowserWrapperProps {
+interface TemplatesViewWrapperProps {
   query_name?: string;
   name?: string;
   action_type?: string;
@@ -53,7 +53,7 @@ interface FileBrowserWrapperProps {
   ui?: Record<string, any>;
 }
 
-export const FileBrowserWrapper: React.FC<FileBrowserWrapperProps> = ({
+export const TemplatesViewWrapper: React.FC<TemplatesViewWrapperProps> = ({
   query_name,
   name,
   action_type,
@@ -97,10 +97,17 @@ export const FileBrowserWrapper: React.FC<FileBrowserWrapperProps> = ({
         isLoadingDataItems={queryDataIsLoading}
         resource_group={entity}
         execlude_components={[
-          "custom_views_columns_view_as",
-          "pagination",
-          "live_updates",
+          "input_mode",
+          "submit_button",
+          "columns",
+          "custom_views",
           "save",
+          "live_updates",
+          "follow_up",
+          "execute_selected",
+          "execute_all",
+          "view_as",
+          "actions",
         ]}
         ui={ui}
       ></DataDisplay>
@@ -108,4 +115,4 @@ export const FileBrowserWrapper: React.FC<FileBrowserWrapperProps> = ({
   );
 };
 
-export default FileBrowserWrapper;
+export default TemplatesViewWrapper;

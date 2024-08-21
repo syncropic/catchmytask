@@ -18,7 +18,7 @@ import {
   IView,
   QueryDataType,
 } from "@components/interfaces";
-import { Accordion, Button, Textarea } from "@mantine/core";
+import { Accordion, ActionIcon, Button, Textarea } from "@mantine/core";
 // import { useDisclosure } from "@mantine/hooks";
 import { useCustom, useCustomMutation, useGetIdentity } from "@refinedev/core";
 import { Create, SaveButton, useForm } from "@refinedev/mantine";
@@ -31,6 +31,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Combobox } from "@components/Combobox";
 import { inputs } from "@data/index";
 import config from "src/config";
+import { IconArrowsVertical, IconCaretDown } from "@tabler/icons-react";
 
 interface DataModel {
   data_model: {
@@ -99,6 +100,7 @@ const ActionControlForm: React.FC<DynamicFormProps> = ({
   const [touchedFields, setTouchedFields] = useState<string[]>([]);
   const {
     mutate,
+    data: mutationData,
     isLoading: mutationIsLoading,
     isError: mutationIsError,
     error: mutationError,
@@ -147,6 +149,7 @@ const ActionControlForm: React.FC<DynamicFormProps> = ({
   }, [data_model]);
 
   const handleSubmit = (e: any) => {
+    e.preventDefault();
     // let generatedRequestData = generateRequestData(values);
     // console.log("generatedRequestData", generatedRequestData);
     mutate({
@@ -158,7 +161,7 @@ const ActionControlForm: React.FC<DynamicFormProps> = ({
           ...activeAction,
         },
         input_values: values,
-        credential: "surrealdb_catchmytask",
+        credential: values?.credential || "surrealdb_catchmytask",
         data_model: data_model,
         application: {
           ...activeApplication,
@@ -167,30 +170,30 @@ const ActionControlForm: React.FC<DynamicFormProps> = ({
           ...activeSession,
         },
       },
-      successNotification: (data, values) => {
-        // console.log("successNotification", data);
-        // invalidate query
+      // successNotification: (data, values) => {
+      //   console.log("successNotification", data);
+      //   // invalidate query
 
-        queryClient.invalidateQueries(["list_action_history_1"]);
-        queryClient.invalidateQueries([activeViewItem?.id]); // invalidate the active view query to retrigger refresh of values
+      //   // queryClient.invalidateQueries(["list_action_history_1"]);
+      //   // queryClient.invalidateQueries([activeViewItem?.id]); // invalidate the active view query to retrigger refresh of values
 
-        return {
-          message: `successfully executed.`,
-          description: "Success with no errors",
-          type: "success",
-        };
-      },
-      errorNotification: (data, values) => {
-        // console.log("successNotification", data?.response.status);
-        // console.log("errorNotification values", values);
-        return {
-          message: `${data?.response.status} : ${
-            data?.response.statusText
-          } : ${JSON.stringify(data?.response.data)}`,
-          description: "Error",
-          type: "error",
-        };
-      },
+      //   // return {
+      //   //   message: `successfully executed.`,
+      //   //   description: "Success with no errors",
+      //   //   type: "success",
+      //   // };
+      // },
+      // errorNotification: (data, values) => {
+      //   console.log("errorNotification", data);
+      //   // console.log("errorNotification values", values);
+      //   // return {
+      //   //   message: `${data?.response.status} : ${
+      //   //     data?.response.statusText
+      //   //   } : ${JSON.stringify(data?.response.data)}`,
+      //   //   description: "Error",
+      //   //   type: "error",
+      //   // };
+      // },
     });
   };
 
@@ -266,10 +269,34 @@ const ActionControlForm: React.FC<DynamicFormProps> = ({
 
   return (
     <>
-      <div>
+      <form onSubmit={handleSubmit}>
         {/* record: {JSON.stringify(values)} */}
         <div className="flex justify-between">
-          <Button size="xs">Run</Button>
+          <Button
+            size="xs"
+            type="submit"
+            // {...saveButtonProps}
+            loading={formLoading || mutationIsLoading}
+          >
+            Run
+          </Button>
+          {/* <Button
+            size="xs"
+            // type="submit"
+            variant="outline"
+            rightSection={<IconCaretDown size={14} />}
+            // {...saveButtonProps}
+            // loading={formLoading || mutationIsLoading}
+          >
+            Last Run
+          </Button> */}
+          <ActionIcon variant="outline" aria-label="Settings">
+            <IconArrowsVertical
+              style={{ width: "70%", height: "70%" }}
+              stroke={1.5}
+            />
+          </ActionIcon>
+
           <Combobox
             data_items={inputs}
             resource="input"
@@ -277,6 +304,18 @@ const ActionControlForm: React.FC<DynamicFormProps> = ({
             setValue={setInputAsValue}
           ></Combobox>
         </div>
+        {/* {mutationData && <MonacoEditor value={mutationData} language="json" />} */}
+        <div>
+          {JSON.stringify(
+            mutationData?.data?.map(({ message, exit_code }) => ({
+              code: message?.code,
+              details: message?.details,
+              exit_code,
+            }))
+          )}
+        </div>
+
+        {mutationError && <div>{JSON.stringify(mutationError)}</div>}
         {(inputAsvalue === "" || inputAsvalue === "form") && (
           <div>
             {" "}
@@ -324,6 +363,7 @@ const ActionControlForm: React.FC<DynamicFormProps> = ({
                             ]
                           }
                           // value="Hello"
+                          setFieldValue={setFieldValue}
                           disabled={schema.properties[key]?.readOnly}
                           label={schema.properties[key]?.title}
                           placeholder={schema.properties[key]?.placeholder}
@@ -371,7 +411,7 @@ const ActionControlForm: React.FC<DynamicFormProps> = ({
             height="100vh"
           />
         )}
-      </div>
+      </form>
       {/* <div className="h-[400px]"></div> */}
       {/* for spacing and making the action buttons visible */}
     </>

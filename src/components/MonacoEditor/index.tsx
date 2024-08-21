@@ -5,15 +5,17 @@ import { Text } from "@mantine/core";
 interface IEditor {
   value: any;
   language?: string;
-  setFieldValue?: (field: string, value: any) => void;
+  setValue?: (value: any) => void;
   height?: string;
+  field?: string;
 }
 
 const MonacoEditor: React.FC<IEditor> = ({
   value,
-  setFieldValue = () => {},
+  setValue = () => {},
   language = "json",
   height = "30vh",
+  field = "query",
 }) => {
   const monaco = useMonaco();
   const editorRef = useRef(null);
@@ -43,9 +45,25 @@ const MonacoEditor: React.FC<IEditor> = ({
     // Editor mount logic
   }
 
-  function handleEditorChange(value: string | undefined) {
-    setFieldValue("query", value);
+  function handleEditorChange(value: any) {
+    // if language is json make sure to json parse the value first before setting it
+    if (language === "json") {
+      try {
+        value = JSON.parse(value);
+      } catch (e) {
+        console.log("error parsing json", e);
+      }
+    }
+    setValue(value);
+    // console.log("editor value", value);
   }
+
+  // const setValue = (value: any) => {
+  //   props?.setFieldValue(
+  //     props?.schema.title.toLowerCase().replace(/ /g, "_"),
+  //     value
+  //   );
+  // };
 
   return (
     <Editor
@@ -83,14 +101,25 @@ const MonacoEditor: React.FC<IEditor> = ({
 export default MonacoEditor;
 
 export const MonacoEditorFormInput = ({ ...props }: any) => {
-  console.log("monaco editor form input props", props);
+  // console.log("monaco editor form input props", props);
+  // const setValue = (value: any) => {
+  //   props?.setFieldValue(
+  //     props?.schema.title.toLowerCase().replace(/ /g, "_"),
+  //     value
+  //   );
+  // };
   return (
     <>
-      {props?.schema?.title && <Text>{props?.schema?.title}</Text>}
+      {props?.schema?.title && (
+        <Text fw={500} size="sm">
+          {props?.schema?.title}
+        </Text>
+      )}
       <MonacoEditor
         {...props?.schema}
         value={props?.value}
-        // setFieldValue={form.setFieldValue}
+        setValue={props?.onChange}
+        field={props?.schema.title.toLowerCase().replace(/ /g, "_")}
         // {...props}
       />
     </>

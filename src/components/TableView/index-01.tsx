@@ -3,7 +3,7 @@ import { useViewportSize } from "@mantine/hooks";
 import { flexRender } from "@tanstack/react-table";
 import { Table as TanStackTable, ColumnDef } from "@tanstack/react-table";
 import { DataTable, DataTableColumn } from "mantine-datatable";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getColumnIdWithoutResourceGroup } from "src/utils";
 import { Column } from "@tanstack/react-table";
 import React from "react";
@@ -13,14 +13,11 @@ import { ActionIcon, Box, Group, Tooltip } from "@mantine/core";
 import { useAppStore } from "src/store";
 import RecordActionsWrapper from "@components/RecordActions";
 
-const PAGE_SIZES = [10, 15, 20];
-
 export function TableView<T extends Record<string, any>>({
   tableInstance,
   data_items,
   resource_group,
   ui,
-  execlude_components,
 }: ResultsComponentProps<T>) {
   // Define pixels per character (adjust as needed)
   const pixelsPerChar = 10; // Example value
@@ -28,8 +25,45 @@ export function TableView<T extends Record<string, any>>({
   const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
   const { setActiveRecord, setActiveAction } = useAppStore();
 
-  let columns_to_filter_out = ["select", "actions", "details"];
+  // Function to calculate width based on the number of characters
+  // const calculateWidth = (header) => {
+  //   const charCount = header.column.columnDef.header.length;
+  //   return charCount * pixelsPerChar;
+  // };
 
+  // Function to get the section of the columnId that comes after the resource group prefix
+  // let columns = data_columns.map((column) => {
+  //   return {
+  //     accessor:
+  //       column?.accessor ||
+  //       getColumnIdWithoutResourceGroup(column?.id, resource_group),
+  //     id: column?.id,
+  //     // Header: column,
+  //     // width: 100,
+  //   };
+  // });
+  // let visibleTableColumns = tableInstance?.getVisibleFlatColumns();
+  // // console.log("visibleFlatColumns", visibleTableColumns);
+  let columns_to_filter_out = ["select", "actions", "details"];
+  // columns = visibleTableColumns.filter((column) => {
+  //   return !columns_to_filter_out.includes(column.accessor);
+  // });
+  // {table.getRowModel().rows.map(row => {
+  //   return (
+  //     <tr key={row.id}>
+  //       {row.getVisibleCells().map(cell => {
+  //         return (
+  //           <td key={cell.id}>
+  //             {flexRender(
+  //               cell.column.columnDef.cell,
+  //               cell.getContext()
+  //             )}
+  //           </td>
+  //         )
+  //       })}
+  //     </tr>
+  //   )
+  // })}
   let filteredRows = tableInstance
     ?.getFilteredRowModel()
     .rows.map((row) => row.original);
@@ -53,20 +87,6 @@ export function TableView<T extends Record<string, any>>({
   //   event.stopPropagation(); // Prevents the click event from bubbling up to the row
   //   // Handle the button click logic here
   // };
-  // const [pageSize, setPageSize] = useState(PAGE_SIZES[1]);
-
-  // useEffect(() => {
-  //   setPage(1);
-  // }, [pageSize]);
-
-  // const [page, setPage] = useState(1);
-  // const [records, setRecords] = useState(data_items.slice(0, pageSize));
-
-  // useEffect(() => {
-  //   const from = (page - 1) * pageSize;
-  //   const to = from + pageSize;
-  //   setRecords(data_items.slice(from, to));
-  // }, [page, pageSize]);
 
   return (
     <>
@@ -112,7 +132,6 @@ export function TableView<T extends Record<string, any>>({
             .filter((column) => {
               return !columns_to_filter_out.includes(String(column?.accessor));
             }) || []),
-
           {
             // id: 'actions',
             accessor: "actions",
@@ -123,8 +142,6 @@ export function TableView<T extends Record<string, any>>({
                 record={record}
                 name="action_step"
                 query_name="data_model"
-                success_message_code="action_input_data_model_schema"
-                setExpandedRecordIds={setExpandedRecordIds}
               ></RecordActionsWrapper>
             ),
           },
@@ -134,34 +151,12 @@ export function TableView<T extends Record<string, any>>({
             ?.getFilteredRowModel()
             .rows?.map((row) => row.original) as T[]) || []
         }
-        // records={records}
         highlightOnHover={true}
         withColumnBorders={true}
         pinFirstColumn={true}
         pinLastColumn={true}
         striped={true}
-        totalRecords={data_items.length}
-        // paginationActiveBackgroundColor="grape"
-        // recordsPerPage={pageSize}
-        // page={page}
-        // onPageChange={(p) => setPage(p)}
-        // recordsPerPageOptions={PAGE_SIZES}
-        // onRecordsPerPageChange={setPageSize}
         // height={height - 200}
-        // totalRecords={data_items.length}
-        // 👇 uncomment the next line to use a custom pagination size
-        // paginationSize="md"
-        // 👇 uncomment the next line to use a custom loading text
-        // loadingText="Loading..."
-        // 👇 uncomment the next line to display a custom text when no records were found
-        // noRecordsText="No records found"
-        // 👇 uncomment the next line to use a custom pagination text
-        // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
-        // 👇 uncomment the next lines to use custom pagination colors
-        // paginationActiveBackgroundColor="green"
-        // paginationActiveTextColor="#e6e348"
-        //
-        // height={800}
         fz="xs"
         selectedRecords={selectedRecords}
         onSelectedRecordsChange={setSelectedRecords}
@@ -184,10 +179,7 @@ export function TableView<T extends Record<string, any>>({
             onRecordIdsChange: setExpandedRecordIds,
           },
           content: ({ record, collapse }) => (
-            <ActionStepEditor
-              record={record}
-              setExpandedRecordIds={setExpandedRecordIds}
-            ></ActionStepEditor>
+            <ActionStepEditor record={record}></ActionStepEditor>
           ),
         }}
       />
@@ -248,5 +240,6 @@ function Filter<TData>({ column }: { column: Column<TData, unknown> }) {
       type="text"
       value={(columnFilterValue ?? "") as string}
     />
+    // See faceted column filters example for datalist search suggestions
   );
 }

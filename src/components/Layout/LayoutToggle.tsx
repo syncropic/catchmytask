@@ -1,9 +1,6 @@
 import SessionBar from "@components/SessionBar";
 import { ActionIcon, Button } from "@mantine/core";
-// import { useIsAuthenticated } from "@refinedev/core";
 import {
-  IconBoxAlignLeftFilled,
-  IconBoxAlignRightFilled,
   IconLayoutSidebarLeftCollapseFilled,
   IconLayoutSidebarRightCollapseFilled,
   IconLayoutDistributeVertical,
@@ -17,7 +14,7 @@ type LayoutToggleAndSearchProps = {
 };
 
 export const LayoutToggle: React.FC<LayoutToggleAndSearchProps> = ({}) => {
-  const { activeLayout, activeApplication, setActiveLayout } = useAppStore();
+  const { activeLayout, setActiveLayout } = useAppStore();
 
   // handle toggleDisplay
   const toggleDisplay = (section: string) => {
@@ -30,7 +27,8 @@ export const LayoutToggle: React.FC<LayoutToggleAndSearchProps> = ({}) => {
   return (
     <div className="flex items-center gap-4">
       <ActionIcon
-        size="compact-xs"
+        // size="compact-xs"
+        size="sm"
         variant={activeLayout?.leftSection?.isDisplayed ? "filled" : "outline"}
         onClick={() => {
           toggleDisplay("leftSection");
@@ -40,7 +38,8 @@ export const LayoutToggle: React.FC<LayoutToggleAndSearchProps> = ({}) => {
         <IconLayoutSidebarLeftCollapseFilled />
       </ActionIcon>
       <ActionIcon
-        size="compact-xs"
+        // size="compact-xs"
+        size="sm"
         variant={
           activeLayout?.centerSection?.isDisplayed ? "filled" : "outline"
         }
@@ -52,7 +51,8 @@ export const LayoutToggle: React.FC<LayoutToggleAndSearchProps> = ({}) => {
         <IconLayoutDistributeVertical />
       </ActionIcon>
       <ActionIcon
-        size="compact-xs"
+        // size="compact-xs"
+        size="sm"
         variant={activeLayout?.rightSection?.isDisplayed ? "filled" : "outline"}
         onClick={() => {
           toggleDisplay("rightSection");

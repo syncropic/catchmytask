@@ -188,9 +188,20 @@ const useAppStore = create(
       action_input_form_values: {},
       setActionInputFormValues: (values) =>
         set((state) => ({ ...state, action_input_form_values: values })),
+      action_steps: [],
+      setActionSteps: (steps) =>
+        set((state) => ({ ...state, action_steps: steps })),
       activeActionStep: null,
       setActiveActionStep: (step) =>
         set((state) => ({ ...state, activeActionStep: step })),
+      sessionConfig: {
+        interaction_mode: "interactive",
+      },
+      setSessionConfig: (config) =>
+        set((state) => ({ ...state, sessionConfig: config })),
+      global_variables: {},
+      setGlobalVariables: (variables) =>
+        set((state) => ({ ...state, global_variables: variables })),
     }),
     {
       name: "catchmytask-store",

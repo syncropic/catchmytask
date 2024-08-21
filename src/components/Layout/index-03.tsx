@@ -1,12 +1,23 @@
+import ExecutionTrace from "@components/ExecutionTrace";
+import GlobalVariables from "@components/GlobalVariables";
+import Hero from "@components/Hero";
+import MonacoEditor from "@components/MonacoEditor";
 import NaturalLanguageQuery from "@components/NaturalLanguageQuery";
+import QueryGraph from "@components/QueryGraph";
+import RecommendationsGraph from "@components/RecommendationsGraph";
+import StructuredQuery from "@components/StructuredQuery";
 import {
   getComponentByKey,
   useAuthToken,
   useDomain,
   useFetchDomainDataByDomain,
 } from "@components/Utils";
-import { ComponentKey } from "@components/interfaces";
-import { Accordion, Button, Tabs, Textarea, Text, Slider } from "@mantine/core";
+import {
+  ComponentKey,
+  IApplication,
+  QueryDataType,
+} from "@components/interfaces";
+import { Accordion, Button, Tabs, Textarea, Text } from "@mantine/core";
 import {
   Authenticated,
   HttpError,
@@ -16,6 +27,11 @@ import {
   useParsed,
 } from "@refinedev/core";
 import {
+  IconAffiliate,
+  IconChalkboard,
+  IconClipboard,
+  IconComponents,
+  IconFilter,
   IconForms,
   IconGauge,
   IconLanguage,
@@ -27,40 +43,48 @@ import {
   IconStackBack,
   IconTableShortcut,
   IconTools,
+  IconUserPlus,
+  IconWashTemperature4,
+  IconWorld,
   IconBuilding,
   IconSettings,
   IconSettingsAutomation,
   IconEdit,
-  IconSearch,
-  IconVariable,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
+import ActionControl from "pages/action_control/create";
 import React, { useEffect, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { AppLayout } from "src/components/Layout/AppLayout";
 import { useAppStore } from "src/store";
+import { useQueryClient } from "@tanstack/react-query";
+import PageSection from "@components/PageSection";
 import StateView from "@components/StateView";
 import ActionInput, { ActionInputWrapper } from "@components/ActionInput";
+import Recommendations, {
+  RecommendationsWrapper,
+} from "@components/Recommendations";
+import GenerativeComponentWrapper from "@components/GenerativeComponent";
+import ActivateActionsSelection from "@components/ActivateActionsSelection";
 import SelectAction from "@components/SelectAction";
 import SearchComponent from "@components/Search";
-import ActionSteps, { ActionStepsWrapper } from "@components/ActionSteps";
+import ActionSteps from "@components/ActionSteps";
 import { ActionControlFormWrapper } from "@components/ActionControlForm";
-import MonacoEditor from "@components/MonacoEditor";
 
-// const useFullUrl = () => {
-//   const router = useRouter();
-//   const [fullUrl, setFullUrl] = useState("");
+const useFullUrl = () => {
+  const router = useRouter();
+  const [fullUrl, setFullUrl] = useState("");
 
-//   useEffect(() => {
-//     if (typeof window !== "undefined") {
-//       // Combines the origin with the asPath for full URL
-//       const fullUrl = window.location.origin + router.asPath;
-//       setFullUrl(fullUrl);
-//     }
-//   }, [router.asPath]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Combines the origin with the asPath for full URL
+      const fullUrl = window.location.origin + router.asPath;
+      setFullUrl(fullUrl);
+    }
+  }, [router.asPath]);
 
-//   return fullUrl;
-// };
+  return fullUrl;
+};
 
 function InitializeApplication({
   activeApplicationId,
@@ -71,6 +95,54 @@ function InitializeApplication({
 }) {
   const domain = useDomain();
 
+  // get session from params
+  // const {
+  //   data: domainData,
+  //   isLoading: domainDataIsLoading,
+  //   error: domainDataError,
+  // } = useFetchDomainDataByDomain(domain);
+  // const { setActiveApplication, activeApplication } = useAppStore();
+  // const currentUrl = window.location.href;
+  // const { params, resource, pathname } = useParsed();
+  // const {
+  //   data: applicationData,
+  //   isLoading: isLoadingApplication,
+  //   isError: isErrorApplication,
+  // } = useOne<IApplication, HttpError>({
+  //   resource: "applications",
+  //   id: `${activeApplication?.id || activeApplicationId}`,
+  // }); // if no active application provide the id of catchmytask as the default application to load
+
+  // console.log("pathname", pathname, resource, params);
+  // console.log("currentUrl", currentUrl);
+  // console.log("domain", domain);
+
+  // console.log(
+  //   "initialize application",
+  //   applicationData?.data,
+  //   activeApplicationId,
+  //   activeApplication?.id,
+  //   isLoadingApplication,
+  //   isErrorApplication
+  // );
+  // const application = applicationData?.data;
+  // useEffect(() => {
+  //   if (application) {
+  //     setActiveApplication(application);
+  //   }
+  // }, [applicationData?.data]);
+  // if (isLoadingApplication) {
+  //   return <>Loading...</> || null;
+  // }
+  // if (isErrorApplication) {
+  //   return <>{JSON.stringify(isErrorApplication)}</>;
+  // }
+  // if (domainDataIsLoading) {
+  //   return <>Loading...</> || null;
+  // }
+  // if (domainDataError) {
+  //   return <>{JSON.stringify(domainDataError)}</>;
+  // }
   return <div>{children}</div>;
 }
 
@@ -90,8 +162,6 @@ const Layout = ({
     activeApplication,
     sessionConfig,
     activeRecord,
-    global_variables,
-    setGlobalVariables,
   } = useAppStore();
   const go = useGo();
   const parsed = useParsed();
@@ -101,6 +171,15 @@ const Layout = ({
     isLoading: domainDataIsLoading,
     error: domainDataError,
   } = useFetchDomainDataByDomain(domain);
+  // return (
+  //   <div>
+  //     {JSON.stringify(
+  //       domainData?.data?.find(
+  //         (item: any) => item?.message?.code === "query_success_results"
+  //       )
+  //     )}
+  //   </div>
+  // );
 
   let domainRecord = domainData?.data?.find(
     (item: any) => item?.message?.code === "query_success_results"
@@ -207,67 +286,12 @@ const Layout = ({
       </>
     );
   }
-  // const marks = [
-  //   { value: 0, label: "off" },
-  //   { value: 25, label: "refine task" },
-  //   { value: 50, label: "suggest " },
-  //   { value: 75, label: "lg" },
-  //   { value: 100, label: "xl" },
-  // ];
 
   return (
     <Authenticated key="home" redirectOnFail="/login">
       <AppLayout authenticatedData={authenticatedData}>
         <SelectAction></SelectAction>
-        {sessionConfig?.interaction_mode == "search" && (
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <Accordion
-              defaultValue={["natural_language_query", "search_results"]}
-              multiple={true}
-            >
-              <Accordion.Item
-                key="natural_language_query"
-                value="natural_language_query"
-              >
-                <Accordion.Control icon={<IconLanguage size={16} />}>
-                  Query
-                </Accordion.Control>
-                <Accordion.Panel>
-                  <ActionInputWrapper
-                    name="task"
-                    query_name="data_model"
-                  ></ActionInputWrapper>
-                </Accordion.Panel>
-              </Accordion.Item>
-
-              <Accordion.Item key="search_results" value="search_results">
-                <Accordion.Control icon={<IconSearch size={16} />}>
-                  Results
-                </Accordion.Control>
-                <Accordion.Panel>
-                  <Tabs defaultValue="basic" orientation="vertical">
-                    <Tabs.List>
-                      <Tabs.Tab value="basic">Basic</Tabs.Tab>
-                    </Tabs.List>
-
-                    <Tabs.Panel value="basic">
-                      {/* <div className="flex items-center justify-center p-4">
-                        <p className="text-sm text-gray-600 text-center">
-                          Search results will appear here
-                        </p>
-                      </div> */}
-                      <ActionSteps
-                        entity="action_steps"
-                        ui={{ rowExpansionTrigger: "always" }}
-                      />
-                    </Tabs.Panel>
-                  </Tabs>
-                </Accordion.Panel>
-              </Accordion.Item>
-            </Accordion>
-          </div>
-        )}
-        {sessionConfig?.interaction_mode == "background" && (
+        {sessionConfig?.background_execution && (
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <Accordion
               defaultValue={[
@@ -285,11 +309,7 @@ const Layout = ({
                   Query
                 </Accordion.Control>
                 <Accordion.Panel>
-                  {/* <NaturalLanguageQuery /> */}
-                  <ActionInputWrapper
-                    name="task"
-                    query_name="data_model"
-                  ></ActionInputWrapper>
+                  <NaturalLanguageQuery />
                 </Accordion.Panel>
               </Accordion.Item>
               <Accordion.Item key="session_config" value="session_config">
@@ -341,7 +361,7 @@ const Layout = ({
           </div>
         )}
 
-        {["interactive", "any"]?.includes(sessionConfig?.interaction_mode) && (
+        {!sessionConfig?.background_execution && (
           <PanelGroup direction="horizontal">
             {activeLayout?.leftSection?.isDisplayed && (
               <Panel defaultSize={20} minSize={0} id="left">
@@ -349,7 +369,15 @@ const Layout = ({
                   className="overflow-auto h-screen"
                   style={{ height: "calc(100vh - 64px)" }}
                 >
-                  <Accordion defaultValue={[]} multiple={true}>
+                  <Accordion
+                    defaultValue={[
+                      "services",
+                      "search_tasks",
+                      "search_action_steps",
+                      "results",
+                    ]}
+                    multiple={true}
+                  >
                     <Accordion.Item key="state_view" value="state_view">
                       <Accordion.Control icon={<IconStackBack size={16} />}>
                         Session Summary {`: `}
@@ -366,6 +394,7 @@ const Layout = ({
                         Services
                       </Accordion.Control>
                       <Accordion.Panel>
+                        {/* <SearchComponent entity="tasks"></SearchComponent> */}
                         <div className="flex items-center justify-center p-4">
                           <p className="text-sm text-gray-600 text-center">
                             Services you can leverage
@@ -379,6 +408,11 @@ const Layout = ({
                       </Accordion.Control>
                       <Accordion.Panel>
                         <SearchComponent entity="tasks"></SearchComponent>
+                        {/* <div className="flex items-center justify-center p-4">
+                        <p className="text-sm text-gray-600 text-center">
+                          Tasks you can leverage
+                        </p>
+                      </div> */}
                       </Accordion.Panel>
                     </Accordion.Item>
                     <Accordion.Item
@@ -410,6 +444,97 @@ const Layout = ({
                         </div>
                       </Accordion.Panel>
                     </Accordion.Item>
+                    {/* <Accordion.Item
+                    key="global_variables"
+                    value="global_variables"
+                  >
+                    <Accordion.Control icon={<IconWorld size={16} />}>
+                      Global Variables
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      
+                      <MonacoEditor
+                        value={{
+                          application: {
+                            id: activeApplication?.id,
+                            name: activeApplication?.name,
+                          },
+                          session: {
+                            id: activeSession?.id,
+                            name: activeSession?.name,
+                          },
+                        }}
+                        language="json"
+                      />
+                    </Accordion.Panel>
+                  </Accordion.Item> */}
+                    {/* <Accordion.Item key="task_variables" value="task_variables">
+                    <Accordion.Control icon={<IconFilter size={16} />}>
+                      Task Variables
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                     
+                      <MonacoEditor
+                        value={{}}
+                        language="json"
+                      />
+                    </Accordion.Panel>
+                  </Accordion.Item> */}
+
+                    {/* <Accordion.Item
+                    key="structured_query"
+                    value="structured_query"
+                  >
+                    <Accordion.Control icon={<IconSql size={16} />}>
+                      Structured Query
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <StructuredQuery />
+                    </Accordion.Panel>
+                  </Accordion.Item> */}
+                    {/* <Accordion.Item key="query_graph" value="query_graph">
+                    <Accordion.Control icon={<IconAffiliate size={16} />}>
+                      Query Graph
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <QueryGraph />
+                    </Accordion.Panel>
+                  </Accordion.Item> */}
+                    {/* <Accordion.Item key="execution_trace" value="execution_trace">
+                    <Accordion.Control icon={<IconListCheck size={16} />}>
+                      Execution Trace
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <ExecutionTrace></ExecutionTrace>
+                    </Accordion.Panel>
+                  </Accordion.Item> */}
+                    {/* <Accordion.Item
+                    key="recommendations_window"
+                    value="recommendations_window"
+                  >
+                    <Accordion.Control icon={<IconUserPlus size={16} />}>
+                      Search Recommendations
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <RecommendationsWrapper></RecommendationsWrapper>
+                    </Accordion.Panel>
+                  </Accordion.Item> */}
+                    {/* <Accordion.Item key="shortcut" value="shortcut">
+                    <Accordion.Control icon={<IconAffiliate size={16} />}>
+                      Shortcuts
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <ShortcutList />
+                    </Accordion.Panel>
+                  </Accordion.Item> */}
+                    {/* <Accordion.Item key="sessions" value="sessions">
+                    <Accordion.Control icon={<IconComponents size={16} />}>
+                      Sessions
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <SessionList />
+                    </Accordion.Panel>
+                  </Accordion.Item> */}
                   </Accordion>
                 </div>
               </Panel>
@@ -425,12 +550,15 @@ const Layout = ({
                       paddingBottom: "60px",
                     }}
                   >
+                    {/* <div className="flex-grow">{children}</div> */}
+                    {/* <ActivateActionsSelection
+                    record={{}}
+                    resultsSection={{
+                      name: "natural_language_query_indicator",
+                    }}
+                  ></ActivateActionsSelection> */}
                     <Accordion
-                      defaultValue={[
-                        "natural_language_query",
-                        "action_plan",
-                        "task_input",
-                      ]}
+                      defaultValue={["natural_language_query", "action_plan"]}
                       multiple={true}
                       // className="mt-auto"
                     >
@@ -442,51 +570,22 @@ const Layout = ({
                           Query
                         </Accordion.Control>
                         <Accordion.Panel>
-                          <ActionInputWrapper
-                            name="task"
-                            query_name="data_model"
-                            exclude_components={["input_mode", "submit_button"]}
-                            success_message_code="action_input_data_model_schema"
-                            nested_component={{
-                              data_model: {
-                                name: "task_config",
-                              },
-                            }}
-                          >
-                            <ActionInputWrapper
-                              name="task_config"
-                              query_name="data_model"
-                              success_message_code="action_input_data_model_schema"
-                              exclude_components={[
-                                "input_mode",
-                                "submit_button",
-                              ]}
-                            ></ActionInputWrapper>
-                          </ActionInputWrapper>
+                          <NaturalLanguageQuery />
                         </Accordion.Panel>
                       </Accordion.Item>
-                      <Accordion.Item key="task_input" value="task_input">
-                        <Accordion.Control icon={<IconForms size={16} />}>
-                          Task Input
-                        </Accordion.Control>
-                        <Accordion.Panel>
-                          <ActionInputWrapper
-                            name="task_input"
-                            exclude_components={["input_mode", "submit_button"]}
-                            success_message_code="action_input_data_model_schema"
-                          ></ActionInputWrapper>
-                          {/* <div>dynamic task input form</div> */}
-                          {/* <div className="flex items-center justify-center p-4">
-                            <p className="text-sm text-gray-600 text-center">
-                              Prompt for your input required to customize and
-                              successfully complete a task will appear here.
-                            </p>
-                          </div> */}
-                        </Accordion.Panel>
-                      </Accordion.Item>
-
+                      {/* <Accordion.Item
+                      key="well_defined_task"
+                      value="well_defined_task"
+                    >
+                      <Accordion.Control icon={<IconLanguage size={16} />}>
+                        Well Defined Task
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <NaturalLanguageQuery />
+                      </Accordion.Panel>
+                    </Accordion.Item> */}
                       <Accordion.Item key="action_plan" value="action_plan">
-                        <Accordion.Control icon={<IconListDetails size={16} />}>
+                        <Accordion.Control icon={<IconLanguage size={16} />}>
                           Action Plan
                         </Accordion.Control>
                         <Accordion.Panel>
@@ -494,21 +593,9 @@ const Layout = ({
                           editable action steps inserted after selection or
                           generation or both with ability to refine
                         </div> */}
-                          <ActionStepsWrapper
+                          <ActionSteps
                             entity="action_steps"
                             ui={{ rowExpansionTrigger: "always" }}
-                            nested_item="action_steps"
-                            exclude_components={[
-                              "input_mode",
-                              "submit_button",
-                              "columns",
-                              "custom_views",
-                              "save",
-                              "live_updates",
-                              "follow_up",
-                              "execute_selected",
-                            ]}
-                            success_message_code="action_plan"
                           />
                         </Accordion.Panel>
                       </Accordion.Item>
@@ -525,67 +612,71 @@ const Layout = ({
                     className="overflow-auto h-screen"
                     style={{ height: "calc(100vh - 64px)" }}
                   >
-                    <Accordion defaultValue={["action_input"]} multiple={true}>
-                      <Accordion.Item
-                        key="global_variables"
-                        value="global_variables"
-                      >
-                        <Accordion.Control icon={<IconVariable size={16} />}>
-                          Global Variables
-                        </Accordion.Control>
-                        <Accordion.Panel>
-                          {/* <div>
-                            global variables synced to active action input
-                          </div> */}
-                          <MonacoEditor
-                            // {...props?.schema}
-                            value={global_variables}
-                            setValue={setGlobalVariables}
-                            // field={props?.schema.title
-                            //   .toLowerCase()
-                            //   .replace(/ /g, "_")}
-                            // {...props}
-                          />
-                          {/* {activeRecord && (
-                            <ActionControlFormWrapper
-                              record={activeRecord}
-                              action_type="write"
-                              entity="action_step"
-                            ></ActionControlFormWrapper>
-                          )} */}
-                          {/* {["any"]?.includes(
-                            sessionConfig?.interaction_mode
-                          ) && (
-                            <ActionInputWrapper
-                              name="action_step_any"
-                              query_name="data_model"
-                            ></ActionInputWrapper>
-                          )} */}
-                        </Accordion.Panel>
-                      </Accordion.Item>
-
+                    <Accordion
+                      defaultValue={["action_input", "smart_indicators"]}
+                      multiple={true}
+                    >
+                      {/* <Accordion.Item
+                      key="natural_language_query_indicator"
+                      value="natural_language_query_indicator"
+                    >
+                      <Accordion.Control icon={<IconGauge size={16} />}>
+                        Natural Language Query Indicator
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <GenerativeComponentWrapper
+                          type="reviews"
+                          response_model="ReviewForTaskDescription"
+                          instruction="generate review for task description"
+                          object_to_list_of_records_with_uuid={true}
+                          name="ReviewForTaskDescription"
+                        ></GenerativeComponentWrapper>
+                      </Accordion.Panel>
+                    </Accordion.Item> */}
                       <Accordion.Item key="action_input" value="action_input">
                         <Accordion.Control icon={<IconForms size={16} />}>
                           Action Input
                         </Accordion.Control>
                         <Accordion.Panel>
-                          {/* {activeRecord && (
+                          {/* <div className="flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-600 text-center">
+                            Smart dynamically changing form will automatically
+                            appear here given cursor position and input
+                          </p>
+                        </div> */}
+                          {activeRecord && (
                             <ActionControlFormWrapper
                               record={activeRecord}
                               action_type="write"
                               entity="action_step"
                             ></ActionControlFormWrapper>
-                          )} */}
-                          {["any"]?.includes(
-                            sessionConfig?.interaction_mode
-                          ) && (
-                            <ActionInputWrapper
-                              name="action_step"
-                              query_name="data_model"
-                            ></ActionInputWrapper>
                           )}
                         </Accordion.Panel>
                       </Accordion.Item>
+
+                      {/* <Accordion.Item
+                      key="smart_indicators"
+                      value="smart_indicators"
+                    >
+                      <Accordion.Control icon={<IconGauge size={16} />}>
+                        Smart Indicators
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <div className="flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-600 text-center">
+                            Smart dynamically changing indicators will appear
+                            here given cursor position and input
+                          </p>
+                        </div>
+                        <GenerativeComponentWrapper
+                          type="reviews"
+                          response_model="ReviewForTaskDescription"
+                          instruction="generate review for task description"
+                          object_to_list_of_records_with_uuid={true}
+                          name="ReviewForTaskDescription"
+                        ></GenerativeComponentWrapper>
+                      </Accordion.Panel>
+                    </Accordion.Item> */}
                     </Accordion>
                   </div>
                 </Panel>

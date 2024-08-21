@@ -24,7 +24,6 @@ import {
   IconEye,
   IconFileDownload,
   IconLink,
-  IconPlayerPlay,
 } from "@tabler/icons-react";
 // import _, { set } from "lodash";
 import {
@@ -113,7 +112,6 @@ const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
 export interface RowData {
   [key: string]: any;
 }
-const PAGE_SIZES = [10, 15, 20];
 
 export function DataDisplay<T extends Record<string, any>>({
   data_items,
@@ -207,21 +205,6 @@ export function DataDisplay<T extends Record<string, any>>({
     setIsLarge(width >= 700);
   }, [width]);
 
-  const [pageSize, setPageSize] = useState(PAGE_SIZES[1]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [pageSize]);
-
-  const [page, setPage] = useState(1);
-  const [records, setRecords] = useState(data_items.slice(0, pageSize));
-
-  useEffect(() => {
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize;
-    setRecords(data_items.slice(from, to));
-  }, [page, pageSize]);
-
   return (
     <>
       <div className="w-full">
@@ -251,27 +234,15 @@ export function DataDisplay<T extends Record<string, any>>({
             )}
           </div>
           <div className="flex gap-3 items-center">
-            {execlude_components?.includes("execute_all") ? null : (
+            {/* {execlude_components?.includes("execute_all") ? null : (
               <div className={`w-full ${isLarge ? "lg:w-auto" : "mb-4"}`}>
-                {/* <Tooltip label={"Execute all action steps"}>
+                <Tooltip label={"Execute all action steps"}>
                   <Button variant="outline" size="compact-xs">
                     Execute All
                   </Button>
-                </Tooltip> */}
-                <Tooltip label="execute all" position="left">
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    color="green"
-                    // onClick={(e) => handleSubmit(e)}
-                    // disabled={!canSubmit}
-                    // loading={mutationIsLoading || isSubmitting}
-                  >
-                    <IconPlayerPlay size={16} />
-                  </ActionIcon>
-                </Tooltip>{" "}
+                </Tooltip>
               </div>
-            )}
+            )} */}
             {execlude_components?.includes("execute_selected") ? null : (
               <div className={`w-full ${isLarge ? "lg:w-auto" : "mb-4"}`}>
                 <Tooltip label={"Execute selected action steps"}>
@@ -491,7 +462,6 @@ export function DataDisplay<T extends Record<string, any>>({
             tableInstance={table}
             resource_group={resource_group}
             ui={ui}
-            execlude_components={execlude_components}
             // view_data={view_data}
           />
           // <div>tableview</div>
@@ -547,6 +517,7 @@ export function DataDisplay<T extends Record<string, any>>({
             {table?.getFilteredSelectedRowModel()?.rows?.length} of{" "}
             {table?.getFilteredRowModel()?.rows?.length} row(s) selected.
           </div>
+          {/* {JSON.stringify(execlude_components)} */}
           <div className="space-x-2">
             <Button
               variant="outline"
@@ -572,3 +543,51 @@ export function DataDisplay<T extends Record<string, any>>({
 }
 
 export default DataDisplay;
+
+// function Filter({ column }: { column: Column<any, unknown> }) {
+//   const columnFilterValue = column.getFilterValue();
+
+//   return (
+//     <DebouncedInput
+//       type="text"
+//       value={(columnFilterValue ?? "") as string}
+//       onChange={(value) => column.setFilterValue(value)}
+//       placeholder={`Search...`}
+//       className="w-36 border shadow rounded"
+//     />
+//   );
+// }
+
+// // A typical debounced input react component
+// function DebouncedInput({
+//   value: initialValue,
+//   onChange,
+//   debounce = 500,
+//   ...props
+// }: {
+//   value: string | number;
+//   onChange: (value: string | number) => void;
+//   debounce?: number;
+// } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
+//   const [value, setValue] = React.useState(initialValue);
+
+//   React.useEffect(() => {
+//     setValue(initialValue);
+//   }, [initialValue]);
+
+//   React.useEffect(() => {
+//     const timeout = setTimeout(() => {
+//       onChange(value);
+//     }, debounce);
+
+//     return () => clearTimeout(timeout);
+//   }, [value]);
+
+//   return (
+//     <Input
+//       {...props}
+//       value={value}
+//       onChange={(e) => setValue(e.target.value)}
+//     />
+//   );
+// }

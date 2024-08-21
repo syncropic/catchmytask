@@ -34,8 +34,9 @@ import {
   Textarea,
   Text,
   ActionIcon,
+  Input,
 } from "@mantine/core";
-import { DateInput } from "@mantine/dates";
+import { DateInput, DateTimePicker } from "@mantine/dates";
 import {
   HttpError,
   useCustom,
@@ -105,6 +106,7 @@ import List from "@components/List/List";
 import { EmailBanner } from "@components/EmailBanner/EmailBanner";
 import React from "react";
 import { render } from "react-dom";
+import { NaturalLanguageEditorFormInput } from "@components/NaturalLanguageEditor";
 // import MediaPlayerController from "@components/MediaPlayerController";
 // import MediaPlayerTimeline from "@components/MediaPlayerTimeline";
 
@@ -642,6 +644,7 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   Select: Select,
   NumberInput: NumberInput,
   FileInput: FileInput,
+  DateTimePicker: DateTimePicker,
   trips: ViewTrip,
   bookings: ViewBooking,
   payments: ViewPayment,
@@ -654,6 +657,7 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   JsonEditor: MonacoEditor,
   MonacoEditor: MonacoEditor,
   MonacoEditorFormInput: MonacoEditorFormInput,
+  NaturalLanguageEditorFormInput: NaturalLanguageEditorFormInput,
   // LocalAudioPlayer: LocalAudioPlayer,
   FileHandler: FileHandler,
   ExcalidrawEditor: ExcalidrawEditor,
@@ -993,6 +997,56 @@ export function useFetchRecommendationDataByState(state: any) {
   return { data, isLoading, error, isError };
 }
 
+export function useFetchActionStepDataByState(state: any) {
+  // const variables = state;
+
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config.API_URL}/catch-action-step`,
+    method: "post",
+    config: {
+      payload: {
+        ...state,
+        // task_variables: {},
+        // global_variables: {},
+        // include_action_steps: [1],
+        // action_steps: [
+        //   {
+        //     id: "1",
+        //     execution_order: 1,
+        //     description: "get recommendation data",
+        //     name: "recommendation_data",
+        //     job: "get recommendation data",
+        //     action_step_query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //       state
+        //     )}')`,
+        //     method: "get",
+        //     type: "main",
+        //     select: {
+        //       query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //         state
+        //       )}')`,
+        //       credential: "surrealdb_catchmytask",
+        //     },
+        //   },
+        // ],
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `useFetchActionStepDataByState_${JSON.stringify({
+          name: state?.action_steps[0]?.name,
+          execution_order: state?.action_steps[0]?.execution_order,
+          id: state?.action_steps[0]?.id,
+          // success_message_code: state?.action_steps[0]?.success_message_code,
+        })}`,
+      ],
+      enabled: false,
+    },
+  });
+
+  return { data, isLoading, error, isError };
+}
+
 interface useFetchGenerativeRecommendationDataByStateProps {
   state: any;
   response_model?: string;
@@ -1146,6 +1200,86 @@ export function useFetchActionDataByName(state: any) {
     },
     queryOptions: {
       queryKey: [`useFetchActionDataByName_${state}`],
+    },
+  });
+
+  return { data, isLoading, error, isError };
+}
+
+export function useFetchDataModelByState(state: any) {
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config.API_URL}/catch-read`,
+    method: "post",
+    config: {
+      payload: {
+        task_variables: {},
+        global_variables: {},
+        include_action_steps: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            description: "get data model",
+            name: "get data model",
+            job: "get data model",
+            action_step_query: `SELECT * FROM fn::execute_query('data_model', '${JSON.stringify(
+              state
+            )}')`,
+            method: "get",
+            type: "main",
+            select: {
+              query: `SELECT * FROM fn::execute_query('data_model', '${JSON.stringify(
+                state
+              )}')`,
+              credential: "surrealdb_catchmytask",
+            },
+          },
+        ],
+      },
+    },
+    queryOptions: {
+      queryKey: [`useFetchDataModelByState_${state}`],
+    },
+  });
+
+  return { data, isLoading, error, isError };
+}
+
+export function useFetchQueryDataByState(state: any) {
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config.API_URL}/catch-read`,
+    method: "post",
+    config: {
+      payload: {
+        task_variables: {},
+        global_variables: {},
+        include_action_steps: [1],
+        action_steps: [
+          {
+            id: "1",
+            execution_order: 1,
+            description: "query data",
+            name: "query data",
+            job: "query data",
+            action_step_query: `SELECT * FROM fn::execute_query('${
+              state?.query_name
+            }', '${JSON.stringify(state)}')`,
+            method: "get",
+            type: "main",
+            success_message_code:
+              state?.success_message_code ?? "query_success_results",
+            select: {
+              query: `SELECT * FROM fn::execute_query('${
+                state?.query_name
+              }', '${JSON.stringify(state)}')`,
+              credential: "surrealdb_catchmytask",
+            },
+          },
+        ],
+      },
+    },
+    queryOptions: {
+      queryKey: [`useFetchQueryDataByState_${JSON.stringify(state)}`],
     },
   });
 
@@ -1634,11 +1768,11 @@ export function useTableColumns({
     () =>
       field_configurations?.map((item) => {
         return {
-          id: `${table_id}-${item.name}`,
-          accessorKey: item.accessor_key || item.name, // Assuming each FieldConfiguration has a 'name' property
-          header: item.name, // Assuming each FieldConfiguration has a 'name' property
+          id: `${table_id}-${item?.name}`,
+          accessorKey: item?.accessor_key || item?.name, // Assuming each FieldConfiguration has a 'name' property
+          header: item?.name, // Assuming each FieldConfiguration has a 'name' property
           cell: (row: RowData) => (
-            <div dangerouslySetInnerHTML={{ __html: row[item.name] }} />
+            <div dangerouslySetInnerHTML={{ __html: row[item?.name] }} />
             // {renderContent(row[item.name])}
             // <div>{renderContent(row[item.name])}</div>
           ),
@@ -1771,7 +1905,7 @@ export function DebouncedInput({
   }, [value]);
 
   return (
-    <input
+    <TextInput
       {...props}
       value={value}
       onChange={(e) => setValue(e.target.value)}

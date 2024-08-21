@@ -75,7 +75,9 @@ export type ComponentKey =
   // | "MediaPlayerController"
   // | "MediaPlayerTimeline"
   | "MonacoEditor"
-  | "MonacoEditorFormInput";
+  | "MonacoEditorFormInput"
+  | "NaturalLanguageEditorFormInput"
+  | "DateTimePicker";
 
 // export type IView = {
 //   resource_type: ComponentKey;

@@ -26,20 +26,24 @@ import ResourceView from "@components/ResourceView";
 import ExcalidrawEditor from "@components/ExcalidrawEditor";
 import MonacoEditor from "@components/MonacoEditor";
 import { debounce } from "lodash";
-import { ActionIcon, FileInput, Tooltip } from "@mantine/core";
+import { ActionIcon, FileInput, Tooltip, Text, Button } from "@mantine/core";
 import { useEffect } from "react";
 import Highlight from "@tiptap/extension-highlight";
 import TemplatesViewWrapper from "@components/TemplatesView";
 import FileBrowserWrapper from "@components/FileBrowser";
 
-const content = "";
+// const content = "";
 // const content = "<p>Hello World!</p>";
-interface IEditor {
+interface NaturalLanguageEditorProps {
   value: any;
   // language?: string;
-  setFieldValue?: (field: string, value: any) => void;
-  setValues?: (values: any) => void;
-  handleSubmit?: (e: any) => void;
+  // setFieldValue?: (field: string, value: any) => void;
+  setValue?: (value: any) => void;
+  form?: any;
+  isLoading?: boolean;
+  // setValues?: (values: any) => void;
+  // handleSubmit?: (e: any) => void;
+
   // height?: string;
 }
 interface ContentNode {
@@ -70,11 +74,13 @@ function extractTextFromContent(content: ContentNode[]): string {
 //   }
 // }, 300); // 300ms debounce delay
 
-const Editor: React.FC<IEditor> = ({
+const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
   value,
-  setFieldValue,
-  setValues,
-  handleSubmit,
+  setValue = () => {},
+  form,
+  isLoading = false,
+  // setValues,
+  // handleSubmit,
   // language = "json",
   // height = "30vh",
 }) => {
@@ -88,11 +94,11 @@ const Editor: React.FC<IEditor> = ({
   //     setValues(values);
   //   }
   // }, 300); // 300ms debounce delay
-  const debouncedSetFormValues = debounce((values: any) => {
-    if (setValues) {
-      setValues(values);
-    }
-  }, 300); // 300ms debounce delay
+  // const debouncedSetFormValues = debounce((values: any) => {
+  //   if (setValues) {
+  //     setValues(values);
+  //   }
+  // }, 300); // 300ms debounce delay
 
   const editor = useEditor({
     extensions: [
@@ -105,31 +111,40 @@ const Editor: React.FC<IEditor> = ({
       // TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder: "What would you like to do?" }),
     ],
-    content,
+    content: value || "",
     // triggered on every change
     onUpdate: ({ editor }) => {
       const content = editor.getJSON();
-      if (setFieldValue) {
-        // setFieldValue("language", "natural_language");
-        // debouncedSetFieldValue("type", "json");
-        // debouncedSetFieldValue("content_json", content || "");
-        // debouncedSetFieldValue(
-        //   "content_text",
-        //   extractTextFromContent(content?.content) || ""
-        // );
-        // debouncedSetFieldValue("content_json", content || "");
-        const updatedValues = {
-          content_text: extractTextFromContent(content?.content) || "",
-          content_json: content || "",
-          // You can add more fields if needed
-        };
-        debouncedSetFormValues(updatedValues);
+      let content_text = extractTextFromContent(content?.content) || "";
+      const updatedValues = {
+        content_text: content_text,
+        content_json: content || "",
+        // You can add more fields if needed
+      };
+      // debouncedSetFormValues(updatedValues);
+      // console.log("editor content_text", content_text);
+      setValue(content_text);
+      // if (setValue) {
+      //   // setFieldValue("language", "natural_language");
+      //   // debouncedSetFieldValue("type", "json");
+      //   // debouncedSetFieldValue("content_json", content || "");
+      //   // debouncedSetFieldValue(
+      //   //   "content_text",
+      //   //   extractTextFromContent(content?.content) || ""
+      //   // );
+      //   // debouncedSetFieldValue("content_json", content || "");
+      //   // const updatedValues = {
+      //   //   content_text: extractTextFromContent(content?.content) || "",
+      //   //   content_json: content || "",
+      //   //   // You can add more fields if needed
+      //   // };
+      //   // debouncedSetFormValues(updatedValues);
 
-        // debouncedSetValues({
-        //   content_json: content || "",
-        //   // content_text: extractTextFromContent(content?.content) || "",
-        // });
-      }
+      //   // debouncedSetValues({
+      //   //   content_json: content || "",
+      //   //   // content_text: extractTextFromContent(content?.content) || "",
+      //   // });
+      // }
       // console.log(json);
       // send the content to an API here
     },
@@ -139,11 +154,11 @@ const Editor: React.FC<IEditor> = ({
   //     debouncedSetFieldValue.cancel(); // cancel any pending debounced calls on unmount
   //   };
   // }, [debouncedSetFieldValue]);
-  useEffect(() => {
-    return () => {
-      debouncedSetFormValues.cancel(); // cancel any pending debounced calls on unmount
-    };
-  }, [debouncedSetFormValues]);
+  // useEffect(() => {
+  //   return () => {
+  //     debouncedSetFormValues.cancel(); // cancel any pending debounced calls on unmount
+  //   };
+  // }, [debouncedSetFormValues]);
   let actions = [
     {
       label: "Templates",
@@ -304,7 +319,7 @@ const Editor: React.FC<IEditor> = ({
         <RichTextEditor.ControlsGroup>
           <Tooltip label="Live Updates">
             <RichTextEditor.Control
-              onClick={handleSubmit}
+              // onClick={handleSubmit}
               aria-label="Live Updates"
               // title="Run"
             >
@@ -313,11 +328,28 @@ const Editor: React.FC<IEditor> = ({
           </Tooltip>
           <Tooltip label="Run">
             <RichTextEditor.Control
-              onClick={handleSubmit}
+              // onClick={() => form?.handleSubmit()}
               aria-label="Run"
               // title="Run"
+              // disabled={form?.Subscribe}
             >
-              <IconSend stroke={1.5} size="1rem" />
+              {/* <IconSend stroke={1.5} size="1rem" /> */}
+              <form.Subscribe
+                selector={(state) => [state.canSubmit, state.isSubmitting]}
+                children={([canSubmit, isSubmitting]) => (
+                  // <button type="submit" disabled={!canSubmit}>
+                  //   {isSubmitting ? '...' : 'Submit'}
+                  // </button>
+                  <Button
+                    size="xs"
+                    type="submit"
+                    loading={isLoading || isSubmitting}
+                    disabled={!canSubmit}
+                  >
+                    Act
+                  </Button>
+                )}
+              />
             </RichTextEditor.Control>
           </Tooltip>
 
@@ -340,4 +372,34 @@ const Editor: React.FC<IEditor> = ({
     </RichTextEditor>
   );
 };
-export default Editor;
+export default NaturalLanguageEditor;
+
+export const NaturalLanguageEditorFormInput = ({ ...props }: any) => {
+  // console.log("monaco editor form input props", props);
+  // const setValue = (value: any) => {
+  //   props?.setFieldValue(
+  //     props?.schema.title.toLowerCase().replace(/ /g, "_"),
+  //     value
+  //   );
+  // };
+  return (
+    <>
+      {props?.schema?.title && (
+        <Text fw={500} size="sm">
+          {props?.schema?.title}
+        </Text>
+      )}
+      {/* <div>{JSON.stringify(props?.value)}</div> */}
+      <NaturalLanguageEditor
+        // {...props?.schema}
+        value={props?.value}
+        setValue={props?.onChange}
+        form={props?.form}
+        isLoading={props?.isLoading}
+        // field={props?.schema.title.toLowerCase().replace(/ /g, "_")}
+        // {...props}
+      />
+    </>
+    // <div>monaco editor form input</div>
+  );
+};

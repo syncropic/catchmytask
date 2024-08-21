@@ -1,11 +1,18 @@
-// ResourceHeader.tsx
+// SessionBar.tsx
 import React from "react";
 import { ActionIcon } from "@mantine/core";
 import SelectSession from "@components/SelectSession";
 import { HttpError, useList } from "@refinedev/core";
 import { ISession } from "@components/interfaces";
 import { useAppStore } from "src/store";
-import { IconCopy, IconEdit, IconPlus } from "@tabler/icons-react";
+import {
+  IconCopy,
+  IconEdit,
+  IconGripHorizontal,
+  IconPlus,
+  IconRun,
+  IconSearch,
+} from "@tabler/icons-react";
 
 interface SessionBarProps {
   name: string;
@@ -20,7 +27,27 @@ const SessionBar: React.FC<SessionBarProps> = ({
   subheading,
   description,
 }) => {
-  const { activeSession, activeApplication, setActiveAction } = useAppStore();
+  const {
+    activeSession,
+    activeApplication,
+    setActiveAction,
+    sessionConfig,
+    setSessionConfig,
+  } = useAppStore();
+
+  // const { activeLayout, setActiveLayout } = useAppStore();
+  // // handle toggleDisplay
+  const toggleSessionInteractionMode = (mode: string) => {
+    if (sessionConfig) {
+      const newSessionConfig = { ...sessionConfig };
+      let currentInteractionMode = newSessionConfig["interaction_mode"];
+      if (mode) {
+        newSessionConfig["interaction_mode"] =
+          currentInteractionMode === mode ? "interactive" : mode;
+      }
+      setSessionConfig(newSessionConfig);
+    }
+  };
 
   const {
     data,
@@ -44,9 +71,9 @@ const SessionBar: React.FC<SessionBarProps> = ({
 
   const session_data_items = data?.data ?? [];
 
-  const handleSelectAction = (action: any) => {
-    setActiveAction(action);
-  };
+  // const handleSelectAction = (action: any) => {
+  //   setActiveAction(action);
+  // };
 
   return (
     <div className="flex w-full items-center pl-4 pr-4 space-x-4">
@@ -57,17 +84,52 @@ const SessionBar: React.FC<SessionBarProps> = ({
       />
       <div className="flex items-center space-x-2">
         <ActionIcon
+          aria-label="Toggle background mode"
+          size="sm"
+          onClick={() => toggleSessionInteractionMode("background")}
+          variant={
+            sessionConfig.interaction_mode == "background"
+              ? "filled"
+              : "outline"
+          }
+        >
+          <IconRun />
+        </ActionIcon>
+
+        {/* <ActionIcon
           variant="filled"
           aria-label="Create Session"
+          size="sm"
+          disabled
           onClick={() => handleSelectAction({ name: "create_session" })}
         >
           <IconPlus />
-        </ActionIcon>
-        <ActionIcon variant="filled" aria-label="Copy" disabled>
+        </ActionIcon> */}
+        {/* <ActionIcon variant="filled" aria-label="Copy" disabled size="sm">
           <IconCopy />
-        </ActionIcon>
-        <ActionIcon variant="filled" aria-label="Edit" disabled>
+        </ActionIcon> */}
+        {/* <ActionIcon variant="filled" aria-label="Edit" disabled size="sm">
           <IconEdit />
+        </ActionIcon> */}
+        <ActionIcon
+          aria-label="Toggle search mode"
+          size="sm"
+          onClick={() => toggleSessionInteractionMode("search")}
+          variant={
+            sessionConfig.interaction_mode == "search" ? "filled" : "outline"
+          }
+        >
+          <IconSearch />
+        </ActionIcon>
+        <ActionIcon
+          aria-label="any"
+          size="sm"
+          onClick={() => toggleSessionInteractionMode("any")}
+          variant={
+            sessionConfig.interaction_mode == "any" ? "filled" : "outline"
+          }
+        >
+          <IconGripHorizontal />
         </ActionIcon>
       </div>
     </div>

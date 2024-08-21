@@ -1,110 +1,106 @@
-// import MonacoEditor from "@components/MonacoEditor";
-// import Reveal from "@components/Reveal";
-// import { extractIdentifier } from "@components/Utils";
-import { useAppStore } from "src/store";
-// import { Text } from "@mantine/core";
-import { ActionControlFormWrapper } from "@components/ActionControlForm";
-
-import { useState } from "react";
-import { Tabs } from "@mantine/core";
 import DataDisplay from "@components/DataDisplay";
+import { useFetchActionStepDataByState } from "@components/Utils";
+import { useAppStore } from "src/store";
 
 interface ActionStepResultsProps {
-  entity?: string;
+  // entity?: string;
   record?: any;
+  nested_item?: string;
+  // queryKey?: string;
   // types?: string[];
   // state?: any;
   // read_write_mode?: string;
   // ui?: Record<string, any>;
 }
 
+interface AppendItems {
+  name: string;
+  id: string;
+}
+
 export function ActionStepResults({
-  entity = "action_steps",
+  // entity = "action_steps",
   record,
-}: // types,
+  nested_item,
+}: // queryKey,
+// types,
 // read_write_mode = "read",
 // ui = {},
 ActionStepResultsProps) {
+  // use read action step results by state
+
+  // const { global_variables } = useAppStore();
+  let state = {
+    // global_variables: global_variables,
+    action_steps: [record],
+    // include_action_steps: [record?.execution_order || 0],
+  };
   const {
-    // activeSession,
-    activeAction,
-    // activeRecord,
-    // activeApplication,
-    // activeResultsSection,
-  } = useAppStore();
-  // const [name, setName] = useState(initialData.name);
-  // const [city, setCity] = useState(initialData.city);
-  // const [state, setState] = useState(initialData.state);
-  // const [streetAddress, setStreetAddress] = useState(initialData.streetAddress);
-  // const [missionStatement, setMissionStatement] = useState(initialData.missionStatement);
+    data: actionStepData,
+    isLoading: actionStepDataIsLoading,
+    error: actionStepDataError,
+  } = useFetchActionStepDataByState(state);
+  if (actionStepDataIsLoading) {
+    return <div>Loading...</div>;
+  }
+  if (actionStepDataError) {
+    return (
+      <div>
+        Error fetching action step data {JSON.stringify(actionStepDataError)}
+      </div>
+    );
+  }
+  // const {
+  //   // activeSession,
+  //   activeAction,
+  //   // activeRecord,
+  //   // activeApplication,
+  //   // activeResultsSection,
+  // } = useAppStore();
   let data_fields = [
     {
-      name: "content",
-      accessor: "content",
-    },
-    {
-      name: "name",
-      accessor: "name",
+      name: "id",
+      accessor: "id",
     },
   ];
+  // let append_items = Array<AppendItems>();
 
   return (
     <>
-      {/* <div>action step editor</div> */}
-      {/* <div>{JSON.stringify(record)}</div> */}
-      {/* <div>predetermined forms or dynamic prompting from agent for action input / feedback. some llm prompts or clicking on buttons or selecting actions updates this section */}
-      {/* render any pydantic model form */}
-      {activeAction && (
+      {/* <div>action step results</div> */}
+      {/* <div>{JSON.stringify(actionStepData)}</div> */}
+      {actionStepData && (
         <>
-          {/* <div>action step results</div> */}
           <DataDisplay
-            // data_items={
-            //   recommendationData?.data?.find(
-            //     (item: any) => item?.message?.code === "query_success_results"
-            //   )?.data[0]?.[entity]
-            // }
-            data_items={[]}
-            data_fields={data_fields}
-            read_write_mode="read"
-            isLoadingDataItems={false}
-            resource_group={"action_steps_recommendations"}
-            execlude_components={["custom_views_columns_view_as"]}
+            data_items={
+              nested_item
+                ? actionStepData?.data?.find(
+                    (item: any) =>
+                      item?.message?.code === "query_success_results"
+                  )?.data?.[0]?.[nested_item] || []
+                : actionStepData?.data?.find(
+                    (item: any) =>
+                      item?.message?.code === "query_success_results"
+                  )?.data || []
+            }
+            data_fields={
+              (
+                actionStepData?.data?.find(
+                  (item: any) => item?.message?.code === "query_success_results"
+                )?.data_fields || []
+              ).map((item: any) => ({
+                name: item?.name,
+                accessor: item?.name,
+              })) ||
+              data_fields ||
+              []
+            }
+            read_write_mode={"read"}
+            isLoadingDataItems={actionStepDataIsLoading}
+            resource_group={record?.execution_id}
+            execlude_components={["columns", "custom_views"]}
             ui={{}}
           ></DataDisplay>
-          {/* <Tabs defaultValue="create" orientation="vertical">
-            <Tabs.List>
-              <Tabs.Tab value="create">create</Tabs.Tab>
-              <Tabs.Tab value="run">run</Tabs.Tab>
-            </Tabs.List>
-
-            <Tabs.Panel value="create">
-              <div className="p-3">
-                <ActionControlFormWrapper
-                  record={record}
-                  action_type="write"
-                  entity="action_step"
-                ></ActionControlFormWrapper>
-              </div>
-            </Tabs.Panel>
-            <Tabs.Panel value="run">
-              <div>
-                quick summary of action step inner workings - view only - pull
-                up and run any action at any time, just through search
-              </div>
-              <div>
-                action step and dependency mocking (dependency mocking
-                techniques) or direct provision
-              </div>
-              <div>button to trigger action</div>
-              <div>display of action results</div>
-            </Tabs.Panel>
-          </Tabs> */}
-
-          {/* <ActionControlFormWrapper
-            record={record}
-            action_type="write"
-            entity="action_step"
-          ></ActionControlFormWrapper> */}
         </>
       )}
     </>
@@ -112,3 +108,36 @@ ActionStepResultsProps) {
 }
 
 export default ActionStepResults;
+
+interface ActionStepResultsProps {
+  record?: any;
+  execlude_components?: string[];
+}
+
+export const ActionStepResultsWrapper = ({
+  record,
+  execlude_components,
+}: ActionStepResultsProps) => {
+  // let id = record?.id;
+  // let queryKey = "";
+  // if (!id?.startsWith("action_step")) {
+  //   queryKey = `catch-action-step-${id}`;
+  // }
+  // console.log("monaco editor form input props", props);
+  // const setValue = (value: any) => {
+  //   props?.setFieldValue(
+  //     props?.schema.title.toLowerCase().replace(/ /g, "_"),
+  //     value
+  //   );
+  // };
+  return (
+    <>
+      {/* <div>action step results wrapper</div> */}
+      {/* <div>{JSON.stringify(record)}</div> */}
+      <ActionStepResults
+        record={record}
+        execlude_components={execlude_components}
+      ></ActionStepResults>
+    </>
+  );
+};
