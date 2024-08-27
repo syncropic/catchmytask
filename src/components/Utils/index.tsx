@@ -75,6 +75,7 @@ import {
   IconBrandOpenai,
   IconBrandSpotify,
   IconBrandStripe,
+  IconBrandZoom,
   IconCircle,
   IconCode,
   IconCurrencyDollar,
@@ -103,6 +104,7 @@ import { EmailBanner } from "@components/EmailBanner/EmailBanner";
 import React from "react";
 import { render } from "react-dom";
 import { NaturalLanguageEditorFormInput } from "@components/NaturalLanguageEditor";
+import AccordionList from "@components/List/AccordionList";
 // import MediaPlayerController from "@components/MediaPlayerController";
 // import MediaPlayerTimeline from "@components/MediaPlayerTimeline";
 
@@ -629,6 +631,7 @@ export const iconMapping: Record<string, React.ElementType> = {
   IconTransform,
   IconTopologyStar3,
   IconBooks,
+  IconBrandZoom,
 };
 
 // Adjust your componentMapping to explicitly use this type for its keys
@@ -663,7 +666,7 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   get_started: Procedure,
   integrations: List,
   social_proof: List,
-  showcase: List,
+  showcase: AccordionList,
   email_list_signup: EmailBanner,
   // MediaPlayerController: MediaPlayerController,
   // MediaPlayerTimeline: MediaPlayerTimeline,

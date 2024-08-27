@@ -37,7 +37,7 @@ const SmallMediumScreenHeader = ({
         }}
       />
       {authenticatedData?.authenticated && <LayoutToggle />}
-      {authenticatedData?.authenticated && <UserMenu />}
+      {<UserMenu />}
     </div>
     <div className="md:pr-72 md:pl-72 col-span-1">
       {authenticatedData?.authenticated && (
@@ -82,7 +82,7 @@ const LargeScreenHeader = ({
         description={activeApplication?.description}
       />
     )}
-    {authenticatedData?.authenticated && <UserMenu />}
+    {<UserMenu />}
   </div>
 );
 
@@ -115,7 +115,7 @@ export function Header({ authenticatedData }: HeaderComponentProps) {
           go={go}
         />
       </div>
-      <div className="hidden lg:block">
+      <div className="hidden lg:block h-full">
         <LargeScreenHeader
           applicationData={applicationData}
           authenticatedData={authenticatedData}

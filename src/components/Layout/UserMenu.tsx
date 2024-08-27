@@ -24,6 +24,7 @@ import {
 } from "@tabler/icons-react";
 import UserButton from "./UserButton";
 import { useAppStore } from "src/store";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 export const UserMenu = () => {
   const { list } = useNavigation();
@@ -45,12 +46,13 @@ export const UserMenu = () => {
     return (
       <Button
         size="xs"
-        onClick={() => {
-          go({
-            to: "/login",
-            type: "push",
-          });
-        }}
+        onClick={() => signIn()}
+        // onClick={() => {
+        //   go({
+        //     to: "/login",
+        //     type: "push",
+        //   });
+        // }}
       >
         Sign In
       </Button>

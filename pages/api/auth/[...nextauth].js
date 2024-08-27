@@ -5,11 +5,10 @@ import AzureADProvider from "next-auth/providers/azure-ad";
 export const authOptions = {
   // Configure one or more authentication providers
   providers: [
-    // GoogleProvider({
-    //   clientId:
-    //     "547172291738-07p9t0ll2d50sv44et91tg62iseao6bb.apps.googleusercontent.com",
-    //   clientSecret: "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",
-    // }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
     AzureADProvider({
       clientId: process.env.AZURE_AD_CLIENT_ID,
       clientSecret: process.env.AZURE_AD_CLIENT_SECRET,
