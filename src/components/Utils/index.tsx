@@ -914,10 +914,7 @@ export function useFetchActionHistoryById(actionId: any | null) {
 //   return { data, isLoading, error, isError };
 // }
 
-export function useFetchDomainDataByDomain(domain: string) {
-  const variables = {
-    domain: domain,
-  };
+export function useFetchDomainDataByDomain(state: any) {
   const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
@@ -936,14 +933,14 @@ export function useFetchDomainDataByDomain(domain: string) {
             name: "domain data",
             job: "get domain data",
             action_step_query: `SELECT * FROM fn::execute_query('domain data', '${JSON.stringify(
-              variables
+              state
             )}')`,
             method: "get",
             type: "main",
             credential: "surrealdb catchmytask dev",
             select: {
               query: `SELECT * FROM fn::execute_query('domain data', '${JSON.stringify(
-                variables
+                state
               )}')`,
               credential: "surrealdb catchmytask dev",
             },
@@ -952,7 +949,7 @@ export function useFetchDomainDataByDomain(domain: string) {
       },
     },
     queryOptions: {
-      queryKey: [`useFetchDomainDataByDomain_${domain}`],
+      queryKey: [`useFetchDomainDataByDomain_${JSON.stringify(state)}`],
     },
   });
 

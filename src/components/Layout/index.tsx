@@ -69,8 +69,6 @@ function InitializeApplication({
   activeApplicationId?: string;
   children: React.ReactNode;
 }) {
-  const domain = useDomain();
-
   return <div>{children}</div>;
 }
 
@@ -95,12 +93,16 @@ const Layout = ({
   } = useAppStore();
   const go = useGo();
   const parsed = useParsed();
-  const domain = useDomain();
+  const runtimeConfig = useAppStore((state) => state.runtimeConfig);
+
+  let state = {
+    domain_url: runtimeConfig?.DOMAIN_URL,
+  };
   const {
     data: domainData,
     isLoading: domainDataIsLoading,
     error: domainDataError,
-  } = useFetchDomainDataByDomain(domain);
+  } = useFetchDomainDataByDomain(state);
 
   let domainRecord = domainData?.data?.find(
     (item: any) => item?.message?.code === "query_success_results"

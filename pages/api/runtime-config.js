@@ -4,5 +4,6 @@ export default function handler(req, res) {
     API_URL: process.env.NEXT_PUBLIC_API_URL || "https://api.catchmytask.com",
     API_REQUESTS_URL:
       process.env.NEXT_PUBLIC_API_REQUESTS_URL || "https://api.catchmytask.com",
+    DOMAIN_URL: process.env.NEXT_PUBLIC_DOMAIN_URL || "https://catchmytask.com",
   });
 }
