@@ -121,12 +121,15 @@ const Layout = ({
   // );
   // for homepage if not logged authenticated
   if (!authenticatedData?.authenticated && parsed?.pathname == "/") {
-    let domain_data = domainData?.data?.find(
-      (item: any) => item?.message?.code === "query_success_results"
-    )?.data[0];
+    let domain_data =
+      domainData?.data?.find(
+        (item: any) => item?.message?.code === "query_success_results"
+      )?.data?.[0] || {};
+
     let visible_sections =
-      domain_data["domain"]["metadata"]["visible_sections"];
-    let application = domain_data["application"];
+      domain_data?.domain?.metadata?.visible_sections || null;
+    let application = domain_data?.application || null;
+
     return (
       <>
         {/* <div>is not authenticated / page</div> */}
