@@ -6,5 +6,5 @@ node_modules
 .env
 .env.*
 !.env.example
-# docker compose files
+# Ignore Docker Compose files
 docker-compose.yml
