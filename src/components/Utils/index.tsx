@@ -10,7 +10,7 @@ import ViewTask from "@components/ViewTask";
 import ViewTestRun from "@components/ViewTestRun";
 import ViewTrip from "@components/ViewTrip";
 import { ComponentKey } from "@components/interfaces";
-import config from "src/config";
+// import config from "src/config";
 import {
   Column,
   FieldConfiguration,
@@ -719,6 +719,7 @@ export function useAuthToken() {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { runtimeConfig: config } = useAppStore();
 
   useEffect(() => {
     const fetchAuthToken = async () => {
@@ -735,7 +736,7 @@ export function useAuthToken() {
         formData.append("username", identity?.email);
         formData.append("password", identity?.email);
 
-        const response = await fetch(`${config.API_URL}/token`, {
+        const response = await fetch(`${config?.API_URL}/token`, {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -796,13 +797,15 @@ export function extractIdentifier(activeRecord: any): RecordIdentifier {
 
 export function useFetchActionById(actionId: string | null) {
   const [action, setAction] = useState<IAction | null>(null);
+  const { runtimeConfig: config } = useAppStore();
+
   // const active_action_query = {
   //   credentials: "surrealdb_catchmytask",
   //   query: `SELECT *, show.view_id.* AS show.view, list.view_id.* AS list.view FROM actions WHERE id = '${actionId}'`,
   //   query_language: "surrealql",
   // };
   const { data, isLoading, error } = useCustom({
-    url: `${config.API_URL}/catch`,
+    url: `${config?.API_URL}/catch`,
     method: "post",
     config: {
       payload: {
@@ -842,13 +845,15 @@ export function useFetchActionById(actionId: string | null) {
 
 export function useFetchActionHistoryById(actionId: any | null) {
   const [action, setAction] = useState<IAction | null>(null);
+  const { runtimeConfig: config } = useAppStore();
+
   const active_action_query = {
     credentials: "surrealdb_catchmytask",
     query: `SELECT * FROM execute WHERE in = 'task:⟨018ebf59-a43a-77ba-9535-c1f2a84ec786⟩'`,
     query_language: "surrealql",
   };
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/query`,
+    url: `${config?.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -875,7 +880,7 @@ export function useFetchActionHistoryById(actionId: any | null) {
 //   };
 
 //   const { data, isLoading, error, isError } = useCustom({
-//     url: `${config.API_URL}/execute-query`,
+//     url: `${config?.API_URL}/execute-query`,
 //     method: "post",
 //     config: {
 //       payload: {
@@ -913,9 +918,10 @@ export function useFetchDomainDataByDomain(domain: string) {
   const variables = {
     domain: domain,
   };
+  const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/execute-query`,
+    url: `${config?.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -955,9 +961,10 @@ export function useFetchDomainDataByDomain(domain: string) {
 
 export function useFetchRecommendationDataByState(state: any) {
   // const variables = state;
+  const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/catch-recommendation`,
+    url: `${config?.API_URL}/catch-recommendation`,
     method: "post",
     config: {
       payload: {
@@ -996,9 +1003,10 @@ export function useFetchRecommendationDataByState(state: any) {
 
 export function useFetchActionStepDataByState(state: any) {
   // const variables = state;
+  const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/catch-action-step`,
+    url: `${config?.API_URL}/catch-action-step`,
     method: "get",
     config: {
       payload: {
@@ -1046,9 +1054,10 @@ export function useFetchActionStepDataByState(state: any) {
 
 export function useFetchTaskInputDataByState(state: any) {
   // const variables = state;
+  const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/catch-task-input`,
+    url: `${config?.API_URL}/catch-task-input`,
     method: "post",
     config: {
       payload: {
@@ -1097,9 +1106,10 @@ export function useFetchTaskInputDataByState(state: any) {
 
 export function useFetchActionPlanDataByState(state: any) {
   // const variables = state;
+  const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/catch-task`,
+    url: `${config?.API_URL}/catch-task`,
     method: "post",
     config: {
       payload: {
@@ -1149,9 +1159,10 @@ export function useFetchActionPlanDataByState(state: any) {
 
 export function useFetchActionStepsDataByState(state: any) {
   // const variables = state;
+  const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/catch-action-step`,
+    url: `${config?.API_URL}/catch-action-step`,
     method: "post",
     config: {
       payload: {
@@ -1217,9 +1228,10 @@ export function useFetchGenerativeRecommendationDataByState({
     response_model: response_model,
     type: type,
   };
+  const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/catch-generative-recommendation`,
+    url: `${config?.API_URL}/catch-generative-recommendation`,
     method: "post",
     config: {
       payload: {
@@ -1277,9 +1289,10 @@ export function useFetchGenerativeComponentDataByStateAndModel({
     type: type,
     instruction: instruction,
   };
+  const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/catch-generate`,
+    url: `${config?.API_URL}/catch-generate`,
     method: "post",
     config: {
       payload: {
@@ -1320,8 +1333,10 @@ export function useFetchGenerativeComponentDataByStateAndModel({
 }
 
 export function useFetchActionDataByName(state: any) {
+  const { runtimeConfig: config } = useAppStore();
+
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/execute-query`,
+    url: `${config?.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -1360,8 +1375,10 @@ export function useFetchActionDataByName(state: any) {
 }
 
 export function useFetchDataModelByState(state: any) {
+  const { runtimeConfig: config } = useAppStore();
+
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/execute-query`,
+    url: `${config?.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -1400,8 +1417,10 @@ export function useFetchDataModelByState(state: any) {
 }
 
 export function useFetchQueryDataByState(state: any) {
+  const { runtimeConfig: config } = useAppStore();
+
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/execute-query`,
+    url: `${config?.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -1442,8 +1461,10 @@ export function useFetchQueryDataByState(state: any) {
 }
 
 export function useFetchSessionById(sessionId: string | null) {
+  const { runtimeConfig: config } = useAppStore();
+
   const { data, isLoading, error } = useCustom({
-    url: `${config.API_URL}/execute-query`,
+    url: `${config?.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -1499,6 +1520,8 @@ export function useFetchSessionById(sessionId: string | null) {
 }
 
 export function useFetchViewById(viewId: string | null) {
+  const { runtimeConfig: config } = useAppStore();
+
   // const [data, setAction] = useState<IAction | null>(null);
   // const view_query = {
   //   credentials: "surrealdb_catchmytask",
@@ -1506,7 +1529,7 @@ export function useFetchViewById(viewId: string | null) {
   //   query_language: "surrealql",
   // };
   const { data, isLoading, error } = useCustom({
-    url: `${config.API_URL}/catch`,
+    url: `${config?.API_URL}/catch`,
     method: "post",
     config: {
       payload: {
@@ -1550,8 +1573,10 @@ export function useFetchViewByName(viewName: string | null) {
     query: `SELECT (SELECT *, out.* FROM includes_field_configuration WHERE in == $parent.id) AS field_configurations, (SELECT *, out.* FROM includes_action_configuration WHERE in == $parent.id) AS action_configurations, * FROM views WHERE name = '${viewName}';`,
     query_language: "surrealql",
   };
+  const { runtimeConfig: config } = useAppStore();
+
   const { data, isLoading, error } = useCustom({
-    url: `${config.API_URL}/query`,
+    url: `${config?.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -1578,8 +1603,10 @@ export function useFetchActionByName(actionName: string | null) {
     query: `SELECT (SELECT *, out.* FROM includes_field_configuration WHERE in == $parent.id) AS field_configurations, (SELECT *, out.* FROM includes_action_configuration WHERE in == $parent.id) AS action_configurations, * FROM views WHERE name = '${actionName}';`,
     query_language: "surrealql",
   };
+  const { runtimeConfig: config } = useAppStore();
+
   const { data, isLoading, error } = useCustom({
-    url: `${config.API_URL}/query`,
+    url: `${config?.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -1601,8 +1628,10 @@ export function useFetchExecutionTraceBySessionId(sessionId: string | null) {
     query: `SELECT * FROM execution_traces WHERE session_id = '${sessionId}';`,
     query_language: "surrealql",
   };
+  const { runtimeConfig: config } = useAppStore();
+
   const { data, isLoading, error } = useCustom({
-    url: `${config.API_URL}/query`,
+    url: `${config?.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -1630,8 +1659,10 @@ export function useFetchResourceByField(item: {
     query: `SELECT * FROM ${resource} WHERE ${field} ${operator} '${value}';`,
     query_language: "surrealql",
   };
+  const { runtimeConfig: config } = useAppStore();
+
   const { data, isLoading, error } = useCustom({
-    url: `${config.API_URL}/query`,
+    url: `${config?.API_URL}/query`,
     method: "post",
     config: {
       payload: {
@@ -1946,9 +1977,10 @@ export const RetrieveFieldData = ({ field }: { field: FieldConfiguration }) => {
   // const fieldData = queryClient.getQueryData<FieldData>([field]) || {};
   console.log("field", field);
   const { activeField } = useAppStore();
+  const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error } = useCustom({
-    url: `${config.API_URL}/execute-query`,
+    url: `${config?.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -2069,3 +2101,19 @@ export function DebouncedInput({
     />
   );
 }
+
+export const useRuntimeConfig = () => {
+  const [config, setConfig] = useState(null);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const res = await fetch("/api/runtime-config");
+      const data = await res.json();
+      setConfig(data);
+    };
+
+    fetchConfig();
+  }, []);
+
+  return config as any;
+};

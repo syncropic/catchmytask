@@ -31,9 +31,6 @@ COPY --from=builder /app/public /app/public
 COPY --from=builder /app/package.json /app/package.json
 COPY --from=builder /app/package-lock.json /app/package-lock.json
 
-# Copy env file (optional)
-COPY .env.production /app
-
 # Install production dependencies
 RUN npm ci --only=production --legacy-peer-deps
 

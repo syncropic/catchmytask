@@ -29,6 +29,9 @@ import "../styles/globals.css";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 // import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { registerLicense } from "@syncfusion/ej2-base";
+import { useRuntimeConfig } from "@components/Utils";
+import { useAppStore } from "src/store";
+import { useEffect } from "react";
 
 // Registering Syncfusion license key
 registerLicense(
@@ -39,7 +42,7 @@ const theme = createTheme({
   /** Put your mantine theme override here */
 });
 
-const API_URL = config.API_URL;
+// const API_URL = config.API_URL;
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   noLayout?: boolean;
@@ -61,10 +64,18 @@ const App = (props: React.PropsWithChildren) => {
   const { data, status } = useSession();
   const router = useRouter();
   const { to } = router.query;
+  const fetchRuntimeConfig = useAppStore((state) => state.fetchRuntimeConfig);
+  const runtimeConfig = useAppStore((state) => state.runtimeConfig);
 
-  if (status === "loading") {
+  useEffect(() => {
+    fetchRuntimeConfig();
+  }, [fetchRuntimeConfig]);
+
+  if (status === "loading" || !runtimeConfig) {
     return <span>loading...</span>;
   }
+
+  let API_URL = runtimeConfig?.API_URL;
 
   const authProvider: AuthBindings = {
     login: async ({ providerName, email, password }) => {

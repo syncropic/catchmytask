@@ -1,3 +1,4 @@
+// src/store.js
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
@@ -202,6 +203,14 @@ const useAppStore = create(
       global_variables: {},
       setGlobalVariables: (variables) =>
         set((state) => ({ ...state, global_variables: variables })),
+      // New configuration state
+      runtimeConfig: null,
+      setRuntimeConfig: (config) => set({ runtimeConfig: config }),
+      fetchRuntimeConfig: async () => {
+        const res = await fetch("/api/runtime-config");
+        const data = await res.json();
+        set({ runtimeConfig: data });
+      },
     }),
     {
       name: "catchmytask-store",
