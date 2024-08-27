@@ -1,10 +1,5 @@
 import { useAppStore } from "src/store";
-import { ActionControlFormWrapper } from "@components/ActionControlForm";
-import { useState } from "react";
 import { Tabs } from "@mantine/core";
-import ActionStepResults, {
-  ActionStepResultsWrapper,
-} from "@components/ActionStepResults";
 import {
   IconEdit,
   IconForms,
@@ -22,6 +17,7 @@ interface ActionStepEditorProps {
   entity?: string;
   record?: any;
   setExpandedRecordIds?: (ids: string[]) => void;
+  invalidate_queries_on_submit_success?: string[];
   // types?: string[];
   // state?: any;
   // read_write_mode?: string;
@@ -32,6 +28,7 @@ export function ActionStepEditor({
   entity = "action_steps",
   record,
   setExpandedRecordIds,
+  invalidate_queries_on_submit_success,
 }: // types,
 // read_write_mode = "read",
 // ui = {},

@@ -1,17 +1,18 @@
 import { Text } from "@mantine/core";
 import {
   useFetchActionPlanDataByState,
-  useFetchActionStepDataByState,
-  useFetchGenerativeComponentDataByStateAndModel,
   useFetchQueryDataByState,
-  useFetchRecommendationDataByState,
 } from "@components/Utils";
 import DataDisplay from "@components/DataDisplay";
 import { useAppStore } from "src/store";
 import _ from "lodash";
+import {
+  ActionInputForm,
+  ActionStepsActionInputForm,
+} from "@components/ActionInput";
 
-interface ActionStepsProps {
-  entity: string;
+interface TaskInputProps {
+  entity?: string;
   types?: string[];
   state?: any;
   read_write_mode?: string;
@@ -21,19 +22,27 @@ interface ActionStepsProps {
   exclude_components?: string[];
   success_message_code?: string;
   invalidate_queries_on_submit_success?: string[];
+  name?: string;
+  description?: any;
+  children?: any;
+  query_name?: string;
 }
 
-export const ActionStepsWrapper = ({
-  entity = "task",
+export const TaskInputWrapper = ({
+  entity = "task_input",
   types,
   read_write_mode = "read",
   ui = {},
   nested_item = false,
   exclude_components,
-  success_message_code = "query_success_results",
+  success_message_code = "task_input_data",
   invalidate_queries_on_submit_success,
+  description,
+  children,
+  query_name,
+  name,
 }: // types,
-ActionStepsProps) => {
+TaskInputProps) => {
   const {
     action_input_form_values,
     activeAction,
@@ -41,7 +50,7 @@ ActionStepsProps) => {
     activeSession,
   } = useAppStore();
   let state = {
-    query_name: "action_plan_data",
+    query_name: query_name || "task_input_data",
     success_message_code: success_message_code,
     // name: name,
     // action_type: action_type,
@@ -119,38 +128,28 @@ ActionStepsProps) => {
   // ) {
   //   return null;
   // }
-  let data_fields = [
-    {
-      name: "id",
-      accessor: "id",
-    },
-  ];
+  // let data_fields = [
+  //   {
+  //     name: "id",
+  //     accessor: "id",
+  //   },
+  // ];
 
   return (
     <>
-      {/* <div>action plan</div> */}
-      {/* <div>{JSON.stringify(nested_item)}</div> */}
-      {data && (
+      {/* <div>task input wrapper</div> */}
+      {/* <div>{JSON.stringify(data)}</div> */}
+      {/* {actionStepData && (
         <>
-          {/* <div>{JSON.stringify(data)}</div> */}
           <DataDisplay
-            // data_items={
-            //   nested_item
-            //     ? actionStepData?.data?.find(
-            //         (item: any) => item?.message?.code === success_message_code
-            //       )?.data?.[0]?.[nested_item] || []
-            //     : actionStepData?.data?.find(
-            //         (item: any) => item?.message?.code === success_message_code
-            //       )?.data || []
-            // }
             data_items={
-              data?.data?.find(
+              actionStepData?.data?.find(
                 (item: any) => item?.message?.code === success_message_code
               )?.data || []
             }
             data_fields={
               (
-                data?.data?.find(
+                actionStepData?.data?.find(
                   (item: any) => item?.message?.code === success_message_code
                 )?.data_fields || []
               ).map((item: any) => ({
@@ -161,8 +160,8 @@ ActionStepsProps) => {
               []
             }
             read_write_mode={read_write_mode}
-            isLoadingDataItems={isLoading}
-            resource_group={success_message_code}
+            isLoadingDataItems={actionStepDataIsLoading}
+            resource_group={record?.execution_id}
             execlude_components={exclude_components}
             ui={{}}
             invalidate_queries_on_submit_success={
@@ -170,9 +169,32 @@ ActionStepsProps) => {
             }
           ></DataDisplay>
         </>
+      )} */}
+      {/* {(!data?.data && !error && !isLoading && description) || null} */}
+      {data?.data && (
+        <ActionInputForm
+          data_model={
+            data?.data?.find(
+              (item: any) => item?.message?.code === success_message_code
+            )?.data[0]?.data_model
+          }
+          // record={record}
+          execlude_components={exclude_components}
+          // name={name}
+          // children={children}
+          // nested_component={nested_component}
+          // action_icon={action_icon}
+          // setExpandedRecordIds={setExpandedRecordIds}
+          // invalidate_queries_on_submit_success={
+          //   invalidate_queries_on_submit_success
+          // }
+          // update_action_input_form_values_on_submit_success={
+          //   update_action_input_form_values_on_submit_success
+          // }
+        ></ActionInputForm>
       )}
     </>
   );
 };
 
-export default ActionStepsWrapper;
+export default TaskInputWrapper;

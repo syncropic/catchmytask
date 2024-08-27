@@ -5,25 +5,13 @@ import {
   useOne,
   useShow,
 } from "@refinedev/core";
-import {
-  Edit,
-  useForm,
-  useSelect,
-  DateField,
-  Create,
-} from "@refinedev/mantine";
-import { TextInput, Select, Textarea } from "@mantine/core";
 import { IAction, IDataset, IIdentity } from "@components/interfaces";
 import { v4 as uuidv4 } from "uuid"; // Import the v4 function from the uuid library
-import ActionControl from "pages/action_control/create";
 import { useAppStore } from "src/store";
 import { useEffect } from "react";
-import { useFetchActionById } from "@components/Utils";
 
 export const PageEdit: React.FC<IResourceComponentsProps> = () => {
   const {
-    setActiveAction,
-    activeAction,
     setActiveRecord,
     setActiveActionId,
     setActiveSession,
@@ -94,9 +82,7 @@ export const PageEdit: React.FC<IResourceComponentsProps> = () => {
   // });
 
   return (
-    <>
-      <ActionControl />
-    </>
+    <></>
 
     // <Create saveButtonProps={saveButtonProps}>
     //   <TextInput

@@ -8,7 +8,10 @@ import { useGo } from "@refinedev/core";
 import { useAppStore } from "src/store";
 
 interface HeaderComponentProps {
-  authenticatedData: any;
+  authenticatedData?: any;
+  activeApplication?: any;
+  applicationData?: any;
+  go?: any;
 }
 
 const SmallMediumScreenHeader = ({
@@ -16,7 +19,7 @@ const SmallMediumScreenHeader = ({
   authenticatedData,
   activeApplication,
   go,
-}) => (
+}: HeaderComponentProps) => (
   <div className="grid grid-cols-1 items-center">
     <div className="flex items-center h-full md:pr-72 md:pl-72 justify-between col-span-1">
       <LogoName
@@ -54,7 +57,7 @@ const LargeScreenHeader = ({
   authenticatedData,
   activeApplication,
   go,
-}) => (
+}: HeaderComponentProps) => (
   <div className="flex justify-between items-center h-full md:pr-72 md:pl-72">
     <LogoName
       logoLink="/"

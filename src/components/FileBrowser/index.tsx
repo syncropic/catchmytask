@@ -1,7 +1,4 @@
 import { useAppStore } from "src/store";
-import { ActionControlFormWrapper } from "@components/ActionControlForm";
-import { useState } from "react";
-import { Tabs } from "@mantine/core";
 import DataDisplay from "@components/DataDisplay";
 import { useFetchQueryDataByState } from "@components/Utils";
 
@@ -47,7 +44,7 @@ interface FileBrowserWrapperProps {
   query_name?: string;
   name?: string;
   action_type?: string;
-  entity: string;
+  entity?: string;
   record?: any;
   read_write_mode?: string;
   ui?: Record<string, any>;
@@ -95,7 +92,7 @@ export const FileBrowserWrapper: React.FC<FileBrowserWrapperProps> = ({
         data_fields={data_fields}
         read_write_mode={read_write_mode}
         isLoadingDataItems={queryDataIsLoading}
-        resource_group={entity}
+        resource_group={entity || "files"}
         execlude_components={[
           "custom_views_columns_view_as",
           "pagination",

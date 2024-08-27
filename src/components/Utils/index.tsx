@@ -1,8 +1,4 @@
 import Decimal from "@components/Decimal";
-import ExecutionStatus from "@components/ExecutionStatus";
-import ExternalLink from "@components/ExternalLink";
-import FilePath from "@components/FilePath";
-import PrimaryKey from "@components/PrimaryKey";
 import Reveal from "@components/Reveal";
 import RowActions from "@components/RowActions";
 import SessionLink from "@components/SessionLink";
@@ -879,7 +875,7 @@ export function useFetchActionHistoryById(actionId: any | null) {
 //   };
 
 //   const { data, isLoading, error, isError } = useCustom({
-//     url: `${config.API_URL}/catch-read`,
+//     url: `${config.API_URL}/execute-query`,
 //     method: "post",
 //     config: {
 //       payload: {
@@ -919,7 +915,7 @@ export function useFetchDomainDataByDomain(domain: string) {
   };
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/catch-read`,
+    url: `${config.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -931,18 +927,19 @@ export function useFetchDomainDataByDomain(domain: string) {
             id: "1",
             execution_order: 1,
             description: "get domain data",
-            name: "domain_data",
+            name: "domain data",
             job: "get domain data",
-            action_step_query: `SELECT * FROM fn::execute_query('domain_data', '${JSON.stringify(
+            action_step_query: `SELECT * FROM fn::execute_query('domain data', '${JSON.stringify(
               variables
             )}')`,
             method: "get",
             type: "main",
+            credential: "surrealdb catchmytask dev",
             select: {
-              query: `SELECT * FROM fn::execute_query('domain_data', '${JSON.stringify(
+              query: `SELECT * FROM fn::execute_query('domain data', '${JSON.stringify(
                 variables
               )}')`,
-              credential: "surrealdb_catchmytask",
+              credential: "surrealdb catchmytask dev",
             },
           },
         ],
@@ -1002,7 +999,7 @@ export function useFetchActionStepDataByState(state: any) {
 
   const { data, isLoading, error, isError } = useCustom({
     url: `${config.API_URL}/catch-action-step`,
-    method: "post",
+    method: "get",
     config: {
       payload: {
         ...state,
@@ -1040,7 +1037,162 @@ export function useFetchActionStepDataByState(state: any) {
           // success_message_code: state?.action_steps[0]?.success_message_code,
         })}`,
       ],
-      enabled: false,
+      // enabled: false,
+    },
+  });
+
+  return { data, isLoading, error, isError };
+}
+
+export function useFetchTaskInputDataByState(state: any) {
+  // const variables = state;
+
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config.API_URL}/catch-task-input`,
+    method: "post",
+    config: {
+      payload: {
+        ...state,
+        // task_variables: {},
+        // global_variables: {},
+        // include_action_steps: [1],
+        // action_steps: [
+        //   {
+        //     id: "1",
+        //     execution_order: 1,
+        //     description: "get recommendation data",
+        //     name: "recommendation_data",
+        //     job: "get recommendation data",
+        //     action_step_query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //       state
+        //     )}')`,
+        //     method: "get",
+        //     type: "main",
+        //     select: {
+        //       query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //         state
+        //       )}')`,
+        //       credential: "surrealdb_catchmytask",
+        //     },
+        //   },
+        // ],
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `useFetchTaskInputDataByState_${JSON.stringify({
+          // name: state?.action_steps[0]?.name,
+          // execution_order: state?.action_steps[0]?.execution_order,
+          description: state?.description,
+          id: state?.id,
+          // success_message_code: state?.action_steps[0]?.success_message_code,
+        })}`,
+      ],
+      // enabled: false,
+    },
+  });
+
+  return { data, isLoading, error, isError };
+}
+
+export function useFetchActionPlanDataByState(state: any) {
+  // const variables = state;
+
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config.API_URL}/catch-task`,
+    method: "post",
+    config: {
+      payload: {
+        ...state,
+        // task_variables: {},
+        // global_variables: {},
+        // include_action_steps: [1],
+        // action_steps: [
+        //   {
+        //     id: "1",
+        //     execution_order: 1,
+        //     description: "get recommendation data",
+        //     name: "recommendation_data",
+        //     job: "get recommendation data",
+        //     action_step_query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //       state
+        //     )}')`,
+        //     method: "get",
+        //     type: "main",
+        //     select: {
+        //       query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //         state
+        //       )}')`,
+        //       credential: "surrealdb_catchmytask",
+        //     },
+        //   },
+        // ],
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `useFetchActionPlanDataByState_${JSON.stringify({
+          id: state?.input_values?.id,
+          // id: state?.id,
+          // name: state?.action_steps[0]?.name,
+          // execution_order: state?.action_steps[0]?.execution_order,
+          // id: state?.action_steps[0]?.id,
+          // success_message_code: state?.action_steps[0]?.success_message_code,
+        })}`,
+      ],
+      // enabled: false,
+    },
+  });
+
+  return { data, isLoading, error, isError };
+}
+
+export function useFetchActionStepsDataByState(state: any) {
+  // const variables = state;
+
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config.API_URL}/catch-action-step`,
+    method: "post",
+    config: {
+      payload: {
+        ...state,
+        // task_variables: {},
+        // global_variables: {},
+        // include_action_steps: [1],
+        // action_steps: [
+        //   {
+        //     id: "1",
+        //     execution_order: 1,
+        //     description: "get recommendation data",
+        //     name: "recommendation_data",
+        //     job: "get recommendation data",
+        //     action_step_query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //       state
+        //     )}')`,
+        //     method: "get",
+        //     type: "main",
+        //     select: {
+        //       query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //         state
+        //       )}')`,
+        //       credential: "surrealdb_catchmytask",
+        //     },
+        //   },
+        // ],
+      },
+    },
+    queryOptions: {
+      // queryKey: [
+      //   `useFetchActionStepsDataByState_${JSON.stringify({
+      //     id: "tasks:hlw9ig5ncahfx8eaec7h",
+      //   })}`,
+      // ],
+      // enabled: false,
+      queryKey: [
+        `useFetchActionStepsDataByState_${JSON.stringify({
+          id: "tasks:hlw9ig5ncahfx8eaec7h",
+        })}`,
+      ],
     },
   });
 
@@ -1169,7 +1321,7 @@ export function useFetchGenerativeComponentDataByStateAndModel({
 
 export function useFetchActionDataByName(state: any) {
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/catch-read`,
+    url: `${config.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -1188,11 +1340,12 @@ export function useFetchActionDataByName(state: any) {
             )}')`,
             method: "get",
             type: "main",
+            credential: "surrealdb catchmytask dev",
             select: {
               query: `SELECT * FROM fn::execute_query('action_data', '${JSON.stringify(
                 state
               )}')`,
-              credential: "surrealdb_catchmytask",
+              credential: "surrealdb catchmytask dev",
             },
           },
         ],
@@ -1208,7 +1361,7 @@ export function useFetchActionDataByName(state: any) {
 
 export function useFetchDataModelByState(state: any) {
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/catch-read`,
+    url: `${config.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -1227,11 +1380,12 @@ export function useFetchDataModelByState(state: any) {
             )}')`,
             method: "get",
             type: "main",
+            credential: "surrealdb catchmytask dev",
             select: {
               query: `SELECT * FROM fn::execute_query('data_model', '${JSON.stringify(
                 state
               )}')`,
-              credential: "surrealdb_catchmytask",
+              credential: "surrealdb catchmytask dev",
             },
           },
         ],
@@ -1247,7 +1401,7 @@ export function useFetchDataModelByState(state: any) {
 
 export function useFetchQueryDataByState(state: any) {
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config.API_URL}/catch-read`,
+    url: `${config.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -1266,13 +1420,14 @@ export function useFetchQueryDataByState(state: any) {
             }', '${JSON.stringify(state)}')`,
             method: "get",
             type: "main",
+            credential: "surrealdb catchmytask dev",
             success_message_code:
               state?.success_message_code ?? "query_success_results",
             select: {
               query: `SELECT * FROM fn::execute_query('${
                 state?.query_name
               }', '${JSON.stringify(state)}')`,
-              credential: "surrealdb_catchmytask",
+              credential: "surrealdb catchmytask dev",
             },
           },
         ],
@@ -1288,7 +1443,7 @@ export function useFetchQueryDataByState(state: any) {
 
 export function useFetchSessionById(sessionId: string | null) {
   const { data, isLoading, error } = useCustom({
-    url: `${config.API_URL}/catch-read`,
+    url: `${config.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -1313,6 +1468,7 @@ export function useFetchSessionById(sessionId: string | null) {
             }`,
             method: "get",
             type: "main",
+            credential: "surrealdb catchmytask dev",
             select: {
               query: `RETURN {
                         LET $session_id = '${sessionId}';
@@ -1323,7 +1479,7 @@ export function useFetchSessionById(sessionId: string | null) {
                             'action_steps': SELECT * FROM action_steps WHERE task_id IN $task_ids
                         }
                     }`,
-              credential: "surrealdb_catchmytask",
+              credential: "surrealdb catchmytask dev",
             },
           },
         ],
@@ -1792,7 +1948,7 @@ export const RetrieveFieldData = ({ field }: { field: FieldConfiguration }) => {
   const { activeField } = useAppStore();
 
   const { data, isLoading, error } = useCustom({
-    url: `${config.API_URL}/catch-read`,
+    url: `${config.API_URL}/execute-query`,
     method: "post",
     config: {
       payload: {
@@ -1810,9 +1966,10 @@ export const RetrieveFieldData = ({ field }: { field: FieldConfiguration }) => {
               field?.data_prop_query || "SELECT * FROM sessions",
             method: "get",
             type: "main",
+            credential: "surrealdb catchmytask dev",
             select: {
               query: field?.data_prop_query || "SELECT * FROM sessions",
-              credential: "surrealdb_catchmytask",
+              credential: "surrealdb catchmytask dev",
             },
           },
         ],
@@ -1905,7 +2062,7 @@ export function DebouncedInput({
   }, [value]);
 
   return (
-    <TextInput
+    <input
       {...props}
       value={value}
       onChange={(e) => setValue(e.target.value)}

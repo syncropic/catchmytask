@@ -1,9 +1,3 @@
-// import { HeroItem } from "@components/interfaces";
-// import { HeroBullets } from "./HeroBullets";
-
-import { FaqSimple } from "@components/Faq/FaqSimple";
-import { FeaturesCards } from "@components/Features/FeaturesCards";
-
 interface PageSectionComponentProps {
   name: string;
   description: string;

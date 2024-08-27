@@ -51,6 +51,7 @@ interface RowActionsWrapperProps {
   nested_component?: any;
   setExpandedRecordIds?: (ids: string[]) => void;
   success_message_code?: string;
+  invalidate_queries_on_submit_success?: string[];
 }
 
 export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
@@ -64,6 +65,7 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
   nested_component,
   success_message_code,
   setExpandedRecordIds,
+  invalidate_queries_on_submit_success,
 }) => {
   // let state = {
   //   query_name: query_name,
@@ -117,6 +119,9 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
             </Group>
           }
           setExpandedRecordIds={setExpandedRecordIds}
+          invalidate_queries_on_submit_success={
+            invalidate_queries_on_submit_success
+          }
         ></ActionInputWrapper>
         {/* <Group gap={4} justify="right" wrap="nowrap">
           <Tooltip label="execute" position="left">

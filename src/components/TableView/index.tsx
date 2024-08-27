@@ -21,71 +21,21 @@ export function TableView<T extends Record<string, any>>({
   resource_group,
   ui,
   execlude_components,
+  invalidate_queries_on_submit_success,
 }: ResultsComponentProps<T>) {
-  // Define pixels per character (adjust as needed)
-  const pixelsPerChar = 10; // Example value
-  const { height, width } = useViewportSize();
   const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
   const { setActiveRecord, setActiveAction } = useAppStore();
 
   let columns_to_filter_out = ["select", "actions", "details"];
 
-  let filteredRows = tableInstance
-    ?.getFilteredRowModel()
-    .rows.map((row) => row.original);
-  // console.log("filteredRows", filteredRows);
-  // return <div>{JSON.stringify(tableInstance?.getVisibleFlatColumns())}</div>;
-
   const [expandedRecordIds, setExpandedRecordIds] = useState<string[]>([]);
-
-  // const expandFirstAndThirdRow = () => {
-  //   setExpandedRecordIds([firstRowId, thirdRowId]);
-  // };
-
-  // const expandSecondAndFourthRow = () => {
-  //   setExpandedRecordIds([secondRowId, fourthRowId]);
-  // };
-
-  // const collapseAllRows = () => {
-  //   setExpandedRecordIds([]);
-  // };
-  // const handleClick = (event: React.MouseEvent) => {
-  //   event.stopPropagation(); // Prevents the click event from bubbling up to the row
-  //   // Handle the button click logic here
-  // };
-  // const [pageSize, setPageSize] = useState(PAGE_SIZES[1]);
-
-  // useEffect(() => {
-  //   setPage(1);
-  // }, [pageSize]);
-
-  // const [page, setPage] = useState(1);
-  // const [records, setRecords] = useState(data_items.slice(0, pageSize));
-
-  // useEffect(() => {
-  //   const from = (page - 1) * pageSize;
-  //   const to = from + pageSize;
-  //   setRecords(data_items.slice(from, to));
-  // }, [page, pageSize]);
 
   return (
     <>
-      {/* {JSON.stringify(
-        visibleTableColumns
-          ?.map((column) => {
-            return {
-              id: column.id,
-              accessor:
-                column.accessor ||
-                getColumnIdWithoutResourceGroup(column.id, resource_group),
-            };
-          })
-          .filter((column) => {
-            return !columns_to_filter_out.includes(column.accessor);
-          })
-      )} */}
       <DataTable<T>
-        // columns={[]}
+        page={1}
+        onPageChange={(page) => console.log(page)}
+        recordsPerPage={10}
         columns={[
           ...(tableInstance
             ?.getVisibleFlatColumns()
@@ -93,9 +43,6 @@ export function TableView<T extends Record<string, any>>({
               return {
                 id: column.id,
                 accessor: column.columnDef.header,
-                // accessor:
-                //   column?.accessorFn ||
-                //   getColumnIdWithoutResourceGroup(column.id, resource_group),
                 render: column.columnDef.cell,
                 sortable: column.getCanSort(),
                 filter: (
@@ -112,9 +59,7 @@ export function TableView<T extends Record<string, any>>({
             .filter((column) => {
               return !columns_to_filter_out.includes(String(column?.accessor));
             }) || []),
-
           {
-            // id: 'actions',
             accessor: "actions",
             title: <Box mr={6}>actions</Box>,
             textAlign: "right",
@@ -125,43 +70,24 @@ export function TableView<T extends Record<string, any>>({
                 query_name="data_model"
                 success_message_code="action_input_data_model_schema"
                 setExpandedRecordIds={setExpandedRecordIds}
+                invalidate_queries_on_submit_success={
+                  invalidate_queries_on_submit_success
+                }
               ></RecordActionsWrapper>
             ),
           },
-        ]} // Assign an empty array as the default value for columns
+        ]}
         records={
           (tableInstance
             ?.getFilteredRowModel()
             .rows?.map((row) => row.original) as T[]) || []
         }
-        // records={records}
         highlightOnHover={true}
         withColumnBorders={true}
         pinFirstColumn={true}
         pinLastColumn={true}
         striped={true}
         totalRecords={data_items.length}
-        // paginationActiveBackgroundColor="grape"
-        // recordsPerPage={pageSize}
-        // page={page}
-        // onPageChange={(p) => setPage(p)}
-        // recordsPerPageOptions={PAGE_SIZES}
-        // onRecordsPerPageChange={setPageSize}
-        // height={height - 200}
-        // totalRecords={data_items.length}
-        // 👇 uncomment the next line to use a custom pagination size
-        // paginationSize="md"
-        // 👇 uncomment the next line to use a custom loading text
-        // loadingText="Loading..."
-        // 👇 uncomment the next line to display a custom text when no records were found
-        // noRecordsText="No records found"
-        // 👇 uncomment the next line to use a custom pagination text
-        // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
-        // 👇 uncomment the next lines to use custom pagination colors
-        // paginationActiveBackgroundColor="green"
-        // paginationActiveTextColor="#e6e348"
-        //
-        // height={800}
         fz="xs"
         selectedRecords={selectedRecords}
         onSelectedRecordsChange={setSelectedRecords}
@@ -170,7 +96,6 @@ export function TableView<T extends Record<string, any>>({
           return typeof data === "string" ? data : JSON.stringify(data);
         }}
         onRowClick={({ record, index, event }) => {
-          // console.log("onRowClick", record, index, event);
           setActiveRecord(record);
           if (resource_group === "action_steps") {
             setActiveAction(record);
@@ -187,13 +112,18 @@ export function TableView<T extends Record<string, any>>({
             <ActionStepEditor
               record={record}
               setExpandedRecordIds={setExpandedRecordIds}
+              invalidate_queries_on_submit_success={
+                invalidate_queries_on_submit_success
+              }
             ></ActionStepEditor>
           ),
         }}
+        withTableBorder={true}
       />
     </>
   );
 }
+
 export default TableView;
 
 interface ColumnMeta {
@@ -207,7 +137,6 @@ function Filter<TData>({ column }: { column: Column<TData, unknown> }) {
   return filter_variant === "range" ? (
     <div>
       <div className="flex space-x-2">
-        {/* See faceted column filters example for min max values functionality */}
         <DebouncedInput
           type="number"
           value={(columnFilterValue as [number, number])?.[0] ?? ""}
@@ -234,7 +163,6 @@ function Filter<TData>({ column }: { column: Column<TData, unknown> }) {
       onChange={(e) => column.setFilterValue(e.target.value)}
       value={columnFilterValue?.toString()}
     >
-      {/* See faceted column filters example for dynamic select options */}
       <option value="">All</option>
       <option value="complicated">complicated</option>
       <option value="relationship">relationship</option>

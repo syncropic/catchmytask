@@ -5,6 +5,7 @@ import {
   getComponentByResourceType,
   useFetchActionDataByName,
   useFetchActionStepDataByState,
+  useFetchActionStepsDataByState,
   useFetchDataModelByState,
   useFetchQueryDataByState,
 } from "@components/Utils";
@@ -28,7 +29,7 @@ import { Combobox } from "@components/Combobox";
 import { ComponentKey, IIdentity } from "@components/interfaces";
 import { useCustomMutation, useGetIdentity } from "@refinedev/core";
 import config from "src/config";
-import { debounce } from "lodash";
+import { debounce, update } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 // import { useIsMutating } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
@@ -56,17 +57,26 @@ function useConditionalFetch(
   } else {
     // const taskRecord =
     //   action_input_form_values[`task_b79aaba2-a0d1-4fa7-9b68-0baebbd1b321`];
-    let activeActionStepRecord = {
-      id: "has_action_step:055fz04qegaw0q8khpjc",
-      name: "retrive booking from caesars snowstorm database by id",
-      execution_order: 1,
+    // let activeActionStepRecord = {
+    //   id: "has_action_step:055fz04qegaw0q8khpjc",
+    //   name: "retrive booking from caesars snowstorm database by id",
+    //   execution_order: 1,
+    //   success_message_code: success_message_code,
+    // };
+
+    // const actionStepState = {
+    //   action_steps: [activeActionStepRecord],
+    // };
+    let record =
+      action_input_form_values[`task_b79aaba2-a0d1-4fa7-9b68-0baebbd1b321`];
+    let actionStepRecord = {
+      ...record,
       success_message_code: success_message_code,
     };
-
-    const actionStepState = {
-      action_steps: [activeActionStepRecord],
+    let actionStepsAwaitingActionInputState = {
+      action_steps: [actionStepRecord],
     };
-    return useFetchActionStepDataByState(actionStepState);
+    return useFetchActionStepDataByState(actionStepsAwaitingActionInputState);
   }
 }
 
@@ -102,14 +112,17 @@ interface DataModel {
 }
 
 interface DynamicFormProps {
-  data_model: DataModel["data_model"];
+  data_model: DataModel["data_model"] | null;
   record?: any;
+  action_steps?: any;
   execlude_components?: string[];
   name?: string;
   children?: any;
   nested_component?: any;
   action_icon?: any;
   setExpandedRecordIds?: (ids: string[]) => void;
+  invalidate_queries_on_submit_success?: string[];
+  update_action_input_form_values_on_submit_success?: boolean;
 }
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
@@ -123,7 +136,7 @@ function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
   );
 }
 
-const ActionInputForm: React.FC<DynamicFormProps> = ({
+export const ActionInputForm: React.FC<DynamicFormProps> = ({
   data_model,
   record = {},
   execlude_components = [],
@@ -132,6 +145,9 @@ const ActionInputForm: React.FC<DynamicFormProps> = ({
   nested_component,
   action_icon,
   setExpandedRecordIds,
+  action_steps,
+  invalidate_queries_on_submit_success,
+  update_action_input_form_values_on_submit_success = false,
 }) => {
   const [inputAsvalue, setInputAsValue] = useState("");
   const queryClient = useQueryClient();
@@ -165,15 +181,15 @@ const ActionInputForm: React.FC<DynamicFormProps> = ({
     action_input_form_values,
   } = useAppStore();
 
-  const actionInputIds = {
-    id: actionInputId,
-  };
+  // const actionInputIds = {
+  //   id: actionInputId,
+  // };
   const identity_object = {
     author_id: identity?.email,
   };
 
   const defaultValueObjects = [
-    actionInputIds,
+    // actionInputIds,
     identity_object,
     record,
     action_input_form_values[`${data_model?.name}_${actionInputId}`],
@@ -215,13 +231,13 @@ const ActionInputForm: React.FC<DynamicFormProps> = ({
             global_variables: {
               ...global_variables,
             },
-            include_execution_orders: [1],
-            active_action_step_data: [],
-            active_action_step_selected_data: [],
+            include_execution_orders: [],
+            // active_action_step_data: [],
+            // active_action_step_selected_data: [],
             action_steps: [
               {
                 ...value,
-                id: value?.id || actionInputId,
+                // id: value?.id || actionInputId,
                 execution_order: value?.execution_order || 1,
                 description: value?.description || "generic description",
                 name: value?.name || "generic name",
@@ -239,6 +255,20 @@ const ActionInputForm: React.FC<DynamicFormProps> = ({
           },
           onSuccess: (data, variables, context) => {
             // Let's celebrate!
+            let data_item = data?.data?.find(
+              (item: any) => item?.message?.code === "create_task_success"
+            )?.data[0];
+
+            console.log("data_item", data_item);
+            if (update_action_input_form_values_on_submit_success) {
+              const key = `${data_model?.name}_${actionInputId}`;
+              console.log("key", key);
+              // console.log(values);
+              setActionInputFormValues({
+                ...action_input_form_values,
+                [key]: data_item,
+              });
+            }
             // Optionally update the query cache as well
             queryClient.setQueryData(
               [
@@ -253,6 +283,31 @@ const ActionInputForm: React.FC<DynamicFormProps> = ({
                 ...data,
               })
             );
+            console.log("onSuccess", data);
+            if (invalidate_queries_on_submit_success) {
+              console.log(
+                "invalidate_queries_on_submit_success",
+                invalidate_queries_on_submit_success
+              );
+
+              // Use invalidateQueries instead of refetchQueries
+              // queryClient.invalidateQueries(
+
+              //   {
+              //     queryKey: invalidate_queries_on_submit_success,
+              //     refetchActive: true, // This will trigger the query to refetch immediately
+              //     refetchInactive: true, // This will trigger the query to refetch even if inactive
+              //   }
+              // );
+              queryClient.refetchQueries({
+                queryKey: [
+                  'useFetchActionStepsDataByState_{"id":"tasks:hlw9ig5ncahfx8eaec7h"}',
+                ],
+                // type: "disabled",
+                // exact: true,
+              });
+            }
+
             if (setExpandedRecordIds) {
               setExpandedRecordIds([actionInputId]);
               // console.log("actionInputId", actionInputId);
@@ -289,7 +344,7 @@ const ActionInputForm: React.FC<DynamicFormProps> = ({
     };
   }, [form.store, debouncedLog]);
 
-  if (!data_model) return <div>No data model</div>;
+  if (!data_model) return <div>No data model </div>;
   const { schema } = data_model;
 
   const handleSubmit = (e: any) => {
@@ -297,6 +352,8 @@ const ActionInputForm: React.FC<DynamicFormProps> = ({
     e.stopPropagation();
     form.handleSubmit();
   };
+  const canSubmit = form.useStore((state) => state.canSubmit);
+  const isSubmitting = form.useStore((state) => state.isSubmitting);
 
   return (
     <>
@@ -308,25 +365,18 @@ const ActionInputForm: React.FC<DynamicFormProps> = ({
       {/* render any pydantic model form */}
       {action_icon && (
         <form onSubmit={handleSubmit}>
-          <form.Subscribe
-            selector={(state) => [state.canSubmit, state.isSubmitting]}
-            children={([canSubmit, isSubmitting]) => (
-              <>
-                <Tooltip label="execute" position="left">
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    color="green"
-                    onClick={(e) => handleSubmit(e)}
-                    disabled={!canSubmit}
-                    loading={mutationIsLoading || isSubmitting}
-                  >
-                    <IconPlayerPlay size={16} />
-                  </ActionIcon>
-                </Tooltip>{" "}
-              </>
-            )}
-          />
+          <Tooltip label="execute" position="left">
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              color="green"
+              onClick={(e) => handleSubmit(e)}
+              disabled={!canSubmit}
+              loading={mutationIsLoading || isSubmitting}
+            >
+              <IconPlayerPlay size={16} />
+            </ActionIcon>
+          </Tooltip>
         </form>
       )}
       {!action_icon && (
@@ -339,19 +389,27 @@ const ActionInputForm: React.FC<DynamicFormProps> = ({
         >
           <div className="flex justify-between">
             {execlude_components?.includes("submit_button") ? null : (
-              <form.Subscribe
-                selector={(state) => [state.canSubmit, state.isSubmitting]}
-                children={([canSubmit, isSubmitting]) => (
-                  <Button
-                    size="xs"
-                    type="submit"
-                    loading={mutationIsLoading || isSubmitting}
-                    disabled={!canSubmit}
-                  >
-                    Act
-                  </Button>
-                )}
-              />
+              // <form.Subscribe
+              //   selector={(state) => [state.canSubmit, state.isSubmitting]}
+              //   children={([canSubmit, isSubmitting]) => (
+              //     <Button
+              //       size="xs"
+              //       type="submit"
+              //       loading={mutationIsLoading || isSubmitting}
+              //       disabled={!canSubmit}
+              //     >
+              //       Submit
+              //     </Button>
+              //   )}
+              // />
+              <Button
+                size="xs"
+                type="submit"
+                loading={mutationIsLoading || isSubmitting}
+                disabled={!canSubmit}
+              >
+                Submit
+              </Button>
             )}
 
             {execlude_components?.includes("input_mode") ? null : (
@@ -365,7 +423,7 @@ const ActionInputForm: React.FC<DynamicFormProps> = ({
           </div>
           {data_model && (
             <Accordion
-              defaultValue={["description", "general"]}
+              defaultValue={["description", "general", "fields"]}
               multiple={true}
             >
               {Object.entries(
@@ -473,6 +531,9 @@ interface ActionInputWrapperProps {
   action_icon?: any;
   setExpandedRecordIds?: (ids: string[]) => void;
   success_message_code?: string;
+  invalidate_queries_on_submit_success?: string[];
+  description?: any;
+  update_action_input_form_values_on_submit_success?: boolean;
 }
 
 export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
@@ -487,6 +548,9 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   action_icon,
   setExpandedRecordIds,
   success_message_code,
+  invalidate_queries_on_submit_success,
+  description,
+  update_action_input_form_values_on_submit_success,
 }) => {
   // let state = {
   //   query_name: query_name,
@@ -525,7 +589,32 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
             (item: any) => item?.message?.code === success_message_code
           )?.data
         )} */}
-        {data?.data && (
+        {/* {data?.data &&
+          !query_name &&
+          JSON.stringify(
+            data?.data
+              .find((item: any) => item?.message?.code === "action_plan")
+              ?.data?.filter(
+                (item: any) =>
+                  item?.queue?.execution_status === "awaiting action input"
+              )
+          )} */}
+        {(!data?.data && !error && !isLoading && description) || null}
+        {/* {data?.data && !query_name && (
+          <ActionStepsActionInputForm
+            action_steps={data?.data
+              .find((item: any) => item?.message?.code === "action_plan")
+              ?.data?.filter(
+                (item: any) =>
+                  item?.queue?.execution_status === "awaiting action input"
+              )}
+            name={name}
+            success_message_code={success_message_code}
+            children={children}
+          ></ActionStepsActionInputForm>
+        )} */}
+
+        {data?.data && query_name && (
           <ActionInputForm
             data_model={
               data?.data?.find(
@@ -539,6 +628,12 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
             nested_component={nested_component}
             action_icon={action_icon}
             setExpandedRecordIds={setExpandedRecordIds}
+            invalidate_queries_on_submit_success={
+              invalidate_queries_on_submit_success
+            }
+            update_action_input_form_values_on_submit_success={
+              update_action_input_form_values_on_submit_success
+            }
           ></ActionInputForm>
         )}
       </div>
@@ -547,3 +642,57 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
 };
 
 export default ActionInputWrapper;
+
+interface ActionStepsActionInputFormProps {
+  action_steps?: any;
+  name?: string;
+  success_message_code?: string;
+  children?: any;
+  nested_component?: any;
+  action_icon?: any;
+  exclude_components?: string[];
+}
+
+export const ActionStepsActionInputForm: React.FC<
+  ActionStepsActionInputFormProps
+> = ({
+  action_steps,
+  name,
+  children,
+  nested_component,
+  action_icon,
+  success_message_code,
+  exclude_components,
+}: ActionStepsActionInputFormProps) => {
+  let state = {
+    action_steps,
+  };
+  const { data, isLoading, error } = useFetchActionStepsDataByState(state);
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (error) {
+    return <div>Error fetching action step data {JSON.stringify(error)}</div>;
+  }
+  return (
+    <>
+      {/* <div>{JSON.stringify(action_steps)}</div> */}
+      {data?.data && (
+        <ActionInputForm
+          data_model={
+            data?.data?.find(
+              (item: any) => item?.message?.code === success_message_code
+            )?.data[0]?.data_model
+          }
+          // record={record}
+          execlude_components={exclude_components}
+          name={name}
+          children={children}
+          nested_component={nested_component}
+          action_icon={action_icon}
+          // setExpandedRecordIds={setExpandedRecordIds}
+        ></ActionInputForm>
+      )}
+    </>
+  );
+};

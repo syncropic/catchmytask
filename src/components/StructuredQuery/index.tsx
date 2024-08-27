@@ -354,7 +354,7 @@ export function StructuredQuery() {
             activeStructuredQuery || activeSession?.structured_query?.content
           }
           language={activeSession?.structured_query?.language}
-          setFieldValue={setFieldValue}
+          // setValue={setFieldValue}
         />
       </Create>
     </>

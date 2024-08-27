@@ -33,27 +33,29 @@ export const Procedure = ({ title, items }: ContentBlockProps) => {
           </Title>
 
           <Accordion variant="separated">
-            {items.map((item, index) => {
-              return (
-                <Accordion.Item
-                  className={classes.item}
-                  value={item.name}
-                  key={index}
-                >
-                  <Accordion.Control>
-                    <Text
-                      size="sm"
-                      fw={700}
-                      variant="gradient"
-                      gradient={{ from: "blue", to: "cyan", deg: 90 }}
-                    >
-                      {item.name}
-                    </Text>
-                  </Accordion.Control>
-                  <Accordion.Panel>{item.description}</Accordion.Panel>
-                </Accordion.Item>
-              );
-            })}
+            {items
+              .sort((a, b) => a.name.localeCompare(b.name)) // Sort items by name
+              .map((item, index) => {
+                return (
+                  <Accordion.Item
+                    className={classes.item}
+                    value={item.name}
+                    key={index}
+                  >
+                    <Accordion.Control>
+                      <Text
+                        size="sm"
+                        fw={700}
+                        variant="gradient"
+                        gradient={{ from: "blue", to: "cyan", deg: 90 }}
+                      >
+                        {item.name}
+                      </Text>
+                    </Accordion.Control>
+                    <Accordion.Panel>{item.description}</Accordion.Panel>
+                  </Accordion.Item>
+                );
+              })}
           </Accordion>
         </Grid.Col>
       </Grid>

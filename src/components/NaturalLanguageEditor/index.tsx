@@ -22,7 +22,6 @@ import {
   IconCode,
 } from "@tabler/icons-react";
 import Reveal from "@components/Reveal";
-import ResourceView from "@components/ResourceView";
 import ExcalidrawEditor from "@components/ExcalidrawEditor";
 import MonacoEditor from "@components/MonacoEditor";
 import { debounce } from "lodash";
@@ -46,16 +45,16 @@ interface NaturalLanguageEditorProps {
 
   // height?: string;
 }
-interface ContentNode {
-  type: string;
-  text?: string;
-  content?: ContentNode[];
-}
+// interface ContentNode {
+//   type: string;
+//   text?: string;
+//   content?: ContentNode[];
+// }
 
-function extractTextFromContent(content: ContentNode[]): string {
+function extractTextFromContent(content: any): string {
   let textContent = "";
 
-  content.forEach((node) => {
+  content.forEach((node: any) => {
     if (node.text) {
       textContent += node.text;
     }
@@ -115,7 +114,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
     // triggered on every change
     onUpdate: ({ editor }) => {
       const content = editor.getJSON();
-      let content_text = extractTextFromContent(content?.content) || "";
+      let content_text = extractTextFromContent(content?.content || "");
       const updatedValues = {
         content_text: content_text,
         content_json: content || "",
@@ -226,6 +225,9 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
     IconCode: <IconCode stroke={1.5} size="1rem" />,
   };
 
+  const canSubmit = form.useStore((state: any) => state.canSubmit);
+  const isSubmitting = form.useStore((state: any) => state.isSubmitting);
+
   return (
     <RichTextEditor editor={editor}>
       <RichTextEditor.Toolbar>
@@ -334,22 +336,28 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
               // disabled={form?.Subscribe}
             >
               {/* <IconSend stroke={1.5} size="1rem" /> */}
-              <form.Subscribe
+              {/* <form.Subscribe
                 selector={(state) => [state.canSubmit, state.isSubmitting]}
                 children={([canSubmit, isSubmitting]) => (
-                  // <button type="submit" disabled={!canSubmit}>
-                  //   {isSubmitting ? '...' : 'Submit'}
-                  // </button>
                   <Button
                     size="xs"
                     type="submit"
                     loading={isLoading || isSubmitting}
                     disabled={!canSubmit}
                   >
-                    Act
+                    Submit
                   </Button>
                 )}
-              />
+              /> */}
+              <Button
+                size="xs"
+                type="submit"
+                // loading={mutationIsLoading || isSubmitting}
+                loading={isLoading || isSubmitting}
+                disabled={!canSubmit}
+              >
+                Submit
+              </Button>
             </RichTextEditor.Control>
           </Tooltip>
 

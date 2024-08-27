@@ -66,7 +66,6 @@ import {
   compareItems,
 } from "@tanstack/match-sorter-utils";
 import { useEffect, useState } from "react";
-import ConversationView from "@components/ConversationView";
 import { useElementSize } from "@mantine/hooks";
 import ActionInputWrapper from "@components/ActionInput";
 
@@ -124,6 +123,7 @@ export function DataDisplay<T extends Record<string, any>>({
   name,
   read_write_mode,
   ui,
+  invalidate_queries_on_submit_success,
 }: ResultsComponentProps<T>) {
   const { ref, width } = useElementSize();
   const [isLarge, setIsLarge] = useState(true);
@@ -492,6 +492,9 @@ export function DataDisplay<T extends Record<string, any>>({
             resource_group={resource_group}
             ui={ui}
             execlude_components={execlude_components}
+            invalidate_queries_on_submit_success={
+              invalidate_queries_on_submit_success
+            }
             // view_data={view_data}
           />
           // <div>tableview</div>

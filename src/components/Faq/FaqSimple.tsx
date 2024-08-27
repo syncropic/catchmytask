@@ -6,7 +6,7 @@ export function FaqSimple({ title, items }: ContentBlockProps) {
   return (
     <Container size="sm" className={classes.wrapper}>
       <Title ta="center" className={classes.title}>
-        {title.name}
+        {title?.name}
       </Title>
 
       <Accordion variant="separated">

@@ -44,8 +44,8 @@ import ActionInput, { ActionInputWrapper } from "@components/ActionInput";
 import SelectAction from "@components/SelectAction";
 import SearchComponent from "@components/Search";
 import ActionSteps, { ActionStepsWrapper } from "@components/ActionSteps";
-import { ActionControlFormWrapper } from "@components/ActionControlForm";
 import MonacoEditor from "@components/MonacoEditor";
+import TaskInputWrapper from "@components/TaskInput";
 
 // const useFullUrl = () => {
 //   const router = useRouter();
@@ -135,6 +135,12 @@ const Layout = ({
   // );
   // for homepage if not logged authenticated
   if (!authenticatedData?.authenticated && parsed?.pathname == "/") {
+    let domain_data = domainData?.data?.find(
+      (item: any) => item?.message?.code === "query_success_results"
+    )?.data[0];
+    let visible_sections =
+      domain_data["domain"]["metadata"]["visible_sections"];
+    let application = domain_data["application"];
     return (
       <>
         {/* <div>is not authenticated / page</div> */}
@@ -142,46 +148,26 @@ const Layout = ({
           {/* <div>not authenticated / page : make request with guest credentials</div> */}
           <InitializeApplication>
             <>
-              {domainData?.data[0]?.find(
-                (item: any) => item?.message === "Query successfully executed"
-              ).results[0]["result"][0]["domain"]["metadata"][
-                "visible_sections"
-              ] &&
-                domainData?.data[0]
-                  ?.find(
-                    (item: any) =>
-                      item?.message === "Query successfully executed"
-                  )
-                  .results[0]["result"][0]["domain"]["metadata"][
-                    "visible_sections"
-                  ].map((section: string) => {
-                    const Component = getComponentByKey(
-                      section as ComponentKey
-                    );
-                    // return <div>{Component}</div>;
-                    return (
-                      <Component
-                        title={domainData?.data[0]
-                          ?.find(
-                            (item: any) =>
-                              item?.message === "Query successfully executed"
-                          )
-                          .results[0]["result"][0]["application"][
-                            "titles"
-                          ].find(
-                            (title: any) => title["type"] === `${section}_title`
-                          )}
-                        items={
-                          domainData?.data[0]?.find(
-                            (item: any) =>
-                              item?.message === "Query successfully executed"
-                          ).results[0]["result"][0]["application"][section]
-                        }
-                        // items={domainData?.data[0]?.[section]}
-                        entity_type={section}
-                      ></Component>
-                    );
-                  })}
+              {/* <div>
+                {JSON.stringify(
+                  domain_data["domain"]["metadata"]["visible_sections"]
+                )}
+              </div> */}
+              {visible_sections &&
+                visible_sections.map((section: string) => {
+                  const Component = getComponentByKey(section as ComponentKey);
+                  return (
+                    // <div>{section}</div>
+                    <Component
+                      title={application["titles"]?.find(
+                        (title: any) =>
+                          title["metadata"]["section"] === `${section}`
+                      )}
+                      items={application[section]}
+                      entity_type={section}
+                    ></Component>
+                  );
+                })}
             </>
           </InitializeApplication>
         </AppLayout>
@@ -447,6 +433,9 @@ const Layout = ({
                             query_name="data_model"
                             exclude_components={["input_mode", "submit_button"]}
                             success_message_code="action_input_data_model_schema"
+                            update_action_input_form_values_on_submit_success={
+                              true
+                            }
                             nested_component={{
                               data_model: {
                                 name: "task_config",
@@ -470,18 +459,20 @@ const Layout = ({
                           Task Input
                         </Accordion.Control>
                         <Accordion.Panel>
-                          <ActionInputWrapper
+                          <TaskInputWrapper
                             name="task_input"
                             exclude_components={["input_mode", "submit_button"]}
-                            success_message_code="action_input_data_model_schema"
-                          ></ActionInputWrapper>
-                          {/* <div>dynamic task input form</div> */}
-                          {/* <div className="flex items-center justify-center p-4">
-                            <p className="text-sm text-gray-600 text-center">
-                              Prompt for your input required to customize and
-                              successfully complete a task will appear here.
-                            </p>
-                          </div> */}
+                            success_message_code="task_input_data"
+                            description={
+                              <div className="flex items-center justify-center p-4">
+                                <p className="text-sm text-gray-600 text-center">
+                                  Prompt for your input required to customize
+                                  and successfully complete a task will appear
+                                  here.
+                                </p>
+                              </div>
+                            }
+                          ></TaskInputWrapper>
                         </Accordion.Panel>
                       </Accordion.Item>
 

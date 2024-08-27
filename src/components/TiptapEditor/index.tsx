@@ -22,7 +22,6 @@ import {
   IconCode,
 } from "@tabler/icons-react";
 import Reveal from "@components/Reveal";
-import ResourceView from "@components/ResourceView";
 import ExcalidrawEditor from "@components/ExcalidrawEditor";
 import MonacoEditor from "@components/MonacoEditor";
 import { debounce } from "lodash";
@@ -46,22 +45,6 @@ interface ContentNode {
   type: string;
   text?: string;
   content?: ContentNode[];
-}
-
-function extractTextFromContent(content: ContentNode[]): string {
-  let textContent = "";
-
-  content.forEach((node) => {
-    if (node.text) {
-      textContent += node.text;
-    }
-
-    if (node.content) {
-      textContent += extractTextFromContent(node.content);
-    }
-  });
-
-  return textContent;
 }
 
 // const debouncedSetFormValues = debounce((values: any) => {
@@ -118,8 +101,9 @@ const Editor: React.FC<IEditor> = ({
         //   extractTextFromContent(content?.content) || ""
         // );
         // debouncedSetFieldValue("content_json", content || "");
+        let content_text = extractTextFromContent(content?.content || "");
         const updatedValues = {
-          content_text: extractTextFromContent(content?.content) || "",
+          content_text: content_text,
           content_json: content || "",
           // You can add more fields if needed
         };
@@ -341,3 +325,8 @@ const Editor: React.FC<IEditor> = ({
   );
 };
 export default Editor;
+function extractTextFromContent(
+  arg0: string | import("@tiptap/react").JSONContent[]
+) {
+  throw new Error("Function not implemented.");
+}

@@ -201,6 +201,7 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   // item: IView;
   // resource: string;
   // results?: any;
+  data_columns?: ColumnDef<RowData>[];
   isLoadingDataItems?: boolean;
   read_write_mode?: string;
   ui?: Record<string, any>;
@@ -213,6 +214,7 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   // view_data: any;
   // data_columns: T[];
   data_fields: T[];
+  invalidate_queries_on_submit_success?: string[];
   // session?: ISession;
   // // initialStateColumnPinningLeft: string[];
   // customTableConfig?: any;

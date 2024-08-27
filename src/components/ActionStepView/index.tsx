@@ -1,39 +1,6 @@
-// import ListView from "@components/ListView";
-// import MonacoEditor from "@components/MonacoEditor";
-// import {
-//   mergeEdgeWithEntityValues,
-//   useDataColumns,
-//   useFetchSessionById,
-//   useFetchViewById,
-//   useFetchViewByName,
-// } from "@components/Utils";
-// import {
-//   FieldConfiguration,
-//   IApplication,
-//   IDataset,
-//   IListItem,
-//   IView,
-// } from "@components/interfaces";
 import DataDisplay from "@components/DataDisplay";
-import MonacoEditor from "@components/MonacoEditor";
-import {
-  Accordion,
-  Button,
-  LoadingOverlay,
-  Modal,
-  Text,
-  TextInput,
-} from "@mantine/core";
+import { Accordion, Text } from "@mantine/core";
 import { useCustom } from "@refinedev/core";
-// import {
-//   HttpError,
-//   IResourceComponentsProps,
-//   useCustom,
-//   useOne,
-//   useParsed,
-//   useShow,
-// } from "@refinedev/core";
-// import { Show } from "@refinedev/mantine";
 import React, { useEffect, useState } from "react";
 // import { useAppStore } from "src/store";
 import config from "src/config";
@@ -130,11 +97,11 @@ const ResultsWrapper = ({ action_step }: { action_step: any }) => {
   if (action_step?.select) {
     return <SelectComponent action_step={action_step}></SelectComponent>;
   }
-  // return (
-  //   <div>
-  //     <Text>{JSON.stringify(action_step)}</Text>
-  //   </div>
-  // );
+  return (
+    <div>
+      <Text>{JSON.stringify(action_step)}</Text>
+    </div>
+  );
 };
 
 const SelectComponent = ({ action_step }: { action_step: any }) => {
