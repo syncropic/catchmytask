@@ -3,7 +3,7 @@ import LayoutToggle from "@components/Layout/LayoutToggle";
 import UserMenu from "@components/Layout/UserMenu";
 import { LogoName } from "@components/LogoName/LogoName";
 import SessionBar from "@components/SessionBar";
-import { useDomain, useFetchDomainDataByDomain } from "@components/Utils";
+import { useFetchDomainDataByDomain } from "@components/Utils";
 import { useGo } from "@refinedev/core";
 import { useAppStore } from "src/store";
 
@@ -88,13 +88,17 @@ const LargeScreenHeader = ({
 
 export function Header({ authenticatedData }: HeaderComponentProps) {
   const go = useGo();
-  const domain = useDomain();
+  const runtimeConfig = useAppStore((state) => state.runtimeConfig);
+
+  let state = {
+    domain_url: runtimeConfig?.DOMAIN_URL,
+  };
   const { activeApplication } = useAppStore();
   const {
     data: domainData,
     isLoading: domainDataIsLoading,
     error: domainDataError,
-  } = useFetchDomainDataByDomain(domain);
+  } = useFetchDomainDataByDomain(state);
 
   const applicationData =
     domainData?.data?.find(

@@ -4,7 +4,8 @@ import { Text } from "@mantine/core";
 import Link from "next/link";
 import { Anchor } from "@mantine/core";
 import { FooterCentered } from "./FooterCentered";
-import { useDomain, useFetchDomainDataByDomain } from "@components/Utils";
+import { useFetchDomainDataByDomain } from "@components/Utils";
+import { useAppStore } from "src/store";
 
 export function SimpleFooter() {
   return (
@@ -23,13 +24,17 @@ export function SimpleFooter() {
 
 export function Footer() {
   // const go = useGo();
-  const domain = useDomain();
-  // const { activeApplication } = useAppStore();
+
+  const runtimeConfig = useAppStore((state) => state.runtimeConfig);
+
+  let state = {
+    domain_url: runtimeConfig?.DOMAIN_URL,
+  };
   const {
     data: domainData,
     isLoading: domainDataIsLoading,
     error: domainDataError,
-  } = useFetchDomainDataByDomain(domain);
+  } = useFetchDomainDataByDomain(state);
   // const links = [
   //   // { link: "#", label: "Contact" },
   //   // { link: "#", label: "Privacy" },

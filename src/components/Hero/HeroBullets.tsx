@@ -44,8 +44,8 @@ export function HeroBullets({ title, items }: ContentBlockProps) {
               </ThemeIcon>
             }
           >
-            {items?.map((feature) => (
-              <List.Item key={feature.name}>
+            {items?.map((feature, index) => (
+              <List.Item key={index}>
                 <b>{feature.name}</b> – {feature.description}
               </List.Item>
             ))}

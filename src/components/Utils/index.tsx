@@ -874,46 +874,6 @@ export function useFetchActionHistoryById(actionId: any | null) {
   return { data, isLoading, error, isError };
 }
 
-// export function useFetchDomainDataByDomain(domain: string) {
-//   const variables = {
-//     domain: domain,
-//   };
-
-//   const { data, isLoading, error, isError } = useCustom({
-//     url: `${config?.API_URL}/execute-query`,
-//     method: "post",
-//     config: {
-//       payload: {
-//         global_variables: {},
-//         include_execution_orders: [1],
-//         action_steps: [
-//           {
-//             id: "1",
-//             execution_order: 1,
-//             tool: "retrieve",
-//             tool_arguments: {
-//               queries: [
-//                 {
-//                   query: `SELECT * FROM fn::execute_query('domain_data', '${JSON.stringify(
-//                     variables
-//                   )}')`,
-//                   credential: "surrealdb_catchmytask",
-//                   params: {},
-//                 },
-//               ],
-//             },
-//           },
-//         ],
-//       },
-//     },
-//     queryOptions: {
-//       queryKey: [`useFetchDomainDataByDomain_${domain}`],
-//     },
-//   });
-
-//   return { data, isLoading, error, isError };
-// }
-
 export function useFetchDomainDataByDomain(state: any) {
   const { runtimeConfig: config } = useAppStore();
 

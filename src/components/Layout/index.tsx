@@ -2,7 +2,6 @@ import NaturalLanguageQuery from "@components/NaturalLanguageQuery";
 import {
   getComponentByKey,
   useAuthToken,
-  useDomain,
   useFetchDomainDataByDomain,
 } from "@components/Utils";
 import { ComponentKey } from "@components/interfaces";
@@ -46,21 +45,6 @@ import SearchComponent from "@components/Search";
 import ActionSteps, { ActionStepsWrapper } from "@components/ActionSteps";
 import MonacoEditor from "@components/MonacoEditor";
 import TaskInputWrapper from "@components/TaskInput";
-
-// const useFullUrl = () => {
-//   const router = useRouter();
-//   const [fullUrl, setFullUrl] = useState("");
-
-//   useEffect(() => {
-//     if (typeof window !== "undefined") {
-//       // Combines the origin with the asPath for full URL
-//       const fullUrl = window.location.origin + router.asPath;
-//       setFullUrl(fullUrl);
-//     }
-//   }, [router.asPath]);
-
-//   return fullUrl;
-// };
 
 function InitializeApplication({
   activeApplicationId,
@@ -167,6 +151,7 @@ const Layout = ({
                       )}
                       items={application[section]}
                       entity_type={section}
+                      key={section}
                     ></Component>
                   );
                 })}
