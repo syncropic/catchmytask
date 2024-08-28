@@ -46,13 +46,10 @@ export const UserMenu = () => {
     return (
       <Button
         size="xs"
-        onClick={() => signIn()}
-        // onClick={() => {
-        //   go({
-        //     to: "/login",
-        //     type: "push",
-        //   });
-        // }}
+        gradient={{ from: "blue", to: "cyan", deg: 90 }}
+        variant="gradient"
+        // fullWidth
+        onClick={() => signIn("keycloak")}
       >
         Sign In
       </Button>
