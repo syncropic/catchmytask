@@ -106,7 +106,7 @@ const ResultsWrapper = ({ action_step }: { action_step: any }) => {
 
 const SelectComponent = ({ action_step }: { action_step: any }) => {
   const { data, isLoading, error } = useCustom({
-    url: `${config.API_URL}/catch-read`,
+    url: `${config.API_URL}/read`,
     method: "post",
     config: {
       payload: {
@@ -123,6 +123,8 @@ const SelectComponent = ({ action_step }: { action_step: any }) => {
             action_step_query: action_step?.select?.query,
             method: "get",
             type: "main",
+            credential:
+              action_step?.select?.credential || "surrealdb catchmytask dev",
             select: {
               query: action_step?.select?.query,
               credential: action_step?.select?.credential,

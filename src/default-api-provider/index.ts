@@ -164,7 +164,7 @@ export const dataProvider = (
 > => ({
   getList: async ({ resource, pagination, filters, sorters, meta }) => {
     // const url = `${apiUrl}/${resource}`;
-    const url = `${apiUrl}/catch-read`;
+    const url = `${apiUrl}/read`;
 
     // const { current = 1, pageSize = 10, mode = "server" } = pagination ?? {};
 
@@ -242,9 +242,10 @@ export const dataProvider = (
           action_step_query: formatted_query,
           method: "get",
           type: "main",
+          credential: meta?.credentials || "surrealdb catchmytask dev",
           select: {
             query: formatted_query,
-            credential: meta?.credentials ?? "surrealdb_catchmytask",
+            credential: meta?.credentials ?? "surrealdb catchmytask dev",
           },
         },
       ],
@@ -331,7 +332,7 @@ export const dataProvider = (
   },
 
   getOne: async ({ resource, id, meta }) => {
-    const url = `${apiUrl}/catch-read`;
+    const url = `${apiUrl}/read`;
     const { headers: headersFromMeta, method } = meta ?? {};
 
     // const { headers, method } = meta ?? {};
@@ -388,9 +389,10 @@ export const dataProvider = (
           action_step_query: formatted_query,
           method: "get",
           type: "main",
+          credential: meta?.credentials || "surrealdb catchmytask dev",
           select: {
             query: formatted_query,
-            credential: meta?.credentials ?? "surrealdb_catchmytask",
+            credential: meta?.credentials ?? "surrealdb catchmytask dev",
           },
         },
       ],

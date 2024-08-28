@@ -32,6 +32,7 @@ import {
   IconEdit,
   IconSearch,
   IconVariable,
+  IconCode,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -328,7 +329,7 @@ const Layout = ({
                   <Accordion defaultValue={[]} multiple={true}>
                     <Accordion.Item key="state_view" value="state_view">
                       <Accordion.Control icon={<IconStackBack size={16} />}>
-                        Session Summary {`: `}
+                        State
                         <Text component="span" fw={700}>
                           {activeSession?.internal_id}
                         </Text>
@@ -354,21 +355,27 @@ const Layout = ({
                         Tasks
                       </Accordion.Control>
                       <Accordion.Panel>
-                        <SearchComponent entity="tasks"></SearchComponent>
+                        {/* <SearchComponent entity="tasks"></SearchComponent>
+                         */}
+                        <div className="flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-600 text-center">
+                            Tasks you can leverage
+                          </p>
+                        </div>
                       </Accordion.Panel>
                     </Accordion.Item>
                     <Accordion.Item
                       key="search_action_steps"
                       value="search_action_steps"
                     >
-                      <Accordion.Control icon={<IconListDetails size={16} />}>
-                        Action Steps
+                      <Accordion.Control icon={<IconCode size={16} />}>
+                        Executables
                       </Accordion.Control>
                       <Accordion.Panel>
                         {/* <SearchComponent entity="action_steps"></SearchComponent> */}
                         <div className="flex items-center justify-center p-4">
                           <p className="text-sm text-gray-600 text-center">
-                            Action steps you can leverage
+                            Executable steps you can leverage
                           </p>
                         </div>
                       </Accordion.Panel>

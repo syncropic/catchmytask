@@ -1,42 +1,75 @@
-import type { GetServerSidePropsContext } from "next";
+import type {
+  GetServerSidePropsContext,
+  InferGetServerSidePropsType,
+} from "next";
 import { getServerSession } from "next-auth/next";
-import { getProviders } from "next-auth/react";
+import {
+  getProviders,
+  LiteralUnion,
+  ClientSafeProvider,
+  signIn,
+  signOut,
+  useSession,
+} from "next-auth/react";
 import { useIsAuthenticated } from "@refinedev/core";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { BuiltInProviderType } from "next-auth/providers";
 import { authOptions } from "../api/auth/[...nextauth]";
+import { Button } from "@mantine/core";
 
-export default function Login() {
+type LoginProps = {
+  providers: Record<
+    LiteralUnion<BuiltInProviderType, string>,
+    ClientSafeProvider
+  > | null;
+};
+
+export default function Login({
+  providers,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { data: session } = useSession();
-  // const go = useGo();
   const { isLoading, data: isAuthenticatedData } = useIsAuthenticated();
 
   const content = session ? (
-    <>
-      <p className="mb-4 text-lg text-gray-700">
-        Signed in as {session?.user?.email}
+    <div className="text-center">
+      <p className="mb-6 text-gray-800 text-lg">
+        Signed in as{" "}
+        <span className="font-semibold">{session?.user?.email}</span>
       </p>
-      <button
+      <Button
+        gradient={{ from: "blue", to: "cyan", deg: 105 }}
+        variant="gradient"
+        fullWidth
         onClick={() => signOut()}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
       >
         Sign out
-      </button>
-    </>
+      </Button>
+    </div>
   ) : (
-    <>
-      <p className="mb-4 text-lg text-gray-700">Not signed in</p>
-      <button
-        onClick={() => signIn()}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-      >
-        Sign in
-      </button>
-    </>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold text-gray-800 text-center">
+        Welcome
+      </h1>
+      <div className="mt-6 space-y-4">
+        {providers &&
+          Object.values(providers).map((provider) => (
+            <div key={provider.name}>
+              <Button
+                gradient={{ from: "blue", to: "cyan", deg: 90 }}
+                variant="gradient"
+                fullWidth
+                onClick={() => signIn(provider.id)}
+              >
+                Sign In
+              </Button>
+            </div>
+          ))}
+      </div>
+    </div>
   );
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="p-6 max-w-sm w-full bg-white rounded-lg shadow-md">
+    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
         {content}
       </div>
     </div>
@@ -48,9 +81,7 @@ Login.noLayout = true;
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const session = await getServerSession(context.req, context.res, authOptions);
 
-  // If the user is already logged in, redirect.
-  // Note: Make sure not to redirect to the same page
-  // To avoid an infinite loop!
+  // If the user is already logged in, redirect to the homepage.
   if (session) {
     return { redirect: { destination: "/" } };
   }
@@ -58,6 +89,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const providers = await getProviders();
 
   return {
-    props: { providers: providers ?? [] },
+    props: { providers: (providers as LoginProps["providers"]) ?? null },
   };
 }

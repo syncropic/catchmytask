@@ -1,11 +1,9 @@
 // pages/api/runtime-config.js
 export default function handler(req, res) {
   res.status(200).json({
-    API_URL: String(
-      process.env.NEXT_PUBLIC_API_URL || "https://api.catchmytask.com"
-    ),
+    API_URL: String(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"),
     API_REQUESTS_URL: String(
-      process.env.NEXT_PUBLIC_API_REQUESTS_URL || "https://api.catchmytask.com"
+      process.env.NEXT_PUBLIC_API_REQUESTS_URL || "http://localhost:8000"
     ),
     DOMAIN_URL: String(
       process.env.NEXT_PUBLIC_DOMAIN_URL ||
