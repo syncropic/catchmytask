@@ -163,38 +163,38 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
       label: "Templates",
       name: "select_template",
       icon: "IconLibrary",
-      // disabled: true,
-    },
-    {
-      label: "Local Files",
-      name: "select_local_files",
-      icon: "IconPaperclip",
       disabled: false,
     },
-    {
-      label: "Remote Files",
-      name: "select_remote_files",
-      icon: "IconFiles",
-      disabled: false,
-    },
-    {
-      label: "Illustrate",
-      name: "select_illustration",
-      icon: "IconScribble",
-      disabled: false,
-    },
+    // {
+    //   label: "Local Files",
+    //   name: "select_local_files",
+    //   icon: "IconPaperclip",
+    //   disabled: false,
+    // },
+    // {
+    //   label: "Remote Files",
+    //   name: "select_remote_files",
+    //   icon: "IconFiles",
+    //   disabled: false,
+    // },
+    // {
+    //   label: "Illustrate",
+    //   name: "select_illustration",
+    //   icon: "IconScribble",
+    //   disabled: false,
+    // },
     // {
     //   label: "Code",
     //   name: "select_code",
     //   icon: "IconCode",
     //   disabled: false,
     // },
-    {
-      label: "Voice",
-      name: "select_template",
-      icon: "IconMicrophone",
-      disabled: true,
-    },
+    // {
+    //   label: "Voice",
+    //   name: "select_template",
+    //   icon: "IconMicrophone",
+    //   disabled: true,
+    // },
     // {
     //   label: "Camera",
     //   name: "select_template",
@@ -282,7 +282,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
                     // aria-label="Insert star emoji"
                     // title="Insert star emoji"
                     aria-label={action.label}
-                    disabled={action.disabled}
+                    disabled={action?.disabled}
                   >
                     {iconMapping[action?.icon]}
                   </RichTextEditor.Control>
@@ -290,48 +290,47 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
               }
               trigger="click"
             >
-              {action.name === "select_template" && (
+              <></>
+              {/* {action.name === "select_template" && (
                 <TemplatesViewWrapper
                   query_name="action_steps_templates"
                   entity="action_steps_templates"
                 ></TemplatesViewWrapper>
-              )}
-              {action.name === "select_local_files" && (
+              )} */}
+              {/* {action.name === "select_local_files" && (
                 <FileInput
                   label="Local Files"
                   description="Click to select and insert local files"
                   placeholder="Click to select and insert local files"
                 />
-              )}
-              {action.name === "select_illustration" && (
+              )} */}
+              {/* {action.name === "select_illustration" && (
                 <ExcalidrawEditor></ExcalidrawEditor>
-              )}
-              {action.name === "select_remote_files" && (
+              )} */}
+              {/* {action.name === "select_remote_files" && (
                 <FileBrowserWrapper
                   query_name="remote_files"
                   entity="file_definitions"
                 ></FileBrowserWrapper>
-              )}
-              {action.name === "select_code" && (
+              )} */}
+              {/* {action.name === "select_code" && (
                 <MonacoEditor value="" language="python"></MonacoEditor>
-              )}
+              )} */}
             </Reveal>
           ))}
         </RichTextEditor.ControlsGroup>
         <RichTextEditor.ControlsGroup>
-          <Tooltip label="Live Updates">
+          {/* <Tooltip label="Live Updates">
             <RichTextEditor.Control
-              // onClick={handleSubmit}
               aria-label="Live Updates"
-              // title="Run"
             >
               <IconLivePhoto stroke={1.5} size="1rem" />
             </RichTextEditor.Control>
-          </Tooltip>
+          </Tooltip> */}
           <Tooltip label="Run">
             <RichTextEditor.Control
               // onClick={() => form?.handleSubmit()}
-              aria-label="Run"
+              aria-label="Submit"
               // title="Run"
               // disabled={form?.Subscribe}
             >

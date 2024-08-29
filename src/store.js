@@ -54,7 +54,10 @@ const useAppStore = create(
           isDisplayed: true,
         },
         rightSection: {
-          isDisplayed: false,
+          isDisplayed: true,
+        },
+        searchSession: {
+          isDisplayed: true,
         },
       },
       setActiveLayout: (activeLayout) => set((state) => ({ activeLayout })),

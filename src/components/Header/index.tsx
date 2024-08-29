@@ -107,7 +107,7 @@ export function Header({ authenticatedData }: HeaderComponentProps) {
 
   return (
     <>
-      <div className="block lg:hidden">
+      {/* <div className="block lg:hidden">
         <SmallMediumScreenHeader
           applicationData={applicationData}
           authenticatedData={authenticatedData}
@@ -122,7 +122,13 @@ export function Header({ authenticatedData }: HeaderComponentProps) {
           activeApplication={activeApplication}
           go={go}
         />
-      </div>
+      </div> */}
+      <LargeScreenHeader
+        applicationData={applicationData}
+        authenticatedData={authenticatedData}
+        activeApplication={activeApplication}
+        go={go}
+      />
     </>
   );
 }

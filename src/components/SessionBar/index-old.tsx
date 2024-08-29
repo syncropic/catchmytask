@@ -1,3 +1,4 @@
+// SessionBar.tsx
 import React from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import SelectSession from "@components/SelectSession";
@@ -47,6 +48,8 @@ const SessionBar: React.FC<SessionBarProps> = ({
     }
   };
 
+  // const { activeLayout, setActiveLayout } = useAppStore();
+  // // handle toggleDisplay
   const toggleSessionInteractionMode = (mode: string) => {
     if (sessionConfig) {
       const newSessionConfig = { ...sessionConfig };
@@ -81,6 +84,10 @@ const SessionBar: React.FC<SessionBarProps> = ({
 
   const session_data_items = data?.data ?? [];
 
+  // const handleSelectAction = (action: any) => {
+  //   setActiveAction(action);
+  // };
+
   return (
     <div className="flex w-full items-center pl-4 pr-4 space-x-4">
       <div className="flex items-center space-x-2">
@@ -99,6 +106,21 @@ const SessionBar: React.FC<SessionBarProps> = ({
           </ActionIcon>
         </Tooltip>
 
+        {/* <ActionIcon
+          variant="filled"
+          aria-label="Create Session"
+          size="sm"
+          disabled
+          onClick={() => handleSelectAction({ name: "create_session" })}
+        >
+          <IconPlus />
+        </ActionIcon> */}
+        {/* <ActionIcon variant="filled" aria-label="Copy" disabled size="sm">
+          <IconCopy />
+        </ActionIcon> */}
+        {/* <ActionIcon variant="filled" aria-label="Edit" disabled size="sm">
+          <IconEdit />
+        </ActionIcon> */}
         <Tooltip label="Toggle search mode" position="top">
           <ActionIcon
             aria-label="Toggle search mode"
@@ -124,15 +146,17 @@ const SessionBar: React.FC<SessionBarProps> = ({
           </ActionIcon>
         </Tooltip>
       </div>
-      {activeLayout?.searchSession?.isDisplayed && (
-        <div className="hidden lg:block">
-          <SelectSession
-            sessions_list={session_data_items || []}
-            record={activeSession}
-            view_item={null}
-          />
-        </div>
-      )}
+      <div
+        style={{
+          display: activeLayout?.searchSession?.isDisplayed ? "block" : "none",
+        }}
+      >
+        <SelectSession
+          sessions_list={session_data_items || []}
+          record={activeSession}
+          view_item={null}
+        />
+      </div>
     </div>
   );
 };

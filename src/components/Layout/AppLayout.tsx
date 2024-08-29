@@ -81,7 +81,7 @@ export function AppLayout({
           breakpoint: "sm",
           collapsed: { desktop: true, mobile: !opened },
         }}
-        padding="md"
+        // padding="md"
       >
         <AppShell.Header>
           <Header authenticatedData={authenticatedData}></Header>
