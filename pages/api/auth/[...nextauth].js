@@ -21,12 +21,34 @@ export const authOptions = {
       clientId: process.env.KEYCLOAK_CLIENT_ID,
       clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
       issuer: process.env.KEYCLOAK_ISSUER,
+      authorization: { params: { scope: "openid" } },
     }),
   ],
   pages: {
     signIn: "/login", // Custom sign-in page
   },
   callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      // console.log("signIn:", user, account, profile, email, credentials);
+      return true;
+    },
+    async jwt({ token, user, account, profile, isNewUser }) {
+      // console.log("jwt:", token);
+      return token;
+    },
+    async jwt({ token, account }) {
+      // Persist the OAuth access_token to the token right after signin
+      if (account) {
+        token.account = account;
+        // console.log("account:", account);
+      }
+      return token;
+    },
+    async session({ session, token, user }) {
+      // Send properties to the client, like an access_token from a provider.
+      session.token = token;
+      return session;
+    },
     async redirect({ url, baseUrl }) {
       //Allows relative callback URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`;

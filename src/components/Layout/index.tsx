@@ -1,7 +1,6 @@
 import NaturalLanguageQuery from "@components/NaturalLanguageQuery";
 import {
   getComponentByKey,
-  useAuthToken,
   useFetchDomainDataByDomain,
 } from "@components/Utils";
 import { ComponentKey } from "@components/interfaces";
@@ -46,6 +45,7 @@ import SearchComponent from "@components/Search";
 import ActionSteps, { ActionStepsWrapper } from "@components/ActionSteps";
 import MonacoEditor from "@components/MonacoEditor";
 import TaskInputWrapper from "@components/TaskInput";
+import { useSession } from "next-auth/react";
 
 function InitializeApplication({
   activeApplicationId,
@@ -65,7 +65,8 @@ const Layout = ({
   noAuth?: boolean;
 }) => {
   const { isLoading, data: authenticatedData } = useIsAuthenticated();
-  const { token, loading, error } = useAuthToken();
+  // const { data: session, status } = useSession();
+  // return session?.token?.account?.access_token;
   const {
     activeLayout,
     setActiveApplication,
@@ -103,12 +104,8 @@ const Layout = ({
     return <>Loading...</> || null;
   }
   // error handling
-  if (error || domainDataError) {
-    return (
-      <>
-        {JSON.stringify(error)} {JSON.stringify(domainDataError)}
-      </>
-    );
+  if (domainDataError) {
+    return <>{JSON.stringify(domainDataError)}</>;
   }
 
   // if not authenticated and url is not /login

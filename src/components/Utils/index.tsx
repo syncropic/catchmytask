@@ -717,56 +717,56 @@ export function getResourceName(
   return idString.substring(0, splitIndex);
 }
 
-export function useAuthToken() {
-  const { data: identity } = useGetIdentity<IIdentity>();
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const { runtimeConfig: config } = useAppStore();
+// export function useAuthToken() {
+//   const { data: identity } = useGetIdentity<IIdentity>();
+//   const [token, setToken] = useState<string | null>(null);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<Error | null>(null);
+//   const { runtimeConfig: config } = useAppStore();
 
-  useEffect(() => {
-    const fetchAuthToken = async () => {
-      setLoading(true);
-      const auth_token = localStorage.getItem("cmt_auth_token");
-      if (auth_token) {
-        console.log("Data already in localStorage", JSON.parse(auth_token));
-        setToken(auth_token);
-        setLoading(false);
-        return;
-      }
-      try {
-        const formData = new URLSearchParams();
-        formData.append("username", identity?.email);
-        formData.append("password", identity?.email);
+//   useEffect(() => {
+//     const fetchAuthToken = async () => {
+//       setLoading(true);
+//       const auth_token = localStorage.getItem("cmt_auth_token");
+//       if (auth_token) {
+//         console.log("Data already in localStorage", JSON.parse(auth_token));
+//         setToken(auth_token);
+//         setLoading(false);
+//         return;
+//       }
+//       try {
+//         const formData = new URLSearchParams();
+//         formData.append("username", identity?.email);
+//         formData.append("password", identity?.email);
 
-        const response = await fetch(`${config?.API_URL}/token`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: formData,
-        });
+//         const response = await fetch(`${config?.API_URL}/token`, {
+//           method: "POST",
+//           headers: {
+//             "Content-Type": "application/x-www-form-urlencoded",
+//           },
+//           body: formData,
+//         });
 
-        if (!response.ok) throw new Error("Failed to fetch auth token");
+//         if (!response.ok) throw new Error("Failed to fetch auth token");
 
-        const data = await response.json();
-        localStorage.setItem("cmt_auth_token", JSON.stringify(data));
-        setToken(JSON.stringify(data));
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError(error as Error);
-      } finally {
-        setLoading(false);
-      }
-    };
+//         const data = await response.json();
+//         localStorage.setItem("cmt_auth_token", JSON.stringify(data));
+//         setToken(JSON.stringify(data));
+//       } catch (error) {
+//         console.error("Error fetching data:", error);
+//         setError(error as Error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
 
-    if (identity) {
-      fetchAuthToken();
-    }
-  }, [identity]); // Re-run when `identity` changes
+//     if (identity) {
+//       fetchAuthToken();
+//     }
+//   }, [identity]); // Re-run when `identity` changes
 
-  return { token, loading, error };
-}
+//   return { token, loading, error };
+// }
 
 type RecordIdentifier = {
   id: string;
@@ -881,7 +881,7 @@ export function useFetchDomainDataByDomain(state: any) {
   const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config?.API_URL}/execute-query`,
+    url: `${config?.API_URL}/execute-guest-query`,
     method: "post",
     config: {
       payload: {

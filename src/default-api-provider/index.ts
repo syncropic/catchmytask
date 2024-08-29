@@ -3,15 +3,18 @@ import { AxiosInstance } from "axios";
 import { stringify } from "query-string";
 import { axiosInstance, generateFilter, generateSort } from "./utils";
 import { addSeparator, formatIdWithPrefix } from "src/utils";
+import { useSession } from "next-auth/react";
 
 type MethodTypes = "get" | "delete" | "head" | "options";
 type MethodTypesWithBody = "post" | "put" | "patch";
 
-// Function to get the stored token
-const getToken = () => {
-  let auth_token = localStorage.getItem("cmt_auth_token");
-  return auth_token ? JSON.parse(auth_token).access_token : "";
-};
+// // Function to get the stored token
+// const getToken = () => {
+//   const { data: session, status } = useSession();
+//   return session?.token?.account?.access_token;
+//   // let auth_token = localStorage.getItem("cmt_auth_token");
+//   // return auth_token ? JSON.parse(auth_token).access_token : "";
+// };
 
 // Define supported operators
 type Operator =
@@ -157,6 +160,7 @@ function generateWhereClause(filters: Filter[]): string {
 
 export const dataProvider = (
   apiUrl: string,
+  getToken: () => string,
   httpClient: AxiosInstance = axiosInstance
 ): Omit<
   Required<DataProvider>,
