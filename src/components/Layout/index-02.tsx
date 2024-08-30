@@ -4,17 +4,7 @@ import {
   useFetchDomainDataByDomain,
 } from "@components/Utils";
 import { ComponentKey, ISession } from "@components/interfaces";
-import {
-  Accordion,
-  Button,
-  Tabs,
-  Textarea,
-  Text,
-  Slider,
-  Highlight,
-  Tooltip,
-  ActionIcon,
-} from "@mantine/core";
+import { Accordion, Button, Tabs, Textarea, Text, Slider } from "@mantine/core";
 import {
   Authenticated,
   HttpError,
@@ -39,9 +29,6 @@ import {
   IconStackBack,
   IconBuilding,
   IconListTree,
-  IconPin,
-  IconQuestionMark,
-  IconLetterQ,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -59,8 +46,6 @@ import { useSession } from "next-auth/react";
 import ResizeHandle from "@components/ResizeHandle";
 import SelectSession from "@components/SelectSession";
 import SearchInput from "@components/SearchInput";
-import Breadcrumbs from "@components/Breadcrumbs";
-import QuickActionsBar from "@components/QuickActionsBar";
 
 function InitializeApplication({
   activeApplicationId,
@@ -84,10 +69,11 @@ const Layout = ({
     activeLayout,
     setActiveApplication,
     activeSession,
-    activeTask,
-    activeSections,
-    setActiveSections,
+    activeApplication,
     sessionConfig,
+    activeRecord,
+    global_variables,
+    setGlobalVariables,
   } = useAppStore();
   const go = useGo();
   const parsed = useParsed();
@@ -105,19 +91,6 @@ const Layout = ({
   let domainRecord = domainData?.data?.find(
     (item: any) => item?.message?.code === "query_success_results"
   )?.data[0];
-
-  // handle toggleDisplay
-  const toggleSectionPinned = (e: any, section: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (activeSections) {
-      const newActiveSections = { ...activeSections };
-      // console.log("newLayout", newLayout);
-      newActiveSections[section].isPinned =
-        !newActiveSections[section]?.isPinned;
-      setActiveSections(newActiveSections);
-    }
-  };
 
   useEffect(() => {
     if (domainRecord?.["application"]) {
@@ -195,6 +168,52 @@ const Layout = ({
   return (
     <Authenticated key="home" redirectOnFail="/login">
       <AppLayout authenticatedData={authenticatedData}>
+        <SelectAction></SelectAction>
+
+        {/* {sessionConfig?.interaction_mode == "search" && (
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <Accordion
+              defaultValue={["natural_language_query", "search_results"]}
+              multiple={true}
+            >
+              <Accordion.Item
+                key="natural_language_query"
+                value="natural_language_query"
+              >
+                <Accordion.Control icon={<IconLanguage size={16} />}>
+                  Query
+                </Accordion.Control>
+                <Accordion.Panel>
+                  <ActionInputWrapper
+                    name="task"
+                    query_name="data_model"
+                  ></ActionInputWrapper>
+                </Accordion.Panel>
+              </Accordion.Item>
+
+              <Accordion.Item key="search_results" value="search_results">
+                <Accordion.Control icon={<IconSearch size={16} />}>
+                  Results
+                </Accordion.Control>
+                <Accordion.Panel>
+                  <Tabs defaultValue="basic" orientation="vertical">
+                    <Tabs.List>
+                      <Tabs.Tab value="basic">Basic</Tabs.Tab>
+                    </Tabs.List>
+
+                    <Tabs.Panel value="basic">
+                      <ActionSteps
+                        entity="action_steps"
+                        ui={{ rowExpansionTrigger: "always" }}
+                      />
+                    </Tabs.Panel>
+                  </Tabs>
+                </Accordion.Panel>
+              </Accordion.Item>
+            </Accordion>
+          </div>
+        )} */}
+
         {sessionConfig?.interaction_mode == "background" && (
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-12">
             <Accordion
@@ -216,7 +235,6 @@ const Layout = ({
                   <ActionInputWrapper
                     name="task"
                     query_name="data_model"
-                    record={activeTask}
                     exclude_components={["input_mode", "submit_button"]}
                     success_message_code="action_input_data_model_schema"
                     update_action_input_form_values_on_submit_success={true}
@@ -278,7 +296,6 @@ const Layout = ({
                         <ActionInputWrapper
                           name="session_config"
                           query_name="data_model"
-                          record={activeSession}
                           exclude_components={["input_mode", "submit_button"]}
                           success_message_code="session_action_input_data_model_schema"
                           update_action_input_form_values_on_submit_success={
@@ -297,6 +314,7 @@ const Layout = ({
             </Accordion>
           </div>
         )}
+
         {["interactive", "any"]?.includes(sessionConfig?.interaction_mode) && (
           <PanelGroup direction="horizontal">
             <Panel
@@ -315,10 +333,7 @@ const Layout = ({
                   height: "calc(100vh - 64px)",
                 }}
               >
-                <Accordion defaultValue={[]} multiple={true}>
-                  {" "}
-                  <div></div>
-                </Accordion>
+                <Accordion defaultValue={[]} multiple={true}></Accordion>
               </div>
             </Panel>
 
@@ -344,36 +359,14 @@ const Layout = ({
                     paddingBottom: "60px",
                   }}
                 >
-                  <Breadcrumbs />
                   <p className="text-sm text-gray-600 text-center max-w-sm">
-                    <Highlight color="violet" highlight="session">
-                      Please create a new session or get started from an
-                      existing one by selecting in the state window. Choose from
-                      sessions you have created or have access to.
-                    </Highlight>
+                    Please create a new session or get started from an existing
+                    one by selecting in the state window. Choose from sessions
+                    you have created or have access to.
                   </p>
                 </div>
               )}
-
-              {!activeTask && (
-                <div
-                  className="flex flex-col h-screen items-center justify-center p-4"
-                  style={{
-                    height: "calc(100vh - 64px)",
-                    paddingBottom: "60px",
-                  }}
-                >
-                  <Breadcrumbs />
-                  <p className="text-sm text-gray-600 text-center max-w-sm">
-                    <Highlight color="lime" highlight="task">
-                      Please create a new task or get started from an existing
-                      one by selecting in the state window. Choose from tasks
-                      you have created or have access to.
-                    </Highlight>
-                  </p>
-                </div>
-              )}
-              {activeSession && activeTask && (
+              {activeSession && (
                 <div
                   className="flex flex-col h-screen overflow-auto"
                   style={{
@@ -381,16 +374,6 @@ const Layout = ({
                     paddingBottom: "60px",
                   }}
                 >
-                  {/* <div className="flex justify-center items-center bg-gray-100 min-h-[20px] pb-3">
-                  <Breadcrumbs />
-                </div> */}
-                  {authenticatedData?.authenticated &&
-                    activeLayout?.quickActionsBar?.isDisplayed && (
-                      <div className="block lg:hidden p-2 bg-gray-100">
-                        <QuickActionsBar />
-                      </div>
-                    )}
-
                   {activeLayout?.searchInput?.isDisplayed && (
                     <div className="block lg:hidden p-2 bg-gray-100">
                       <SearchInput />
@@ -409,34 +392,14 @@ const Layout = ({
                       key="natural_language_query"
                       value="natural_language_query"
                     >
-                      <Accordion.Control icon={<IconLetterQ size={16} />}>
-                        <div className="flex justify-between pr-8">
-                          <div>Query</div>
-                          <div>
-                            <Tooltip label="pin query" position="top">
-                              <ActionIcon
-                                aria-label="pin"
-                                size="sm"
-                                onClick={(e) => toggleSectionPinned(e, "query")}
-                                // onClick={(e) => handleSubmit(e)}
-                                variant={
-                                  activeSections["query"].isPinned
-                                    ? "filled"
-                                    : "outline"
-                                }
-                              >
-                                <IconPin />
-                              </ActionIcon>
-                            </Tooltip>
-                          </div>
-                        </div>
+                      <Accordion.Control icon={<IconLanguage size={16} />}>
+                        Query
                       </Accordion.Control>
                       <Accordion.Panel>
                         <ActionInputWrapper
                           name="task"
                           query_name="data_model"
                           exclude_components={["input_mode", "submit_button"]}
-                          record={activeTask}
                           success_message_code="action_input_data_model_schema"
                           update_action_input_form_values_on_submit_success={
                             true
@@ -447,60 +410,60 @@ const Layout = ({
                             },
                           }}
                         >
-                          {/* <ActionInputWrapper
-                          name="task_config"
-                          query_name="data_model"
-                          success_message_code="action_input_data_model_schema"
-                          exclude_components={["input_mode", "submit_button"]}
-                        ></ActionInputWrapper> */}
+                          <ActionInputWrapper
+                            name="task_config"
+                            query_name="data_model"
+                            success_message_code="action_input_data_model_schema"
+                            exclude_components={["input_mode", "submit_button"]}
+                          ></ActionInputWrapper>
                         </ActionInputWrapper>
                       </Accordion.Panel>
                     </Accordion.Item>
 
-                    {/* <Accordion.Item key="task_input" value="task_input">
-                    <Accordion.Control icon={<IconForms size={16} />}>
-                      Task Input
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      <TaskInputWrapper
-                        name="task_input"
-                        exclude_components={["input_mode", "submit_button"]}
-                        success_message_code="task_input_data"
-                        description={
-                          <div className="flex items-center justify-center p-4">
-                            <p className="text-sm text-gray-600 text-center">
-                              Prompt for your input required to customize and
-                              successfully complete a task will appear here.
-                            </p>
-                          </div>
-                        }
-                      ></TaskInputWrapper>
-                    </Accordion.Panel>
-                  </Accordion.Item> */}
+                    <Accordion.Item key="task_input" value="task_input">
+                      <Accordion.Control icon={<IconForms size={16} />}>
+                        Task Input
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <TaskInputWrapper
+                          name="task_input"
+                          exclude_components={["input_mode", "submit_button"]}
+                          success_message_code="task_input_data"
+                          description={
+                            <div className="flex items-center justify-center p-4">
+                              <p className="text-sm text-gray-600 text-center">
+                                Prompt for your input required to customize and
+                                successfully complete a task will appear here.
+                              </p>
+                            </div>
+                          }
+                        ></TaskInputWrapper>
+                      </Accordion.Panel>
+                    </Accordion.Item>
 
-                    {/* <Accordion.Item key="action_plan" value="action_plan">
-                    <Accordion.Control icon={<IconListDetails size={16} />}>
-                      Action Plan
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      <ActionStepsWrapper
-                        entity="action_steps"
-                        ui={{ rowExpansionTrigger: "always" }}
-                        nested_item="action_steps"
-                        exclude_components={[
-                          "input_mode",
-                          "submit_button",
-                          "columns",
-                          "custom_views",
-                          "save",
-                          "live_updates",
-                          "follow_up",
-                          "execute_selected",
-                        ]}
-                        success_message_code="action_plan"
-                      />
-                    </Accordion.Panel>
-                  </Accordion.Item> */}
+                    <Accordion.Item key="action_plan" value="action_plan">
+                      <Accordion.Control icon={<IconListDetails size={16} />}>
+                        Action Plan
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <ActionStepsWrapper
+                          entity="action_steps"
+                          ui={{ rowExpansionTrigger: "always" }}
+                          nested_item="action_steps"
+                          exclude_components={[
+                            "input_mode",
+                            "submit_button",
+                            "columns",
+                            "custom_views",
+                            "save",
+                            "live_updates",
+                            "follow_up",
+                            "execute_selected",
+                          ]}
+                          success_message_code="action_plan"
+                        />
+                      </Accordion.Panel>
+                    </Accordion.Item>
                   </Accordion>
                 </div>
               )}
@@ -527,7 +490,7 @@ const Layout = ({
                 <Accordion defaultValue={["logs"]} multiple={true}>
                   <Accordion.Item key="state" value="state">
                     <Accordion.Control icon={<IconStackBack size={16} />}>
-                      State <Breadcrumbs />
+                      State
                       <Text component="span" fw={700}>
                         {activeSession?.internal_id}
                       </Text>

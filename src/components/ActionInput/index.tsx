@@ -446,6 +446,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   } / ${groupName}`}</Accordion.Control>
                   <Accordion.Panel>
                     {groupFields.map((key) => {
+                      // console.log(
+                      //   "schema.properties[key]",
+                      //   schema.properties[key]
+                      // );
                       const Component = getComponentByResourceType(
                         schema.properties[key]?.component as ComponentKey
                       );

@@ -1,10 +1,10 @@
-import {
-  mergeEdgeWithEntityValues,
-  useDataColumns,
-  useFetchSessionById,
-  useFetchViewById,
-  useFetchViewByName,
-} from "@components/Utils";
+// import {
+//   mergeEdgeWithEntityValues,
+//   useDataColumns,
+//   useFetchSessionById,
+//   useFetchViewById,
+//   useFetchViewByName,
+// } from "@components/Utils";
 // import {
 //   FieldConfiguration,
 //   IApplication,
@@ -12,14 +12,14 @@ import {
 //   IListItem,
 //   IView,
 // } from "@components/interfaces";
-import {
-  Accordion,
-  Button,
-  LoadingOverlay,
-  Modal,
-  Text,
-  TextInput,
-} from "@mantine/core";
+// import {
+//   Accordion,
+//   Button,
+//   LoadingOverlay,
+//   Modal,
+//   Text,
+//   TextInput,
+// } from "@mantine/core";
 import {
   HttpError,
   IResourceComponentsProps,
@@ -31,9 +31,9 @@ import {
 // import { Show } from "@refinedev/mantine";
 import React, { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
-import { useQueryClient } from "@tanstack/react-query";
-import ActionStepView from "@components/ActionStepView";
-import SelectAction from "@components/SelectAction";
+// import { useQueryClient } from "@tanstack/react-query";
+// import ActionStepView from "@components/ActionStepView";
+// import SelectAction from "@components/SelectAction";
 // import FloatingWindow from "@components/FloatingWindow";
 // import RetriveView from "@components/RetrieveView";
 // import config from "src/config";
@@ -53,11 +53,11 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
   // });
 
   // get session from params
-  const {
-    data: sessionData,
-    isLoading: sessionIsLoading,
-    error: sessionError,
-  } = useFetchSessionById(params?.id);
+  // const {
+  //   data: sessionData,
+  //   isLoading: sessionIsLoading,
+  //   error: sessionError,
+  // } = useFetchSessionById(params?.id);
 
   // // get default view by id
   // const {
@@ -184,6 +184,7 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
 
   return (
     <>
+      <div>session detail page</div>
       {/* <div>{JSON.stringify(data?.data[0]?.main_query["select"]["data"])}</div> */}
       {/* {JSON.stringify(defaultView)} */}
       {/* <FloatingWindow></FloatingWindow> */}
@@ -198,7 +199,7 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
           (item: any) => item?.message?.code === "query_success_results"
         ).data[0]
       )} */}
-      <Accordion defaultValue="main_query">
+      {/* <Accordion defaultValue="main_query">
         {sessionData?.data?.find(
           (item: any) => item?.message?.code === "query_success_results"
         ).data[0]?.action_steps &&
@@ -212,7 +213,7 @@ export const PageShow: React.FC<IResourceComponentsProps> = () => {
             .map((item: any) => {
               return <ActionStepView action_step={item} />;
             })}
-      </Accordion>
+      </Accordion> */}
 
       {/* <SelectAction></SelectAction> */}
       {/* only render for unique items, i.e no duplicates so i dont make multiple requests */}

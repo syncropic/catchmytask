@@ -39,12 +39,14 @@ const LargeScreenHeader = ({
       />
       {authenticatedData?.authenticated && <LayoutToggle />}
       {authenticatedData?.authenticated && (
-        <QuickActionsBar
-          name={activeApplication?.name}
-          heading={activeApplication?.heading}
-          subheading={activeApplication?.subheading}
-          description={activeApplication?.description}
-        />
+        <div className="hidden lg:block">
+          <QuickActionsBar
+            name={activeApplication?.name}
+            heading={activeApplication?.heading}
+            subheading={activeApplication?.subheading}
+            description={activeApplication?.description}
+          />
+        </div>
       )}
     </div>
     {authenticatedData?.authenticated && (

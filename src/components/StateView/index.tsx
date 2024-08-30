@@ -1,81 +1,99 @@
-import MonacoEditor from "@components/MonacoEditor";
-import Reveal from "@components/Reveal";
-import { extractIdentifier } from "@components/Utils";
+import { ActionIcon, Group, Tooltip } from "@mantine/core";
+import { IconX, IconPlus, IconTrash } from "@tabler/icons-react";
+import SearchInput from "@components/SearchInput";
+import { SearchInputComponentProps } from "@components/interfaces";
 import { useAppStore } from "src/store";
-import { Text } from "@mantine/core";
 
 export function StateView() {
   const {
-    activeSession,
-    activeAction,
-    activeRecord,
     activeApplication,
-    activeResultsSection,
+    setActiveSession,
+    activeSession,
+    activeTask,
+    setActiveTask,
+    activeActionStep,
+    setActiveActionStep,
   } = useAppStore();
-
+  // const navigateToSession = useSessionNavigation(); // Get the navigation function
+  // const handleOptionSubmit = (value: string) => {
+  //   // navigateToSession(value, autocompleteData); // Pass the actual sessions list
+  // };
   return (
     <>
-      {/* <div>make this an enhanced breadcrumb // window into the state</div> */}
-      {/* <div>state view</div> */}
-      {activeApplication?.name && (
-        <>
-          <div className="flex gap-1">
-            <Text fw={500}>activeApplication:</Text>{" "}
-            <Reveal
-              target={<Text>{activeApplication?.name}</Text>}
-              trigger="click"
-            >
-              <MonacoEditor value={activeApplication}></MonacoEditor>
-            </Reveal>
-          </div>
-        </>
-      )}
-      {activeSession?.name && (
-        <>
-          <div className="flex gap-1">
-            <Text fw={500}>activeSession:</Text>{" "}
-            <Reveal target={<Text>{activeSession?.name}</Text>} trigger="click">
-              <MonacoEditor value={activeSession}></MonacoEditor>
-            </Reveal>
-          </div>
-        </>
-      )}
-      {activeResultsSection?.name && (
-        <>
-          <div className="flex gap-1">
-            <Text fw={500}>activeResultsSection:</Text>{" "}
-            <Reveal
-              target={<Text>{activeResultsSection?.name}</Text>}
-              trigger="click"
-            >
-              <MonacoEditor value={activeResultsSection}></MonacoEditor>
-            </Reveal>
-          </div>
-        </>
-      )}
-      {activeAction?.name && (
-        <>
-          <div className="flex gap-1">
-            <Text fw={500}>activeAction:</Text>{" "}
-            <Reveal target={<Text>{activeAction?.name}</Text>} trigger="click">
-              <MonacoEditor value={activeAction}></MonacoEditor>
-            </Reveal>
-          </div>
-        </>
-      )}
-      {activeRecord && (
-        <div className="flex gap-1">
-          <Text fw={500}>activeRecord:</Text>{" "}
-          <Reveal
-            target={
-              <Text>{JSON.stringify(extractIdentifier(activeRecord))}</Text>
-            }
-            trigger="click"
-          >
-            <MonacoEditor value={activeRecord}></MonacoEditor>
-          </Reveal>
-        </div>
-      )}
+      <SearchInput
+        placeholder="Search for applications"
+        description="applications"
+        defaultValue={activeApplication?.name || ""}
+        disabled
+        activeFilters={[
+          {
+            id: 1,
+            name: "applications",
+            description: "applications",
+            is_selected: true,
+          },
+        ]}
+      />
+      <SearchInput
+        placeholder="Search for sessions"
+        description="sessions"
+        handleOptionSubmit={setActiveSession}
+        defaultValue={activeSession?.name || ""}
+        include_action_icons={["remove_from_state"]}
+        activeFilters={[
+          {
+            id: 1,
+            name: "sessions",
+            description: "sessions",
+            is_selected: true,
+          },
+        ]}
+      />
+      <SearchInput
+        placeholder="Search for tasks"
+        description="tasks"
+        handleOptionSubmit={setActiveTask}
+        defaultValue={activeTask?.name || ""}
+        include_action_icons={["remove_from_state"]}
+        activeFilters={[
+          {
+            id: 1,
+            name: "tasks",
+            description: "tasks",
+            is_selected: true,
+          },
+        ]}
+      />
+      <SearchInput
+        placeholder="Search for action steps"
+        description="action steps"
+        handleOptionSubmit={setActiveActionStep}
+        defaultValue={activeActionStep?.name || ""}
+        include_action_icons={["remove_from_state"]}
+        activeFilters={[
+          {
+            id: 1,
+            name: "action_steps",
+            description: "action steps",
+            is_selected: true,
+          },
+        ]}
+      />
+      <SearchInput
+        placeholder="Search for records"
+        description="records"
+        // handleOptionSubmit={setActiveActionStep}
+        // defaultValue={activeActionStep?.name}
+        include_action_icons={["remove_from_state"]}
+        activeFilters={[
+          {
+            id: 1,
+            name: "records",
+            description: "records",
+            is_selected: true,
+          },
+        ]}
+      />
     </>
   );
 }

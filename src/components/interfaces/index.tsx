@@ -77,7 +77,9 @@ export type ComponentKey =
   | "MonacoEditor"
   | "MonacoEditorFormInput"
   | "NaturalLanguageEditorFormInput"
-  | "DateTimePicker";
+  | "DateTimePicker"
+  | "Switch"
+  | "Checkbox";
 
 // export type IView = {
 //   resource_type: ComponentKey;
@@ -907,4 +909,16 @@ export interface FilterItem {
   name: string;
   description: string;
   is_selected: boolean;
+}
+
+export interface SearchInputComponentProps<T extends Record<string, any>> {
+  success_message_code?: string;
+  activeFilters?: FilterItem[];
+  placeholder?: string;
+  label?: string;
+  description?: string;
+  handleOptionSubmit?: (value: any | null) => void;
+  defaultValue?: string;
+  disabled?: boolean;
+  include_action_icons?: string[];
 }

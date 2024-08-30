@@ -68,11 +68,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     <div className="flex w-full items-center pl-4 pr-4 space-x-4">
       {activeLayout?.searchInput?.isDisplayed && (
         <div className="hidden lg:block w-full max-w-2xl">
-          <SearchInput
-            sessions_list={session_data_items || []}
-            record={activeSession}
-            view_item={null}
-          />
+          <SearchInput />
         </div>
       )}
     </div>

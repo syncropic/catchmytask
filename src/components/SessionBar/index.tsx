@@ -128,11 +128,7 @@ const SessionBar: React.FC<SessionBarProps> = ({
       </div>
       {activeLayout?.searchInput?.isDisplayed && (
         <div className="hidden lg:block w-full">
-          <SearchInput
-            sessions_list={session_data_items || []}
-            record={activeSession}
-            view_item={null}
-          />
+          <SearchInput />
         </div>
       )}
     </div>

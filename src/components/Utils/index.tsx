@@ -31,12 +31,14 @@ import {
   Text,
   ActionIcon,
   Input,
+  Switch,
 } from "@mantine/core";
 import { DateInput, DateTimePicker } from "@mantine/dates";
 import {
   HttpError,
   useCustom,
   useGetIdentity,
+  useGo,
   useList,
   useOne,
 } from "@refinedev/core";
@@ -55,7 +57,6 @@ import { MonacoEditorFormInput } from "@components/MonacoEditor";
 import FileHandler from "@components/FileHandler";
 import ExcalidrawEditor from "@components/ExcalidrawEditor";
 import { ColumnDef } from "@tanstack/react-table";
-import { Checkbox } from "@components/Checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,6 +106,7 @@ import React from "react";
 import { render } from "react-dom";
 import { NaturalLanguageEditorFormInput } from "@components/NaturalLanguageEditor";
 import AccordionList from "@components/List/AccordionList";
+import { Checkbox } from "@components/Checkbox";
 // import MediaPlayerController from "@components/MediaPlayerController";
 // import MediaPlayerTimeline from "@components/MediaPlayerTimeline";
 
@@ -641,6 +643,8 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   DateInput: DateInput,
   MultiSelect: MultiSelect,
   Select: Select,
+  Switch: Switch,
+  Checkbox: Checkbox,
   NumberInput: NumberInput,
   FileInput: FileInput,
   DateTimePicker: DateTimePicker,
@@ -2077,3 +2081,74 @@ export const useRuntimeConfig = () => {
 
   return config as any;
 };
+
+export function useSessionNavigation() {
+  const { setActiveSession, activeApplication } = useAppStore();
+  const go = useGo();
+
+  const navigateToSession = (
+    sessionId: string,
+    sessions: { id: string; name: string }[]
+  ) => {
+    const selectedSession = sessions.find(
+      (session) => session.id === sessionId
+    );
+
+    console.log(`Navigating to session: ${sessionId}`);
+    // console.log(`Selected session: ${selectedSession}`);
+    // console.log(sessions);
+
+    if (selectedSession) {
+      setActiveSession(selectedSession);
+      go({
+        to: {
+          resource: "sessions",
+          action: "show",
+          id: selectedSession.id,
+          meta: {
+            applicationId: activeApplication?.id,
+          },
+        },
+        type: "push",
+      });
+    }
+  };
+
+  return navigateToSession;
+}
+
+export function useNavigation() {
+  const { activeApplication } = useAppStore();
+  const go = useGo();
+
+  const navigate = (
+    record: any
+    // sessionId: string,
+    // sessions: { id: string; name: string }[]
+  ) => {
+    // const selectedSession = sessions.find(
+    //   (session) => session.id === sessionId
+    // );
+
+    // console.log(`Navigating to session: ${sessionId}`);
+    // console.log(`Selected session: ${selectedSession}`);
+    // console.log(sessions);
+
+    if (record?.entity_type === "tasks") {
+      // setActiveSession(selectedSession);
+      go({
+        to: {
+          resource: "sessions",
+          action: "show",
+          id: record.id,
+          meta: {
+            applicationId: activeApplication?.id,
+          },
+        },
+        type: "push",
+      });
+    }
+  };
+
+  return navigate;
+}

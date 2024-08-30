@@ -151,26 +151,27 @@ export const UserMenu = () => {
               </Menu.Item> */}
             </>
           )}
-          <Menu.Label>Profile</Menu.Label>
-          <Menu.Item
-            leftSection={<IconUserCircle size={14} />}
-            // onClick={() => list("profile")}
-          >
-            Switch
+          {/* <Menu.Label>Profile</Menu.Label> */}
+          <Menu.Item leftSection={<IconUserCircle size={14} />} disabled>
+            Switch Profile
           </Menu.Item>
-          <Menu.Item
+          {/* <Menu.Item
             leftSection={<IconPuzzle size={14} />}
-            // onClick={() => handleFloatingWindowMenuSelection("connections")}
           >
             Resources
-          </Menu.Item>
+          </Menu.Item> */}
 
-          <Menu.Label>Account</Menu.Label>
-          <Menu.Item
+          {/* <Menu.Label>Account</Menu.Label> */}
+          {/* <Menu.Item
             leftSection={<IconSettings size={14} />}
-            // onClick={() => list("profile")}
           >
             Settings
+          </Menu.Item> */}
+          <Menu.Item leftSection={<IconSettings size={14} />} disabled>
+            Manage Account
+          </Menu.Item>
+          <Menu.Item leftSection={<IconMail size={14} />} disabled>
+            Inbox
           </Menu.Item>
           <Menu.Item
             leftSection={<IconLogout size={14} />}

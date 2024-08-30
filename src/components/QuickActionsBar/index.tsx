@@ -1,29 +1,15 @@
 import React from "react";
 import { ActionIcon, Button, Checkbox, Tooltip } from "@mantine/core";
-import SelectSession from "@components/SelectSession";
-import { HttpError, useList } from "@refinedev/core";
-import { ISession } from "@components/interfaces";
 import { useAppStore } from "src/store";
-import {
-  IconCopy,
-  IconEdit,
-  IconFilter,
-  IconGripHorizontal,
-  IconLetterS,
-  IconPlus,
-  IconRun,
-  IconSearch,
-} from "@tabler/icons-react";
-import SearchInput from "@components/SearchInput";
+import { IconSearch } from "@tabler/icons-react";
 import { IconLetterB } from "@tabler/icons-react";
-import Reveal from "@components/Reveal";
 import FilterComponent from "@components/Filter";
 
 interface QuickActionsBarProps {
-  name: string;
-  heading: string;
-  subheading: string;
-  description: string;
+  name?: string;
+  heading?: string;
+  subheading?: string;
+  description?: string;
 }
 
 const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
@@ -32,23 +18,14 @@ const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
   subheading,
   description,
 }) => {
-  const {
-    activeSession,
-    activeApplication,
-    setActiveAction,
-    sessionConfig,
-    setSessionConfig,
-    activeLayout,
-    setActiveLayout,
-    searchFilters,
-    setSearchFilters,
-  } = useAppStore();
+  const { sessionConfig, setSessionConfig, activeLayout, setActiveLayout } =
+    useAppStore();
 
   // handle toggleDisplay
   const toggleDisplay = (section: string) => {
     if (activeLayout) {
       const newLayout = { ...activeLayout };
-      console.log("newLayout", newLayout);
+      // console.log("newLayout", newLayout);
       newLayout[section].isDisplayed = !newLayout[section]?.isDisplayed;
       setActiveLayout(newLayout);
     }
@@ -65,28 +42,6 @@ const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
       setSessionConfig(newSessionConfig);
     }
   };
-
-  const {
-    data,
-    isLoading: isLoadingReports,
-    isError: isErrorReports,
-  } = useList<ISession, HttpError>({
-    resource: "sessions",
-    filters: [
-      {
-        field: "session_status",
-        operator: "eq",
-        value: "published",
-      },
-      {
-        field: "application",
-        operator: "eq",
-        value: activeApplication?.id,
-      },
-    ],
-  });
-
-  const session_data_items = data?.data ?? [];
 
   return (
     <div className="flex w-full items-center pl-4 pr-4 space-x-4">
@@ -125,6 +80,9 @@ const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
         <div>
           <FilterComponent />
         </div>
+        {/* <div>
+          <Generate />
+        </div> */}
       </div>
       {/* {activeLayout?.searchInput?.isDisplayed && (
         <div className="hidden lg:block w-full">
