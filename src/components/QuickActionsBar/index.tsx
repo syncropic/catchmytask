@@ -1,5 +1,5 @@
 import React from "react";
-import { ActionIcon, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Checkbox, Tooltip } from "@mantine/core";
 import SelectSession from "@components/SelectSession";
 import { HttpError, useList } from "@refinedev/core";
 import { ISession } from "@components/interfaces";
@@ -7,6 +7,7 @@ import { useAppStore } from "src/store";
 import {
   IconCopy,
   IconEdit,
+  IconFilter,
   IconGripHorizontal,
   IconLetterS,
   IconPlus,
@@ -15,15 +16,17 @@ import {
 } from "@tabler/icons-react";
 import SearchInput from "@components/SearchInput";
 import { IconLetterB } from "@tabler/icons-react";
+import Reveal from "@components/Reveal";
+import FilterComponent from "@components/Filter";
 
-interface SessionBarProps {
+interface QuickActionsBarProps {
   name: string;
   heading: string;
   subheading: string;
   description: string;
 }
 
-const SessionBar: React.FC<SessionBarProps> = ({
+const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
   name,
   heading,
   subheading,
@@ -37,6 +40,8 @@ const SessionBar: React.FC<SessionBarProps> = ({
     setSessionConfig,
     activeLayout,
     setActiveLayout,
+    searchFilters,
+    setSearchFilters,
   } = useAppStore();
 
   // handle toggleDisplay
@@ -86,47 +91,42 @@ const SessionBar: React.FC<SessionBarProps> = ({
   return (
     <div className="flex w-full items-center pl-4 pr-4 space-x-4">
       <div className="flex items-center space-x-2">
-        <Tooltip label="Toggle background mode" position="top">
-          <ActionIcon
-            aria-label="Toggle background mode"
-            size="sm"
-            onClick={() => toggleSessionInteractionMode("background")}
-            variant={
-              sessionConfig.interaction_mode == "background"
-                ? "filled"
-                : "outline"
-            }
-          >
-            <IconLetterB />
-          </ActionIcon>
-        </Tooltip>
+        <div>
+          <Tooltip label="Toggle background mode" position="top">
+            <ActionIcon
+              aria-label="Toggle background mode"
+              size="sm"
+              onClick={() => toggleSessionInteractionMode("background")}
+              variant={
+                sessionConfig.interaction_mode == "background"
+                  ? "filled"
+                  : "outline"
+              }
+            >
+              <IconLetterB />
+            </ActionIcon>
+          </Tooltip>
+        </div>
 
-        {/* <Tooltip label="Toggle search mode" position="top">
-          <ActionIcon
-            aria-label="Toggle search mode"
-            size="sm"
-            onClick={() => toggleSessionInteractionMode("search")}
-            variant={
-              sessionConfig.interaction_mode == "search" ? "filled" : "outline"
-            }
-          >
-            <IconSearch />
-          </ActionIcon>
-        </Tooltip> */}
-        <Tooltip label="Toggle search" position="top">
-          <ActionIcon
-            aria-label="any"
-            size="sm"
-            onClick={() => toggleDisplay("searchInput")}
-            variant={
-              activeLayout?.searchInput?.isDisplayed ? "filled" : "outline"
-            }
-          >
-            <IconLetterS />
-          </ActionIcon>
-        </Tooltip>
+        <div>
+          <Tooltip label="Toggle search" position="top">
+            <ActionIcon
+              aria-label="any"
+              size="sm"
+              onClick={() => toggleDisplay("searchInput")}
+              variant={
+                activeLayout?.searchInput?.isDisplayed ? "filled" : "outline"
+              }
+            >
+              <IconSearch />
+            </ActionIcon>
+          </Tooltip>
+        </div>
+        <div>
+          <FilterComponent />
+        </div>
       </div>
-      {activeLayout?.searchInput?.isDisplayed && (
+      {/* {activeLayout?.searchInput?.isDisplayed && (
         <div className="hidden lg:block w-full">
           <SearchInput
             sessions_list={session_data_items || []}
@@ -134,9 +134,9 @@ const SessionBar: React.FC<SessionBarProps> = ({
             view_item={null}
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 };
 
-export default SessionBar;
+export default QuickActionsBar;

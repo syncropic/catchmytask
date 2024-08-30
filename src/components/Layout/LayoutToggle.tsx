@@ -26,52 +26,57 @@ export const LayoutToggle: React.FC<LayoutToggleAndSearchProps> = ({}) => {
   };
   return (
     <div className="flex items-center gap-4">
-      <Tooltip label="Toggle left pane" position="top">
-        <ActionIcon
-          // size="compact-xs"
-          size="sm"
-          variant={
-            activeLayout?.leftSection?.isDisplayed ? "filled" : "outline"
-          }
-          onClick={() => {
-            toggleDisplay("leftSection");
-          }}
-        >
-          {/* left */}
-          <IconLayoutSidebarLeftCollapseFilled />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Toggle center pane" position="top">
-        <ActionIcon
-          // size="compact-xs"
-          size="sm"
-          variant={
-            activeLayout?.centerSection?.isDisplayed ? "filled" : "outline"
-          }
-          onClick={() => {
-            toggleDisplay("centerSection");
-          }}
-        >
-          {/* center */}
-          <IconLayoutDistributeVertical />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Toggle right pane" position="top">
-        <ActionIcon
-          // size="compact-xs"
-          size="sm"
-          variant={
-            activeLayout?.rightSection?.isDisplayed ? "filled" : "outline"
-          }
-          onClick={() => {
-            toggleDisplay("rightSection");
-          }}
-        >
-          {/* right */}
-          <IconLayoutSidebarRightCollapseFilled />
-        </ActionIcon>
-      </Tooltip>
-      {/* <CustomSpotlight /> */}
+      <div>
+        <Tooltip label="Toggle left pane" position="top">
+          <ActionIcon
+            // size="compact-xs"
+            size="sm"
+            variant={
+              activeLayout?.leftSection?.isDisplayed ? "filled" : "outline"
+            }
+            onClick={() => {
+              toggleDisplay("leftSection");
+            }}
+          >
+            {/* left */}
+            <IconLayoutSidebarLeftCollapseFilled />
+          </ActionIcon>
+        </Tooltip>
+      </div>
+      <div>
+        <Tooltip label="Toggle center pane" position="top">
+          <ActionIcon
+            // size="compact-xs"
+            size="sm"
+            variant={
+              activeLayout?.centerSection?.isDisplayed ? "filled" : "outline"
+            }
+            onClick={() => {
+              toggleDisplay("centerSection");
+            }}
+          >
+            {/* center */}
+            <IconLayoutDistributeVertical />
+          </ActionIcon>
+        </Tooltip>
+      </div>
+      <div>
+        <Tooltip label="Toggle right pane" position="top">
+          <ActionIcon
+            // size="compact-xs"
+            size="sm"
+            variant={
+              activeLayout?.rightSection?.isDisplayed ? "filled" : "outline"
+            }
+            onClick={() => {
+              toggleDisplay("rightSection");
+            }}
+          >
+            {/* right */}
+            <IconLayoutSidebarRightCollapseFilled />
+          </ActionIcon>
+        </Tooltip>
+      </div>
     </div>
   );
 };

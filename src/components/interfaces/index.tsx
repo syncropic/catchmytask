@@ -891,3 +891,20 @@ export interface ContentBlockProps {
     };
   }[];
 }
+
+// Define the type for the option object
+export interface SearchItemOption {
+  value: string;
+  entity_type: string;
+  label: string;
+  description: string;
+  author_id: string;
+}
+
+// Define the type for the filter item
+export interface FilterItem {
+  id: number;
+  name: string;
+  description: string;
+  is_selected: boolean;
+}

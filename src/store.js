@@ -59,6 +59,9 @@ const useAppStore = create(
         searchSession: {
           isDisplayed: true,
         },
+        searchInput: {
+          isDisplayed: true,
+        },
       },
       setActiveLayout: (activeLayout) => set((state) => ({ activeLayout })),
       activeQuery: null,
@@ -214,6 +217,52 @@ const useAppStore = create(
         const data = await res.json();
         set({ runtimeConfig: data });
       },
+      searchFilters: [
+        {
+          id: 1,
+          name: "sessions",
+          description: "sessions",
+          is_selected: true,
+        },
+        {
+          id: 2,
+          name: "tasks",
+          description: "tasks",
+          is_selected: true,
+        },
+        {
+          id: 3,
+          name: "services",
+          description: "services",
+          is_selected: true,
+        },
+        {
+          id: 4,
+          name: "action steps",
+          description: "action steps",
+          is_selected: true,
+        },
+        {
+          id: 5,
+          name: "executable steps",
+          description: "executable steps",
+          is_selected: true,
+        },
+        {
+          id: 6,
+          name: "templates",
+          description: "templates",
+          is_selected: true,
+        },
+        {
+          id: 7,
+          name: "data models",
+          description: "data models",
+          is_selected: true,
+        },
+      ],
+      setSearchFilters: (filters) =>
+        set((state) => ({ ...state, searchFilters: filters })),
     }),
     {
       name: "catchmytask-store",

@@ -1,25 +1,29 @@
 import { Group, HoverCard, Popover, Text } from "@mantine/core";
+import { ReactNode } from "react";
 
-function Reveal({
-  target,
-  children,
-  trigger,
-}: {
-  target: any;
-  children: any;
+interface RevealProps {
+  target: ReactNode;
+  children: ReactNode;
   trigger: "hover" | "click";
-}) {
+}
+
+function Reveal({ target, children, trigger }: RevealProps) {
   const TriggerComponent = trigger === "hover" ? HoverCard : Popover;
 
   return (
-    <Group>
-      <TriggerComponent width={600} shadow="md" withinPortal={true}>
-        <TriggerComponent.Target>
-          <Text>{target}</Text>
-        </TriggerComponent.Target>
+    <div>
+      <TriggerComponent
+        classNames={{
+          dropdown:
+            "w-full max-w-full sm:min-w-[300px] sm:max-w-[400px] md:min-w-[400px] md:max-w-[500px] lg:min-w-[500px] lg:max-w-[600px]",
+        }}
+        shadow="md"
+        withinPortal={true}
+      >
+        <TriggerComponent.Target>{target}</TriggerComponent.Target>
         <TriggerComponent.Dropdown>{children}</TriggerComponent.Dropdown>
       </TriggerComponent>
-    </Group>
+    </div>
   );
 }
 

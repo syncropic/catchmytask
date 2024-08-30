@@ -42,6 +42,7 @@ import TaskInputWrapper from "@components/TaskInput";
 import { useSession } from "next-auth/react";
 import ResizeHandle from "@components/ResizeHandle";
 import SelectSession from "@components/SelectSession";
+import SearchInput from "@components/SearchInput";
 
 function InitializeApplication({
   activeApplicationId,
@@ -350,9 +351,9 @@ const Layout = ({
                   paddingBottom: "60px",
                 }}
               >
-                {activeLayout?.searchSession?.isDisplayed && (
-                  <div className="block lg:hidden">
-                    <SelectSession
+                {activeLayout?.searchInput?.isDisplayed && (
+                  <div className="block lg:hidden p-2 bg-gray-100">
+                    <SearchInput
                       sessions_list={session_data_items || []}
                       record={activeSession}
                       view_item={null}
