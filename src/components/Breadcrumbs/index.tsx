@@ -41,7 +41,7 @@ function Breadcrumbs() {
   ));
 
   return (
-    <div className="flex flex-wrap items-start bg-gray-100 py-2">
+    <div className="flex flex-wrap items-start py-2">
       <MantineBreadcrumbs
         separator="→"
         separatorMargin="md"

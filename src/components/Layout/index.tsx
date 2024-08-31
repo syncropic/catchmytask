@@ -42,6 +42,7 @@ import {
   IconPin,
   IconQuestionMark,
   IconLetterQ,
+  IconCircleMinus,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -61,6 +62,7 @@ import SelectSession from "@components/SelectSession";
 import SearchInput from "@components/SearchInput";
 import Breadcrumbs from "@components/Breadcrumbs";
 import QuickActionsBar from "@components/QuickActionsBar";
+import ComponentsToolbar from "@components/ComponentsToolbar";
 
 function InitializeApplication({
   activeApplicationId,
@@ -197,6 +199,17 @@ const Layout = ({
       <AppLayout authenticatedData={authenticatedData}>
         {sessionConfig?.interaction_mode == "background" && (
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+            {authenticatedData?.authenticated &&
+              activeLayout?.quickActionsBar?.isDisplayed && (
+                <>
+                  <div className="block lg:hidden p-2 bg-gray-100">
+                    <QuickActionsBar />
+                  </div>
+                  <div className="block lg:hidden p-2 bg-gray-100">
+                    <SearchInput />
+                  </div>
+                </>
+              )}
             <Accordion
               defaultValue={[
                 "natural_language_query",
@@ -317,7 +330,12 @@ const Layout = ({
               >
                 <Accordion defaultValue={[]} multiple={true}>
                   {" "}
-                  <div></div>
+                  <div className="flex items-center justify-center p-4">
+                    <p className="text-sm text-gray-600 text-center">
+                      Personalize your interface by including and configuring
+                      prebuilt and custom components
+                    </p>
+                  </div>
                 </Accordion>
               </div>
             </Panel>
@@ -386,16 +404,21 @@ const Layout = ({
                 </div> */}
                   {authenticatedData?.authenticated &&
                     activeLayout?.quickActionsBar?.isDisplayed && (
-                      <div className="block lg:hidden p-2 bg-gray-100">
-                        <QuickActionsBar />
-                      </div>
+                      <>
+                        <div className="block lg:hidden p-2 bg-gray-100">
+                          <QuickActionsBar />
+                        </div>
+                        <div className="block lg:hidden p-2 bg-gray-100">
+                          <SearchInput />
+                        </div>
+                      </>
                     )}
 
-                  {activeLayout?.searchInput?.isDisplayed && (
+                  {/* {activeLayout?.searchInput?.isDisplayed && (
                     <div className="block lg:hidden p-2 bg-gray-100">
                       <SearchInput />
                     </div>
-                  )}
+                  )} */}
 
                   <Accordion
                     defaultValue={[
@@ -410,25 +433,28 @@ const Layout = ({
                       value="natural_language_query"
                     >
                       <Accordion.Control icon={<IconLetterQ size={16} />}>
-                        <div className="flex justify-between pr-8">
+                        <div className="flex justify-between items-center pr-8">
                           <div>Query</div>
-                          <div>
-                            <Tooltip label="pin query" position="top">
-                              <ActionIcon
-                                aria-label="pin"
-                                size="sm"
-                                onClick={(e) => toggleSectionPinned(e, "query")}
-                                // onClick={(e) => handleSubmit(e)}
-                                variant={
-                                  activeSections["query"].isPinned
-                                    ? "filled"
-                                    : "outline"
-                                }
-                              >
-                                <IconPin />
-                              </ActionIcon>
-                            </Tooltip>
-                          </div>
+
+                          <ComponentsToolbar
+                            include_components={[
+                              {
+                                action: "pin",
+                                entity_type: "query",
+                                onClick: toggleSectionPinned,
+                              },
+                              {
+                                action: "remove",
+                                entity_type: "query",
+                                onClick: () => {},
+                              },
+                              {
+                                action: "configure",
+                                entity_type: "query",
+                                onClick: () => {},
+                              },
+                            ]}
+                          ></ComponentsToolbar>
                         </div>
                       </Accordion.Control>
                       <Accordion.Panel>
@@ -458,49 +484,71 @@ const Layout = ({
                     </Accordion.Item>
 
                     {/* <Accordion.Item key="task_input" value="task_input">
-                    <Accordion.Control icon={<IconForms size={16} />}>
-                      Task Input
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      <TaskInputWrapper
-                        name="task_input"
-                        exclude_components={["input_mode", "submit_button"]}
-                        success_message_code="task_input_data"
-                        description={
-                          <div className="flex items-center justify-center p-4">
-                            <p className="text-sm text-gray-600 text-center">
-                              Prompt for your input required to customize and
-                              successfully complete a task will appear here.
-                            </p>
-                          </div>
-                        }
-                      ></TaskInputWrapper>
-                    </Accordion.Panel>
-                  </Accordion.Item> */}
+                      <Accordion.Control icon={<IconForms size={16} />}>
+                        Task Input
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <TaskInputWrapper
+                          name="task_input"
+                          exclude_components={["input_mode", "submit_button"]}
+                          success_message_code="task_input_data"
+                          description={
+                            <div className="flex items-center justify-center p-4">
+                              <p className="text-sm text-gray-600 text-center">
+                                Prompt for your input required to customize and
+                                successfully complete a task will appear here.
+                              </p>
+                            </div>
+                          }
+                        ></TaskInputWrapper>
+                      </Accordion.Panel>
+                    </Accordion.Item> */}
 
-                    {/* <Accordion.Item key="action_plan" value="action_plan">
-                    <Accordion.Control icon={<IconListDetails size={16} />}>
-                      Action Plan
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      <ActionStepsWrapper
-                        entity="action_steps"
-                        ui={{ rowExpansionTrigger: "always" }}
-                        nested_item="action_steps"
-                        exclude_components={[
-                          "input_mode",
-                          "submit_button",
-                          "columns",
-                          "custom_views",
-                          "save",
-                          "live_updates",
-                          "follow_up",
-                          "execute_selected",
-                        ]}
-                        success_message_code="action_plan"
-                      />
-                    </Accordion.Panel>
-                  </Accordion.Item> */}
+                    <Accordion.Item key="action_plan" value="action_plan">
+                      <Accordion.Control icon={<IconListDetails size={16} />}>
+                        <div className="flex justify-between items-center pr-8">
+                          <div>Action Plan</div>
+                          <ComponentsToolbar
+                            include_components={[
+                              {
+                                action: "pin",
+                                entity_type: "action_plan",
+                                onClick: toggleSectionPinned,
+                              },
+                              {
+                                action: "remove",
+                                entity_type: "action_plan",
+                                onClick: () => {},
+                              },
+                              {
+                                action: "configure",
+                                entity_type: "action_plan",
+                                onClick: () => {},
+                              },
+                            ]}
+                          ></ComponentsToolbar>
+                        </div>
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <ActionStepsWrapper
+                          entity="action_steps"
+                          record={activeTask}
+                          ui={{ rowExpansionTrigger: "always" }}
+                          nested_item="action_steps"
+                          exclude_components={[
+                            "input_mode",
+                            "submit_button",
+                            "columns",
+                            "custom_views",
+                            "save",
+                            "live_updates",
+                            "follow_up",
+                            "execute_selected",
+                          ]}
+                          success_message_code="action_plan"
+                        />
+                      </Accordion.Panel>
+                    </Accordion.Item>
                   </Accordion>
                 </div>
               )}

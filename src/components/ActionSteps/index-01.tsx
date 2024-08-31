@@ -1,8 +1,5 @@
 import { Text } from "@mantine/core";
 import {
-  useFetchActionPlanDataByState,
-  useFetchActionStepDataByState,
-  useFetchGenerativeComponentDataByStateAndModel,
   useFetchQueryDataByState,
   useFetchRecommendationDataByState,
 } from "@components/Utils";
@@ -36,10 +33,15 @@ export const ActionStepsWrapper = ({
   invalidate_queries_on_submit_success,
 }: // types,
 ActionStepsProps) => {
+  // const {
+  //   action_input_form_values,
+  //   activeAction,
+  //   activeApplication,
+  //   activeSession,
+  // } = useAppStore();
   let state = {
-    query_name: "action plan",
+    query_name: "action_plan_data",
     success_message_code: success_message_code,
-    task_id: record?.id,
     // name: name,
     // action_type: action_type,
     // entity: entity,
@@ -102,7 +104,6 @@ ActionStepsProps) => {
   //   isLoading: actionStepDataIsLoading,
   //   error: actionStepDataError,
   // } = useFetchActionStepDataByState(state);
-
   const { data, isLoading, error } = useFetchQueryDataByState(state);
   if (isLoading) {
     return <div>Loading...</div>;
@@ -130,8 +131,8 @@ ActionStepsProps) => {
       {/* <div>{JSON.stringify(nested_item)}</div> */}
       {data && (
         <>
-          {/* <div>{JSON.stringify(data)}</div> */}
-          <DataDisplay
+          <div>{JSON.stringify(data)}</div>
+          {/* <DataDisplay
             data_items={
               data?.data?.find(
                 (item: any) => item?.message?.code === success_message_code
@@ -145,7 +146,9 @@ ActionStepsProps) => {
               ).map((item: any) => ({
                 name: item?.name,
                 accessor: item?.name,
-              })) || []
+              })) ||
+              data_fields ||
+              []
             }
             read_write_mode={read_write_mode}
             isLoadingDataItems={isLoading}
@@ -155,7 +158,7 @@ ActionStepsProps) => {
             invalidate_queries_on_submit_success={
               invalidate_queries_on_submit_success
             }
-          ></DataDisplay>
+          ></DataDisplay> */}
         </>
       )}
     </>

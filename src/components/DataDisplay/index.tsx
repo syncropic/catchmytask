@@ -240,38 +240,50 @@ export function DataDisplay<T extends Record<string, any>>({
             {/* Row 1: Debounced Input */}
             {/* display this if global_search string is not in execlude_components list */}
             {execlude_components?.includes("global_search") ? null : (
-              <div className={`w-full ${isLarge ? "lg:w-auto" : "mb-4"}`}>
+              <div
+                className={`flex gap-2 items-center w-full ${
+                  isLarge ? "lg:w-auto" : "mb-4"
+                }`}
+              >
                 <DebouncedInput
                   value={globalFilter ?? ""}
                   onChange={(value) => setGlobalFilter(String(value))}
                   className="w-full p-2 font-lg shadow border border-block"
                   placeholder="Search all fields..."
                 />
-              </div>
-            )}
-          </div>
-          <div className="flex gap-3 items-center">
-            {execlude_components?.includes("execute_all") ? null : (
-              <div className={`w-full ${isLarge ? "lg:w-auto" : "mb-4"}`}>
-                {/* <Tooltip label={"Execute all action steps"}>
-                  <Button variant="outline" size="compact-xs">
-                    Execute All
-                  </Button>
-                </Tooltip> */}
                 <Tooltip label="execute all" position="left">
                   <ActionIcon
-                    size="sm"
+                    // size="sm"
                     variant="subtle"
                     color="green"
                     // onClick={(e) => handleSubmit(e)}
                     // disabled={!canSubmit}
                     // loading={mutationIsLoading || isSubmitting}
                   >
-                    <IconPlayerPlay size={16} />
+                    <IconPlayerPlay />
                   </ActionIcon>
                 </Tooltip>{" "}
               </div>
             )}
+          </div>
+          <div className="flex gap-3 items-center">
+            {/* {execlude_components?.includes("execute_all") ? null : (
+              <div className={`w-full ${isLarge ? "lg:w-auto" : "mb-4"}`}>
+                
+                <Tooltip label="execute all" position="left">
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="green"
+                    onClick={(e) => handleSubmit(e)}
+                    disabled={!canSubmit}
+                    loading={mutationIsLoading || isSubmitting}
+                  >
+                    <IconPlayerPlay size={16} />
+                  </ActionIcon>
+                </Tooltip>{" "}
+              </div>
+            )} */}
             {execlude_components?.includes("execute_selected") ? null : (
               <div className={`w-full ${isLarge ? "lg:w-auto" : "mb-4"}`}>
                 <Tooltip label={"Execute selected action steps"}>
@@ -469,12 +481,12 @@ export function DataDisplay<T extends Record<string, any>>({
                   </div>
                 )}
 
-                {execlude_components?.includes("view_as") ? null : (
+                {/* {execlude_components?.includes("view_as") ? null : (
                   <SelectViewAs
                     viewAsValue={viewAsvalue}
                     setViewAsValue={setViewAsValue}
                   ></SelectViewAs>
-                )}
+                )} */}
               </div>
             )}
           </div>

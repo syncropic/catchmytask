@@ -2058,8 +2058,10 @@ export function DebouncedInput({
   }, [value]);
 
   return (
-    <input
-      {...props}
+    <TextInput
+      size="sm"
+      // {...props}
+      placeholder={props?.placeholder}
       value={value}
       onChange={(e) => setValue(e.target.value)}
     />
