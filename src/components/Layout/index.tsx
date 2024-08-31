@@ -493,17 +493,17 @@ const Layout = ({
                             include_components={[
                               {
                                 action: "pin",
-                                entity_type: "query",
+                                entity_type: "action_input",
                                 onClick: toggleSectionPinned,
                               },
                               {
                                 action: "remove",
-                                entity_type: "query",
+                                entity_type: "action_input",
                                 onClick: () => {},
                               },
                               {
                                 action: "configure",
-                                entity_type: "query",
+                                entity_type: "action_input",
                                 onClick: () => {},
                               },
                             ]}

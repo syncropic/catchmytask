@@ -71,6 +71,9 @@ const useAppStore = create(
         query: {
           isPinned: true,
         },
+        action_input: {
+          isPinned: true,
+        },
         action_plan: {
           isPinned: false,
         },

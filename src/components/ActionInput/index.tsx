@@ -123,6 +123,7 @@ interface DynamicFormProps {
   setExpandedRecordIds?: (ids: string[]) => void;
   invalidate_queries_on_submit_success?: string[];
   update_action_input_form_values_on_submit_success?: boolean;
+  success_message_code?: string;
 }
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
@@ -148,6 +149,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   action_steps,
   invalidate_queries_on_submit_success,
   update_action_input_form_values_on_submit_success = false,
+  success_message_code = "query_success_results",
 }) => {
   const [inputAsvalue, setInputAsValue] = useState("");
   const queryClient = useQueryClient();
@@ -206,8 +208,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           // url: `${config.API_URL}/catch-${
           //   data_model?.name === "action_step_any" ? "any" : "action"
           // }`,
-          url: `${config.API_URL}/catch-${
-            name === "task" ? "task" : "action-step"
+          url: `${config.API_URL}/${
+            name === "task" ? "plan" : "catch-action-step"
           }`,
           method: "post",
           // values: generateRequestData(values),
@@ -244,7 +246,9 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 job: value?.description || "generic job",
                 method: value?.method || "select",
                 type: value?.type || "action_steps",
-                credential: value?.credential || "surrealdb_catchmytask",
+                credential: value?.credential || "surrealdb catchmytask dev",
+                success_message_code:
+                  success_message_code || "query_success_results",
               },
             ],
           },
