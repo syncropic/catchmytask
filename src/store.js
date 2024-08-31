@@ -94,8 +94,8 @@ const useAppStore = create(
       // activeStructuredQuery: null,
       // setActiveStructuredQuery: (activeStructuredQuery) =>
       //   set((state) => ({ activeStructuredQuery })),
-      // activeRecord: null,
-      // setActiveRecord: (activeRecord) => set((state) => ({ activeRecord })),
+      activeRecord: null,
+      setActiveRecord: (activeRecord) => set((state) => ({ activeRecord })),
       // activeActionOption: null,
       // setActiveActionOption: (activeActionOption) =>
       //   set((state) => ({ activeActionOption })),

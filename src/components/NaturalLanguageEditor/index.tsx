@@ -203,14 +203,14 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
     // },
   ];
 
-  let bottom_actions = [
-    {
-      label: "Camera",
-      name: "select_template",
-      icon: "IconCamera",
-      disabled: true,
-    },
-  ];
+  // let bottom_actions = [
+  //   {
+  //     label: "Camera",
+  //     name: "select_template",
+  //     icon: "IconCamera",
+  //     disabled: true,
+  //   },
+  // ];
 
   const iconMapping: { [key: string]: JSX.Element } = {
     IconScribble: <IconScribble stroke={1.5} size="1rem" />,

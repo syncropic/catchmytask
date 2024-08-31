@@ -1920,7 +1920,7 @@ export function useTableColumns({
       field_configurations?.map((item) => {
         return {
           id: `${table_id}-${item?.name}`,
-          accessorKey: item?.accessor_key || item?.name, // Assuming each FieldConfiguration has a 'name' property
+          accessor: item?.accessor_key || item?.name, // Assuming each FieldConfiguration has a 'name' property
           header: item?.name, // Assuming each FieldConfiguration has a 'name' property
           cell: (row: RowData) => (
             <div dangerouslySetInnerHTML={{ __html: row[item?.name] }} />
@@ -1939,7 +1939,7 @@ export function useTableColumns({
 export const RetrieveFieldData = ({ field }: { field: FieldConfiguration }) => {
   // const queryClient = useQueryClient();
   // const fieldData = queryClient.getQueryData<FieldData>([field]) || {};
-  console.log("field", field);
+  // console.log("field", field);
   const { activeField } = useAppStore();
   const { runtimeConfig: config } = useAppStore();
 

@@ -2,16 +2,21 @@ import { ResultsComponentProps } from "@components/interfaces";
 import { useViewportSize } from "@mantine/hooks";
 import { flexRender } from "@tanstack/react-table";
 import { Table as TanStackTable, ColumnDef } from "@tanstack/react-table";
-import { DataTable, DataTableColumn } from "mantine-datatable";
+import {
+  DataTable,
+  DataTableColumn,
+  DataTableSortStatus,
+} from "mantine-datatable";
 import { useEffect, useState } from "react";
 import { getColumnIdWithoutResourceGroup } from "src/utils";
 import { Column } from "@tanstack/react-table";
 import React from "react";
 import { DebouncedInput } from "@components/Utils";
-import ActionStepEditor from "@components/ActionStepEditor";
 import { ActionIcon, Box, Group, Tooltip } from "@mantine/core";
 import { useAppStore } from "src/store";
 import RecordActionsWrapper from "@components/RecordActions";
+import { sortBy } from "lodash";
+import ActionStepEditor from "@components/ActionStepEditor";
 
 const PAGE_SIZES = [10, 15, 20];
 
@@ -29,13 +34,31 @@ export function TableView<T extends Record<string, any>>({
   let columns_to_filter_out = ["select", "actions", "details"];
 
   const [expandedRecordIds, setExpandedRecordIds] = useState<string[]>([]);
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<T>>({
+    columnAccessor: "execution_order",
+    direction: "asc",
+  });
+  const [records, setRecords] = useState(
+    sortBy(
+      tableInstance?.getFilteredRowModel().rows?.map((row) => row.original),
+      "execution_order"
+    ) as T[]
+  );
+
+  useEffect(() => {
+    const data = sortBy(
+      tableInstance?.getFilteredRowModel().rows?.map((row) => row.original),
+      sortStatus.columnAccessor
+    ) as T[];
+    setRecords(sortStatus.direction === "desc" ? data.reverse() : data);
+  }, [sortStatus]);
 
   return (
     <>
       <DataTable<T>
-        page={1}
-        onPageChange={(page) => console.log(page)}
-        recordsPerPage={10}
+        // page={1}
+        // onPageChange={(page) => console.log(page)}
+        // recordsPerPage={10}
         columns={[
           ...(tableInstance
             ?.getVisibleFlatColumns()
@@ -44,7 +67,18 @@ export function TableView<T extends Record<string, any>>({
                 id: column.id,
                 accessor: column.columnDef.header,
                 render: column.columnDef.cell,
-                sortable: column.getCanSort(),
+                // sortable: column.getCanSort(),
+                // width: 20,
+                sortable: true,
+                // thProps: { style: { maxWidth: 20 } },
+                // tdProps: {
+                //   style: {
+                //     maxWidth: 20,
+                //     overflow: "hidden",
+                //     textOverflow: "ellipsis",
+                //     whiteSpace: "nowrap",
+                //   },
+                // },
                 filter: (
                   <>
                     {column.getCanFilter() ? (
@@ -63,6 +97,8 @@ export function TableView<T extends Record<string, any>>({
             accessor: "actions",
             title: <Box mr={6}>actions</Box>,
             textAlign: "right",
+            // width: "0%", // 👈 set width to 0%
+            width: 60,
             render: (record: T) => (
               <RecordActionsWrapper
                 record={record}
@@ -77,24 +113,22 @@ export function TableView<T extends Record<string, any>>({
             ),
           },
         ]}
-        records={
-          (tableInstance
-            ?.getFilteredRowModel()
-            .rows?.map((row) => row.original) as T[]) || []
-        }
+        records={records}
+        sortStatus={sortStatus}
+        onSortStatusChange={setSortStatus}
         highlightOnHover={true}
         withColumnBorders={true}
         pinFirstColumn={true}
-        pinLastColumn={true}
+        // pinLastColumn={true}
         striped={true}
-        totalRecords={data_items.length}
+        // totalRecords={data_items.length}
         fz="xs"
         selectedRecords={selectedRecords}
         onSelectedRecordsChange={setSelectedRecords}
-        defaultColumnRender={(row, _, accessor) => {
-          const data = row[accessor as keyof typeof row];
-          return typeof data === "string" ? data : JSON.stringify(data);
-        }}
+        // defaultColumnRender={(row, _, accessor) => {
+        //   const data = row[accessor as keyof typeof row];
+        //   return typeof data === "string" ? data : JSON.stringify(data);
+        // }}
         onRowClick={({ record, index, event }) => {
           setActiveRecord(record);
           if (resource_group === "action_steps") {
@@ -116,9 +150,10 @@ export function TableView<T extends Record<string, any>>({
                 invalidate_queries_on_submit_success
               }
             ></ActionStepEditor>
+            // <div>{JSON.stringify(record)}</div>
           ),
         }}
-        withTableBorder={true}
+        // withTableBorder={true}
       />
     </>
   );

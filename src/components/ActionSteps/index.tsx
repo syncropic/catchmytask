@@ -117,12 +117,14 @@ ActionStepsProps) => {
   // ) {
   //   return null;
   // }
-  // let data_fields = [
-  //   {
-  //     name: "id",
-  //     accessor: "id",
-  //   },
-  // ];
+  let data_fields = [
+    {
+      name: "description",
+    },
+    {
+      name: "execution_order",
+    },
+  ];
 
   return (
     <>
@@ -137,16 +139,17 @@ ActionStepsProps) => {
                 (item: any) => item?.message?.code === success_message_code
               )?.data || []
             }
-            data_fields={
-              (
-                data?.data?.find(
-                  (item: any) => item?.message?.code === success_message_code
-                )?.data_fields || []
-              ).map((item: any) => ({
-                name: item?.name,
-                accessor: item?.name,
-              })) || []
-            }
+            // data_fields={
+            //   (
+            //     data?.data?.find(
+            //       (item: any) => item?.message?.code === success_message_code
+            //     )?.data_fields || []
+            //   ).map((item: any) => ({
+            //     name: item?.name,
+            //     accessor: item?.name,
+            //   })) || []
+            // }
+            data_fields={data_fields}
             read_write_mode={read_write_mode}
             isLoadingDataItems={isLoading}
             resource_group={success_message_code}

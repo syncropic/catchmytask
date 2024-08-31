@@ -13,7 +13,13 @@ import defaultApiDataProvider from "../src/default-api-provider";
 import { Avatar, createTheme, MantineProvider } from "@mantine/core";
 // import config from "src/config";
 // core styles are required for all packages
-import "@mantine/core/styles.css";
+// import "@mantine/core/styles.css";
+// 👇 Import the mantine-core layer CSS file;
+//    this will automatically place it in a `mantine` layer
+import "@mantine/core/styles.layer.css";
+// 👇 Import the mantine-datatable layer CSS file;
+//    this will automatically place it in a `mantine-datatable` layer
+import "mantine-datatable/styles.layer.css";
 import "@mantine/tiptap/styles.css";
 // other css files are required only if
 // you are using components from the corresponding package
@@ -23,7 +29,7 @@ import "@mantine/dates/styles.css";
 // import '@mantine/dropzone/styles.css';
 // import '@mantine/code-highlight/styles.css';
 // import "@mantine/core/styles.layer.css";
-import "mantine-datatable/styles.layer.css";
+// import "mantine-datatable/styles.layer.css";
 import "../styles/globals.css";
 // import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
