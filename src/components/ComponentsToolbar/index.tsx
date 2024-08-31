@@ -1,6 +1,11 @@
 import React from "react";
-import { ActionIcon, Tooltip } from "@mantine/core";
-import { IconCircleMinus, IconPin, IconSettings } from "@tabler/icons-react";
+import { ActionIcon, Indicator, Tooltip } from "@mantine/core";
+import {
+  IconCircleMinus,
+  IconPin,
+  IconSettingsAutomation,
+  IconTool,
+} from "@tabler/icons-react";
 import { useAppStore } from "src/store";
 
 interface ComponentsToolbarProps {
@@ -20,7 +25,8 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
   const iconMap: Record<string, React.ElementType> = {
     pin: IconPin,
     remove: IconCircleMinus,
-    configure: IconSettings,
+    configure: IconTool,
+    automate: IconSettingsAutomation,
   };
 
   return (
@@ -29,9 +35,9 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
         // Get the appropriate icon component
         const IconComponent = iconMap[component?.action];
 
-        return (
+        const ActionContent = (
           <Tooltip
-            key={component?.entity_type} // Ensure each component has a unique key
+            key={component?.entity_type}
             label={`${component?.action} ${component?.entity_type} component`}
             position="top"
           >
@@ -50,6 +56,14 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
               {/* Render the icon */}
             </ActionIcon>
           </Tooltip>
+        );
+
+        return component?.action === "automate" ? (
+          <Indicator inline label="on" size={16} color="blue">
+            {ActionContent}
+          </Indicator>
+        ) : (
+          ActionContent
         );
       })}
     </div>

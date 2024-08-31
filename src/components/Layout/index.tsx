@@ -63,6 +63,7 @@ import SearchInput from "@components/SearchInput";
 import Breadcrumbs from "@components/Breadcrumbs";
 import QuickActionsBar from "@components/QuickActionsBar";
 import ComponentsToolbar from "@components/ComponentsToolbar";
+import Automation from "@components/Automation";
 
 function InitializeApplication({
   activeApplicationId,
@@ -332,8 +333,8 @@ const Layout = ({
                   {" "}
                   <div className="flex items-center justify-center p-4">
                     <p className="text-sm text-gray-600 text-center">
-                      Personalize your interface by including and configuring
-                      prebuilt and custom components
+                      Personalize your interface further by including and
+                      configuring prebuilt and/or custom built components here.
                     </p>
                   </div>
                 </Accordion>
@@ -424,7 +425,7 @@ const Layout = ({
                     defaultValue={[
                       "natural_language_query",
                       "action_plan",
-                      "task_input",
+                      "action_input",
                     ]}
                     multiple={true}
                   >
@@ -483,31 +484,61 @@ const Layout = ({
                       </Accordion.Panel>
                     </Accordion.Item>
 
-                    {/* <Accordion.Item key="task_input" value="task_input">
+                    <Accordion.Item key="action_input" value="action_input">
                       <Accordion.Control icon={<IconForms size={16} />}>
-                        Task Input
+                        <div className="flex justify-between items-center pr-8">
+                          <div>Action Input</div>
+
+                          <ComponentsToolbar
+                            include_components={[
+                              {
+                                action: "pin",
+                                entity_type: "query",
+                                onClick: toggleSectionPinned,
+                              },
+                              {
+                                action: "remove",
+                                entity_type: "query",
+                                onClick: () => {},
+                              },
+                              {
+                                action: "configure",
+                                entity_type: "query",
+                                onClick: () => {},
+                              },
+                            ]}
+                          ></ComponentsToolbar>
+                        </div>
                       </Accordion.Control>
                       <Accordion.Panel>
-                        <TaskInputWrapper
+                        <div className="flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-600 text-center">
+                            Prompts for your input required to customize and/or
+                            successfully complete a task/action will appear
+                            here.
+                          </p>
+                        </div>
+                        {/* <TaskInputWrapper
                           name="task_input"
                           exclude_components={["input_mode", "submit_button"]}
                           success_message_code="task_input_data"
                           description={
                             <div className="flex items-center justify-center p-4">
                               <p className="text-sm text-gray-600 text-center">
-                                Prompt for your input required to customize and
-                                successfully complete a task will appear here.
+                                Prompts for your input required to customize and/or
+                                successfully complete a task/action will appear here.
                               </p>
                             </div>
                           }
-                        ></TaskInputWrapper>
+                        ></TaskInputWrapper> */}
                       </Accordion.Panel>
-                    </Accordion.Item> */}
+                    </Accordion.Item>
 
                     <Accordion.Item key="action_plan" value="action_plan">
                       <Accordion.Control icon={<IconListDetails size={16} />}>
                         <div className="flex justify-between items-center pr-8">
                           <div>Action Plan</div>
+                          {/* <Automation /> */}
                           <ComponentsToolbar
                             include_components={[
                               {
@@ -522,6 +553,11 @@ const Layout = ({
                               },
                               {
                                 action: "configure",
+                                entity_type: "action_plan",
+                                onClick: () => {},
+                              },
+                              {
+                                action: "automate",
                                 entity_type: "action_plan",
                                 onClick: () => {},
                               },
