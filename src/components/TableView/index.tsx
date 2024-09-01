@@ -119,7 +119,7 @@ export function TableView<T extends Record<string, any>>({
         highlightOnHover={true}
         withColumnBorders={true}
         pinFirstColumn={true}
-        // pinLastColumn={true}
+        pinLastColumn={true}
         striped={true}
         // totalRecords={data_items.length}
         fz="xs"

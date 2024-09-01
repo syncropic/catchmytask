@@ -6,6 +6,7 @@ import renderSearchItem from "@components/SearchItem";
 import { useAppStore } from "src/store";
 import { FilterItem, SearchInputComponentProps } from "@components/interfaces";
 import { IconPlus, IconTrash, IconX } from "@tabler/icons-react";
+import FilterComponent from "@components/Filter";
 
 function SearchInput<T extends Record<string, any>>({
   activeFilters,
@@ -107,6 +108,11 @@ function SearchInput<T extends Record<string, any>>({
           disabled={disabled}
         />
       </div>
+      {include_action_icons?.includes("filter") && (
+        <Tooltip label="Filter results" position="top">
+          <FilterComponent />
+        </Tooltip>
+      )}
       {include_action_icons?.includes("remove_from_state") && (
         <Tooltip label="Remove from state" position="top">
           <ActionIcon

@@ -7,6 +7,10 @@ import { useGo } from "@refinedev/core";
 import { useAppStore } from "src/store";
 import SearchBar from "@components/SearchBar";
 import QuickActionsBar from "@components/QuickActionsBar";
+import ColorSchemeToggle from "@components/ColorSchemeToggle";
+import { ActionIcon, Tooltip } from "@mantine/core";
+import { IconLetterB, IconMenu2 } from "@tabler/icons-react";
+import SearchInput from "@components/SearchInput";
 
 interface HeaderComponentProps {
   authenticatedData?: any;
@@ -20,47 +24,114 @@ const LargeScreenHeader = ({
   authenticatedData,
   activeApplication,
   go,
-}: HeaderComponentProps) => (
-  <div className="flex justify-between items-center h-full md:pr-72 md:pl-72">
-    <div className="flex items-center">
-      <LogoName
-        logoLink="/"
-        logoURL={applicationData.logo_image_url}
-        companyName={
-          applicationData.name || activeApplication?.name || "APP NAME"
-        }
-        iconName={applicationData.logo_icon_name}
-        handleClickHome={() => {
-          go({
-            to: "/",
-            type: "push",
-          });
-        }}
-      />
-      {authenticatedData?.authenticated && <LayoutToggle />}
+}: HeaderComponentProps) => {
+  const { sessionConfig, setSessionConfig, activeLayout, setActiveLayout } =
+    useAppStore();
+
+  // handle toggleDisplay
+  const toggleDisplay = (section: string) => {
+    if (activeLayout) {
+      const newLayout = { ...activeLayout };
+      newLayout[section].isDisplayed = !newLayout[section].isDisplayed;
+      setActiveLayout(newLayout);
+    }
+  };
+
+  const toggleSessionInteractionMode = (mode: string) => {
+    if (sessionConfig) {
+      const newSessionConfig = { ...sessionConfig };
+      let currentInteractionMode = newSessionConfig["interaction_mode"];
+      if (mode) {
+        newSessionConfig["interaction_mode"] =
+          currentInteractionMode === mode ? "interactive" : mode;
+      }
+      setSessionConfig(newSessionConfig);
+    }
+  };
+
+  return (
+    <div className="flex justify-between items-center h-full md:pr-72 md:pl-72">
+      <div className="flex items-center">
+        <LogoName
+          logoLink="/"
+          logoURL={applicationData.logo_image_url}
+          companyName={
+            applicationData.name || activeApplication?.name || "APP NAME"
+          }
+          iconName={applicationData.logo_icon_name}
+          handleClickHome={() => {
+            go({
+              to: "/",
+              type: "push",
+            });
+          }}
+        />
+        {authenticatedData?.authenticated && (
+          <div className="hidden lg:block">
+            <LayoutToggle />
+          </div>
+        )}
+
+        {<ColorSchemeToggle />}
+
+        {authenticatedData?.authenticated && (
+          <div className="block lg:hidden">
+            <Tooltip label="Toggle quick actions" position="top">
+              <ActionIcon
+                size="sm"
+                variant={
+                  activeLayout?.quickActionsBar?.isDisplayed
+                    ? "filled"
+                    : "outline"
+                }
+                onClick={() => {
+                  toggleDisplay("quickActionsBar");
+                }}
+              >
+                {/* right */}
+                <IconMenu2 />
+              </ActionIcon>
+            </Tooltip>
+          </div>
+        )}
+
+        {authenticatedData?.authenticated && (
+          <div className="hidden lg:block">
+            {/* <QuickActionsBar
+              name={activeApplication?.name}
+              heading={activeApplication?.heading}
+              subheading={activeApplication?.subheading}
+              description={activeApplication?.description}
+            /> */}
+            <div>
+              <Tooltip label="Toggle background mode" position="top">
+                <ActionIcon
+                  aria-label="Toggle background mode"
+                  size="sm"
+                  onClick={() => toggleSessionInteractionMode("background")}
+                  variant={
+                    sessionConfig.interaction_mode == "background"
+                      ? "filled"
+                      : "outline"
+                  }
+                >
+                  <IconLetterB />
+                </ActionIcon>
+              </Tooltip>
+            </div>
+          </div>
+        )}
+      </div>
       {authenticatedData?.authenticated && (
-        <div className="hidden lg:block">
-          <QuickActionsBar
-            name={activeApplication?.name}
-            heading={activeApplication?.heading}
-            subheading={activeApplication?.subheading}
-            description={activeApplication?.description}
-          />
+        <div className="hidden lg:block w-full items-center pl-4">
+          <SearchInput include_action_icons={["filter"]} />
         </div>
       )}
-    </div>
-    {authenticatedData?.authenticated && (
-      <SearchBar
-        name={activeApplication?.name}
-        heading={activeApplication?.heading}
-        subheading={activeApplication?.subheading}
-        description={activeApplication?.description}
-      />
-    )}
 
-    {<UserMenu />}
-  </div>
-);
+      {<UserMenu />}
+    </div>
+  );
+};
 
 export function Header({ authenticatedData }: HeaderComponentProps) {
   const go = useGo();

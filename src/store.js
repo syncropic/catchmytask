@@ -65,6 +65,12 @@ const useAppStore = create(
         quickActionsBar: {
           isDisplayed: true,
         },
+        mobileStateView: {
+          isDisplayed: false,
+        },
+        mobileCustomComponents: {
+          isDisplayed: false,
+        },
       },
       setActiveLayout: (activeLayout) => set((state) => ({ activeLayout })),
       activeSections: {
@@ -80,6 +86,10 @@ const useAppStore = create(
       },
       setActiveSections: (activeSections) =>
         set((state) => ({ activeSections })),
+      colorScheme: {
+        scheme: "auto",
+      },
+      setColorScheme: (colorScheme) => set((state) => ({ colorScheme })),
       // activeQuery: null,
       // setActiveQuery: (activeQuery) => set((state) => ({ activeQuery })),
       // activeQueryResults: null,

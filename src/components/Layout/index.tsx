@@ -14,6 +14,7 @@ import {
   Highlight,
   Tooltip,
   ActionIcon,
+  useComputedColorScheme,
 } from "@mantine/core";
 import {
   Authenticated,
@@ -64,6 +65,8 @@ import Breadcrumbs from "@components/Breadcrumbs";
 import QuickActionsBar from "@components/QuickActionsBar";
 import ComponentsToolbar from "@components/ComponentsToolbar";
 import Automation from "@components/Automation";
+import FilterComponent from "@components/Filter";
+import { useMediaQuery } from "@mantine/hooks";
 
 function InitializeApplication({
   activeApplicationId,
@@ -91,7 +94,21 @@ const Layout = ({
     activeSections,
     setActiveSections,
     sessionConfig,
+    colorScheme,
   } = useAppStore();
+  const computedColorScheme = useComputedColorScheme("light"); // Compute the color scheme, defaults to 'light'
+  // Define a media query for large screens
+  const isLargeScreen = useMediaQuery("(min-width: 1024px)");
+
+  // Determine whether the panel should be displayed
+  const shouldDisplayLeftSection =
+    activeLayout?.leftSection?.isDisplayed && isLargeScreen;
+  const shouldDisplayRightSection =
+    activeLayout?.rightSection?.isDisplayed && isLargeScreen;
+
+  // Determine the effective scheme to use
+  const effectiveScheme =
+    colorScheme.scheme === "auto" ? computedColorScheme : colorScheme.scheme;
   const go = useGo();
   const parsed = useParsed();
   const runtimeConfig = useAppStore((state) => state.runtimeConfig);
@@ -203,11 +220,76 @@ const Layout = ({
             {authenticatedData?.authenticated &&
               activeLayout?.quickActionsBar?.isDisplayed && (
                 <>
-                  <div className="block lg:hidden p-2 bg-gray-100">
+                  <div
+                    className={`block lg:hidden p-2 ${
+                      effectiveScheme === "light"
+                        ? "bg-gray-100"
+                        : "bg-gray-800"
+                    }`}
+                  >
                     <QuickActionsBar />
                   </div>
-                  <div className="block lg:hidden p-2 bg-gray-100">
-                    <SearchInput />
+                  <div
+                    className={`block lg:hidden p-2 ${
+                      effectiveScheme === "light"
+                        ? "bg-gray-100"
+                        : "bg-gray-800"
+                    }`}
+                  >
+                    {activeLayout?.mobileStateView?.isDisplayed && (
+                      <Accordion
+                        defaultValue={["state", "logs"]}
+                        multiple={true}
+                      >
+                        <Accordion.Item key="state" value="state">
+                          <Accordion.Control icon={<IconStackBack size={16} />}>
+                            State <Breadcrumbs />
+                            <Text component="span" fw={700}>
+                              {activeSession?.internal_id}
+                            </Text>
+                          </Accordion.Control>
+                          <Accordion.Panel>
+                            <StateView />
+                          </Accordion.Panel>
+                        </Accordion.Item>
+                        <Accordion.Item key="logs" value="logs">
+                          <Accordion.Control icon={<IconListTree size={16} />}>
+                            Logs
+                          </Accordion.Control>
+                          <Accordion.Panel>
+                            <div className="flex items-center justify-center p-4">
+                              <p
+                                className={`text-sm ${
+                                  effectiveScheme === "light"
+                                    ? "text-gray-600"
+                                    : "text-gray-300"
+                                } text-center`}
+                              >
+                                Live updating execution feedback from the system
+                              </p>
+                            </div>
+                          </Accordion.Panel>
+                        </Accordion.Item>
+                      </Accordion>
+                    )}
+
+                    {activeLayout?.mobileCustomComponents?.isDisplayed && (
+                      <Accordion defaultValue={[]} multiple={true}>
+                        <div className="flex items-center justify-center p-4">
+                          <p
+                            className={`text-sm ${
+                              effectiveScheme === "light"
+                                ? "text-gray-600"
+                                : "text-gray-300"
+                            } text-center`}
+                          >
+                            Personalize your interface further by including and
+                            configuring prebuilt and/or custom built components
+                            here.
+                          </p>
+                        </div>
+                      </Accordion>
+                    )}
                   </div>
                 </>
               )}
@@ -318,21 +400,26 @@ const Layout = ({
               minSize={0}
               id="left"
               style={{
-                display: activeLayout?.leftSection?.isDisplayed
-                  ? "block"
-                  : "none",
+                display: shouldDisplayLeftSection ? "block" : "none",
               }}
             >
               <div
-                className="overflow-auto h-screen bg-gray-100"
+                className={`lg:block overflow-auto h-screen ${
+                  effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
+                }`}
                 style={{
                   height: "calc(100vh - 64px)",
                 }}
               >
                 <Accordion defaultValue={[]} multiple={true}>
-                  {" "}
                   <div className="flex items-center justify-center p-4">
-                    <p className="text-sm text-gray-600 text-center">
+                    <p
+                      className={`text-sm ${
+                        effectiveScheme === "light"
+                          ? "text-gray-600"
+                          : "text-gray-300"
+                      } text-center`}
+                    >
                       Personalize your interface further by including and
                       configuring prebuilt and/or custom built components here.
                     </p>
@@ -355,6 +442,88 @@ const Layout = ({
                   : "none",
               }}
             >
+              {authenticatedData?.authenticated &&
+                activeLayout?.quickActionsBar?.isDisplayed && (
+                  <>
+                    <div
+                      className={`block lg:hidden p-2 ${
+                        effectiveScheme === "light"
+                          ? "bg-gray-100"
+                          : "bg-gray-800"
+                      }`}
+                    >
+                      <QuickActionsBar />
+                    </div>
+                    <div
+                      className={`block lg:hidden p-2 ${
+                        effectiveScheme === "light"
+                          ? "bg-gray-100"
+                          : "bg-gray-800"
+                      }`}
+                    >
+                      {/* <SearchInput include_action_icons={["filter"]} /> */}
+                      {/* <StateView /> */}
+                      {activeLayout?.mobileStateView?.isDisplayed && (
+                        <Accordion
+                          defaultValue={["state", "logs"]}
+                          multiple={true}
+                        >
+                          <Accordion.Item key="state" value="state">
+                            <Accordion.Control
+                              icon={<IconStackBack size={16} />}
+                            >
+                              State <Breadcrumbs />
+                              <Text component="span" fw={700}>
+                                {activeSession?.internal_id}
+                              </Text>
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                              <StateView />
+                            </Accordion.Panel>
+                          </Accordion.Item>
+                          <Accordion.Item key="logs" value="logs">
+                            <Accordion.Control
+                              icon={<IconListTree size={16} />}
+                            >
+                              Logs
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                              <div className="flex items-center justify-center p-4">
+                                <p
+                                  className={`text-sm ${
+                                    effectiveScheme === "light"
+                                      ? "text-gray-600"
+                                      : "text-gray-300"
+                                  } text-center`}
+                                >
+                                  Live updating execution feedback from the
+                                  system
+                                </p>
+                              </div>
+                            </Accordion.Panel>
+                          </Accordion.Item>
+                        </Accordion>
+                      )}
+                      {activeLayout?.mobileCustomComponents?.isDisplayed && (
+                        <Accordion defaultValue={[]} multiple={true}>
+                          <div className="flex items-center justify-center p-4">
+                            <p
+                              className={`text-sm ${
+                                effectiveScheme === "light"
+                                  ? "text-gray-600"
+                                  : "text-gray-300"
+                              } text-center`}
+                            >
+                              Personalize your interface further by including
+                              and configuring prebuilt and/or custom built
+                              components here.
+                            </p>
+                          </div>
+                        </Accordion>
+                      )}
+                    </div>
+                  </>
+                )}
               {!activeSession && (
                 <div
                   className="flex flex-col h-screen items-center justify-center p-4"
@@ -374,7 +543,7 @@ const Layout = ({
                 </div>
               )}
 
-              {!activeTask && (
+              {!activeTask && activeSession && (
                 <div
                   className="flex flex-col h-screen items-center justify-center p-4"
                   style={{
@@ -403,17 +572,6 @@ const Layout = ({
                   {/* <div className="flex justify-center items-center bg-gray-100 min-h-[20px] pb-3">
                   <Breadcrumbs />
                 </div> */}
-                  {authenticatedData?.authenticated &&
-                    activeLayout?.quickActionsBar?.isDisplayed && (
-                      <>
-                        <div className="block lg:hidden p-2 bg-gray-100">
-                          <QuickActionsBar />
-                        </div>
-                        <div className="block lg:hidden p-2 bg-gray-100">
-                          <SearchInput />
-                        </div>
-                      </>
-                    )}
 
                   {/* {activeLayout?.searchInput?.isDisplayed && (
                     <div className="block lg:hidden p-2 bg-gray-100">
@@ -599,13 +757,13 @@ const Layout = ({
               minSize={0}
               id="right"
               style={{
-                display: activeLayout?.rightSection?.isDisplayed
-                  ? "block"
-                  : "none",
+                display: shouldDisplayRightSection ? "block" : "none",
               }}
             >
               <div
-                className="overflow-auto h-screen bg-gray-100"
+                className={`overflow-auto h-screen ${
+                  effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
+                }`}
                 style={{ height: "calc(100vh - 64px)" }}
               >
                 <Accordion defaultValue={["logs"]} multiple={true}>
@@ -617,7 +775,7 @@ const Layout = ({
                       </Text>
                     </Accordion.Control>
                     <Accordion.Panel>
-                      <StateView></StateView>
+                      <StateView />
                     </Accordion.Panel>
                   </Accordion.Item>
                   <Accordion.Item key="logs" value="logs">
@@ -626,7 +784,13 @@ const Layout = ({
                     </Accordion.Control>
                     <Accordion.Panel>
                       <div className="flex items-center justify-center p-4">
-                        <p className="text-sm text-gray-600 text-center">
+                        <p
+                          className={`text-sm ${
+                            effectiveScheme === "light"
+                              ? "text-gray-600"
+                              : "text-gray-300"
+                          } text-center`}
+                        >
                           Live updating execution feedback from the system
                         </p>
                       </div>

@@ -6,8 +6,7 @@ export default function handler(req, res) {
       process.env.NEXT_PUBLIC_API_REQUESTS_URL || "http://localhost:8000"
     ),
     DOMAIN_URL: String(
-      process.env.NEXT_PUBLIC_DOMAIN_URL ||
-        "https://stormy.reports.snowstormtech.com"
+      process.env.NEXT_PUBLIC_DOMAIN_URL || "https://catchmytask.com"
     ),
     APP_NAME: String(process.env.NEXT_PUBLIC_APP_NAME || "catchmytask"),
   });

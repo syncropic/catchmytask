@@ -1,7 +1,12 @@
 import React from "react";
 import { ActionIcon, Button, Checkbox, Tooltip } from "@mantine/core";
 import { useAppStore } from "src/store";
-import { IconSearch } from "@tabler/icons-react";
+import {
+  IconCrop54,
+  IconListSearch,
+  IconSearch,
+  IconStackBack,
+} from "@tabler/icons-react";
 import { IconLetterB } from "@tabler/icons-react";
 import FilterComponent from "@components/Filter";
 
@@ -64,35 +69,38 @@ const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
         </div>
 
         <div>
-          <Tooltip label="Toggle search" position="top">
+          <Tooltip label="Toggle state view" position="top">
             <ActionIcon
-              aria-label="any"
+              aria-label="Toggle state view"
               size="sm"
-              onClick={() => toggleDisplay("searchInput")}
+              onClick={() => toggleDisplay("mobileStateView")}
               variant={
-                activeLayout?.searchInput?.isDisplayed ? "filled" : "outline"
+                activeLayout?.mobileStateView?.isDisplayed
+                  ? "filled"
+                  : "outline"
               }
             >
-              <IconSearch />
+              <IconListSearch />
             </ActionIcon>
           </Tooltip>
         </div>
         <div>
-          <FilterComponent />
+          <Tooltip label="Toggle custom components" position="top">
+            <ActionIcon
+              aria-label="Toggle custom components"
+              size="sm"
+              onClick={() => toggleDisplay("mobileCustomComponents")}
+              variant={
+                activeLayout?.mobileCustomComponents?.isDisplayed
+                  ? "filled"
+                  : "outline"
+              }
+            >
+              <IconCrop54 />
+            </ActionIcon>
+          </Tooltip>
         </div>
-        {/* <div>
-          <Generate />
-        </div> */}
       </div>
-      {/* {activeLayout?.searchInput?.isDisplayed && (
-        <div className="hidden lg:block w-full">
-          <SearchInput
-            sessions_list={session_data_items || []}
-            record={activeSession}
-            view_item={null}
-          />
-        </div>
-      )} */}
     </div>
   );
 };

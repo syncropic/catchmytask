@@ -1,3 +1,4 @@
+import React from "react";
 import {
   ThemeIcon,
   Text,
@@ -5,50 +6,12 @@ import {
   Container,
   SimpleGrid,
   rem,
+  useMantineColorScheme,
+  useComputedColorScheme,
 } from "@mantine/core";
-import {
-  IconGauge,
-  IconCookie,
-  IconUser,
-  IconMessage2,
-  IconLock,
-} from "@tabler/icons-react";
+import { iconMapping } from "@components/Utils";
 import classes from "./FeaturesGrid.module.css";
 import { ContentBlockProps } from "@components/interfaces";
-import { iconMapping } from "@components/Utils";
-
-// export const MOCKDATA = [
-//   {
-//     icon: IconGauge,
-//     title: "Extreme performance",
-//     description:
-//       "This dust is actually a powerful poison that will even make a pro wrestler sick, Regice cloaks itself with frigid air of -328 degrees Fahrenheit",
-//   },
-//   {
-//     icon: IconUser,
-//     title: "Privacy focused",
-//     description:
-//       "People say it can run at the same speed as lightning striking, Its icy body is so cold, it will not melt even if it is immersed in magma",
-//   },
-//   {
-//     icon: IconCookie,
-//     title: "No third parties",
-//     description:
-//       "They’re popular, but they’re rare. Trainers who show them off recklessly may be targeted by thieves",
-//   },
-//   {
-//     icon: IconLock,
-//     title: "Secure by default",
-//     description:
-//       "Although it still can’t fly, its jumping power is outstanding, in Alola the mushrooms on Paras don’t grow up quite right",
-//   },
-//   {
-//     icon: IconMessage2,
-//     title: "24/7 Support",
-//     description:
-//       "Rapidash usually can be seen casually cantering in the fields and plains, Skitty is known to chase around after its own tail",
-//   },
-// ];
 
 interface FeatureProps {
   icon: React.FC<any>;
@@ -57,8 +20,27 @@ interface FeatureProps {
 }
 
 export function Feature({ icon: Icon, title, description }: FeatureProps) {
+  const computedColorScheme = useComputedColorScheme("light");
+
   return (
-    <div>
+    <div
+      style={{
+        backgroundColor:
+          computedColorScheme === "light"
+            ? "rgba(229, 231, 235, 1)" // Tailwind bg-gray-200 for light mode
+            : "rgba(255, 255, 255, 0.1)", // Existing dark mode background
+        color:
+          computedColorScheme === "light"
+            ? "#000" // Dark text for light mode
+            : "#FFF", // Light text for dark mode
+        boxShadow:
+          computedColorScheme === "light"
+            ? "0 4px 6px rgba(0, 0, 0, 0.1)" // Light mode shadow
+            : "0 4px 6px rgba(0, 0, 0, 0.5)", // Dark mode shadow
+        borderRadius: "8px", // Add some rounding to the corners
+        padding: "20px", // Add padding to give some spacing inside the items
+      }}
+    >
       <ThemeIcon variant="light" size={40} radius={40}>
         <Icon style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
       </ThemeIcon>
@@ -72,25 +54,33 @@ export function Feature({ icon: Icon, title, description }: FeatureProps) {
   );
 }
 
-interface FeaturesGridProps {
-  heading: string;
-  subheading: string;
-  items: FeatureProps[];
-}
-
 export function FeaturesGrid({ title, items }: ContentBlockProps) {
+  const computedColorScheme = useComputedColorScheme("light");
+
   const items_components = items.map((item, index) => {
     const IconComponent = iconMapping[item.metadata?.illustration];
     return (
-      <div key={index}>
+      <div
+        key={index}
+        style={{
+          backgroundColor:
+            computedColorScheme === "light"
+              ? "rgba(229, 231, 235, 1)" // Tailwind bg-gray-200 for light mode
+              : "rgba(255, 255, 255, 0.1)", // Existing dark mode background
+          color:
+            computedColorScheme === "light"
+              ? "#000" // Dark text for light mode
+              : "#FFF", // Light text for dark mode
+          boxShadow:
+            computedColorScheme === "light"
+              ? "0 4px 6px rgba(0, 0, 0, 0.1)" // Light mode shadow
+              : "0 4px 6px rgba(0, 0, 0, 0.5)", // Dark mode shadow
+          borderRadius: "8px", // Add some rounding to the corners
+          padding: "20px", // Add padding to give some spacing inside the items
+        }}
+      >
         <ThemeIcon variant="light" size={40} radius={40}>
-          {/* <Icon style={{ width: rem(18), height: rem(18) }} stroke={1.5} /> */}
-          {IconComponent && (
-            <IconComponent
-              // color={theme.colors[item.metadata?.color][6]}
-              size="2rem"
-            />
-          )}
+          {IconComponent && <IconComponent size="2rem" />}
         </ThemeIcon>
         <Text mt="sm" mb={7}>
           {item.name}
@@ -103,12 +93,33 @@ export function FeaturesGrid({ title, items }: ContentBlockProps) {
   });
 
   return (
-    <div className="bg-gray-200">
+    <div
+      style={{
+        backgroundColor:
+          computedColorScheme === "light"
+            ? "rgba(229, 231, 235, 1)" // Tailwind bg-gray-200 for light mode
+            : "rgba(0, 0, 0, 0.8)", // Existing dark mode background
+      }}
+    >
       <Container className={classes.wrapper}>
-        <Title className={classes.title}>{title.name}</Title>
+        <Title
+          className={classes.title}
+          style={{ color: computedColorScheme === "light" ? "#000" : "#FFF" }}
+        >
+          {title.name}
+        </Title>
 
         <Container size={560} p={0}>
-          <Text size="sm" className={classes.description}>
+          <Text
+            size="sm"
+            className={classes.description}
+            style={{
+              color:
+                computedColorScheme === "light"
+                  ? "rgba(0, 0, 0, 0.6)"
+                  : "rgba(255, 255, 255, 0.6)",
+            }}
+          >
             {title.description}
           </Text>
         </Container>

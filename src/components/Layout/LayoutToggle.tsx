@@ -78,22 +78,6 @@ export const LayoutToggle: React.FC<LayoutToggleAndSearchProps> = ({}) => {
           </ActionIcon>
         </Tooltip>
       </div>
-      <div className="block lg:hidden w-full max-w-2xl">
-        <Tooltip label="Toggle quick actions" position="top">
-          <ActionIcon
-            size="sm"
-            variant={
-              activeLayout?.quickActionsBar?.isDisplayed ? "filled" : "outline"
-            }
-            onClick={() => {
-              toggleDisplay("quickActionsBar");
-            }}
-          >
-            {/* right */}
-            <IconMenu2 />
-          </ActionIcon>
-        </Tooltip>
-      </div>
     </div>
   );
 };

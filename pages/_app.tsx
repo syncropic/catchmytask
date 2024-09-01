@@ -103,6 +103,8 @@ const App = (props: React.PropsWithChildren) => {
   const { to } = router.query;
   const fetchRuntimeConfig = useAppStore((state) => state.fetchRuntimeConfig);
   const runtimeConfig = useAppStore((state) => state.runtimeConfig);
+  const { activeSession, activeApplication, activeTask, colorScheme } =
+    useAppStore();
 
   useEffect(() => {
     fetchRuntimeConfig();
@@ -117,6 +119,24 @@ const App = (props: React.PropsWithChildren) => {
   // Function to return the access token
   const getToken = () => {
     return session?.token?.account?.access_token || ""; // Adjust this based on your session structure
+  };
+  const getStateIds = () => {
+    let stateIds: { [key: string]: any } = {};
+
+    if (activeSession?.id) {
+      stateIds["session_id"] = activeSession.id;
+    }
+    if (activeApplication?.id) {
+      stateIds["application_id"] = activeApplication.id;
+    }
+    if (activeTask?.id) {
+      stateIds["task_id"] = activeTask.id;
+    }
+    if (session?.token?.account?.providerAccountId) {
+      stateIds["user_id"] = session.token.account.providerAccountId;
+    }
+
+    return stateIds;
   };
 
   const authProvider: AuthBindings = {
@@ -232,7 +252,7 @@ const App = (props: React.PropsWithChildren) => {
     logout: async () => {
       signOut({
         redirect: true,
-        callbackUrl: "/login",
+        callbackUrl: "/",
       });
 
       return {
@@ -280,12 +300,15 @@ const App = (props: React.PropsWithChildren) => {
 
   return (
     <>
-      <MantineProvider theme={theme} defaultColorScheme="auto">
+      <MantineProvider
+        theme={theme}
+        defaultColorScheme={colorScheme?.scheme || "auto"}
+      >
         <Notifications position="top-right" />
         <Refine
           routerProvider={routerProvider}
           dataProvider={{
-            default: defaultApiDataProvider(API_URL, getToken),
+            default: defaultApiDataProvider(API_URL, getToken, getStateIds),
           }}
           notificationProvider={useNotificationProvider}
           authProvider={authProvider}
@@ -321,7 +344,10 @@ const App = (props: React.PropsWithChildren) => {
             projectId: "OpGcqe-gAGTnn-eW9pDg",
           }}
         >
-          {/* <div>MYAPP // {JSON.stringify(session)}</div> */}
+          {/* <div>
+            MYAPP //{" "}
+            {JSON.stringify(session?.token?.account?.providerAccountId)}
+          </div> */}
           {/* <button
             onClick={() =>
               signOut({

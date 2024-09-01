@@ -161,6 +161,7 @@ function generateWhereClause(filters: Filter[]): string {
 export const dataProvider = (
   apiUrl: string,
   getToken: () => string,
+  getStateIds: () => any,
   httpClient: AxiosInstance = axiosInstance
 ): Omit<
   Required<DataProvider>,
@@ -202,6 +203,7 @@ export const dataProvider = (
     const headers_with_Authorization = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
+      ...getStateIds(),
       ...headersFromMeta,
     };
     // Generate the WHERE clause
@@ -303,6 +305,7 @@ export const dataProvider = (
     const headers_with_Authorization = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
+      ...getStateIds(),
       ...headers,
     };
     console.log(headers_with_Authorization);
@@ -348,6 +351,7 @@ export const dataProvider = (
     const headers_with_Authorization = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
+      ...getStateIds(),
       ...headersFromMeta,
     };
 
@@ -474,6 +478,7 @@ export const dataProvider = (
     const headers_with_Authorization = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
+      ...getStateIds(),
       ...headers,
     };
     // console.log("headers_with_Authorization", headers_with_Authorization);
