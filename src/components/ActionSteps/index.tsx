@@ -128,6 +128,9 @@ ActionStepsProps) => {
       name: "dependencies",
     },
     {
+      name: "confidence",
+    },
+    {
       name: "execution_runs",
     },
   ];

@@ -461,10 +461,7 @@ const Layout = ({
                       {/* <SearchInput include_action_icons={["filter"]} /> */}
                       {/* <StateView /> */}
                       {activeLayout?.mobileStateView?.isDisplayed && (
-                        <Accordion
-                          defaultValue={["state", "logs"]}
-                          multiple={true}
-                        >
+                        <Accordion defaultValue={["state"]} multiple={true}>
                           <Accordion.Item key="state" value="state">
                             <Accordion.Control
                               icon={<IconStackBack size={16} />}
@@ -533,8 +530,7 @@ const Layout = ({
                   <p className="text-sm text-gray-600 text-center max-w-sm">
                     <Highlight color="violet" highlight="session">
                       Please create a new session or get started from an
-                      existing one by selecting in the state window. Choose from
-                      sessions you have created or have access to.
+                      existing to continue.
                     </Highlight>
                   </p>
                 </div>
@@ -552,8 +548,7 @@ const Layout = ({
                   <p className="text-sm text-gray-600 text-center max-w-sm">
                     <Highlight color="lime" highlight="task">
                       Please create a new task or get started from an existing
-                      one by selecting in the state window. Choose from tasks
-                      you have created or have access to.
+                      one to continue.
                     </Highlight>
                   </p>
                 </div>

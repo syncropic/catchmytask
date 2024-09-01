@@ -66,7 +66,7 @@ const useAppStore = create(
           isDisplayed: true,
         },
         mobileStateView: {
-          isDisplayed: false,
+          isDisplayed: true,
         },
         mobileCustomComponents: {
           isDisplayed: false,
