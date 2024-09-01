@@ -34,7 +34,7 @@ import { v4 as uuidv4 } from "uuid";
 // import { useIsMutating } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
-import { IconPlayerPlay } from "@tabler/icons-react";
+import { IconCode, IconPlayerPlay, IconTools } from "@tabler/icons-react";
 
 function useConditionalFetch(
   query_name?: string,
@@ -354,7 +354,17 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const handleSubmit = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
-    form.handleSubmit();
+    // form.handleSubmit();
+  };
+  const handleExecute = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // form.handleSubmit();
+  };
+  const handleImplement = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // form.handleSubmit();
   };
   const canSubmit = form.useStore((state) => state.canSubmit);
   const isSubmitting = form.useStore((state) => state.isSubmitting);
@@ -369,18 +379,32 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       {/* render any pydantic model form */}
       {action_icon && (
         <form onSubmit={handleSubmit}>
-          <Tooltip label="execute" position="left">
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="green"
-              onClick={(e) => handleSubmit(e)}
-              disabled={!canSubmit}
-              loading={mutationIsLoading || isSubmitting}
-            >
-              <IconPlayerPlay size={16} />
-            </ActionIcon>
-          </Tooltip>
+          <div className="flex gap-1">
+            <Tooltip label="implement" position="left">
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                color="orange"
+                onClick={(e) => handleImplement(e)}
+                // disabled={!canSubmit}
+                // loading={mutationIsLoading || isSubmitting}
+              >
+                <IconCode size={16} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="execute" position="left">
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                color="green"
+                onClick={(e) => handleExecute(e)}
+                // disabled={!canSubmit}
+                // loading={mutationIsLoading || isSubmitting}
+              >
+                <IconPlayerPlay size={16} />
+              </ActionIcon>
+            </Tooltip>
+          </div>
         </form>
       )}
       {!action_icon && (

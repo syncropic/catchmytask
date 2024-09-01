@@ -237,10 +237,7 @@ const Layout = ({
                     }`}
                   >
                     {activeLayout?.mobileStateView?.isDisplayed && (
-                      <Accordion
-                        defaultValue={["state", "logs"]}
-                        multiple={true}
-                      >
+                      <Accordion defaultValue={["state"]} multiple={true}>
                         <Accordion.Item key="state" value="state">
                           <Accordion.Control icon={<IconStackBack size={16} />}>
                             State <Breadcrumbs />

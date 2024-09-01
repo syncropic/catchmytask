@@ -124,6 +124,12 @@ ActionStepsProps) => {
     {
       name: "execution_order",
     },
+    {
+      name: "dependencies",
+    },
+    {
+      name: "execution_runs",
+    },
   ];
 
   return (

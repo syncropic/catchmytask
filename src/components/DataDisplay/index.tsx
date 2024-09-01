@@ -18,6 +18,7 @@ import {
   Tabs,
 } from "@mantine/core";
 import {
+  IconCode,
   IconColumns,
   IconDatabase,
   IconDownload,
@@ -25,6 +26,7 @@ import {
   IconFileDownload,
   IconLink,
   IconPlayerPlay,
+  IconCircleX,
 } from "@tabler/icons-react";
 // import _, { set } from "lodash";
 import {
@@ -232,41 +234,68 @@ export function DataDisplay<T extends Record<string, any>>({
         {/* {JSON.stringify(table.getVisibleFlatColumns().map((column) => column))} */}
         <div
           ref={ref}
-          className={`flex p-3 ${
-            isLarge ? "flex-row" : "flex-col"
-          } py-1 gap-1 justify-between items-center`}
+          // className={`flex p-3 ${
+          //   isLarge ? "flex-row" : "flex-col"
+          // } py-1 gap-1 justify-between items-center`}
+          className={`flex flex-row p-3 py-1 gap-1 justify-between items-center`}
         >
           <div>
             {/* Row 1: Debounced Input */}
             {/* display this if global_search string is not in execlude_components list */}
             {execlude_components?.includes("global_search") ? null : (
               <div
-                className={`flex gap-2 items-center w-full ${
-                  isLarge ? "lg:w-auto" : "mb-4"
-                }`}
+              // className={`flex gap-2 items-center w-full ${
+              //   isLarge ? "lg:w-auto" : "mb-4"
+              // }`}
               >
-                <DebouncedInput
-                  value={globalFilter ?? ""}
-                  onChange={(value) => setGlobalFilter(String(value))}
-                  className="w-full p-2 font-lg shadow border border-block"
-                  placeholder="Search all fields..."
-                />
-                <Tooltip label="execute all" position="left">
-                  <ActionIcon
-                    // size="sm"
-                    variant="subtle"
-                    color="green"
-                    // onClick={(e) => handleSubmit(e)}
-                    // disabled={!canSubmit}
-                    // loading={mutationIsLoading || isSubmitting}
-                  >
-                    <IconPlayerPlay />
-                  </ActionIcon>
-                </Tooltip>{" "}
+                <div className="flex items-center gap-2">
+                  <DebouncedInput
+                    value={globalFilter ?? ""}
+                    onChange={(value) => setGlobalFilter(String(value))}
+                    className="w-full p-2 font-lg shadow border border-block"
+                    placeholder="Search all fields..."
+                  />
+                  <Tooltip label="implement all" position="left">
+                    <ActionIcon
+                      size="sm"
+                      variant="outline"
+                      color="orange"
+                      // onClick={(e) => handleSubmit(e)}
+                      // disabled={!canSubmit}
+                      // loading={mutationIsLoading || isSubmitting}
+                    >
+                      <IconCode />
+                    </ActionIcon>
+                  </Tooltip>
+                  <Tooltip label="execute all" position="left">
+                    <ActionIcon
+                      size="sm"
+                      variant="outline"
+                      color="green"
+                      // onClick={(e) => handleSubmit(e)}
+                      // disabled={!canSubmit}
+                      // loading={mutationIsLoading || isSubmitting}
+                    >
+                      <IconPlayerPlay />
+                    </ActionIcon>
+                  </Tooltip>
+                </div>
               </div>
             )}
           </div>
           <div className="flex gap-3 items-center">
+            <Tooltip label="cancel all executions" position="left">
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                color="red"
+                // onClick={(e) => handleSubmit(e)}
+                // disabled={!canSubmit}
+                // loading={mutationIsLoading || isSubmitting}
+              >
+                <IconCircleX />
+              </ActionIcon>
+            </Tooltip>
             {/* {execlude_components?.includes("execute_all") ? null : (
               <div className={`w-full ${isLarge ? "lg:w-auto" : "mb-4"}`}>
                 
