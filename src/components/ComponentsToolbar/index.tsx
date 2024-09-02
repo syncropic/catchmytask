@@ -31,15 +31,15 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
 
   return (
     <div className="flex gap-1">
-      {include_components?.map((component) => {
+      {include_components?.map((component, index) => {
         // Get the appropriate icon component
         const IconComponent = iconMap[component?.action];
 
         const ActionContent = (
           <Tooltip
-            key={component?.entity_type}
             label={`${component?.action} ${component?.entity_type} component`}
             position="top"
+            key={index}
           >
             <ActionIcon
               aria-label={component?.action}

@@ -1,5 +1,5 @@
 import { ResultsComponentProps } from "@components/interfaces";
-import { useViewportSize } from "@mantine/hooks";
+import { useMediaQuery, useViewportSize } from "@mantine/hooks";
 import { flexRender } from "@tanstack/react-table";
 import { Table as TanStackTable, ColumnDef } from "@tanstack/react-table";
 import {
@@ -30,6 +30,8 @@ export function TableView<T extends Record<string, any>>({
 }: ResultsComponentProps<T>) {
   const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
   const { setActiveRecord, setActiveAction } = useAppStore();
+  // Media query for screens smaller than 640px (mobile devices)
+  const isMobile = useMediaQuery("(max-width: 640px)");
 
   let columns_to_filter_out = ["select", "actions", "details"];
 
@@ -143,13 +145,27 @@ export function TableView<T extends Record<string, any>>({
             onRecordIdsChange: setExpandedRecordIds,
           },
           content: ({ record, collapse }) => (
-            <ActionStepEditor
-              record={record}
-              setExpandedRecordIds={setExpandedRecordIds}
-              invalidate_queries_on_submit_success={
-                invalidate_queries_on_submit_success
-              }
-            ></ActionStepEditor>
+            <div
+              className={`${
+                isMobile ? "w-[400px]" : "w-full"
+              } max-w-full max-h-screen overflow-y-auto p-4`}
+            >
+              <ActionStepEditor
+                record={record}
+                setExpandedRecordIds={setExpandedRecordIds}
+                invalidate_queries_on_submit_success={
+                  invalidate_queries_on_submit_success
+                }
+              />
+            </div>
+
+            // <ActionStepEditor
+            //   record={record}
+            //   setExpandedRecordIds={setExpandedRecordIds}
+            //   invalidate_queries_on_submit_success={
+            //     invalidate_queries_on_submit_success
+            //   }
+            // ></ActionStepEditor>
             // <div>{JSON.stringify(record)}</div>
           ),
         }}

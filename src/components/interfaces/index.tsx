@@ -79,7 +79,8 @@ export type ComponentKey =
   | "NaturalLanguageEditorFormInput"
   | "DateTimePicker"
   | "Switch"
-  | "Checkbox";
+  | "Checkbox"
+  | "SearchInput";
 
 // export type IView = {
 //   resource_type: ComponentKey;

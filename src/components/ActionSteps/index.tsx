@@ -37,7 +37,8 @@ export const ActionStepsWrapper = ({
 }: // types,
 ActionStepsProps) => {
   let state = {
-    query_name: "action plan",
+    // query_name: "action plan",
+    query_name: "read action plan data",
     success_message_code: success_message_code,
     task_id: record?.id,
     // name: name,

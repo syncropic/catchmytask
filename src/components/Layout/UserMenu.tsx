@@ -44,15 +44,17 @@ export const UserMenu = () => {
   };
   if (!user) {
     return (
-      <Button
-        size="xs"
-        gradient={{ from: "blue", to: "cyan", deg: 90 }}
-        variant="gradient"
-        // fullWidth
-        onClick={() => signIn("keycloak")}
-      >
-        Sign In
-      </Button>
+      <div className="pr-3">
+        <Button
+          size="xs"
+          gradient={{ from: "blue", to: "cyan", deg: 90 }}
+          variant="gradient"
+          // fullWidth
+          onClick={() => signIn("keycloak")}
+        >
+          Sign In
+        </Button>
+      </div>
     );
   }
 

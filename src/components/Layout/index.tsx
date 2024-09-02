@@ -318,6 +318,8 @@ const Layout = ({
                         name: "task_config",
                       },
                     }}
+                    endpoint="plan"
+                    action_label="Catch"
                   >
                     <ActionInputWrapper
                       name="task_config"
@@ -623,6 +625,8 @@ const Layout = ({
                               name: "task_config",
                             },
                           }}
+                          endpoint="plan"
+                          action_label="Catch"
                         >
                           {/* <ActionInputWrapper
                           name="task_config"

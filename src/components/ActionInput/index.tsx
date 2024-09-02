@@ -124,6 +124,8 @@ interface DynamicFormProps {
   invalidate_queries_on_submit_success?: string[];
   update_action_input_form_values_on_submit_success?: boolean;
   success_message_code?: string;
+  endpoint?: string;
+  action_label?: string;
 }
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
@@ -150,6 +152,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   invalidate_queries_on_submit_success,
   update_action_input_form_values_on_submit_success = false,
   success_message_code = "query_success_results",
+  action_label,
+  endpoint,
 }) => {
   const [inputAsvalue, setInputAsValue] = useState("");
   const queryClient = useQueryClient();
@@ -208,9 +212,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           // url: `${config.API_URL}/catch-${
           //   data_model?.name === "action_step_any" ? "any" : "action"
           // }`,
-          url: `${config.API_URL}/${
-            name === "task" ? "plan" : "catch-action-step"
-          }`,
+          url: `${config.API_URL}/${endpoint ? endpoint : "execute-task"}`,
           method: "post",
           // values: generateRequestData(values),
           values: {
@@ -219,7 +221,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               name: activeAction?.name,
             },
             input_values: value,
-            credential: value?.credential || "surrealdb_catchmytask",
+            credential: value?.credential || "surrealdb catchmytask dev",
             data_model: data_model,
             application: {
               id: activeApplication?.id,
@@ -359,7 +361,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const handleExecute = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
-    // form.handleSubmit();
+    form.handleSubmit();
   };
   const handleImplement = (e: any) => {
     e.preventDefault();
@@ -398,8 +400,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 variant="outline"
                 color="green"
                 onClick={(e) => handleExecute(e)}
-                // disabled={!canSubmit}
-                // loading={mutationIsLoading || isSubmitting}
+                disabled={!canSubmit}
+                loading={mutationIsLoading || isSubmitting}
               >
                 <IconPlayerPlay size={16} />
               </ActionIcon>
@@ -415,7 +417,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             form.handleSubmit();
           }}
         >
-          <div className="flex justify-between">
+          <div className="flex justify-between pl-3 pr-3">
             {execlude_components?.includes("submit_button") ? null : (
               // <form.Subscribe
               //   selector={(state) => [state.canSubmit, state.isSubmitting]}
@@ -436,7 +438,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 loading={mutationIsLoading || isSubmitting}
                 disabled={!canSubmit}
               >
-                Submit
+                {action_label || "Submit"}
               </Button>
             )}
 
@@ -566,6 +568,8 @@ interface ActionInputWrapperProps {
   invalidate_queries_on_submit_success?: string[];
   description?: any;
   update_action_input_form_values_on_submit_success?: boolean;
+  endpoint?: string;
+  action_label?: string;
 }
 
 export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
@@ -583,6 +587,8 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   invalidate_queries_on_submit_success,
   description,
   update_action_input_form_values_on_submit_success,
+  endpoint,
+  action_label,
 }) => {
   // let state = {
   //   query_name: query_name,
@@ -666,6 +672,8 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
             update_action_input_form_values_on_submit_success={
               update_action_input_form_values_on_submit_success
             }
+            endpoint={endpoint}
+            action_label={action_label}
           ></ActionInputForm>
         )}
       </div>

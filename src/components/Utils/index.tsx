@@ -107,6 +107,7 @@ import { render } from "react-dom";
 import { NaturalLanguageEditorFormInput } from "@components/NaturalLanguageEditor";
 import AccordionList from "@components/List/AccordionList";
 import { Checkbox } from "@components/Checkbox";
+import SearchInput from "@components/SearchInput";
 // import MediaPlayerController from "@components/MediaPlayerController";
 // import MediaPlayerTimeline from "@components/MediaPlayerTimeline";
 
@@ -648,6 +649,7 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   NumberInput: NumberInput,
   FileInput: FileInput,
   DateTimePicker: DateTimePicker,
+  SearchInput: SearchInput,
   trips: ViewTrip,
   bookings: ViewBooking,
   payments: ViewPayment,
