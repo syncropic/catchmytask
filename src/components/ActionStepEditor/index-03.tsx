@@ -93,7 +93,7 @@ ActionStepEditorProps) {
               Results
             </Tabs.Tab>
           </Tabs.List>
-          <div className="flex hidden">
+          <div>
             <Tabs.Panel value="create">
               <div className="p-3">
                 <ActionInputWrapper

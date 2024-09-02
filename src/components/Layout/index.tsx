@@ -460,7 +460,9 @@ const Layout = ({
                           : "bg-gray-800"
                       }`}
                     >
-                      {/* <SearchInput include_action_icons={["filter"]} /> */}
+                      <div className="p-3">
+                        <SearchInput />
+                      </div>
                       {/* <StateView /> */}
                       {activeLayout?.mobileStateView?.isDisplayed && (
                         <Accordion defaultValue={["state"]} multiple={true}>

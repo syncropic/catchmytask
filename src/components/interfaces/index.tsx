@@ -909,6 +909,7 @@ export interface FilterItem {
   id: number;
   name: string;
   description: string;
+  entity_type: string;
   is_selected: boolean;
 }
 
@@ -919,7 +920,9 @@ export interface SearchInputComponentProps<T extends Record<string, any>> {
   label?: string;
   description?: string;
   handleOptionSubmit?: (value: any | null) => void;
-  defaultValue?: string;
+  onChange?: (value: any | null) => void;
+  value?: string;
   disabled?: boolean;
   include_action_icons?: string[];
+  schema?: any;
 }

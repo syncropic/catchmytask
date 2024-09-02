@@ -24,7 +24,7 @@ const renderSearchItem = (props: any) => {
 
   // Find the position of the entity_type in the value
   const startIndex = value.indexOf(entity_type);
-  const endIndex = startIndex + entity_type.length;
+  const endIndex = startIndex + entity_type?.length;
 
   // Truncate the description to 100 words
   const truncatedDescription = truncateText(description, 20);

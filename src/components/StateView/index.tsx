@@ -23,13 +23,14 @@ export function StateView() {
       <SearchInput
         placeholder="Search for applications"
         description="applications"
-        defaultValue={activeApplication?.name || ""}
+        value={activeApplication?.name || ""}
         disabled
         activeFilters={[
           {
             id: 1,
             name: "applications",
             description: "applications",
+            entity_type: "applications",
             is_selected: true,
           },
         ]}
@@ -38,13 +39,14 @@ export function StateView() {
         placeholder="Search for sessions"
         description="sessions"
         handleOptionSubmit={setActiveSession}
-        defaultValue={activeSession?.name || ""}
+        value={activeSession?.name || ""}
         include_action_icons={["remove_from_state"]}
         activeFilters={[
           {
             id: 1,
             name: "sessions",
             description: "sessions",
+            entity_type: "sessions",
             is_selected: true,
           },
         ]}
@@ -53,13 +55,14 @@ export function StateView() {
         placeholder="Search for tasks"
         description="tasks"
         handleOptionSubmit={setActiveTask}
-        defaultValue={activeTask?.name || ""}
+        value={activeTask?.name || ""}
         include_action_icons={["remove_from_state"]}
         activeFilters={[
           {
             id: 1,
             name: "tasks",
             description: "tasks",
+            entity_type: "tasks",
             is_selected: true,
           },
         ]}
@@ -68,13 +71,14 @@ export function StateView() {
         placeholder="Search for action steps"
         description="action steps"
         handleOptionSubmit={setActiveActionStep}
-        defaultValue={activeActionStep?.name || ""}
+        value={activeActionStep?.name || ""}
         include_action_icons={["remove_from_state"]}
         activeFilters={[
           {
             id: 1,
             name: "action_steps",
             description: "action steps",
+            entity_type: "action_steps",
             is_selected: true,
           },
         ]}
@@ -82,14 +86,15 @@ export function StateView() {
       <SearchInput
         placeholder="Search for records"
         description="records"
-        // handleOptionSubmit={setActiveActionStep}
-        // defaultValue={activeActionStep?.name}
+        // onChange={setActiveActionStep}
+        // value={activeActionStep?.name}
         include_action_icons={["remove_from_state"]}
         activeFilters={[
           {
             id: 1,
             name: "records",
             description: "records",
+            entity_type: "records",
             is_selected: true,
           },
         ]}

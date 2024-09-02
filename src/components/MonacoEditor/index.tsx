@@ -119,7 +119,9 @@ export const MonacoEditorFormInput = ({ ...props }: any) => {
         {...props?.schema}
         value={props?.value}
         setValue={props?.onChange}
-        field={props?.schema.title.toLowerCase().replace(/ /g, "_")}
+        field={
+          props?.schema.title.toLowerCase().replace(/ /g, "_") || props?.label
+        }
         // {...props}
       />
     </>

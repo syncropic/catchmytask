@@ -1,5 +1,5 @@
 import { ActionIcon, Autocomplete, Loader, Tooltip } from "@mantine/core";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { debounce } from "lodash";
 import { useFetchQueryDataByState, useNavigation } from "@components/Utils";
 import renderSearchItem from "@components/SearchItem";
@@ -14,22 +14,27 @@ function SearchInput<T extends Record<string, any>>({
   placeholder = "Search",
   label,
   description,
-  handleOptionSubmit = () => {},
-  defaultValue,
+  onChange,
+  handleOptionSubmit,
+  value,
   disabled,
   include_action_icons,
+  schema,
 }: SearchInputComponentProps<T>) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(value || "");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [autocompleteData, setAutocompleteData] = useState<any[]>([]);
+  const abortController = useRef<AbortController>();
   const { searchFilters } = useAppStore();
+  const navigate = useNavigation();
 
-  // Ensure TypeScript knows searchFilters is an array of FilterItem objects
   const globalActiveFilters = searchFilters.filter(
     (filter: FilterItem) => filter.is_selected
   );
 
-  // Update debounced query after a delay
   useEffect(() => {
+    console.log("search input effect", query);
+
     const handler = debounce(() => {
       setDebouncedQuery(query);
     }, 300);
@@ -40,71 +45,69 @@ function SearchInput<T extends Record<string, any>>({
     };
   }, [query]);
 
-  let selected_filters = activeFilters || globalActiveFilters;
+  let selected_filters =
+    activeFilters || schema?.activeFilters || globalActiveFilters;
 
-  // Prepare the state object for your custom hook
   const state = {
     query_name: "search",
     search_term: debouncedQuery,
-    success_message_code: success_message_code,
+    success_message_code,
     filters: selected_filters,
   };
 
-  const { data, isLoading, isError, error } = useFetchQueryDataByState(state);
-  const navigate = useNavigation(); // Get the navigation function
+  const { data, isLoading, error, isError } = useFetchQueryDataByState(state);
 
-  // Map the search results to the required structure
-  const autocompleteData =
-    data?.data
-      ?.find((item: any) => item?.message?.code === success_message_code)
-      ?.data[0]?.search_results?.map((item: any) => ({
-        value: item.id, // Use the unique ID of the item as the value
-        label: item.name, // Assign 'label' for the Autocomplete component to recognize
-        description: item.description,
-        entity_type: item.entity_type,
-        author_id: item.author_id,
-        id: item.id,
-        name: item.name,
-      })) || [];
+  useEffect(() => {
+    if (data) {
+      const results =
+        data.data
+          ?.find((item: any) => item?.message?.code === success_message_code)
+          ?.data[0]?.search_results?.map((item: any) => ({
+            value: item.id,
+            label: item.name,
+            description: item.description,
+            entity_type: item.entity_type,
+            author_id: item.author_id,
+            id: item.id,
+            name: item.name,
+          })) || [];
+      console.log("search results setting autocompletedata effect", results);
+      setAutocompleteData(results);
+    }
+  }, [data, success_message_code]);
 
-  const enhancedHandleOptionSubmit = (value: string) => {
-    // console.log(value);
+  const enhancedHandleOptionSubmit = (value: string | null) => {
     const selectedItem = autocompleteData.find(
       (item: any) => item.value === value
     );
     if (selectedItem) {
-      handleOptionSubmit(selectedItem); // Pass the selected
-      navigate(selectedItem); // Navigate using the session ID
+      if (handleOptionSubmit) handleOptionSubmit(selectedItem);
+      if (onChange) onChange(selectedItem?.value);
+      navigate(selectedItem);
     }
   };
 
   return (
     <div className="flex items-end w-full space-x-2">
       <div className="flex-grow">
-        {/* <SearchInput
-              placeholder={placeholder}
-              description={description}
-              activeFilters={activeFilters}
-              disabled={disabled}
-              defaultValue={defaultValue}
-            /> */}
         <Autocomplete
-          value={defaultValue || query}
+          value={query}
           onChange={setQuery}
           data={autocompleteData.filter((item: any) =>
             selected_filters
-              .map((filter: any) => filter.name)
+              .map((filter: any) => filter.entity_type)
               .includes(item.entity_type)
           )}
-          renderOption={(props) => renderSearchItem(props)} // Use custom render function
+          // data={autocompleteData}
+          renderOption={(props) => renderSearchItem(props)}
           rightSection={isLoading ? <Loader size="xs" /> : null}
           placeholder={placeholder}
           label={label}
           description={description}
           error={isError ? error?.message : undefined}
-          limit={10} // Limit the number of items rendered at once
-          maxDropdownHeight={300} // Control the maximum height of the dropdown
-          onOptionSubmit={enhancedHandleOptionSubmit} // Handle option submission
+          // limit={10}
+          maxDropdownHeight={300}
+          onOptionSubmit={enhancedHandleOptionSubmit}
           disabled={disabled}
         />
       </div>
@@ -119,7 +122,7 @@ function SearchInput<T extends Record<string, any>>({
             size="xs"
             variant="default"
             aria-label="Clear from state"
-            onClick={() => handleOptionSubmit(null)}
+            onClick={() => enhancedHandleOptionSubmit(null)}
             style={{ visibility: disabled ? "hidden" : "visible" }}
           >
             <IconX size={18} />
@@ -140,7 +143,6 @@ function SearchInput<T extends Record<string, any>>({
           </ActionIcon>
         </Tooltip>
       )}
-
       {include_action_icons?.includes("delete_selected_item") && (
         <Tooltip label="Delete selected item" position="top">
           <ActionIcon

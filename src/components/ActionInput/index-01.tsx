@@ -17,7 +17,6 @@ import {
   Group,
   Text,
   TextInput,
-  Title,
   Tooltip,
 } from "@mantine/core";
 // import { ActionControlFormWrapper } from "@components/ActionControlForm";
@@ -533,6 +532,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                                     schema.properties[key]?.label ||
                                     schema.properties[key]?.title
                                   }
+                                  // placeholder={
+                                  //   schema.properties[key]?.placeholder
+                                  // }
+                                  // {...schema.properties[key]}
                                   searchable={true}
                                   value={field.state.value}
                                   onBlur={field.handleBlur}
@@ -562,57 +565,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   </Accordion.Panel>
                 </Accordion.Item>
               ))}
-
-              {/* Handle implement Keys */}
-              {record?.implement && (
-                <Accordion.Item value="implement" key="implement">
-                  <Accordion.Control>
-                    <Title c="orange" order={5}>
-                      Implement
-                    </Title>
-                  </Accordion.Control>
-                  <Accordion.Panel>
-                    {Object.entries(record.implement).map(([key, value]) => {
-                      const Component = getComponentByResourceType(
-                        "MonacoEditorFormInput"
-                      ); // Default to TextInput
-                      let field_key = `implement.${key
-                        .toLowerCase()
-                        .replace(/ /g, "_")}`;
-                      return (
-                        <div key={field_key} className="mb-4">
-                          <form.Field name={field_key}>
-                            {(field) => (
-                              <>
-                                <Component
-                                  schema={{
-                                    component: "MonacoEditorFormInput",
-                                    default: null,
-                                    placeholder: `Enter ${field_key}`,
-                                    size: "lg",
-                                    title: field_key,
-                                    type: "string",
-                                    language: "python",
-                                    // ...value, // Use any additional properties from implement value
-                                  }}
-                                  label={field_key}
-                                  value={field.state.value}
-                                  onBlur={field.handleBlur}
-                                  onChange={field.handleChange}
-                                  form={form}
-                                  isLoading={mutationIsLoading}
-                                />
-                                <FieldInfo field={field} />
-                              </>
-                            )}
-                          </form.Field>
-                        </div>
-                      );
-                    })}
-                  </Accordion.Panel>
-                </Accordion.Item>
-              )}
-
               {children && (
                 <Accordion.Item
                   value={

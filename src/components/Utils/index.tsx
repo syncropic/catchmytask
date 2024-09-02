@@ -1384,6 +1384,8 @@ export function useFetchDataModelByState(state: any) {
 
 export function useFetchQueryDataByState(state: any) {
   const { runtimeConfig: config } = useAppStore();
+  // pop out frequently changing search_term or other part of state i don't want to trigger a new fetch/use in queryKey
+  const { search_term, ...rest } = state;
 
   const { data, isLoading, error, isError } = useCustom({
     url: `${config?.API_URL}/execute-query`,
