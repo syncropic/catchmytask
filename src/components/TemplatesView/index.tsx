@@ -92,22 +92,7 @@ export const TemplatesViewWrapper: React.FC<TemplatesViewWrapperProps> = ({
           )?.data
         }
         data_fields={data_fields}
-        read_write_mode={read_write_mode}
         isLoadingDataItems={queryDataIsLoading}
-        resource_group={entity}
-        execlude_components={[
-          "input_mode",
-          "submit_button",
-          "columns",
-          "custom_views",
-          "save",
-          "live_updates",
-          "follow_up",
-          "execute_selected",
-          "execute_all",
-          "view_as",
-          "actions",
-        ]}
         ui={ui}
       ></DataDisplay>
     </>

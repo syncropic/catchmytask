@@ -11,7 +11,7 @@ import { useAppStore } from "src/store";
 import _ from "lodash";
 
 interface ActionStepsProps {
-  entity: string;
+  entity_type: string;
   types?: string[];
   state?: any;
   read_write_mode?: string;
@@ -25,7 +25,7 @@ interface ActionStepsProps {
 }
 
 export const ActionStepsWrapper = ({
-  entity = "task",
+  entity_type = "action_steps",
   types,
   read_write_mode = "read",
   ui = {},
@@ -149,6 +149,7 @@ ActionStepsProps) => {
                 (item: any) => item?.message?.code === success_message_code
               )?.data || []
             }
+            record={record || {}}
             // data_fields={
             //   (
             //     data?.data?.find(
@@ -160,14 +161,15 @@ ActionStepsProps) => {
             //   })) || []
             // }
             data_fields={data_fields}
-            read_write_mode={read_write_mode}
+            entity_type={entity_type}
+            // read_write_mode={read_write_mode}
             isLoadingDataItems={isLoading}
-            resource_group={success_message_code}
-            execlude_components={exclude_components}
+            // resource_group={success_message_code}
+            // execlude_components={exclude_components}
             ui={{}}
-            invalidate_queries_on_submit_success={
-              invalidate_queries_on_submit_success
-            }
+            // invalidate_queries_on_submit_success={
+            //   invalidate_queries_on_submit_success
+            // }
           ></DataDisplay>
         </>
       )}

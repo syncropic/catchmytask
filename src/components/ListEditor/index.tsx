@@ -10,6 +10,7 @@ import {
   ResultsComponentProps,
 } from "@components/interfaces";
 import { aggregate_views, views } from "@data/index";
+import { v4 as uuidv4 } from "uuid"; // Import UUID generator
 import {
   ActionIcon,
   Switch,
@@ -79,6 +80,21 @@ import ActionInputWrapper from "@components/ActionInput";
 import { useAppStore } from "src/store";
 import RecordsActionWrapper from "@components/RecordsAction";
 import Board from "@components/Board";
+import {
+  DragDropContext,
+  Draggable,
+  type DropResult,
+  Droppable,
+} from "@hello-pangea/dnd";
+import { TableTd } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconGripVertical } from "@tabler/icons-react";
+import {
+  DataTable,
+  DataTableColumn,
+  DataTableDraggableRow,
+} from "mantine-datatable";
+import companies from "./companies.json";
 
 declare module "@tanstack/react-table" {
   //add fuzzy filter to the filterFns
@@ -283,3 +299,160 @@ DataDisplayComponentProps<T>) {
 }
 
 export default DataDisplay;
+
+interface RecordData {
+  id: string;
+  name: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  missionStatement: string;
+}
+export const ListEditorFormInput = ({ ...props }: any) => {
+  // const transformedRecords = props?.value?.map((item: string, index: any) => ({
+  //   id: uuidv4(), // Generate a unique ID for each item
+  //   description: item,
+  //   index: index + 1,
+  // }));
+
+  // // Set transformed records as the initial state
+  // const [records, setRecords] = useState<RecordData[]>(transformedRecords);
+  // const { selectedRecords, setSelectedRecords } = useAppStore();
+
+  const [records, setRecords] = useState<RecordData[]>([]); // Initialize with an empty array
+  const { selectedRecords, setSelectedRecords } = useAppStore();
+
+  // Update records whenever props.value changes
+  // for id use the item with all spaces replaced with _
+  useEffect(() => {
+    if (props.value && props.value.length > 0) {
+      const transformedRecords = props.value.map(
+        (item: string, index: number) => ({
+          // id: item.replace(/ /g, "_"),
+          id: String(index + 1),
+          description: item,
+          index: index + 1,
+        })
+      );
+      setRecords(transformedRecords); // Update state with transformed records
+    }
+  }, [props.value]); // Dependency array ensures effect runs when props.value changes
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const items = Array.from(records);
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+    const [reorderedItem] = items.splice(sourceIndex, 1);
+    items.splice(destinationIndex, 0, reorderedItem);
+
+    let items_with_index = items.map((item, index) => {
+      return { ...item, index: index + 1 };
+    });
+    setRecords(items_with_index);
+    // notifications.show({
+    //   title: "Table reordered",
+    //   message: `The company named "${
+    //     items[sourceIndex].name
+    //   }" has been moved from position ${sourceIndex + 1} to ${
+    //     destinationIndex + 1
+    //   }.`,
+    //   color: "blue",
+    // });
+  };
+
+  const handleSelectValue = (value: any) => {
+    // console.log("selected value", value);
+    setSelectedRecords(value);
+  };
+
+  const columns: DataTableColumn<RecordData>[] = [
+    // add empty header column for the drag handle
+    { accessor: "", hiddenContent: true, width: 50 },
+    { accessor: "description" },
+    { accessor: "index", width: 40 },
+    // { accessor: "streetAddress", width: 150 },
+    // { accessor: "city", width: 150 },
+    // { accessor: "state", width: 150 },
+  ];
+  return (
+    <>
+      {/* {props?.schema?.title && (
+        <Text fw={500} size="sm">
+          {props?.schema?.title}
+        </Text>
+      )} */}
+      {/* <div>{JSON.stringify(selectedRecords)}</div> */}
+      {/* <div>{JSON.stringify(records)}</div> */}
+      {/* <div>{JSON.stringify(props?.value)}</div> */}
+      {/* {props?.value && (
+        <NaturalLanguageEditor
+          // {...props?.schema}
+          // value={props?.value}
+          value={JSON.stringify(props?.value)}
+          setValue={props?.onChange}
+          form={props?.form}
+          isLoading={props?.isLoading}
+          // field={props?.schema.title.toLowerCase().replace(/ /g, "_")}
+          // {...props}
+        />
+      )} */}
+      {props?.value && (
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <DataTable<RecordData>
+            columns={columns}
+            records={records}
+            // height={300}
+            withTableBorder
+            withColumnBorders
+            tableWrapper={({ children }) => (
+              <Droppable droppableId="datatable">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef}>
+                    {children}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            )}
+            styles={{ table: { tableLayout: "fixed" } }}
+            selectedRecords={selectedRecords}
+            onSelectedRecordsChange={handleSelectValue}
+            rowFactory={({
+              record,
+              index,
+              rowProps,
+              children,
+            }: {
+              record: RecordData;
+              index: number;
+              rowProps: any;
+              children: React.ReactNode;
+            }) => (
+              <Draggable key={record.id} draggableId={record.id} index={index}>
+                {(provided, snapshot) => (
+                  <DataTableDraggableRow
+                    isDragging={snapshot.isDragging}
+                    {...rowProps}
+                    {...provided.draggableProps}
+                  >
+                    {/** custom drag handle */}
+                    <TableTd
+                      {...provided.dragHandleProps}
+                      ref={provided.innerRef}
+                    >
+                      <IconGripVertical size={12} />
+                    </TableTd>
+                    {children}
+                  </DataTableDraggableRow>
+                )}
+              </Draggable>
+            )}
+          />
+        </DragDropContext>
+      )}
+    </>
+    // <div>monaco editor form input</div>
+  );
+};

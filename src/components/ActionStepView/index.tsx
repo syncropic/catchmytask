@@ -185,7 +185,6 @@ const SelectComponent = ({ action_step }: { action_step: any }) => {
           )?.data_fields
         }
         isLoadingDataItems={isLoading}
-        resource_group={action_step?.name}
       ></DataDisplay>
     </div>
   );

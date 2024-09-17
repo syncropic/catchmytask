@@ -2,50 +2,58 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-// export const useInstanceStore = create((set) => ({
-//   wavesurfer: null,
-//   setWavesurfer: (wsInstance) => set({ wavesurfer: wsInstance }),
-//   clearWavesurfer: () => set({ wavesurfer: null }),
-//   wavesurferMultiTrackInstance: null,
-//   setWavesurferMultiTrackInstance: (wsInstance) =>
-//     set({ wavesurferMultiTrackInstance: wsInstance }),
-//   clearWavesurferMultiTrackInstance: () =>
-//     set({ wavesurferMultiTrackInstance: null }),
-// }));
+export const useTransientStore = create((set) => ({
+  forms: {}, // This will store form instances and their submit functions
 
-const useAppStore = create(
+  // Set the submit handler for a specific form
+  setFormSubmitHandler: (formId, submitForm) =>
+    set((state) => ({
+      forms: {
+        ...state.forms,
+        [formId]: {
+          ...state.forms[formId],
+          submitForm,
+        },
+      },
+    })),
+
+  // Set the form instance for a specific form
+  setFormInstance: (formId, formInstance) =>
+    set((state) => ({
+      forms: {
+        ...state.forms,
+        [formId]: {
+          ...state.forms[formId],
+          formInstance,
+        },
+      },
+    })),
+
+  // Remove a form from the store
+  // removeForm: (formId) =>
+  //   set((state) => {
+  //     const newForms = { ...state.forms };
+  //     delete newForms[formId];
+  //     return { forms: newForms };
+  //   }),
+
+  // // Retrieve the submit handler for a specific form
+  // getFormSubmitHandler: (formId) => (state) =>
+  //   state.forms?.[formId]?.submitForm || null,
+
+  // // Retrieve the form instance for a specific form
+  // getFormInstance: (formId) => (state) =>
+  //   state.forms?.[formId]?.formInstance || null,
+
+  // // Example non-persisted state (you can add more)
+  // nonPersistedState: null,
+  // setNonPersistedState: (stateValue) =>
+  //   set((state) => ({ nonPersistedState: stateValue })),
+}));
+
+export const useAppStore = create(
   persist(
     (set) => ({
-      // deck1Track: null,
-      // deck2Track: null,
-      // setDeck1Track: (track) => set((state) => ({ deck1Track: track })),
-      // setDeck2Track: (track) => set((state) => ({ deck2Track: track })),
-      // audioUrl: null,
-      // isPlaying: false,
-      // setAudioUrl: (url) => set({ audioUrl: url }),
-      // togglePlayPause: () => set((state) => ({ isPlaying: !state.isPlaying })),
-      // timeline: {
-      //   currentTime: 0,
-      //   duration: 60,
-      //   isPlaying: false,
-      // },
-      // setTimeline: (timeline) => set({ timeline }),
-      // setCurrentTime: (currentTime) =>
-      //   set((state) => ({ timeline: { ...state.timeline, currentTime } })),
-      // toggleTimelinePlayPause: () =>
-      //   set((state) => ({
-      //     timeline: { ...state.timeline, isPlaying: !state.timeline.isPlaying },
-      //   })),
-      // channel1: null,
-      // setChannel1: (channel) => set((state) => ({ channel1: channel })),
-      // channel2: null,
-      // setChannel2: (channel) => set((state) => ({ channel2: channel })),
-      // timeChannel: null,
-      // setTimeChannel: (channel) => set((state) => ({ timeChannel: channel })),
-      // actionType: null,
-      // setActionType: (actionType) => set((state) => ({ actionType })),
-      // activeItem: null,
-      // setActiveItem: (activeItem) => set((state) => ({ activeItem })),
       activeLayout: {
         leftSection: {
           isDisplayed: true,
@@ -73,6 +81,34 @@ const useAppStore = create(
         },
       },
       setActiveLayout: (activeLayout) => set((state) => ({ activeLayout })),
+      activeActionInputLayout: {
+        leftSection: {
+          isDisplayed: true,
+        },
+        centerSection: {
+          isDisplayed: true,
+        },
+        rightSection: {
+          isDisplayed: true,
+        },
+        searchSession: {
+          isDisplayed: true,
+        },
+        searchInput: {
+          isDisplayed: true,
+        },
+        quickActionsBar: {
+          isDisplayed: true,
+        },
+        mobileStateView: {
+          isDisplayed: true,
+        },
+        mobileCustomComponents: {
+          isDisplayed: false,
+        },
+      },
+      setActiveActionInputLayout: (activeActionInputLayout) =>
+        set((state) => ({ activeActionInputLayout })),
       activeSections: {
         query: {
           isPinned: true,
@@ -86,103 +122,30 @@ const useAppStore = create(
       },
       setActiveSections: (activeSections) =>
         set((state) => ({ activeSections })),
+      entity_types: {
+        action_steps: {
+          inputMode: "display",
+        },
+      },
+      focused_entities: {},
+      setFocusedEntities: (focused_entities) =>
+        set((state) => ({ ...state, focused_entities: focused_entities })),
+      setEntityTypes: (entity_types) => set((state) => ({ entity_types })),
       colorScheme: {
         scheme: "auto",
       },
       setColorScheme: (colorScheme) => set((state) => ({ colorScheme })),
-      // activeQuery: null,
-      // setActiveQuery: (activeQuery) => set((state) => ({ activeQuery })),
-      // activeQueryResults: null,
-      // setActiveQueryResults: (activeQueryResults) =>
-      //   set((state) => ({ activeQueryResults })),
-      // activeQueryGraph: null,
-      // setActiveQueryGraph: (activeQueryGraph) =>
-      //   set((state) => ({ activeQueryGraph })),
-      // touchedFields: [],
-      // setTouchedFields: (touchedFields) =>
-      //   set((state) => ({ touchedFields })),
-      // activeStructuredQuery: null,
-      // setActiveStructuredQuery: (activeStructuredQuery) =>
-      //   set((state) => ({ activeStructuredQuery })),
+
       activeRecord: null,
       setActiveRecord: (activeRecord) => set((state) => ({ activeRecord })),
-      // activeActionOption: null,
-      // setActiveActionOption: (activeActionOption) =>
-      //   set((state) => ({ activeActionOption })),
-      // activeActionId: null,
-      // setActiveActionId: (activeActionId) =>
-      //   set((state) => ({ activeActionId })),
-      // activeResultsSection: null,
-      // setActiveResultsSection: (activeResultsSection) =>
-      //   set((state) => ({ activeResultsSection })),
-      // activeActionSelectionComponent: null,
-      // setActiveActionSelectionComponent: (activeActionSelectionComponent) =>
-      //   set((state) => ({ activeActionSelectionComponent })),
+
       activeMouseCoordinates: {
         x: 0,
         y: 0,
       },
       setActiveMouseCoordinates: (activeMouseCoordinates) =>
         set((state) => ({ activeMouseCoordinates })),
-      // activeSessionId: null,
-      // setActiveSessionId: (activeSessionId) =>
-      //   set((state) => ({ activeSessionId })),
-      // activeAction: null,
-      // setActiveAction: (activeAction) => set((state) => ({ activeAction })),
-      // isActionsSelectionOpen: false,
-      // setIsActionsSelectionOpen: (isActionsSelectionOpen) =>
-      //   set((state) => ({ isActionsSelectionOpen })),
-      // isFloatingWindowOpen: false,
-      // setIsFloatingWindowOpen: (isFloatingWindowOpen) =>
-      //   set((state) => ({ isFloatingWindowOpen })),
-      // activeFloatingWindow: null,
-      // setActiveFloatingWindow: (activeFloatingWindow) =>
-      //   set((state) => ({ activeFloatingWindow })),
-      // activeDataset: null,
-      // setActiveDataset: (activeDataset) => set((state) => ({ activeDataset })),
-      // activeActionView: null,
-      // setActiveActionView: (activeActionView) =>
-      //   set((state) => ({ activeActionView })),
-      // queryAction: null,
-      // setQueryAction: (queryAction) => set((state) => ({ queryAction })),
-      // activeDataModel: null,
-      // setActiveDataModel: (activeDataModel) =>
-      //   set((state) => ({ activeDataModel })),
-      // activeFile: null,
-      // setActiveFile: (activeFile) => set((state) => ({ activeFile })),
-      // activeRequestData: null,
-      // setActiveRequestData: (activeRequestData) =>
-      //   set((state) => ({ activeRequestData })),
-      // opened: false,
-      // setOpened: (opened) => set((state) => ({ opened })),
-      // activeItem_2: null,
-      // setActiveItem_2: (activeItem_2) => set((state) => ({ activeItem_2 })),
-      // activeItem_3: null,
-      // setActiveItem_3: (activeItem_3) => set((state) => ({ activeItem_3 })),
-      // syncFiles: [],
-      // setSyncFiles: (syncFiles) => set((state) => ({ syncFiles })),
-      // text: "",
-      // dynamicSections: [], // { id, type, value, position }
-      // setText: (text) => set((state) => ({ ...state, text })),
-      // setDynamicSections: (sections) =>
-      //   set((state) => ({ ...state, dynamicSections: sections })),
-      // selectedColumnType: "textinput", // default value
-      // setSelectedColumnType: (type) => set({ selectedColumnType: type }),
-      // selectedColumns: [], // { id, type, value, position }
-      // setSelectedColumns: (columns) =>
-      //   set((state) => ({ ...state, selectedColumns: columns })),
-      // activeViews: [],
-      // setActiveViews: (view) =>
-      //   set((state) => ({ ...state, activeViews: view })),
-      // activeViewStats: {},
-      // setActiveViewStats: (stats) =>
-      //   set((state) => ({ ...state, activeViewStats: stats })),
-      // activeSessions: [],
-      // setActiveSessions: (view) =>
-      //   set((state) => ({ ...state, activeSessions: view })),
-      // activeSessionStats: {},
-      // setActiveSessionStats: (stats) =>
-      //   set((state) => ({ ...state, activeSessionStats: stats })),
+
       activeSession: null,
       setActiveSession: (session) =>
         set((state) => ({ ...state, activeSession: session })),
@@ -191,55 +154,44 @@ const useAppStore = create(
       activeActionStep: null,
       setActiveActionStep: (actionStep) =>
         set((state) => ({ ...state, activeActionStep: actionStep })),
-      // activeActionActiveView: {},
-      // setActiveActionActiveView: (view) =>
-      //   set((state) => ({ ...state, activeActionActiveView: view })),
-      // activeField: {},
-      // setActiveField: (field) =>
-      //   set((state) => ({ ...state, activeField: field })),
-      // focusedFields: {},
-      // setFocusedFields: (fields) =>
-      //   set((state) => ({ ...state, focusedFields: fields })),
-      // selectedItems: {},
-      // setSelectedItems: (items) =>
-      //   set((state) => ({ ...state, selectedItems: items })),
-      // analytics: {},
-      // setAnalytics: (analytics) => set((state) => ({ analytics })),
-      // activeDataset: {},
-      // setActiveDataset: (dataset) =>
-      //   set((state) => ({ ...state, activeDataset: dataset })),
+      selectedRecords: [],
+      setSelectedRecords: (records) =>
+        set((state) => ({ ...state, selectedRecords: records })),
+
+      component_input_mode: null,
+      setComponentInputMode: (mode) =>
+        set((state) => ({ ...state, component_input_mode: mode })),
+      query_mode: null,
+      setQueryMode: (mode) => set((state) => ({ ...state, query_mode: mode })),
+      execute_mode: null,
+      setExecuteMode: (mode) =>
+        set((state) => ({ ...state, execute_mode: mode })),
+      save_mode: null,
+      setSaveMode: (mode) => set((state) => ({ ...state, save_mode: mode })),
+      share_mode: null,
+      setShareMode: (mode) => set((state) => ({ ...state, share_mode: mode })),
+      cancel_mode: null,
+      setCancelMode: (mode) =>
+        set((state) => ({ ...state, cancel_mode: mode })),
+      display_mode: null,
+      setDisplayMode: (mode) =>
+        set((state) => ({ ...state, display_mode: mode })),
+      action: "execute",
+      setAction: (action) => set((state) => ({ ...state, action: action })),
       activeApplication: null,
       setActiveApplication: (application) =>
         set((state) => ({ ...state, activeApplication: application })),
-      // activeViewItem: {},
-      // setActiveViewItem: (view_item) =>
-      //   set((state) => ({ ...state, activeViewItem: view_item })),
-      // activeColumnOptions: [],
-      // setActiveColumnOptions: (view) =>
-      //   set((state) => ({ ...state, activeColumnOptions: view })),
-      // natural_language_query_form_values: {},
-      // setNaturalLanguageQueryFormValues: (values) =>
-      //   set((state) => ({
-      //     ...state,
-      //     natural_language_query_form_values: values,
-      //   })),
+
       action_input_form_values: {},
       setActionInputFormValues: (values) =>
         set((state) => ({ ...state, action_input_form_values: values })),
-      // action_steps: [],
-      // setActionSteps: (steps) =>
-      //   set((state) => ({ ...state, action_steps: steps })),
-      // activeActionStep: null,
-      // setActiveActionStep: (step) =>
-      //   set((state) => ({ ...state, activeActionStep: step })),
+
       sessionConfig: {
         interaction_mode: "interactive",
       },
       setSessionConfig: (config) =>
         set((state) => ({ ...state, sessionConfig: config })),
-      // global_variables: {},
-      // setGlobalVariables: (variables) =>
-      //   set((state) => ({ ...state, global_variables: variables })),
+
       runtimeConfig: null,
       setRuntimeConfig: (config) => set({ runtimeConfig: config }),
       fetchRuntimeConfig: async () => {
@@ -304,6 +256,55 @@ const useAppStore = create(
           entity_type: "credentials",
           is_selected: true,
         },
+        {
+          id: 9,
+          name: "mentions",
+          description: "mentions",
+          entity_type: "mentions",
+          is_selected: true,
+        },
+        {
+          id: 10,
+          name: "users",
+          description: "users",
+          entity_type: "users",
+          is_selected: true,
+        },
+        {
+          id: 11,
+          name: "display modes",
+          description: "display modes",
+          entity_type: "display modes",
+          is_selected: true,
+        },
+        {
+          id: 12,
+          name: "share modes",
+          description: "share modes",
+          entity_type: "share modes",
+          is_selected: true,
+        },
+        {
+          id: 13,
+          name: "save modes",
+          description: "save modes",
+          entity_type: "save modes",
+          is_selected: true,
+        },
+        {
+          id: 14,
+          name: "query modes",
+          description: "query modes",
+          entity_type: "query modes",
+          is_selected: true,
+        },
+        {
+          id: 15,
+          name: "profiles",
+          description: "profiles",
+          entity_type: "profiles",
+          is_selected: true,
+        },
       ],
       setSearchFilters: (filters) =>
         set((state) => ({ ...state, searchFilters: filters })),
@@ -314,5 +315,3 @@ const useAppStore = create(
     }
   )
 );
-
-export { useAppStore };

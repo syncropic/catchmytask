@@ -170,13 +170,6 @@ export function GenerativeComponent({
         }
         data_fields={data_fields}
         isLoadingDataItems={recommendationDataIsLoading}
-        resource_group={"natural_language_query_indicators"}
-        name={name}
-        execlude_components={[
-          "global_search",
-          "custom_views_columns_view_as",
-          "pagination",
-        ]}
       />
     </>
   );

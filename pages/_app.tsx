@@ -110,6 +110,17 @@ const App = (props: React.PropsWithChildren) => {
     fetchRuntimeConfig();
   }, [fetchRuntimeConfig]);
 
+  // useEffect(() => {
+  //   if (session?.error === "RefreshAccessTokenError") {
+  //     // signIn(); // Force sign in to resolve the error
+  //     // signout and push to login page
+  //     signOut({
+  //       redirect: true,
+  //       callbackUrl: "/login",
+  //     });
+  //   }
+  // }, [session]);
+
   if (status === "loading" || !runtimeConfig) {
     return <span>loading...</span>;
   }

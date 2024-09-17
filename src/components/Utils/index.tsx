@@ -32,6 +32,10 @@ import {
   ActionIcon,
   Input,
   Switch,
+  Indicator,
+  Popover,
+  rem,
+  Tooltip,
 } from "@mantine/core";
 import { DateInput, DateTimePicker } from "@mantine/dates";
 import {
@@ -43,7 +47,7 @@ import {
   useOne,
 } from "@refinedev/core";
 import { MRT_ColumnDef } from "mantine-react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DateTime from "src/components/DateTime";
 import { useAppStore } from "src/store";
 import { localDb } from "src/localDb";
@@ -67,6 +71,7 @@ import {
 } from "@components/DropdownMenu";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 import {
+  IconAt,
   IconBooks,
   IconBrandAirtable,
   IconBrandAzure,
@@ -83,6 +88,7 @@ import {
   IconDatabase,
   IconDots,
   IconFunction,
+  IconHighlight,
   IconMessageCircle,
   IconNotification,
   IconPlane,
@@ -90,6 +96,7 @@ import {
   IconPresentation,
   IconRobot,
   IconServer,
+  IconSql,
   IconTopologyStar3,
   IconTransform,
   IconUsersGroup,
@@ -108,6 +115,8 @@ import { NaturalLanguageEditorFormInput } from "@components/NaturalLanguageEdito
 import AccordionList from "@components/List/AccordionList";
 import { Checkbox } from "@components/Checkbox";
 import SearchInput from "@components/SearchInput";
+import { useClickOutside, useDisclosure } from "@mantine/hooks";
+import { ListEditorFormInput } from "@components/ListEditor";
 // import MediaPlayerController from "@components/MediaPlayerController";
 // import MediaPlayerTimeline from "@components/MediaPlayerTimeline";
 
@@ -663,6 +672,7 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   MonacoEditor: MonacoEditor,
   MonacoEditorFormInput: MonacoEditorFormInput,
   NaturalLanguageEditorFormInput: NaturalLanguageEditorFormInput,
+  ListEditorFormInput: ListEditorFormInput,
   // LocalAudioPlayer: LocalAudioPlayer,
   FileHandler: FileHandler,
   ExcalidrawEditor: ExcalidrawEditor,
@@ -972,7 +982,7 @@ export function useFetchActionStepDataByState(state: any) {
   const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config?.API_URL}/catch-action-step`,
+    url: `${config?.API_URL}/execute-task`,
     method: "get",
     config: {
       payload: {
@@ -1016,6 +1026,96 @@ export function useFetchActionStepDataByState(state: any) {
   });
 
   return { data, isLoading, error, isError };
+}
+
+export function useQueryByState(state: any) {
+  // const variables = state;
+  const { runtimeConfig: config } = useAppStore();
+
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config?.API_URL}/query`,
+    method: "post",
+    config: {
+      payload: {
+        ...state,
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `useQueryByState_${JSON.stringify({
+          name: state?.name,
+          // execution_order: state?.action_steps[0]?.execution_order,
+          id: state?.id,
+          // success_message_code: state?.action_steps[0]?.success_message_code,
+        })}`,
+      ],
+      // enabled: false,
+    },
+  });
+
+  return { data, isLoading, error, isError };
+}
+
+export function useReadByState(state: any) {
+  // const variables = state;
+  const { runtimeConfig: config } = useAppStore();
+
+  const { data, isLoading, error, isError, refetch } = useCustom({
+    url: `${config?.API_URL}/read`,
+    method: "post",
+    config: {
+      payload: {
+        ...state,
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `readByState_${JSON.stringify({
+          success_message_code: state?.success_message_code,
+        })}`,
+      ],
+    },
+  });
+
+  return { data, isLoading, error, isError, refetch };
+}
+
+export function useReadRecordByState(state: any) {
+  // const variables = state;
+  const { runtimeConfig: config } = useAppStore();
+
+  const { data, isLoading, error, isError, refetch } = useCustom({
+    url: `${config?.API_URL}/read`,
+    method: "post",
+    config: {
+      payload: {
+        action_steps: state?.action_steps || [
+          {
+            execution_order: state?.execution_order || 1,
+            description: state?.description || "use read record by state",
+            name: state?.name || "use read record by state",
+            job: state?.description || "use read record by state",
+            method: state?.method || "select",
+            type: state?.type || "action_steps",
+            credential: state?.credential || "surrealdb catchmytask dev",
+            credential_id: "credentials:5drygx90zfe8mf2jigvl",
+            implement: state?.implement,
+            action_step_query: `SELECT * FROM ${state?.record?.id}`,
+            success_message_code: state?.success_message_code || "record_read",
+          },
+        ],
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `readByState_${JSON.stringify({
+          success_message_code: state?.success_message_code,
+        })}`,
+      ],
+    },
+  });
+
+  return { data, isLoading, error, isError, refetch };
 }
 
 export function useFetchTaskInputDataByState(state: any) {
@@ -1909,6 +2009,47 @@ const MemoizedCell = React.memo(({ content }: { content: string }) => (
   <div>{renderContent(content)}</div>
 ));
 
+function DescriptionPopover({
+  rowId,
+  isOpen,
+  onOpen,
+  onClose,
+}: {
+  rowId: string;
+  isOpen: boolean;
+  onOpen: (e: any, rowId: string) => void;
+  onClose: () => void;
+}) {
+  const ref = useClickOutside(onClose);
+
+  return (
+    <div className="pr-1">
+      <Popover
+        width={200}
+        position="bottom"
+        withArrow
+        shadow="md"
+        opened={isOpen}
+        trapFocus
+      >
+        <Popover.Target>
+          <ActionIcon
+            aria-label="Settings"
+            size={"xs"}
+            variant="subtle"
+            onClick={(e) => onOpen(e, rowId)}
+          >
+            <IconMessageCircle />
+          </ActionIcon>
+        </Popover.Target>
+        <Popover.Dropdown ref={ref}>
+          <TextInput label="prompt" placeholder="prompt" size="xs" />
+        </Popover.Dropdown>
+      </Popover>
+    </div>
+  );
+}
+
 interface UseTableColumnsProps {
   field_configurations: FieldConfiguration[];
   table_id: string;
@@ -1918,7 +2059,18 @@ export function useTableColumns({
   field_configurations,
   table_id,
 }: UseTableColumnsProps) {
-  // console.log("field_configurations", field_configurations);
+  const [openedPopover, setOpenedPopover] = useState<string | null>(null);
+
+  const handlePopoverOpen = (e: any, rowId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOpenedPopover(rowId);
+  };
+
+  const handlePopoverClose = () => {
+    setOpenedPopover(null);
+  };
+
   const tableColumns = useMemo<ColumnDef<RowData, any>[]>(
     () =>
       field_configurations?.map((item) => {
@@ -1926,15 +2078,27 @@ export function useTableColumns({
           id: `${table_id}-${item?.name}`,
           accessor: item?.accessor_key || item?.name, // Assuming each FieldConfiguration has a 'name' property
           header: item?.name, // Assuming each FieldConfiguration has a 'name' property
-          cell: (row: RowData) => (
-            <div dangerouslySetInnerHTML={{ __html: row[item?.name] }} />
-            // {renderContent(row[item.name])}
-            // <div>{renderContent(row[item.name])}</div>
-          ),
+          cell: (row: RowData) => {
+            const rowId = `${row?.id}`; // Assuming each row has a unique 'id' property
+
+            return (
+              <div className="flex">
+                {/* {item?.name === "description" && (
+                  <DescriptionPopover
+                    rowId={rowId}
+                    isOpen={openedPopover === rowId}
+                    onOpen={handlePopoverOpen}
+                    onClose={handlePopoverClose}
+                  />
+                )} */}
+                <div dangerouslySetInnerHTML={{ __html: row[item?.name] }} />
+              </div>
+            );
+          },
           // Add more properties as needed from item
         };
       }),
-    [field_configurations, table_id]
+    [field_configurations, table_id, openedPopover]
   );
 
   return { tableColumns };
@@ -2061,11 +2225,35 @@ export function DebouncedInput({
     return () => clearTimeout(timeout);
   }, [value]);
 
+  const icon = (
+    <Tooltip label="toggle sql mode" position="left">
+      <div>
+        <ActionIcon
+          size="sm"
+          variant="outline"
+          // variant="outline"
+          // color="green"
+          // onClick={(e) => handleImplement(e)}
+          // disabled={!canSubmit}
+          // loading={mutationIsLoading || isSubmitting}
+          // onClick={(e) => handleExecuteSelected(e)}
+          // disabled={!canSubmit}
+          // loading={mutationIsLoading || isSubmitting}
+        >
+          {/* hide or reveal a natural languge input with correct context */}
+          <IconSql />
+        </ActionIcon>
+        {/* // {JSON.stringify(record?.natural_language_prompt)} */}
+      </div>
+    </Tooltip>
+  );
+
   return (
     <TextInput
       size="sm"
       // {...props}
       placeholder={props?.placeholder}
+      leftSection={icon}
       value={value}
       onChange={(e) => setValue(e.target.value)}
     />
@@ -2158,3 +2346,12 @@ export function useNavigation() {
 
   return navigate;
 }
+
+// Helper function to truncate the description to a word limit
+export const truncateText = (text: string, wordLimit: number): string => {
+  const words = text.split(" ");
+  if (words.length > wordLimit) {
+    return words.slice(0, wordLimit).join(" ") + "...";
+  }
+  return text;
+};

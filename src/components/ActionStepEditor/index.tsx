@@ -43,7 +43,7 @@ ActionStepEditorProps) {
 
       <>
         <Tabs
-          defaultValue="results"
+          defaultValue="create"
           orientation="horizontal"
           variant="unstyled"
           classNames={classes}
@@ -61,6 +61,7 @@ ActionStepEditorProps) {
           </Tabs.List>
           <Tabs.Panel value="create">
             <div className="p-3">
+              {/* <div>create form</div> */}
               <ActionInputWrapper
                 name="action_step"
                 query_name="data_model"
@@ -86,13 +87,8 @@ ActionStepEditorProps) {
             />
           </Tabs.Panel>
           <Tabs.Panel value="results">
-            <MonacoEditor
-              language="json"
-              value={record}
-              // options={{
-              //   readOnly: true,
-              // }}
-            />
+            {/* <Results record={record} /> */}
+            <div>results</div>
           </Tabs.Panel>
         </Tabs>
       </>
@@ -101,3 +97,18 @@ ActionStepEditorProps) {
 }
 
 export default ActionStepEditor;
+
+// create a dedicated results component
+const Results = ({ record }: any) => {
+  let state = {
+    action_steps: [record || {}],
+  };
+  const { data, isLoading, error } = useFetchActionStepDataByState(state);
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (error) {
+    return <div>Error fetching action step data {JSON.stringify(error)}</div>;
+  }
+  return <MonacoEditor language="json" value={data} />;
+};

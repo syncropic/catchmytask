@@ -90,15 +90,8 @@ export const FileBrowserWrapper: React.FC<FileBrowserWrapperProps> = ({
           )?.data
         }
         data_fields={data_fields}
-        read_write_mode={read_write_mode}
         isLoadingDataItems={queryDataIsLoading}
-        resource_group={entity || "files"}
-        execlude_components={[
-          "custom_views_columns_view_as",
-          "pagination",
-          "live_updates",
-          "save",
-        ]}
+        record={record}
         ui={ui}
       ></DataDisplay>
     </>

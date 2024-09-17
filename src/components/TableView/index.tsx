@@ -17,6 +17,7 @@ import { useAppStore } from "src/store";
 import RecordActionsWrapper from "@components/RecordActions";
 import { sortBy } from "lodash";
 import ActionStepEditor from "@components/ActionStepEditor";
+import MonacoEditor from "@components/MonacoEditor";
 
 const PAGE_SIZES = [10, 15, 20];
 
@@ -28,8 +29,13 @@ export function TableView<T extends Record<string, any>>({
   execlude_components,
   invalidate_queries_on_submit_success,
 }: ResultsComponentProps<T>) {
-  const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
-  const { setActiveRecord, setActiveAction } = useAppStore();
+  // const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
+  const {
+    setActiveRecord,
+    setActiveAction,
+    selectedRecords,
+    setSelectedRecords,
+  } = useAppStore();
   // Media query for screens smaller than 640px (mobile devices)
   const isMobile = useMediaQuery("(max-width: 640px)");
 
@@ -47,16 +53,26 @@ export function TableView<T extends Record<string, any>>({
     ) as T[]
   );
 
+  // useEffect(() => {
+  //   const data = sortBy(
+  //     tableInstance?.getFilteredRowModel().rows?.map((row) => row.original),
+  //     sortStatus.columnAccessor
+  //   ) as T[];
+  //   setRecords(sortStatus.direction === "desc" ? data.reverse() : data);
+  // }, [sortStatus]);
+
+  // Update records whenever data_items change
   useEffect(() => {
-    const data = sortBy(
-      tableInstance?.getFilteredRowModel().rows?.map((row) => row.original),
-      sortStatus.columnAccessor
-    ) as T[];
-    setRecords(sortStatus.direction === "desc" ? data.reverse() : data);
-  }, [sortStatus]);
+    const sortedData = sortBy(data_items, sortStatus.columnAccessor);
+    setRecords(
+      sortStatus.direction === "desc" ? sortedData.reverse() : sortedData
+    );
+  }, [data_items, sortStatus]); // Trigger whenever data_items or sortStatus changes
 
   return (
     <>
+      {/* <MonacoEditor value={data_items} language="json" height="50vh" /> */}
+
       <DataTable<T>
         // page={1}
         // onPageChange={(page) => console.log(page)}
@@ -81,39 +97,41 @@ export function TableView<T extends Record<string, any>>({
                 //     whiteSpace: "nowrap",
                 //   },
                 // },
-                filter: (
-                  <>
-                    {column.getCanFilter() ? (
-                      <div>
-                        <Filter column={column} />
-                      </div>
-                    ) : null}
-                  </>
-                ),
+                // filter: (
+                //   <>
+                //     {column.getCanFilter() ? (
+                //       <div>
+                //         <Filter column={column} />
+                //       </div>
+                //     ) : null}
+                //   </>
+                // ),
               } as DataTableColumn<T>;
             })
             .filter((column) => {
               return !columns_to_filter_out.includes(String(column?.accessor));
             }) || []),
-          {
-            accessor: "actions",
-            title: <Box mr={6}>actions</Box>,
-            textAlign: "right",
-            // width: "0%", // 👈 set width to 0%
-            width: 60,
-            render: (record: T) => (
-              <RecordActionsWrapper
-                record={record}
-                name="action_step"
-                query_name="data_model"
-                success_message_code="action_input_data_model_schema"
-                setExpandedRecordIds={setExpandedRecordIds}
-                invalidate_queries_on_submit_success={
-                  invalidate_queries_on_submit_success
-                }
-              ></RecordActionsWrapper>
-            ),
-          },
+          // {
+          //   accessor: "actions",
+          //   title: <Box mr={6}>actions</Box>,
+          //   textAlign: "right",
+          //   // width: "0%", // 👈 set width to 0%
+          //   width: 60,
+          //   render: (record: T) => (
+          //     <div>{null}</div>
+          //     // <RecordActionsWrapper
+          //     //   record={record}
+          //     //   name="action_step"
+          //     //   query_name="data_model"
+          //     //   success_message_code="action_input_data_model_schema"
+          //     //   include_form_components={["execute icon"]}
+          //     //   setExpandedRecordIds={setExpandedRecordIds}
+          //     //   invalidate_queries_on_submit_success={
+          //     //     invalidate_queries_on_submit_success
+          //     //   }
+          //     // ></RecordActionsWrapper>
+          //   ),
+          // },
         ]}
         records={records}
         sortStatus={sortStatus}
@@ -130,12 +148,13 @@ export function TableView<T extends Record<string, any>>({
         // defaultColumnRender={(row, _, accessor) => {
         //   const data = row[accessor as keyof typeof row];
         //   return typeof data === "string" ? data : JSON.stringify(data);
+        //   return <div>hello world</div>;
         // }}
         onRowClick={({ record, index, event }) => {
           setActiveRecord(record);
-          if (resource_group === "action_steps") {
-            setActiveAction(record);
-          }
+          // if (resource_group === "action_steps") {
+          //   setActiveAction(record);
+          // }
         }}
         rowExpansion={{
           allowMultiple: true,
@@ -150,13 +169,14 @@ export function TableView<T extends Record<string, any>>({
                 isMobile ? "w-[400px]" : "w-full"
               } max-w-full max-h-screen overflow-y-auto p-4`}
             >
-              <ActionStepEditor
+              {/* <ActionStepEditor
                 record={record}
                 setExpandedRecordIds={setExpandedRecordIds}
                 invalidate_queries_on_submit_success={
                   invalidate_queries_on_submit_success
                 }
-              />
+              /> */}
+              <MonacoEditor value={record} language="json" height="50vh" />
             </div>
 
             // <ActionStepEditor

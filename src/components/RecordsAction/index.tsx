@@ -52,11 +52,12 @@ interface RowActionsWrapperProps {
   setExpandedRecordIds?: (ids: string[]) => void;
   success_message_code?: string;
   invalidate_queries_on_submit_success?: string[];
+  records?: any[];
   include_action_icons?: string[];
   include_form_components?: string[];
 }
 
-export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
+export const RecordsActionWrapper: React.FC<RowActionsWrapperProps> = ({
   query_name,
   name,
   action_type,
@@ -68,6 +69,7 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
   success_message_code,
   setExpandedRecordIds,
   invalidate_queries_on_submit_success,
+  records,
   include_action_icons,
   include_form_components,
 }) => {
@@ -102,9 +104,9 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
           (item: any) => item?.message?.code === "query_success_results"
         )?.data
       )} */}
-
         <ActionInputWrapper
           record={record}
+          records={records}
           exclude_components={exclude_components}
           name={name}
           children={children}
@@ -113,8 +115,6 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
           action_type={action_type}
           nested_component={nested_component}
           success_message_code={success_message_code}
-          include_form_components={include_form_components}
-          // include_action_icons={include_action_icons}
           // action_icon={
           //   <Group gap={4} justify="right" wrap="nowrap">
           //     <Tooltip label="execute" position="left">
@@ -128,61 +128,11 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
           invalidate_queries_on_submit_success={
             invalidate_queries_on_submit_success
           }
+          include_form_components={include_form_components}
         ></ActionInputWrapper>
-        {/* <Group gap={4} justify="right" wrap="nowrap">
-          <Tooltip label="execute" position="left">
-            <ActionIcon size="sm" variant="subtle" color="green">
-              <IconPlayerPlay size={16} />
-            </ActionIcon>
-          </Tooltip> */}
-
-        {/* <Tooltip label="view/edit/save" position="left">
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="green"
-            >
-              <IconEye size={16} />
-            </ActionIcon>
-          </Tooltip> */}
-        {/* <Tooltip label="lock/add to state" position="left">
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="green"
-            >
-              <IconLock size={16} />
-            </ActionIcon>
-          </Tooltip> */}
-        {/* <Tooltip label="insert into current cursor position" position="left">
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="green"
-            >
-              <IconCursorText size={16} />
-            </ActionIcon>
-          </Tooltip> */}
-        {/* <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="blue"
-                  // onClick={() => showModal({ company, action: 'edit' })}
-                >
-                  <IconEdit size={16} />
-                </ActionIcon> */}
-        {/* <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    color="red"
-                    onClick={() => showModal({ company, action: 'delete' })}
-                  >
-                    <IconTrash size={16} />
-                  </ActionIcon> */}
-        {/* </Group> */}
       </div>
     </>
   );
 };
 
-export default RecordActionsWrapper;
+export default RecordsActionWrapper;

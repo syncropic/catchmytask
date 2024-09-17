@@ -80,7 +80,8 @@ export type ComponentKey =
   | "DateTimePicker"
   | "Switch"
   | "Checkbox"
-  | "SearchInput";
+  | "SearchInput"
+  | "ListEditorFormInput";
 
 // export type IView = {
 //   resource_type: ComponentKey;
@@ -135,6 +136,40 @@ export interface IView extends IViewItem {
 //   //   columnsConfig: ColumnConfig[] | null
 //   // ) => void;
 // }
+
+export interface ActionStepsActionInputFormProps {
+  action_steps?: any;
+  name?: string;
+  success_message_code?: string;
+  children?: any;
+  nested_component?: any;
+  action_icon?: any;
+  exclude_components?: string[];
+}
+
+export interface ActionInputWrapperProps {
+  query_name?: string;
+  name?: string;
+  execution_record?: any;
+  action?: any;
+  action_type?: string;
+  entity?: string;
+  record?: any;
+  record_query?: any;
+  exclude_components?: string[];
+  children?: any;
+  nested_component?: any;
+  include_form_components?: string[];
+  setExpandedRecordIds?: (ids: string[]) => void;
+  success_message_code?: string;
+  invalidate_queries_on_submit_success?: string[];
+  description?: any;
+  update_action_input_form_values_on_submit_success?: boolean;
+  endpoint?: string;
+  action_label?: string;
+  records?: any;
+  focused_item?: string;
+}
 
 export interface TabularViewComponentProps<T extends Record<string, any>> {
   data_columns: any[]; // Define more specific type if possible
@@ -212,12 +247,45 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   name?: string;
   tableInstance?: TanStackTable<T>;
   data_items: T[];
+  record?: any;
   resource_group: string;
   execlude_components?: string[];
   // view_data: any;
   // data_columns: T[];
   data_fields: T[];
   invalidate_queries_on_submit_success?: string[];
+  // session?: ISession;
+  // // initialStateColumnPinningLeft: string[];
+  // customTableConfig?: any;
+  // updateTableVisibility: (
+  //   tableInstance: MRT_TableInstance<T>,
+  //   columnsConfig: ColumnConfig[] | null
+  // ) => void;
+}
+
+export interface DataDisplayComponentProps<T extends Record<string, any>> {
+  // data_columns: any[]; // Define more specific type if possible
+  // item: IView;
+  // resource: string;
+  // results?: any;
+  display_mode?: any;
+  record?: any;
+  entity_type?: string;
+  // data_columns?: ColumnDef<RowData>[];
+  isLoadingDataItems?: boolean;
+  // read_write_mode?: string;
+  ui?: Record<string, any>;
+  // data_columns: ColumnDef<RowData>[];
+  // name?: string;
+  // tableInstance?: TanStackTable<T>;
+  data_items: T[];
+  // record?: any;
+  // resource_group: string;
+  // execlude_components?: string[];
+  // view_data: any;
+  // data_columns: T[];
+  data_fields: T[];
+  // invalidate_queries_on_submit_success?: string[];
   // session?: ISession;
   // // initialStateColumnPinningLeft: string[];
   // customTableConfig?: any;
@@ -925,4 +993,59 @@ export interface SearchInputComponentProps<T extends Record<string, any>> {
   disabled?: boolean;
   include_action_icons?: string[];
   schema?: any;
+}
+
+export interface DataModel {
+  data_model: {
+    author_id: string;
+    created_datetime: string;
+    description: string;
+    entity_type: string;
+    id: string;
+    name: string;
+    schema: {
+      properties: Record<
+        string,
+        {
+          group: string;
+          component: string;
+          description: string;
+          placeholder?: string;
+          size?: string;
+          title: string;
+          type: string;
+          readOnly?: boolean;
+          format?: string;
+          id: string;
+          // Allow any additional properties
+          [key: string]: any;
+        }
+      >;
+      required: string[];
+      title: string;
+      type: string;
+    };
+    updated_datetime: string;
+  };
+}
+
+export interface DynamicFormProps {
+  data_model: DataModel["data_model"] | null;
+  record?: any;
+  action_steps?: any;
+  execlude_components?: string[];
+  name?: string;
+  action?: any;
+  children?: any;
+  nested_component?: any;
+  setExpandedRecordIds?: (ids: string[]) => void;
+  invalidate_queries_on_submit_success?: string[];
+  update_action_input_form_values_on_submit_success?: boolean;
+  success_message_code?: string;
+  endpoint?: string;
+  action_label?: string;
+  records?: any;
+  include_action_icons?: string[];
+  include_form_components?: string[];
+  focused_item?: string;
 }

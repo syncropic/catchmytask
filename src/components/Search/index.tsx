@@ -96,13 +96,6 @@ export function SearchComponent({ state, entity }: SearchComponentProps) {
         }
         data_fields={data_fields}
         isLoadingDataItems={recommendationDataIsLoading}
-        resource_group={"action_steps_recommendations"}
-        execlude_components={[
-          "global_search",
-          "custom_views_columns_view_as",
-          "pagination",
-          "live_action",
-        ]}
       ></DataDisplay>
     </>
   );

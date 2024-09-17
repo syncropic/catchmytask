@@ -43,36 +43,18 @@ export function Recommendations({
           data_items={tasks}
           data_fields={task_recommendations_data_fields}
           isLoadingDataItems={isLoading}
-          resource_group={"task_recommendations"}
-          execlude_components={[
-            "global_search",
-            "custom_views_columns_view_as",
-            "pagination",
-          ]}
         ></DataDisplay>
         <Text fw={700}>Services</Text>
         <DataDisplay
           data_items={services}
           data_fields={task_recommendations_data_fields}
           isLoadingDataItems={isLoading}
-          resource_group={"services_recommendations"}
-          execlude_components={[
-            "global_search",
-            "custom_views_columns_view_as",
-            "pagination",
-          ]}
         ></DataDisplay>
         <Text fw={700}>Action Steps</Text>
         <DataDisplay
           data_items={action_steps}
           data_fields={task_recommendations_data_fields}
           isLoadingDataItems={isLoading}
-          resource_group={"action_steps_recommendations"}
-          execlude_components={[
-            "global_search",
-            "custom_views_columns_view_as",
-            "pagination",
-          ]}
         ></DataDisplay>
       </div>
       {/* <div>

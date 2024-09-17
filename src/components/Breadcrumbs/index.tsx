@@ -1,3 +1,5 @@
+import MonacoEditor from "@components/MonacoEditor";
+import Reveal from "@components/Reveal";
 import {
   Breadcrumbs as MantineBreadcrumbs,
   Tooltip,
@@ -13,6 +15,7 @@ function Breadcrumbs() {
 
   if (activeApplication) {
     items.push({
+      ...activeApplication,
       title: activeApplication.name,
       type: "Application",
     });
@@ -20,6 +23,7 @@ function Breadcrumbs() {
 
   if (activeSession) {
     items.push({
+      ...activeSession,
       title: activeSession.name,
       type: "Session",
     });
@@ -27,17 +31,29 @@ function Breadcrumbs() {
 
   if (activeTask) {
     items.push({
+      ...activeTask,
       title: activeTask.name,
       type: "Task",
     });
   }
 
   const breadcrumbItems = items.map((item, index) => (
-    <Tooltip key={index} label={item.type} withArrow>
-      <Text size="sm" className="text-blue-500 whitespace-normal">
-        {item.title}
-      </Text>
-    </Tooltip>
+    // <Tooltip key={index} label={item.type} withArrow>
+    //   <Text size="sm" className="text-blue-500 whitespace-normal">
+    //     {item.title}
+    //   </Text>
+    // </Tooltip>
+
+    <Reveal
+      trigger="click"
+      target={
+        <Text size="sm" className="text-blue-500 whitespace-normal">
+          {item.title}
+        </Text>
+      }
+    >
+      <MonacoEditor value={item} language="json" height="50vh" />
+    </Reveal>
   ));
 
   return (

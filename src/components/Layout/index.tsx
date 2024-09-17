@@ -1,6 +1,7 @@
 import NaturalLanguageQuery from "@components/NaturalLanguageQuery";
 import {
   getComponentByKey,
+  truncateText,
   useFetchDomainDataByDomain,
 } from "@components/Utils";
 import { ComponentKey, ISession } from "@components/interfaces";
@@ -15,6 +16,7 @@ import {
   Tooltip,
   ActionIcon,
   useComputedColorScheme,
+  Indicator,
 } from "@mantine/core";
 import {
   Authenticated,
@@ -49,7 +51,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { AppLayout } from "src/components/Layout/AppLayout";
-import { useAppStore } from "src/store";
+import { useAppStore, useTransientStore } from "src/store";
 import StateView from "@components/StateView";
 import ActionInput, { ActionInputWrapper } from "@components/ActionInput";
 import SelectAction from "@components/SelectAction";
@@ -67,6 +69,11 @@ import ComponentsToolbar from "@components/ComponentsToolbar";
 import Automation from "@components/Automation";
 import FilterComponent from "@components/Filter";
 import { useMediaQuery } from "@mantine/hooks";
+import Board from "@components/Board";
+import ExternalSubmitButton from "@components/SubmitButton";
+import ActionInputToolbar from "@components/ActionInputToolbar";
+import { LogsWrapper } from "@components/LogsViewer";
+import Reveal from "@components/Reveal";
 
 function InitializeApplication({
   activeApplicationId,
@@ -88,6 +95,7 @@ const Layout = ({
   const { isLoading, data: authenticatedData } = useIsAuthenticated();
   const {
     activeLayout,
+    activeActionInputLayout,
     setActiveApplication,
     activeSession,
     activeTask,
@@ -95,6 +103,11 @@ const Layout = ({
     setActiveSections,
     sessionConfig,
     colorScheme,
+    entity_types,
+    setEntityTypes,
+    focused_entities,
+    setFocusedEntities,
+    action,
   } = useAppStore();
   const computedColorScheme = useComputedColorScheme("light"); // Compute the color scheme, defaults to 'light'
   // Define a media query for large screens
@@ -105,6 +118,11 @@ const Layout = ({
     activeLayout?.leftSection?.isDisplayed && isLargeScreen;
   const shouldDisplayRightSection =
     activeLayout?.rightSection?.isDisplayed && isLargeScreen;
+
+  const shouldDisplayActionInputLeftSection =
+    activeActionInputLayout?.leftSection?.isDisplayed && isLargeScreen;
+  const shouldDisplayActionInputRightSection =
+    activeActionInputLayout?.rightSection?.isDisplayed && isLargeScreen;
 
   // Determine the effective scheme to use
   const effectiveScheme =
@@ -138,6 +156,121 @@ const Layout = ({
       setActiveSections(newActiveSections);
     }
   };
+
+  const updateComponentInputMode = (
+    e: any,
+    entity_type: string,
+    action: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (entity_types) {
+      const new_entity_types = { ...entity_types };
+
+      // Ensure the entity_type exists in new_entity_types, or initialize it
+      if (!new_entity_types[entity_type]) {
+        new_entity_types[entity_type] = {};
+      }
+
+      // Toggle logic: If inputMode is already set to action, set it to null, otherwise set it to the action
+      if (new_entity_types[entity_type].inputMode === action) {
+        new_entity_types[entity_type].inputMode = null;
+      } else {
+        new_entity_types[entity_type].inputMode = action;
+      }
+
+      setEntityTypes(new_entity_types);
+    } else {
+      console.log("no entity types");
+    }
+  };
+
+  const updateComponentAction = (
+    e: any,
+    record: any,
+    entity_type: string,
+    action: string,
+    type: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (focused_entities) {
+      const new_focused_entities = { ...focused_entities };
+      //   console.log("new_focused_entities", new_focused_entities);
+      //   console.log("id", id);
+      if (!new_focused_entities[record?.id]) {
+        new_focused_entities[record?.id] = {};
+      }
+      if (new_focused_entities[record?.id].action === action) {
+        new_focused_entities[record?.id].action = null;
+      } else {
+        new_focused_entities[record?.id].action = action;
+      }
+      setFocusedEntities(new_focused_entities);
+    }
+  };
+
+  const updateActionInputTool = (
+    e: any,
+    record: any,
+    entity_type: string,
+    action: string,
+    type: string,
+    tool: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const specialActions = ["reset"]; // List of special actions
+    const action_name = specialActions.includes(action) ? "execute" : action; // Check if action is in the list and replace if necessary
+
+    if (focused_entities) {
+      const new_focused_entities = { ...focused_entities };
+      //   console.log("new_focused_entities", new_focused_entities);
+      // console.log("id", record?.id);
+      // console.log("action", action);
+      if (!new_focused_entities[record?.id]) {
+        new_focused_entities[record?.id] = {};
+      }
+      if (new_focused_entities[record?.id].action === action_name) {
+        // new_focused_entities[record?.id].action = null;
+        new_focused_entities[record?.id].action = action_name;
+      } else {
+        new_focused_entities[record?.id].action = action_name;
+      }
+      setFocusedEntities(new_focused_entities);
+    }
+  };
+
+  // const handleModeSelection = (item: any, id: string, action: string) => {
+  //   // console.log("Mode selection item:", item);
+  //   // console.log("Mode selection id:", id);
+  //   // console.log("Mode selection action:", action);
+
+  //   if (focused_entities) {
+  //     const new_focused_entities = { ...focused_entities };
+
+  //     // Ensure that the entity exists in the state
+  //     if (!new_focused_entities[id]) {
+  //       new_focused_entities[id] = {};
+  //     }
+
+  //     // Define the mode key based on the action
+  //     const modeKey = `${action}_mode`;
+
+  //     // Toggle the mode or set it to the new item
+  //     if (new_focused_entities[id][modeKey] === item) {
+  //       new_focused_entities[id][modeKey] = null; // Clear if already selected
+  //     } else {
+  //       new_focused_entities[id][modeKey] = item; // Set new item
+  //     }
+
+  //     // Update the state with the modified focused_entities
+  //     setFocusedEntities(new_focused_entities);
+  //   }
+  // };
 
   useEffect(() => {
     if (domainRecord?.["application"]) {
@@ -576,11 +709,7 @@ const Layout = ({
                   )} */}
 
                   <Accordion
-                    defaultValue={[
-                      "natural_language_query",
-                      "action_plan",
-                      "action_input",
-                    ]}
+                    defaultValue={["natural_language_query", "action_plan"]}
                     multiple={true}
                   >
                     <Accordion.Item
@@ -588,32 +717,192 @@ const Layout = ({
                       value="natural_language_query"
                     >
                       <Accordion.Control icon={<IconLetterQ size={16} />}>
-                        <div className="flex justify-between items-center pr-8">
-                          <div>Query</div>
+                        <div className="flex justify-between items-center">
+                          <div>Task</div>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <Reveal
+                              trigger="click"
+                              target={
+                                <Indicator
+                                  // inline
+                                  label="i"
+                                  // size={16}
+                                  // color="blue"
+                                  // variant="outline"
+                                  offset={3}
+                                >
+                                  <Text
+                                    truncate="end"
+                                    size="xs"
+                                    className="text-blue-500 pl-3 pr-3"
+                                  >
+                                    {truncateText(`${activeTask?.name}`, 3)}
+                                  </Text>
+                                </Indicator>
+                              }
+                            >
+                              <MonacoEditor
+                                value={activeTask}
+                                language="json"
+                                height="50vh"
+                              />
+                            </Reveal>
+                          </div>
 
-                          <ComponentsToolbar
-                            include_components={[
-                              {
-                                action: "pin",
-                                entity_type: "query",
-                                onClick: toggleSectionPinned,
-                              },
-                              {
-                                action: "remove",
-                                entity_type: "query",
-                                onClick: () => {},
-                              },
-                              {
-                                action: "configure",
-                                entity_type: "query",
-                                onClick: () => {},
-                              },
-                            ]}
-                          ></ComponentsToolbar>
+                          <div className="pr-3">
+                            <ComponentsToolbar
+                              include_components={[
+                                // {
+                                //   action: "display",
+                                //   entity_type: "action_steps",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
+                                // {
+                                //   action: "query",
+                                //   entity_type: "action_steps",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
+                                {
+                                  action: "implement",
+                                  entity_type: "tasks",
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateComponentAction,
+                                },
+                                {
+                                  action: "execute",
+                                  entity_type: "tasks",
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateComponentAction,
+                                },
+                                // {
+                                //   action: "save",
+                                //   entity_type: "action_steps",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
+                                {
+                                  action: "share",
+                                  entity_type: "tasks",
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateComponentAction,
+                                },
+                                {
+                                  action: "pin",
+                                  entity_type: "tasks",
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateComponentAction,
+                                },
+                                // {
+                                //   action: "cancel",
+                                //   entity_type: "action_steps",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
+                              ]}
+                            ></ComponentsToolbar>
+                          </div>
                         </div>
                       </Accordion.Control>
                       <Accordion.Panel>
-                        <ActionInputWrapper
+                        <PanelGroup direction="horizontal">
+                          <Panel
+                            defaultSize={30}
+                            minSize={0}
+                            id="left"
+                            style={{
+                              display: shouldDisplayActionInputLeftSection
+                                ? "block"
+                                : "none",
+                            }}
+                          ></Panel>
+
+                          <PanelResizeHandle>
+                            <ResizeHandle />
+                          </PanelResizeHandle>
+
+                          <Panel
+                            defaultSize={40}
+                            minSize={30}
+                            id="center"
+                            style={{
+                              display: activeActionInputLayout?.centerSection
+                                ?.isDisplayed
+                                ? "block"
+                                : "none",
+                            }}
+                          >
+                            {/* {focused_entities["action_input"]?.action ? (
+                              <div className="w-full">
+                                <ActionInputWrapper
+                                  name="task"
+                                  query_name="data_model"
+                                  record={activeTask}
+                                  action={
+                                    focused_entities[activeTask?.id]?.action
+                                  }
+                                  success_message_code="action_input_data_model_schema"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-center p-4">
+                                <p className="text-sm text-gray-600 text-center">
+                                  action steps action
+                                </p>
+                              </div>
+                            )} */}
+                            <div className="w-full">
+                              <ActionInputWrapper
+                                name="task"
+                                query_name="data_model"
+                                record={activeTask}
+                                action={
+                                  focused_entities[activeTask?.id]?.action ||
+                                  action
+                                }
+                                success_message_code="action_input_data_model_schema"
+                              />
+                            </div>
+                          </Panel>
+
+                          <PanelResizeHandle>
+                            <ResizeHandle />
+                          </PanelResizeHandle>
+
+                          <Panel
+                            defaultSize={30}
+                            minSize={0}
+                            id="right"
+                            style={{
+                              display: shouldDisplayActionInputRightSection
+                                ? "block"
+                                : "none",
+                            }}
+                          >
+                            {/* <div
+                              className={`overflow-auto  p-3 ${
+                                effectiveScheme === "light"
+                                  ? "bg-gray-100"
+                                  : "bg-gray-800"
+                              }`}
+                              // style={{ height: "calc(100vh - 64px)" }}
+                            >
+                              <LogsWrapper
+                                record={activeTask}
+                              />
+                            </div> */}
+                          </Panel>
+                        </PanelGroup>
+                        {/* <ActionInputWrapper
                           name="task"
                           query_name="data_model"
                           exclude_components={["input_mode", "submit_button"]}
@@ -630,115 +919,375 @@ const Layout = ({
                           endpoint="plan"
                           action_label="Catch"
                         >
-                          {/* <ActionInputWrapper
+                          <ActionInputWrapper
                           name="task_config"
                           query_name="data_model"
                           success_message_code="action_input_data_model_schema"
                           exclude_components={["input_mode", "submit_button"]}
-                        ></ActionInputWrapper> */}
-                        </ActionInputWrapper>
+                        ></ActionInputWrapper>
+                        </ActionInputWrapper> */}
                       </Accordion.Panel>
                     </Accordion.Item>
 
                     <Accordion.Item key="action_input" value="action_input">
                       <Accordion.Control icon={<IconForms size={16} />}>
-                        <div className="flex justify-between items-center pr-8">
-                          <div>Action Input</div>
+                        <div className="flex justify-between items-center">
+                          <div>action input</div>
+                          <div
+                            className="max-w-xs flex items-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* <SearchInput
+                              placeholder={`Search for ${
+                                focused_entities[activeTask?.id]?.["action"]
+                              } modes`}
+                              handleOptionSubmit={(item) =>
+                                handleModeSelection(
+                                  item,
+                                  activeTask?.id,
+                                  focused_entities[activeTask?.id]?.["action"]
+                                )
+                              }
+                              activeFilters={[
+                                {
+                                  id: 1,
+                                  name: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  description: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  entity_type: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  is_selected: true,
+                                },
+                              ]}
+                            /> */}
+                            <div
+                              className="p-3"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {activeTask && (
+                                <ExternalSubmitButton
+                                  record={activeTask}
+                                  entity_type="tasks"
+                                  action={
+                                    focused_entities[activeTask?.id]?.[
+                                      "action"
+                                    ] || action
+                                  }
+                                ></ExternalSubmitButton>
+                                // <div>{JSON.stringify(action)}</div>
+                              )}
+                            </div>
+                          </div>
 
-                          <ComponentsToolbar
-                            include_components={[
-                              {
-                                action: "pin",
-                                entity_type: "action_input",
-                                onClick: toggleSectionPinned,
-                              },
-                              {
-                                action: "remove",
-                                entity_type: "action_input",
-                                onClick: () => {},
-                              },
-                              {
-                                action: "configure",
-                                entity_type: "action_input",
-                                onClick: () => {},
-                              },
-                            ]}
-                          ></ComponentsToolbar>
+                          <div className="pr-3">
+                            <ActionInputToolbar
+                              include_components={[
+                                // {
+                                //   action: "display",
+                                //   tool: "display",
+                                //   entity_type:
+                                //     focused_entities["action_input"]
+                                //       ?.entity_type,
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateActionInputTool,
+                                // },
+                                {
+                                  action: "clear",
+                                  tool: "clear",
+                                  entity_type: "action_input",
+                                  // entity_type:
+                                  //   focused_entities["action_input"]
+                                  //     ?.entity_type,
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateActionInputTool,
+                                },
+                                {
+                                  action: "reset",
+                                  tool: "reset",
+                                  entity_type: "action_input",
+                                  // entity_type:
+                                  //   focused_entities["action_input"]
+                                  //     ?.entity_type,
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateActionInputTool,
+                                },
+                              ]}
+                            ></ActionInputToolbar>
+                          </div>
                         </div>
                       </Accordion.Control>
                       <Accordion.Panel>
-                        <div className="flex items-center justify-center p-4">
-                          <p className="text-sm text-gray-600 text-center">
-                            Prompts for your input required to customize and/or
-                            successfully complete a task/action will appear
-                            here.
-                          </p>
-                        </div>
-                        {/* <TaskInputWrapper
-                          name="task_input"
-                          exclude_components={["input_mode", "submit_button"]}
-                          success_message_code="task_input_data"
-                          description={
-                            <div className="flex items-center justify-center p-4">
-                              <p className="text-sm text-gray-600 text-center">
-                                Prompts for your input required to customize and/or
-                                successfully complete a task/action will appear here.
-                              </p>
-                            </div>
-                          }
-                        ></TaskInputWrapper> */}
+                        <PanelGroup direction="horizontal">
+                          <Panel
+                            defaultSize={30}
+                            minSize={0}
+                            id="left"
+                            style={{
+                              display: shouldDisplayActionInputLeftSection
+                                ? "block"
+                                : "none",
+                            }}
+                          ></Panel>
+
+                          <PanelResizeHandle>
+                            <ResizeHandle />
+                          </PanelResizeHandle>
+
+                          <Panel
+                            defaultSize={40}
+                            minSize={30}
+                            id="center"
+                            style={{
+                              display: activeActionInputLayout?.centerSection
+                                ?.isDisplayed
+                                ? "block"
+                                : "none",
+                            }}
+                          >
+                            {focused_entities["action_input"]?.action ? (
+                              <div className="w-full">
+                                <ActionInputWrapper
+                                  execution_record={activeTask}
+                                  query_name="execution data model"
+                                  record={{}}
+                                  action={
+                                    focused_entities["action_input"]?.action
+                                  }
+                                  focused_item="action_input"
+                                  success_message_code="action_input_data_model_schema"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-center p-4">
+                                <p className="text-sm text-gray-600 text-center">
+                                  Prompts for your input required to
+                                  successfully complete an action will
+                                  dynamically appear here.
+                                </p>
+                              </div>
+                            )}
+                          </Panel>
+
+                          <PanelResizeHandle>
+                            <ResizeHandle />
+                          </PanelResizeHandle>
+
+                          <Panel
+                            defaultSize={30}
+                            minSize={0}
+                            id="right"
+                            style={{
+                              display: shouldDisplayActionInputRightSection
+                                ? "block"
+                                : "none",
+                            }}
+                          >
+                            {/* <div
+                              className={`overflow-auto  p-3 ${
+                                effectiveScheme === "light"
+                                  ? "bg-gray-100"
+                                  : "bg-gray-800"
+                              }`}
+                              // style={{ height: "calc(100vh - 64px)" }}
+                            >
+                              <LogsWrapper
+                                record={activeTask}
+                              />
+                            </div> */}
+                          </Panel>
+                        </PanelGroup>
                       </Accordion.Panel>
                     </Accordion.Item>
 
                     <Accordion.Item key="action_plan" value="action_plan">
                       <Accordion.Control icon={<IconListDetails size={16} />}>
-                        <div className="flex justify-between items-center pr-8">
-                          <div>Action Plan</div>
-                          {/* <Automation /> */}
-                          <ComponentsToolbar
-                            include_components={[
-                              {
-                                action: "pin",
-                                entity_type: "action_plan",
-                                onClick: toggleSectionPinned,
-                              },
-                              {
-                                action: "remove",
-                                entity_type: "action_plan",
-                                onClick: () => {},
-                              },
-                              {
-                                action: "configure",
-                                entity_type: "action_plan",
-                                onClick: () => {},
-                              },
-                              {
-                                action: "automate",
-                                entity_type: "action_plan",
-                                onClick: () => {},
-                              },
-                            ]}
-                          ></ComponentsToolbar>
+                        <div className="flex justify-between items-center">
+                          <div>action_steps</div>
+                          {/* <div
+                            className="max-w-xs flex items-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <SearchInput
+                              placeholder={`Search for ${
+                                focused_entities[activeTask?.id]?.["action"]
+                              } modes`}
+                              // description={`${entity_types["action_steps"]?.["action"]} mode`}
+                              handleOptionSubmit={(item) =>
+                                handleModeSelection(
+                                  item,
+                                  activeTask?.id,
+                                  focused_entities[activeTask?.id]?.["action"]
+                                )
+                              }
+                              // value={activeTask?.name || ""}
+                              // include_action_icons={["remove_from_state"]}
+                              activeFilters={[
+                                {
+                                  id: 1,
+                                  name: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  description: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  entity_type: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  is_selected: true,
+                                },
+                              ]}
+                            />
+                            <div
+                              className="p-3"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <ExternalSubmitButton
+                                record={activeTask}
+                                entity_type="action_steps"
+                                action={
+                                  focused_entities[activeTask?.id]?.["action"]
+                                }
+                              ></ExternalSubmitButton>
+                            </div>
+                          </div> */}
+
+                          <div>
+                            <ComponentsToolbar
+                              include_components={[
+                                {
+                                  action: "display",
+                                  entity_type: "action_steps",
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateComponentAction,
+                                },
+                                {
+                                  action: "query",
+                                  entity_type: "action_steps",
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateComponentAction,
+                                },
+                                {
+                                  action: "execute",
+                                  entity_type: "action_steps",
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateComponentAction,
+                                },
+                                {
+                                  action: "save",
+                                  entity_type: "action_steps",
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateComponentAction,
+                                },
+                                {
+                                  action: "share",
+                                  entity_type: "action_steps",
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateComponentAction,
+                                },
+                                {
+                                  action: "cancel",
+                                  entity_type: "action_steps",
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateComponentAction,
+                                },
+                              ]}
+                            ></ComponentsToolbar>
+                          </div>
                         </div>
                       </Accordion.Control>
                       <Accordion.Panel>
-                        <ActionStepsWrapper
-                          entity="action_steps"
-                          record={activeTask}
-                          ui={{ rowExpansionTrigger: "always" }}
-                          nested_item="action_steps"
-                          exclude_components={[
-                            "input_mode",
-                            "submit_button",
-                            "columns",
-                            "custom_views",
-                            "save",
-                            "live_updates",
-                            "follow_up",
-                            "execute_selected",
-                          ]}
-                          success_message_code="action_plan"
-                        />
+                        <div className="w-full">
+                          <PanelGroup direction="horizontal">
+                            <Panel
+                              defaultSize={30}
+                              minSize={0}
+                              id="left"
+                              style={{
+                                display: shouldDisplayActionInputLeftSection
+                                  ? "block"
+                                  : "none",
+                              }}
+                            >
+                              {/* <div
+                              className={`overflow-auto ${
+                                effectiveScheme === "light"
+                                  ? "bg-gray-100"
+                                  : "bg-gray-800"
+                              }`}
+                              // style={{ height: "calc(100vh - 64px)" }}
+                            >
+                              conversation history
+                            </div> */}
+                            </Panel>
+
+                            <PanelResizeHandle>
+                              <ResizeHandle />
+                            </PanelResizeHandle>
+
+                            <Panel
+                              defaultSize={40}
+                              minSize={30}
+                              id="center"
+                              style={{
+                                display: activeActionInputLayout?.centerSection
+                                  ?.isDisplayed
+                                  ? "block"
+                                  : "none",
+                              }}
+                            ></Panel>
+
+                            <PanelResizeHandle>
+                              <ResizeHandle />
+                            </PanelResizeHandle>
+
+                            <Panel
+                              defaultSize={30}
+                              minSize={0}
+                              id="right"
+                              style={{
+                                display: shouldDisplayActionInputRightSection
+                                  ? "block"
+                                  : "none",
+                              }}
+                            >
+                              {/* <div
+                              className={`overflow-auto  p-3 ${
+                                effectiveScheme === "light"
+                                  ? "bg-gray-100"
+                                  : "bg-gray-800"
+                              }`}
+                              // style={{ height: "calc(100vh - 64px)" }}
+                            >
+                              <LogsWrapper
+                                record={activeTask}
+                              />
+                            </div> */}
+                            </Panel>
+                          </PanelGroup>
+                          <div>
+                            <ActionStepsWrapper
+                              entity_type="action_steps"
+                              record={activeTask}
+                              ui={{ rowExpansionTrigger: "always" }}
+                              nested_item="action_steps"
+                              exclude_components={[]}
+                              success_message_code="action_plan"
+                            />
+                          </div>
+                        </div>
                       </Accordion.Panel>
                     </Accordion.Item>
                   </Accordion>

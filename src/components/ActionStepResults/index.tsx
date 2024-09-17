@@ -1,6 +1,10 @@
 import DataDisplay from "@components/DataDisplay";
-import { useFetchActionStepDataByState } from "@components/Utils";
+import MonacoEditor from "@components/MonacoEditor";
+import Reveal from "@components/Reveal";
+import { useReadByState } from "@components/Utils";
 import { useAppStore } from "src/store";
+import { Text } from "@mantine/core";
+import { useEffect } from "react";
 
 interface ActionStepResultsProps {
   // entity?: string;
@@ -13,10 +17,10 @@ interface ActionStepResultsProps {
   // ui?: Record<string, any>;
 }
 
-interface AppendItems {
-  name: string;
-  id: string;
-}
+// interface AppendItems {
+//   name: string;
+//   id: string;
+// }
 
 export function ActionStepResults({
   // entity = "action_steps",
@@ -28,27 +32,40 @@ export function ActionStepResults({
 // ui = {},
 ActionStepResultsProps) {
   // use read action step results by state
+  // Create the key with the transformed data_model.name
+  const { action_input_form_values, activeTask } = useAppStore();
+  const proceed_action_input_form_values_key = `proceed_execute_with_action_input_create_freshdesk_ticket_from_zoom_engagement_data_models:lefd1wja8dcfmpa7a0cq`;
+
+  // const defaultValueObjects = [
+  //   // actionInputIds,
+  //   identity_object,
+  //   record,
+  //   action_input_form_values[action_input_form_values_key],
+  //   action_input_form_values[proceed_action_input_form_values_key] || {},
+  // ];
+  let proceed_action_input_form_values =
+    action_input_form_values[proceed_action_input_form_values_key] || {};
 
   // const { global_variables } = useAppStore();
   let state = {
     // global_variables: global_variables,
+    success_message_code: record?.success_message_code,
+    id: record?.id,
     action_steps: [record],
-    // include_action_steps: [record?.execution_order || 0],
+    include_action_steps: [record?.execution_order || 0],
+    input_values: proceed_action_input_form_values,
   };
-  const {
-    data: actionStepData,
-    isLoading: actionStepDataIsLoading,
-    error: actionStepDataError,
-  } = useFetchActionStepDataByState(state);
-  if (actionStepDataIsLoading) {
+  const { data, isLoading, error, refetch } = useReadByState(state);
+
+  // Refetch query whenever the input values change
+  useEffect(() => {
+    refetch();
+  }, [proceed_action_input_form_values]); // Refetch when input values change
+  if (isLoading) {
     return <div>Loading...</div>;
   }
-  if (actionStepDataError) {
-    return (
-      <div>
-        Error fetching action step data {JSON.stringify(actionStepDataError)}
-      </div>
-    );
+  if (error) {
+    return <MonacoEditor value={error} language="json" height="75vh" />;
   }
   // const {
   //   // activeSession,
@@ -57,49 +74,72 @@ ActionStepResultsProps) {
   //   // activeApplication,
   //   // activeResultsSection,
   // } = useAppStore();
-  let data_fields = [
-    {
-      name: "id",
-      accessor: "id",
-    },
-  ];
+  // let data_fields = [
+  //   {
+  //     name: "id",
+  //     accessor: "id",
+  //   },
+  // ];
   // let append_items = Array<AppendItems>();
 
   return (
     <>
       {/* <div>action step results</div> */}
       {/* <div>{JSON.stringify(actionStepData)}</div> */}
-      {actionStepData && (
+      {/* <div>{JSON.stringify(record)}</div> */}
+      {/* <div>action step results</div> */}
+      {/* <div>{JSON.stringify(proceed_action_input_form_values)}</div> */}
+      {/* <MonacoEditor value={data?.data} language="json" height="50vh" /> */}
+      <Reveal
+        trigger="click"
+        target={
+          <Text truncate="end" size="xs" className="text-blue-500 pl-3 pr-3">
+            {`${record.id} / ${record.name}`}
+          </Text>
+        }
+      >
+        <MonacoEditor value={record} language="json" height="50vh" />
+      </Reveal>
+
+      {/* if data.data contains at least one object with exit_code = 1 then show error message */}
+      {data?.data?.find((item: any) => item?.exit_code === 1) && (
+        <MonacoEditor value={data} language="json" height="50vh" />
+      )}
+
+      {/* if data.data contains no object with exit_code = 1 then show success message */}
+      {data && data?.data?.find((item: any) => item?.exit_code !== 1) && (
         <>
+          {/* <div>{JSON.stringify(data)}</div> */}
           <DataDisplay
             data_items={
-              nested_item
-                ? actionStepData?.data?.find(
-                    (item: any) =>
-                      item?.message?.code === "query_success_results"
-                  )?.data?.[0]?.[nested_item] || []
-                : actionStepData?.data?.find(
-                    (item: any) =>
-                      item?.message?.code === "query_success_results"
-                  )?.data || []
+              data?.data?.find(
+                (item: any) =>
+                  item?.message?.code === record?.success_message_code
+              )?.data || []
             }
             data_fields={
               (
-                actionStepData?.data?.find(
-                  (item: any) => item?.message?.code === "query_success_results"
+                data?.data?.find(
+                  (item: any) =>
+                    item?.message?.code === record?.success_message_code
                 )?.data_fields || []
-              ).map((item: any) => ({
-                name: item?.name,
-                accessor: item?.name,
-              })) ||
-              data_fields ||
-              []
+              )
+                .filter((item: any) =>
+                  record?.main_view_has_fields
+                    ? record.main_view_has_fields.includes(item?.name)
+                    : true
+                )
+                .map((item: any) => ({
+                  name: item?.name,
+                  accessor: item?.name,
+                })) || []
             }
-            read_write_mode={"read"}
-            isLoadingDataItems={actionStepDataIsLoading}
-            resource_group={record?.execution_id}
-            execlude_components={["columns", "custom_views"]}
-            ui={{}}
+            record={record}
+            // read_write_mode={"read"}
+            // isLoadingDataItems={actionStepDataIsLoading}
+            // resource_group={record?.execution_id}
+            // execlude_components={["columns", "custom_views"]}
+            // ui={{}}
           ></DataDisplay>
         </>
       )}
@@ -136,7 +176,7 @@ export const ActionStepResultsWrapper = ({
       {/* <div>{JSON.stringify(record)}</div> */}
       <ActionStepResults
         record={record}
-        execlude_components={execlude_components}
+        // execlude_components={execlude_components}
       ></ActionStepResults>
     </>
   );

@@ -43,19 +43,14 @@ export const TaskInputWrapper = ({
   name,
 }: // types,
 TaskInputProps) => {
-  const {
-    action_input_form_values,
-    activeAction,
-    activeApplication,
-    activeSession,
-  } = useAppStore();
-  let state = {
-    query_name: query_name || "task_input_data",
-    success_message_code: success_message_code,
-    // name: name,
-    // action_type: action_type,
-    // entity: entity,
-  };
+  const { activeActionStep } = useAppStore();
+  // let state = {
+  //   query_name: query_name || "task_input_data",
+  //   success_message_code: success_message_code,
+  //   // name: name,
+  //   // action_type: action_type,
+  //   // entity: entity,
+  // };
   // let record =
   //   action_input_form_values[`task_b79aaba2-a0d1-4fa7-9b68-0baebbd1b321`];
   // // let actionStepRecord = {
@@ -114,13 +109,13 @@ TaskInputProps) => {
   //   isLoading: actionStepDataIsLoading,
   //   error: actionStepDataError,
   // } = useFetchActionStepDataByState(state);
-  const { data, isLoading, error } = useFetchQueryDataByState(state);
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-  if (error) {
-    return <div>Error fetching action step data {JSON.stringify(error)}</div>;
-  }
+  // const { data, isLoading, error } = useFetchQueryDataByState(state);
+  // if (isLoading) {
+  //   return <div>Loading...</div>;
+  // }
+  // if (error) {
+  //   return <div>Error fetching action step data {JSON.stringify(error)}</div>;
+  // }
   // // length of the natural_language_query_form_values?.content_text has to be greater than 0 otherwise return null
   // if (
   //   natural_language_query_form_values?.content_text?.length === 0 ||
@@ -139,6 +134,7 @@ TaskInputProps) => {
     <>
       {/* <div>task input wrapper</div> */}
       {/* <div>{JSON.stringify(data)}</div> */}
+      {/* <div>{JSON.stringify(activeActionStep)}</div> */}
       {/* {actionStepData && (
         <>
           <DataDisplay
@@ -171,28 +167,29 @@ TaskInputProps) => {
         </>
       )} */}
       {/* {(!data?.data && !error && !isLoading && description) || null} */}
-      {data?.data && (
+      {!activeActionStep && (description || null)}
+      {/* {data?.data && (
         <ActionInputForm
           data_model={
             data?.data?.find(
               (item: any) => item?.message?.code === success_message_code
             )?.data[0]?.data_model
           }
-          // record={record}
+          record={record}
           execlude_components={exclude_components}
-          // name={name}
-          // children={children}
-          // nested_component={nested_component}
-          // action_icon={action_icon}
-          // setExpandedRecordIds={setExpandedRecordIds}
-          // invalidate_queries_on_submit_success={
-          //   invalidate_queries_on_submit_success
-          // }
-          // update_action_input_form_values_on_submit_success={
-          //   update_action_input_form_values_on_submit_success
-          // }
+          name={name}
+          children={children}
+          nested_component={nested_component}
+          action_icon={action_icon}
+          setExpandedRecordIds={setExpandedRecordIds}
+          invalidate_queries_on_submit_success={
+            invalidate_queries_on_submit_success
+          }
+          update_action_input_form_values_on_submit_success={
+            update_action_input_form_values_on_submit_success
+          }
         ></ActionInputForm>
-      )}
+      )} */}
     </>
   );
 };

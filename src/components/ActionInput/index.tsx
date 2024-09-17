@@ -1,5 +1,3 @@
-import MonacoEditor from "@components/MonacoEditor";
-import Reveal from "@components/Reveal";
 import {
   extractIdentifier,
   getComponentByResourceType,
@@ -8,160 +6,28 @@ import {
   useFetchActionStepsDataByState,
   useFetchDataModelByState,
   useFetchQueryDataByState,
+  useReadRecordByState,
 } from "@components/Utils";
-import { useAppStore } from "src/store";
-import {
-  Accordion,
-  ActionIcon,
-  Button,
-  Group,
-  Text,
-  TextInput,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { useAppStore, useTransientStore } from "src/store";
+import { Accordion, Button, Title } from "@mantine/core";
 // import { ActionControlFormWrapper } from "@components/ActionControlForm";
 import type { FieldApi } from "@tanstack/react-form";
 import { useForm } from "@tanstack/react-form";
 // import { IconArrowsVertical } from "@tabler/icons-react";
 import { Children, useEffect, useRef, useState } from "react";
-import { inputs } from "@data/index";
-import { Combobox } from "@components/Combobox";
-import { ComponentKey, IIdentity } from "@components/interfaces";
+import {
+  ActionInputWrapperProps,
+  ActionStepsActionInputFormProps,
+  ComponentKey,
+  DynamicFormProps,
+  IIdentity,
+} from "@components/interfaces";
 import { useCustomMutation, useGetIdentity } from "@refinedev/core";
 import config from "src/config";
 import { debounce, update } from "lodash";
-import { v4 as uuidv4 } from "uuid";
-// import { useIsMutating } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
-import { IconCode, IconPlayerPlay, IconTools } from "@tabler/icons-react";
-
-function useConditionalFetch(
-  query_name?: string,
-  name?: string,
-  action_type?: string,
-  entity?: string,
-  success_message_code?: string
-) {
-  const { action_input_form_values } = useAppStore();
-
-  if (query_name) {
-    const queryState = {
-      query_name,
-      name,
-      action_type,
-      entity,
-      success_message_code,
-    };
-    return useFetchQueryDataByState(queryState);
-  } else {
-    // const taskRecord =
-    //   action_input_form_values[`task_b79aaba2-a0d1-4fa7-9b68-0baebbd1b321`];
-    // let activeActionStepRecord = {
-    //   id: "has_action_step:055fz04qegaw0q8khpjc",
-    //   name: "retrive booking from caesars snowstorm database by id",
-    //   execution_order: 1,
-    //   success_message_code: success_message_code,
-    // };
-
-    // const actionStepState = {
-    //   action_steps: [activeActionStepRecord],
-    // };
-    let record =
-      action_input_form_values[`task_b79aaba2-a0d1-4fa7-9b68-0baebbd1b321`];
-    let actionStepRecord = {
-      ...record,
-      success_message_code: success_message_code,
-    };
-    let actionStepsAwaitingActionInputState = {
-      action_steps: [actionStepRecord],
-    };
-    return useFetchActionStepDataByState(actionStepsAwaitingActionInputState);
-  }
-}
-
-// interface DataModel {
-//   data_model: {
-//     author_id: string;
-//     created_datetime: string;
-//     description: string;
-//     entity_type: string;
-//     id: string;
-//     name: string;
-//     schema: {
-//       properties: {
-//         [key: string]: {
-//           group: string;
-//           component: string;
-//           description: string;
-//           placeholder?: string;
-//           size?: string;
-//           title: string;
-//           type: string;
-//           readOnly?: boolean;
-//           format?: string;
-//           id: string;
-//         };
-//       };
-//       required: string[];
-//       title: string;
-//       type: string;
-//     };
-//     updated_datetime: string;
-//   };
-// }
-
-interface DataModel {
-  data_model: {
-    author_id: string;
-    created_datetime: string;
-    description: string;
-    entity_type: string;
-    id: string;
-    name: string;
-    schema: {
-      properties: Record<
-        string,
-        {
-          group: string;
-          component: string;
-          description: string;
-          placeholder?: string;
-          size?: string;
-          title: string;
-          type: string;
-          readOnly?: boolean;
-          format?: string;
-          id: string;
-          // Allow any additional properties
-          [key: string]: any;
-        }
-      >;
-      required: string[];
-      title: string;
-      type: string;
-    };
-    updated_datetime: string;
-  };
-}
-
-interface DynamicFormProps {
-  data_model: DataModel["data_model"] | null;
-  record?: any;
-  action_steps?: any;
-  execlude_components?: string[];
-  name?: string;
-  children?: any;
-  nested_component?: any;
-  action_icon?: any;
-  setExpandedRecordIds?: (ids: string[]) => void;
-  invalidate_queries_on_submit_success?: string[];
-  update_action_input_form_values_on_submit_success?: boolean;
-  success_message_code?: string;
-  endpoint?: string;
-  action_label?: string;
-}
+import MonacoEditor from "@components/MonacoEditor";
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
   return (
@@ -177,29 +43,24 @@ function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
 export const ActionInputForm: React.FC<DynamicFormProps> = ({
   data_model,
   record = {},
-  execlude_components = [],
-  name,
-  children,
-  nested_component,
-  action_icon,
+  action,
   setExpandedRecordIds,
-  action_steps,
-  invalidate_queries_on_submit_success,
-  update_action_input_form_values_on_submit_success = false,
   success_message_code = "query_success_results",
-  action_label,
   endpoint,
+  records,
+  focused_item,
 }) => {
-  const [inputAsvalue, setInputAsValue] = useState("");
   const queryClient = useQueryClient();
   const { data: identity } = useGetIdentity<IIdentity>();
+  const { setFormSubmitHandler, setFormInstance } = useTransientStore();
 
   // Generate the ID once and persist it across re-renders
   // const generatedIdRef = useRef(uuidv4());
 
-  // // Access the persisted ID using generatedIdRef.current
+  // Access the persisted ID using generatedIdRef.current
   // const generatedId = generatedIdRef.current;
-  const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
+  const actionInputId =
+    record?.id || data_model?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
 
   const {
     mutate,
@@ -209,7 +70,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     error: mutationError,
   } = useCustomMutation({
     mutationOptions: {
-      mutationKey: [`catch-action-step-${actionInputId}`],
+      mutationKey: [`action-input-${actionInputId}`],
     },
   });
 
@@ -217,23 +78,45 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     activeSession,
     activeAction,
     activeApplication,
+    activeTask,
     setActionInputFormValues,
-    global_variables,
     action_input_form_values,
+    focused_entities,
+    setFocusedEntities,
+    selectedRecords,
+    setSelectedRecords,
   } = useAppStore();
 
-  // const actionInputIds = {
-  //   id: actionInputId,
-  // };
   const identity_object = {
     author_id: identity?.email,
   };
+
+  let standardized_data_model_name = data_model?.name
+    ?.replace(/\s+/g, "_")
+    .toLowerCase();
+
+  // Create the key with the transformed data_model.name
+  const action_input_form_values_key =
+    action === "proceed_execute_with_action_input"
+      ? "action_input"
+      : `${action}_${standardized_data_model_name}_${actionInputId}`;
+
+  // let standardized_data_model_name = data_model?.name
+  // ?.replace(/\s+/g, "_")
+  // .toLowerCase();
+
+  // Create the key with the transformed data_model.name
+  // const proceed_action_input_form_values_key = `proceed_execute_with_action_input_${standardized_data_model_name}_${actionInputId}`;
+  const proceed_action_input_form_values_key = "action_input";
+
+  const formId = `${action}_${actionInputId}`; // Unique form identifier
 
   const defaultValueObjects = [
     // actionInputIds,
     identity_object,
     record,
-    action_input_form_values[`${data_model?.name}_${actionInputId}`],
+    action_input_form_values[action_input_form_values_key],
+    action_input_form_values[proceed_action_input_form_values_key] || {},
   ];
 
   const defaultValues = _.merge({}, ...defaultValueObjects);
@@ -241,123 +124,156 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const form = useForm({
     defaultValues: defaultValues,
     onSubmit: async ({ value }) => {
-      // Do something with form data
-      mutate(
-        {
-          // url: `${config.API_URL}/catch-${
-          //   data_model?.name === "action_step_any" ? "any" : "action"
-          // }`,
-          url: `${config.API_URL}/${endpoint ? endpoint : "execute-task"}`,
-          method: "post",
-          // values: generateRequestData(values),
-          values: {
-            action: {
-              id: activeAction?.id,
-              name: activeAction?.name,
-            },
-            input_values: value,
-            credential: value?.credential || "surrealdb catchmytask dev",
-            data_model: data_model,
-            application: {
-              id: activeApplication?.id,
-              name: activeApplication?.name,
-            },
-            session: {
-              id: activeSession?.id,
-              name: activeSession?.name,
-            },
-            task_variables: {},
-            global_variables: {
-              ...global_variables,
-            },
-            include_execution_orders: [],
-            // active_action_step_data: [],
-            // active_action_step_selected_data: [],
-            action_steps: [
-              {
-                ...value,
-                // id: value?.id || actionInputId,
-                execution_order: value?.execution_order || 1,
-                description: value?.description || "generic description",
-                name: value?.name || "generic name",
-                job: value?.description || "generic job",
-                method: value?.method || "select",
-                type: value?.type || "action_steps",
-                credential: value?.credential || "surrealdb catchmytask dev",
-                success_message_code:
-                  success_message_code || "query_success_results",
+      let success_message_code_selected =
+        value?.success_message_code ||
+        success_message_code ||
+        "query_success_results";
+
+      const new_focused_entities = { ...focused_entities };
+      //   console.log("new_focused_entities", new_focused_entities);
+      //   console.log("id", id);
+      if (!new_focused_entities["action_input"]) {
+        new_focused_entities["action_input"] = {};
+      } else {
+        new_focused_entities["action_input"].action = action;
+        new_focused_entities["action_input"].record = record;
+      }
+      setFocusedEntities(new_focused_entities);
+
+      const specialActions = ["proceed_execute_with_action_input"]; // List of special actions
+      const action_url = specialActions.includes(action) ? "execute" : action; // Check if action is in the list and replace if necessary
+
+      return new Promise((resolve, reject) => {
+        mutate(
+          {
+            // url: `${config.API_URL}/catch-${
+            //   data_model?.name === "action_step_any" ? "any" : "action"
+            // }`,
+            // url: `${config.API_URL}/${endpoint ? endpoint : "execute-task"}`,
+            url: `${config.API_URL}/${action_url}`,
+            method: "post",
+            // values: generateRequestData(values),
+            values: {
+              action: {
+                id: action || activeAction?.id,
+                name: action || activeAction?.name,
               },
-            ],
-          },
-        },
-        {
-          onError: (error, variables, context) => {
-            // An error occurred!
-          },
-          onSuccess: (data, variables, context) => {
-            // Let's celebrate!
-            let data_item = data?.data?.find(
-              (item: any) => item?.message?.code === "create_task_success"
-            )?.data[0];
-
-            console.log("data_item", data_item);
-            if (update_action_input_form_values_on_submit_success) {
-              const key = `${data_model?.name}_${actionInputId}`;
-              console.log("key", key);
-              // console.log(values);
-              setActionInputFormValues({
-                ...action_input_form_values,
-                [key]: data_item,
-              });
-            }
-            // Optionally update the query cache as well
-            queryClient.setQueryData(
-              [
-                `useFetchActionStepDataByState_${JSON.stringify({
-                  name: value?.name,
-                  execution_order: value?.execution_order,
-                  id: actionInputId,
-                })}`,
+              input_values: value,
+              // credential: value?.credential || "surrealdb catchmytask dev",
+              // data_model: data_model,
+              application: {
+                id: activeApplication?.id,
+                name: activeApplication?.name,
+              },
+              session: {
+                id: activeSession?.id,
+                name: activeSession?.name,
+              },
+              task: {
+                id: activeTask?.id,
+                name: activeTask?.name,
+              },
+              // task_variables: {},
+              // global_variables: {
+              //   ...global_variables,
+              // },
+              // include_execution_orders: [record?.execution_order || 1],
+              include_execution_orders: selectedRecords.map(
+                (item: any) => item?.index
+              ) || [1],
+              action_steps: records || [
+                {
+                  ...value,
+                  execution_order: value?.execution_order || 1,
+                  description: value?.description || "generic description",
+                  name: value?.name || "generic name",
+                  job: value?.description || "generic job",
+                  method: value?.method || "select",
+                  type: value?.type || "action_steps",
+                  credential: value?.credential || "surrealdb catchmytask dev",
+                  implement: value?.implement,
+                  success_message_code: success_message_code_selected,
+                },
               ],
-              (oldData = {}) => ({
-                ...{},
-                ...data,
-              })
-            );
-            console.log("onSuccess", data);
-            if (invalidate_queries_on_submit_success) {
-              console.log(
-                "invalidate_queries_on_submit_success",
-                invalidate_queries_on_submit_success
-              );
-
-              // Use invalidateQueries instead of refetchQueries
-              // queryClient.invalidateQueries(
-
-              //   {
-              //     queryKey: invalidate_queries_on_submit_success,
-              //     refetchActive: true, // This will trigger the query to refetch immediately
-              //     refetchInactive: true, // This will trigger the query to refetch even if inactive
-              //   }
-              // );
-              queryClient.refetchQueries({
-                queryKey: [
-                  'useFetchActionStepsDataByState_{"id":"tasks:hlw9ig5ncahfx8eaec7h"}',
-                ],
-                // type: "disabled",
-                // exact: true,
-              });
-            }
-
-            if (setExpandedRecordIds) {
-              setExpandedRecordIds([actionInputId]);
-              // console.log("actionInputId", actionInputId);
-            }
-            // console.log("setExpandedRecordIds", setExpandedRecordIds);
-            // console.log("actionInputId", actionInputId);
+            },
           },
-        }
-      );
+          {
+            onError: (error, variables, context) => {
+              // console.log("onError", error);
+              reject(error);
+            },
+            onSuccess: (data, variables, context) => {
+              // retrieve the item we are interested
+              let execute_mode_item = data?.data?.find(
+                (item: any) => item?.message?.code === "execute_mode"
+              );
+              // console.log(
+              //   "success_message_code_item",
+              //   success_message_code_item
+              // );
+              // if execute_mode_item is found we need to add it to the focused_entities object
+              if (execute_mode_item) {
+                // console.log("execute_mode_item", execute_mode_item);
+                let new_focused_entities = { ...focused_entities };
+                new_focused_entities["action_input"] = {
+                  ...new_focused_entities["action_input"],
+                  execute_mode: execute_mode_item["data"],
+                  action: "proceed_execute_with_action_input",
+                };
+                new_focused_entities[record?.id] = {
+                  ...new_focused_entities[record?.id],
+                  action: "proceed_execute_with_action_input",
+                };
+                setFocusedEntities(new_focused_entities);
+              }
+              // invalidate appropriate queries to now refresh their data since mutation was successful
+              // retrieve the item we are interested
+              let action_step_items = Array.isArray(data?.data)
+                ? data.data.filter(
+                    (item: any) =>
+                      item?.action_step?.id && item?.exit_code === 0
+                  )
+                : [];
+              let query_state = action_step_items.map((item: any) => ({
+                id: item?.action_step?.id,
+                success_message_code: item?.message?.code,
+              }));
+
+              query_state.forEach((state) => {
+                queryClient.invalidateQueries({
+                  queryKey: [
+                    `readByState_${JSON.stringify({
+                      success_message_code: state?.success_message_code,
+                      // id: state?.id,
+                    })}`,
+                  ],
+                });
+              });
+              // // cache the result to a query that is viewable in multiple places
+              // queryClient.setQueryData(
+              //   [
+              //     `readByState_${JSON.stringify({
+              //       name: value?.name,
+              //       execution_order: value?.execution_order,
+              //       id: actionInputId,
+              //     })}`,
+              //   ],
+              //   (oldData = {}) => ({
+              //     ...{},
+              //     ...success_message_code_item,
+              //   })
+              // );
+
+              // // expand and navigate to the appropriate place, the results or input prompt
+              // if (setExpandedRecordIds) {
+              //   setExpandedRecordIds([actionInputId]);
+              //   // console.log("actionInputId", actionInputId);
+              // }
+              resolve(data);
+            },
+          }
+        );
+      });
     },
   });
 
@@ -365,12 +281,17 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     // let form_input_values: { [key: string]: any } = {};
     // form_input_values[`${data_model?.name}_${record?.id || generatedId}`] =
     //   values;
-    const key = `${data_model?.name}_${actionInputId}`;
-    console.log("key", key);
+
+    // const key = `${data_model?.name}_${actionInputId}`;
+    // // replace all spaces with underscores and convert to lowercase the value of data_model.name
+    // let standardized_data_model_name = data_model?.name
+    // Convert the data_model.name by replacing spaces with underscores and converting to lowercase
+
+    // console.log("key", key);
     // console.log(values);
     setActionInputFormValues({
       ...action_input_form_values,
-      [key]: values,
+      [action_input_form_values_key]: values,
     });
   }, 300); // 300ms debounce delay, adjust as needed
 
@@ -388,247 +309,203 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   if (!data_model) return <div>No data model </div>;
   const { schema } = data_model;
 
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // form.handleSubmit();
-  };
-  const handleExecute = (e: any) => {
-    e.preventDefault();
-    e.stopPropagation();
-    form.handleSubmit();
-  };
-  const handleImplement = (e: any) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // form.handleSubmit();
-  };
-  const canSubmit = form.useStore((state) => state.canSubmit);
-  const isSubmitting = form.useStore((state) => state.isSubmitting);
+  useEffect(() => {
+    // Instead of setting the form instance, track isSubmitting directly or ensure store is updated
+    setFormSubmitHandler(formId, form.handleSubmit);
+    setFormInstance(formId, form); // This is fine if you need to store form instance
+
+    return () => {
+      // Cleanup when the form is unmounted
+      setFormSubmitHandler(formId, undefined);
+      setFormInstance(formId, undefined); // Also clear the form instance to avoid stale data
+    };
+  }, [
+    form,
+    action, // Should track only necessary dependencies
+    actionInputId,
+    setFormSubmitHandler,
+    setFormInstance,
+  ]);
+
+  // conditionally set include_items based on the name. read include items from the corresponding state variable. i.e query_mode.include_items for name = query
+  let include_items: string[] = [];
+
+  if (focused_item === "action_input") {
+    include_items =
+      focused_entities["action_input"]?.["execute_mode"]?.["include_items"] ||
+      [];
+  } else if (data_model?.name === "task") {
+    include_items = [
+      "description",
+      "author_id",
+      "profile_id",
+      "id",
+      "name",
+      "include_execution_orders",
+      "high_level_plan",
+    ];
+  } else if (
+    !focused_entities[record?.id]?.[`${action}_mode`] &&
+    focused_entities[record?.id]?.["query_mode"]
+  ) {
+    include_items =
+      focused_entities[record?.id]?.["query_mode"]?.["include_items"] || [];
+  } else {
+    include_items =
+      focused_entities[record?.id]?.[`${action}_mode`]?.["include_items"] || [];
+  }
 
   return (
     <>
-      {/* <div>{JSON.stringify(action_input_form_values)}</div> */}
-      {/* <div>{JSON.stringify(form.state.values)}</div> */}
-      {/* <div>ActionInputForm</div>
-      <div>{JSON.stringify(schema)}</div> */}
-      {/* <div>predetermined forms or dynamic prompting from agent for action input / feedback. some llm prompts or clicking on buttons or selecting actions updates this section */}
-      {/* render any pydantic model form */}
-      {action_icon && (
-        <form onSubmit={handleSubmit}>
-          <div className="flex gap-1">
-            <Tooltip label="implement" position="left">
-              <ActionIcon
-                size="sm"
-                variant="outline"
-                color="orange"
-                onClick={(e) => handleImplement(e)}
-                // disabled={!canSubmit}
-                // loading={mutationIsLoading || isSubmitting}
-              >
-                <IconCode size={16} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="execute" position="left">
-              <ActionIcon
-                size="sm"
-                variant="outline"
-                color="green"
-                onClick={(e) => handleExecute(e)}
-                disabled={!canSubmit}
-                loading={mutationIsLoading || isSubmitting}
-              >
-                <IconPlayerPlay size={16} />
-              </ActionIcon>
-            </Tooltip>
-          </div>
-        </form>
-      )}
-      {!action_icon && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
-          }}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          form.handleSubmit();
+        }}
+      >
+        {/* <div>{JSON.stringify(formId)}</div> */}
+        {/* <div>{JSON.stringify(proceed_action_input_form_values_key)}</div> */}
+        {/* <div>{JSON.stringify(action_input_form_values_key)}</div> */}
+        {/* <div>{JSON.stringify(include_items)}</div> */}
+        {/* <div>{JSON.stringify(action)}</div> */}
+        {/* <div>{JSON.stringify(data_model)}</div> */}
+        {/* <div>{JSON.stringify(record)}</div> */}
+        <Accordion
+          defaultValue={["main", "description", "high_level_plan"]}
+          multiple={true}
         >
-          <div className="flex justify-between pl-3 pr-3">
-            {execlude_components?.includes("submit_button") ? null : (
-              // <form.Subscribe
-              //   selector={(state) => [state.canSubmit, state.isSubmitting]}
-              //   children={([canSubmit, isSubmitting]) => (
-              //     <Button
-              //       size="xs"
-              //       type="submit"
-              //       loading={mutationIsLoading || isSubmitting}
-              //       disabled={!canSubmit}
-              //     >
-              //       Submit
-              //     </Button>
-              //   )}
-              // />
-              <Button
-                size="xs"
-                type="submit"
-                loading={mutationIsLoading || isSubmitting}
-                disabled={!canSubmit}
-              >
-                {action_label || "Submit"}
-              </Button>
-            )}
-
-            {execlude_components?.includes("input_mode") ? null : (
-              <Combobox
-                data_items={inputs}
-                resource="input"
-                value={inputAsvalue}
-                setValue={setInputAsValue}
-              ></Combobox>
-            )}
-          </div>
-          {data_model && (
-            <Accordion
-              defaultValue={["description", "general", "fields"]}
-              multiple={true}
-            >
-              {Object.entries(
-                Object.keys(schema?.properties)
-                  .sort((a, b) => {
-                    const idA = parseInt(schema.properties[a]?.id, 10) || 0;
-                    const idB = parseInt(schema.properties[b]?.id, 10) || 0;
-                    return idA - idB;
-                  })
-                  .reduce((groups, key) => {
-                    const group = schema.properties[key]?.group || "fields"; // Default group if no group key
-                    if (!groups[group]) groups[group] = [];
-                    groups[group].push(key);
-                    return groups;
-                  }, {} as Record<string, string[]>)
-              ).map(([groupName, groupFields]) => (
-                <Accordion.Item value={groupName} key={groupName}>
-                  <Accordion.Control>{`${
-                    data_model?.name || ""
-                  } / ${groupName}`}</Accordion.Control>
-                  <Accordion.Panel>
-                    {groupFields.map((key) => {
-                      const Component = getComponentByResourceType(
-                        schema.properties[key]?.component as ComponentKey
-                      );
-                      return (
-                        <div
-                          key={schema.properties[key]?.title}
-                          className="mb-4"
+          {Object.entries(
+            Object.keys(schema?.properties)
+              .sort((a, b) => {
+                const idA = parseInt(schema.properties[a]?.id, 10) || 0;
+                const idB = parseInt(schema.properties[b]?.id, 10) || 0;
+                return idA - idB;
+              })
+              .reduce((groups, key) => {
+                const group = schema.properties[key]?.group || "fields"; // Default group if no group key
+                if (!groups[group]) groups[group] = [];
+                groups[group].push(key);
+                return groups;
+              }, {} as Record<string, string[]>)
+          ).map(([groupName, groupFields]) => (
+            <Accordion.Item value={groupName} key={groupName}>
+              <Accordion.Control>{`${
+                data_model?.name || ""
+              } / ${groupName}`}</Accordion.Control>
+              <Accordion.Panel>
+                {groupFields
+                  .filter((key) => include_items.includes(key)) // Filter based on include_items state
+                  .map((key) => {
+                    const Component = getComponentByResourceType(
+                      schema.properties[key]?.component as ComponentKey
+                    );
+                    return (
+                      <div key={schema.properties[key]?.title} className="mb-4">
+                        <form.Field
+                          name={schema.properties[key]?.title
+                            .toLowerCase()
+                            .replace(/ /g, "_")}
                         >
-                          <form.Field
-                            name={schema.properties[key]?.title
-                              .toLowerCase()
-                              .replace(/ /g, "_")}
-                          >
-                            {(field) => (
-                              <>
-                                <Component
-                                  schema={schema.properties[key]}
-                                  disabled={schema.properties[key]?.readOnly}
-                                  label={
-                                    schema.properties[key]?.label ||
-                                    schema.properties[key]?.title
-                                  }
-                                  searchable={true}
-                                  value={field.state.value}
-                                  onBlur={field.handleBlur}
-                                  onChange={
-                                    [
-                                      "NumberInput",
-                                      "MonacoEditorFormInput",
-                                      "NaturalLanguageEditorFormInput",
-                                      "SearchInput",
-                                    ].includes(
-                                      schema.properties[key]?.component
-                                    )
-                                      ? field.handleChange
-                                      : (e: any) =>
-                                          field.handleChange(e?.target?.value)
-                                  }
-                                  form={form}
-                                  isLoading={mutationIsLoading}
-                                />
-                                <FieldInfo field={field} />
-                              </>
-                            )}
-                          </form.Field>
-                        </div>
-                      );
-                    })}
-                  </Accordion.Panel>
-                </Accordion.Item>
-              ))}
+                          {(field) => (
+                            <>
+                              <Component
+                                schema={schema.properties[key]}
+                                disabled={schema.properties[key]?.readOnly}
+                                label={
+                                  schema.properties[key]?.label ||
+                                  schema.properties[key]?.title
+                                }
+                                searchable={true}
+                                value={field.state.value}
+                                onBlur={field.handleBlur}
+                                onChange={
+                                  [
+                                    "NumberInput",
+                                    "MonacoEditorFormInput",
+                                    "NaturalLanguageEditorFormInput",
+                                    "SearchInput",
+                                  ].includes(schema.properties[key]?.component)
+                                    ? field.handleChange
+                                    : (e: any) =>
+                                        field.handleChange(e?.target?.value)
+                                }
+                                form={form}
+                                isLoading={mutationIsLoading}
+                              />
+                              <FieldInfo field={field} />
+                            </>
+                          )}
+                        </form.Field>
+                      </div>
+                    );
+                  })}
+              </Accordion.Panel>
+            </Accordion.Item>
+          ))}
 
-              {/* Handle implement Keys */}
-              {record?.implement && (
-                <Accordion.Item value="implement" key="implement">
-                  <Accordion.Control>
-                    <Title c="orange" order={5}>
-                      Implement
-                    </Title>
-                  </Accordion.Control>
-                  <Accordion.Panel>
-                    {Object.entries(record.implement).map(([key, value]) => {
-                      const Component = getComponentByResourceType(
-                        "MonacoEditorFormInput"
-                      ); // Default to TextInput
-                      let field_key = `implement.${key
-                        .toLowerCase()
-                        .replace(/ /g, "_")}`;
-                      return (
-                        <div key={field_key} className="mb-4">
-                          <form.Field name={field_key}>
-                            {(field) => (
-                              <>
-                                <Component
-                                  schema={{
-                                    component: "MonacoEditorFormInput",
-                                    default: null,
-                                    placeholder: `Enter ${field_key}`,
-                                    size: "lg",
-                                    title: field_key,
-                                    type: "string",
-                                    language: "python",
-                                    // ...value, // Use any additional properties from implement value
-                                  }}
-                                  label={field_key}
-                                  value={field.state.value}
-                                  onBlur={field.handleBlur}
-                                  onChange={field.handleChange}
-                                  form={form}
-                                  isLoading={mutationIsLoading}
-                                />
-                                <FieldInfo field={field} />
-                              </>
-                            )}
-                          </form.Field>
-                        </div>
-                      );
-                    })}
-                  </Accordion.Panel>
-                </Accordion.Item>
-              )}
-
-              {children && (
-                <Accordion.Item
-                  value={
-                    nested_component?.data_model?.name || "nested_component"
-                  }
-                  key={nested_component?.data_model?.name || "nested_component"}
-                >
-                  <Accordion.Control>
-                    {nested_component?.data_model?.name || "nested component"}
-                  </Accordion.Control>
-                  <Accordion.Panel>{children}</Accordion.Panel>
-                </Accordion.Item>
-              )}
-            </Accordion>
+          {/* Handle implement Keys */}
+          {record?.implement && include_items.includes("implement") && (
+            <Accordion.Item value="implement" key="implement">
+              <Accordion.Control>
+                <Title c="orange" order={5}>
+                  Implement
+                </Title>
+              </Accordion.Control>
+              <Accordion.Panel>
+                {Object.entries(record.implement).map(([key, value]) => {
+                  const Component = getComponentByResourceType(
+                    "MonacoEditorFormInput"
+                  ); // Default to TextInput
+                  let field_key = `implement.${key
+                    .toLowerCase()
+                    .replace(/ /g, "_")}`;
+                  return (
+                    <div key={field_key} className="mb-4">
+                      <form.Field name={field_key}>
+                        {(field) => (
+                          <>
+                            <Component
+                              schema={{
+                                component: "MonacoEditorFormInput",
+                                default: null,
+                                placeholder: `Enter ${field_key}`,
+                                size: "lg",
+                                title: field_key,
+                                type: "string",
+                                language: "python",
+                                // ...value, // Use any additional properties from implement value
+                              }}
+                              label={field_key}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={field.handleChange}
+                              form={form}
+                              isLoading={mutationIsLoading}
+                            />
+                            <FieldInfo field={field} />
+                          </>
+                        )}
+                      </form.Field>
+                    </div>
+                  );
+                })}
+              </Accordion.Panel>
+            </Accordion.Item>
           )}
-        </form>
+        </Accordion>
+      </form>
+      {/* <div>{JSON.stringify(mutationError)}</div> */}
+      {/* <div>{JSON.stringify(mutationData)}</div> */}
+      {mutationData && (
+        <MonacoEditor
+          value={mutationData?.data}
+          language="json"
+          height="50vh"
+        />
+      )}
+      {mutationError && (
+        <MonacoEditor value={mutationError} language="json" height="50vh" />
       )}
     </>
   );
@@ -636,35 +513,17 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
 // export default ActionInput;
 
-interface ActionInputWrapperProps {
-  query_name?: string;
-  name?: string;
-  action_type?: string;
-  entity?: string;
-  record?: any;
-  exclude_components?: string[];
-  children?: any;
-  nested_component?: any;
-  action_icon?: any;
-  setExpandedRecordIds?: (ids: string[]) => void;
-  success_message_code?: string;
-  invalidate_queries_on_submit_success?: string[];
-  description?: any;
-  update_action_input_form_values_on_submit_success?: boolean;
-  endpoint?: string;
-  action_label?: string;
-}
-
 export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   query_name,
   name,
+  execution_record,
   action_type,
   entity,
   record,
+  record_query,
   exclude_components = [],
   children,
   nested_component,
-  action_icon,
   setExpandedRecordIds,
   success_message_code,
   invalidate_queries_on_submit_success,
@@ -672,68 +531,76 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   update_action_input_form_values_on_submit_success,
   endpoint,
   action_label,
+  records,
+  action,
+  include_form_components,
+  focused_item,
 }) => {
-  // let state = {
-  //   query_name: query_name,
-  //   name: name,
-  //   action_type: action_type,
-  //   entity: entity,
-  // };
-  // const {
-  //   data: queryData,
-  //   isLoading: queryDataIsLoading,
-  //   error: queryDataError,
-  // } = useFetchQueryDataByState(state);
-  const { data, isLoading, error } = useConditionalFetch(
+  let state = {
+    id: execution_record?.id,
     query_name,
     name,
     action_type,
     entity,
-    success_message_code
-  );
+    success_message_code,
+  };
+  let read_record_state = {
+    credential: "surrealdb catchmytask dev",
+    success_message_code: record?.id,
+    record: record,
+  };
+
+  const { data, isLoading, error } = useFetchQueryDataByState(state);
+  const {
+    data: recordData,
+    isLoading: recordIsLoading,
+    error: recordError,
+  } = useReadRecordByState(read_record_state);
 
   if (error) return <div>Error: {JSON.stringify(error)}</div>;
   if (isLoading) return <div>Loading...</div>;
 
-  // console.log("actionFormFieldValues", actionFormFieldValues);
-  // if (error) return <div>Error: {JSON.stringify(error)}</div>;
-  // if (isLoading) return <div>Loading...</div>;
-
   return (
     <>
-      {/* <div>ActionInputWrapper</div> */}
+      {/* <MonacoEditor
+        value={
+          recordData?.data?.find(
+            (item: any) => item?.message?.code === record?.id
+          )?.data[0]
+        }
+        language="json"
+        height="50vh"
+      /> */}
+
+      {/* <div>
+        {JSON.stringify(
+          recordData?.data?.find(
+            (item: any) => item?.message?.code === record?.id
+          )?.data[0]
+        )}
+      </div> */}
+      {/* <div>{JSON.stringify(execution_record)}</div>
+    <div>{JSON.stringify(record)}</div> */}
       {/* <>{JSON.stringify(data)}</> */}
-      <div>
-        {/* <div>action input</div> */}
-        {/* {JSON.stringify(
+      {/* <div>
+        {JSON.stringify(
           data?.data?.find(
             (item: any) => item?.message?.code === success_message_code
-          )?.data
-        )} */}
-        {/* {data?.data &&
-          !query_name &&
-          JSON.stringify(
-            data?.data
-              .find((item: any) => item?.message?.code === "action_plan")
-              ?.data?.filter(
-                (item: any) =>
-                  item?.queue?.execution_status === "awaiting action input"
-              )
-          )} */}
+          )?.data[0]?.data_model
+        )}
+      </div> */}
+      {/* <MonacoEditor
+        value={
+          data?.data?.find(
+            (item: any) => item?.message?.code === success_message_code
+          )?.data[0]?.data_model
+        }
+        language="json"
+        height="50vh"
+      /> */}
+
+      <div>
         {(!data?.data && !error && !isLoading && description) || null}
-        {/* {data?.data && !query_name && (
-          <ActionStepsActionInputForm
-            action_steps={data?.data
-              .find((item: any) => item?.message?.code === "action_plan")
-              ?.data?.filter(
-                (item: any) =>
-                  item?.queue?.execution_status === "awaiting action input"
-              )}
-            name={name}
-            success_message_code={success_message_code}
-            children={children}
-          ></ActionStepsActionInputForm>
-        )} */}
 
         {data?.data && query_name && (
           <ActionInputForm
@@ -742,21 +609,15 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
                 (item: any) => item?.message?.code === success_message_code
               )?.data[0]?.data_model
             }
-            record={record}
-            execlude_components={exclude_components}
-            name={name}
+            record={
+              recordData?.data?.find(
+                (item: any) => item?.message?.code === record?.id
+              )?.data[0]
+            }
+            records={records}
+            action={action}
             children={children}
-            nested_component={nested_component}
-            action_icon={action_icon}
-            setExpandedRecordIds={setExpandedRecordIds}
-            invalidate_queries_on_submit_success={
-              invalidate_queries_on_submit_success
-            }
-            update_action_input_form_values_on_submit_success={
-              update_action_input_form_values_on_submit_success
-            }
-            endpoint={endpoint}
-            action_label={action_label}
+            focused_item={focused_item}
           ></ActionInputForm>
         )}
       </div>
@@ -765,16 +626,6 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
 };
 
 export default ActionInputWrapper;
-
-interface ActionStepsActionInputFormProps {
-  action_steps?: any;
-  name?: string;
-  success_message_code?: string;
-  children?: any;
-  nested_component?: any;
-  action_icon?: any;
-  exclude_components?: string[];
-}
 
 export const ActionStepsActionInputForm: React.FC<
   ActionStepsActionInputFormProps
@@ -812,7 +663,8 @@ export const ActionStepsActionInputForm: React.FC<
           name={name}
           children={children}
           nested_component={nested_component}
-          action_icon={action_icon}
+          // records={records}
+          // action_icon={action_icon}
           // setExpandedRecordIds={setExpandedRecordIds}
         ></ActionInputForm>
       )}

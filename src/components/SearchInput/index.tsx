@@ -52,7 +52,10 @@ function SearchInput<T extends Record<string, any>>({
     query_name: "search",
     search_term: debouncedQuery,
     success_message_code,
-    filters: selected_filters,
+    // filters: selected_filters,
+    tables: selected_filters
+      .map((filter: { entity_type: any }) => filter.entity_type)
+      .join(", "),
   };
 
   const { data, isLoading, error, isError } = useFetchQueryDataByState(state);
@@ -63,15 +66,11 @@ function SearchInput<T extends Record<string, any>>({
         data.data
           ?.find((item: any) => item?.message?.code === success_message_code)
           ?.data[0]?.search_results?.map((item: any) => ({
+            ...item,
             value: item.id,
             label: item.name,
-            description: item.description,
-            entity_type: item.entity_type,
-            author_id: item.author_id,
-            id: item.id,
-            name: item.name,
           })) || [];
-      console.log("search results setting autocompletedata effect", results);
+      // console.log("search results setting autocompletedata effect", results);
       setAutocompleteData(results);
     }
   }, [data, success_message_code]);
