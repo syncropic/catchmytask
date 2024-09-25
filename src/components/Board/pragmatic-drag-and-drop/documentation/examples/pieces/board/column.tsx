@@ -630,10 +630,10 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                   <ActionStepResultsWrapper record={column} />
                 )} */}
                 {/* <ActionStepResultsWrapper record={column} /> */}
-                {/* {column?.results_mode && (
+                {column?.results_mode && (
                   <ActionStepResultsWrapper record={column} />
-                )} */}
-                <div>results</div>
+                )}
+                {/* <div>results</div> */}
               </Stack>
             </Box>
           </Stack>

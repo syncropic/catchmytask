@@ -11,30 +11,6 @@ import {
 } from "@components/interfaces";
 import { aggregate_views, views } from "@data/index";
 import { v4 as uuidv4 } from "uuid"; // Import UUID generator
-import {
-  ActionIcon,
-  Switch,
-  TextInput,
-  Tooltip,
-  Input,
-  rem,
-  Button,
-  Tabs,
-  Text,
-} from "@mantine/core";
-import {
-  IconCode,
-  IconColumns,
-  IconDatabase,
-  IconDownload,
-  IconEye,
-  IconFileDownload,
-  IconLink,
-  IconPlayerPlay,
-  IconCircleX,
-  IconZoomCode,
-  IconShare,
-} from "@tabler/icons-react";
 // import _, { set } from "lodash";
 import {
   ColumnDef,
@@ -326,15 +302,12 @@ export const ListEditorFormInput = ({ ...props }: any) => {
   // for id use the item with all spaces replaced with _
   useEffect(() => {
     if (props.value && props.value.length > 0) {
-      const transformedRecords = props.value.map(
-        (item: string, index: number) => ({
-          // id: item.replace(/ /g, "_"),
-          id: String(index + 1),
-          description: item,
-          index: index + 1,
-        })
-      );
+      const transformedRecords = props.value.map((item: any) => ({
+        ...item,
+        id: item?.name.replace(/ /g, "_"),
+      }));
       setRecords(transformedRecords); // Update state with transformed records
+      // console.log("transformedRecords", transformedRecords);
     }
   }, [props.value]); // Dependency array ensures effect runs when props.value changes
 
@@ -370,7 +343,7 @@ export const ListEditorFormInput = ({ ...props }: any) => {
   const columns: DataTableColumn<RecordData>[] = [
     // add empty header column for the drag handle
     { accessor: "", hiddenContent: true, width: 50 },
-    { accessor: "description" },
+    { accessor: "name" },
     { accessor: "index", width: 40 },
     // { accessor: "streetAddress", width: 150 },
     // { accessor: "city", width: 150 },

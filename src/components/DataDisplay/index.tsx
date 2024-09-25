@@ -143,7 +143,7 @@ export function DataDisplay<T extends Record<string, any>>({
 DataDisplayComponentProps<T>) {
   // const { ref, width } = useElementSize();
   // const [isLarge, setIsLarge] = useState(true);
-  const { focused_entities } = useAppStore();
+  const { focused_entities, selectedRecords } = useAppStore();
   // const { tableColumns } = useTableColumns({
   //   field_configurations: view_data?.data[0]?.field_configurations?.map(
   //     (nested_field: any) => mergeEdgeWithEntityValues(nested_field)
@@ -252,8 +252,17 @@ DataDisplayComponentProps<T>) {
         {/* {JSON.stringify(focused_entities[record?.id]?.["display_mode"])} */}
         {focused_entities[record?.id]?.["display_mode"]?.name === "board" ||
           (entity_type === "action_steps" && (
-            <Board data_fields={data_items}></Board>
+            <Board
+              data_fields={data_items?.filter(
+                (item) =>
+                  item &&
+                  selectedRecords.some(
+                    (record: any) => record.name === item.name
+                  )
+              )}
+            ></Board>
           ))}
+
         {focused_entities[record?.id]?.["display_mode"]?.name === "table" && (
           <TableView
             data_items={data_items}

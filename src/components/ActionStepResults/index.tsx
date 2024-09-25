@@ -34,7 +34,7 @@ ActionStepResultsProps) {
   // use read action step results by state
   // Create the key with the transformed data_model.name
   const { action_input_form_values, activeTask } = useAppStore();
-  const proceed_action_input_form_values_key = `proceed_execute_with_action_input_create_freshdesk_ticket_from_zoom_engagement_data_models:lefd1wja8dcfmpa7a0cq`;
+  // const proceed_action_input_form_values_key = `proceed_execute_with_action_input_create_freshdesk_ticket_from_zoom_engagement_data_models:lefd1wja8dcfmpa7a0cq`;
 
   // const defaultValueObjects = [
   //   // actionInputIds,
@@ -43,24 +43,24 @@ ActionStepResultsProps) {
   //   action_input_form_values[action_input_form_values_key],
   //   action_input_form_values[proceed_action_input_form_values_key] || {},
   // ];
-  let proceed_action_input_form_values =
-    action_input_form_values[proceed_action_input_form_values_key] || {};
+  // let proceed_action_input_form_values =
+  //   action_input_form_values[proceed_action_input_form_values_key] || {};
 
-  // const { global_variables } = useAppStore();
+  // // const { global_variables } = useAppStore();
   let state = {
     // global_variables: global_variables,
     success_message_code: record?.success_message_code,
     id: record?.id,
     action_steps: [record],
     include_action_steps: [record?.execution_order || 0],
-    input_values: proceed_action_input_form_values,
+    input_values: action_input_form_values?.action_input || {},
   };
   const { data, isLoading, error, refetch } = useReadByState(state);
 
   // Refetch query whenever the input values change
-  useEffect(() => {
-    refetch();
-  }, [proceed_action_input_form_values]); // Refetch when input values change
+  // useEffect(() => {
+  //   refetch();
+  // }, [proceed_action_input_form_values]); // Refetch when input values change
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -84,13 +84,13 @@ ActionStepResultsProps) {
 
   return (
     <>
-      {/* <div>action step results</div> */}
-      {/* <div>{JSON.stringify(actionStepData)}</div> */}
+      {/* <div>ActionStepResults</div> */}
+      <MonacoEditor value={data} language="json" height="75vh" />
       {/* <div>{JSON.stringify(record)}</div> */}
       {/* <div>action step results</div> */}
       {/* <div>{JSON.stringify(proceed_action_input_form_values)}</div> */}
       {/* <MonacoEditor value={data?.data} language="json" height="50vh" /> */}
-      <Reveal
+      {/* <Reveal
         trigger="click"
         target={
           <Text truncate="end" size="xs" className="text-blue-500 pl-3 pr-3">
@@ -99,17 +99,14 @@ ActionStepResultsProps) {
         }
       >
         <MonacoEditor value={record} language="json" height="50vh" />
-      </Reveal>
-
+      </Reveal> */}
       {/* if data.data contains at least one object with exit_code = 1 then show error message */}
-      {data?.data?.find((item: any) => item?.exit_code === 1) && (
+      {/* {data?.data?.find((item: any) => item?.exit_code === 1) && (
         <MonacoEditor value={data} language="json" height="50vh" />
-      )}
-
+      )} */}
       {/* if data.data contains no object with exit_code = 1 then show success message */}
-      {data && data?.data?.find((item: any) => item?.exit_code !== 1) && (
+      {/* {data && data?.data?.find((item: any) => item?.exit_code !== 1) && (
         <>
-          {/* <div>{JSON.stringify(data)}</div> */}
           <DataDisplay
             data_items={
               data?.data?.find(
@@ -135,14 +132,10 @@ ActionStepResultsProps) {
                 })) || []
             }
             record={record}
-            // read_write_mode={"read"}
-            // isLoadingDataItems={actionStepDataIsLoading}
-            // resource_group={record?.execution_id}
-            // execlude_components={["columns", "custom_views"]}
-            // ui={{}}
+           
           ></DataDisplay>
         </>
-      )}
+      )} */}
     </>
   );
 }
@@ -172,6 +165,7 @@ export const ActionStepResultsWrapper = ({
   // };
   return (
     <>
+      {/* <div>ActionStepResultsWrapper</div> */}
       {/* <div>action step results wrapper</div> */}
       {/* <div>{JSON.stringify(record)}</div> */}
       <ActionStepResults
