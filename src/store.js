@@ -200,6 +200,12 @@ export const useAppStore = create(
         const data = await res.json();
         set({ runtimeConfig: data });
       },
+      globalFilters: [],
+      setGlobalFilters: (filters) =>
+        set((state) => ({ ...state, globalFilters: filters })),
+      globalFilterQuery: "",
+      setGlobalFilterQuery: (query) =>
+        set((state) => ({ ...state, globalFilterQuery: query })),
       searchFilters: [
         {
           id: 1,

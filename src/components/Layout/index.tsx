@@ -76,6 +76,7 @@ import ActionInputToolbar from "@components/ActionInputToolbar";
 import { LogsWrapper } from "@components/LogsViewer";
 import Reveal from "@components/Reveal";
 import PlanWrapper from "@components/Plan";
+import GlobalSearchInput from "@components/GlobalSearchInput";
 
 function InitializeApplication({
   activeApplicationId,
@@ -672,24 +673,8 @@ const Layout = ({
                     paddingBottom: "60px",
                   }}
                 >
-                  {/* <div className="flex justify-center items-center bg-gray-100 min-h-[20px] pb-3">
-                  <Breadcrumbs />
-                </div> */}
-
-                  {/* {activeLayout?.searchInput?.isDisplayed && (
-                    <div className="block lg:hidden p-2 bg-gray-100">
-                      <SearchInput />
-                    </div>
-                  )} */}
-
-                  <Accordion
-                    defaultValue={["natural_language_query", "action_plan"]}
-                    multiple={true}
-                  >
-                    <Accordion.Item
-                      key="natural_language_query"
-                      value="natural_language_query"
-                    >
+                  <Accordion defaultValue={["execution"]} multiple={true}>
+                    <Accordion.Item key="task" value="task">
                       <Accordion.Control icon={<IconLetterQ size={16} />}>
                         <div className="flex justify-between items-center">
                           <div>Task</div>
@@ -697,20 +682,13 @@ const Layout = ({
                             <Reveal
                               trigger="click"
                               target={
-                                <Indicator
-                                  // inline
-                                  label="i"
-                                  // size={16}
-                                  // color="blue"
-                                  // variant="outline"
-                                  offset={3}
-                                >
+                                <Indicator label="i" offset={3}>
                                   <Text
                                     truncate="end"
                                     size="xs"
                                     className="text-blue-500 pl-3 pr-3"
                                   >
-                                    {truncateText(`${activeTask?.name}`, 3)}
+                                    {activeTask?.name}
                                   </Text>
                                 </Indicator>
                               }
@@ -725,214 +703,61 @@ const Layout = ({
 
                           <div className="pr-3">
                             <ComponentsToolbar
-                              include_components={[
-                                {
-                                  action: "plan",
-                                  entity_type: "tasks",
-                                  type: "action",
-                                  record: activeTask,
-                                  onClick: updateComponentAction,
-                                },
-                                {
-                                  action: "build",
-                                  entity_type: "tasks",
-                                  type: "action",
-                                  record: activeTask,
-                                  onClick: updateComponentAction,
-                                },
-
-                                {
-                                  action: "execute",
-                                  entity_type: "tasks",
-                                  type: "action",
-                                  record: activeTask,
-                                  onClick: updateComponentAction,
-                                },
-                              ]}
+                              include_components={[]}
                             ></ComponentsToolbar>
                           </div>
                         </div>
                       </Accordion.Control>
-                      <Accordion.Panel>
-                        <PanelGroup direction="horizontal">
-                          <Panel
-                            defaultSize={30}
-                            minSize={0}
-                            id="left"
-                            style={{
-                              display: shouldDisplayActionInputLeftSection
-                                ? "block"
-                                : "none",
-                            }}
-                          ></Panel>
-
-                          <PanelResizeHandle>
-                            <ResizeHandle />
-                          </PanelResizeHandle>
-
-                          <Panel
-                            defaultSize={40}
-                            minSize={30}
-                            id="center"
-                            style={{
-                              display: activeActionInputLayout?.centerSection
-                                ?.isDisplayed
-                                ? "block"
-                                : "none",
-                            }}
-                          >
-                            <div className="w-full">
-                              <ActionInputWrapper
-                                name="task"
-                                query_name="data_model"
-                                record={activeTask}
-                                action={
-                                  focused_entities[activeTask?.id]?.action ||
-                                  action
-                                }
-                                success_message_code="action_input_data_model_schema"
-                              />
-                            </div>
-                          </Panel>
-
-                          <PanelResizeHandle>
-                            <ResizeHandle />
-                          </PanelResizeHandle>
-
-                          <Panel
-                            defaultSize={30}
-                            minSize={0}
-                            id="right"
-                            style={{
-                              display: shouldDisplayActionInputRightSection
-                                ? "block"
-                                : "none",
-                            }}
-                          ></Panel>
-                        </PanelGroup>
-                      </Accordion.Panel>
+                      <Accordion.Panel></Accordion.Panel>
                     </Accordion.Item>
 
-                    <Accordion.Item key="plan" value="plan">
-                      <Accordion.Control icon={<IconSitemap size={16} />}>
+                    <Accordion.Item key="execution" value="execution">
+                      <Accordion.Control icon={<IconListDetails size={16} />}>
                         <div className="flex justify-between items-center">
-                          <div>Plan</div>
+                          <div>Execution</div>
+                          <div
+                            className="p-3"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {activeTask && (
+                              <ExternalSubmitButton
+                                record={activeTask}
+                                entity_type="tasks"
+                                action={
+                                  focused_entities[activeTask?.id]?.[
+                                    "action"
+                                  ] || action
+                                }
+                              ></ExternalSubmitButton>
+                              // <div>{JSON.stringify(action)}</div>
+                            )}
+                          </div>
+
                           <div className="pr-3">
                             <ComponentsToolbar
                               include_components={[
                                 {
+                                  action: "search",
+                                  entity_type: "action_steps",
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateComponentAction,
+                                },
+                                // {
+                                //   action: "execute",
+                                //   entity_type: "action_steps",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
+                                {
                                   action: "save",
-                                  entity_type: "tasks",
+                                  entity_type: "action_steps",
                                   type: "action",
                                   record: activeTask,
                                   onClick: updateComponentAction,
                                 },
                               ]}
-                            ></ComponentsToolbar>
-                          </div>
-                        </div>
-                      </Accordion.Control>
-                      <Accordion.Panel>
-                        <PanelGroup direction="horizontal">
-                          <Panel
-                            defaultSize={30}
-                            minSize={0}
-                            id="left"
-                            style={{
-                              display: shouldDisplayActionInputLeftSection
-                                ? "block"
-                                : "none",
-                            }}
-                          ></Panel>
-
-                          <PanelResizeHandle>
-                            <ResizeHandle />
-                          </PanelResizeHandle>
-
-                          <Panel
-                            defaultSize={40}
-                            minSize={30}
-                            id="center"
-                            style={{
-                              display: activeActionInputLayout?.centerSection
-                                ?.isDisplayed
-                                ? "block"
-                                : "none",
-                            }}
-                          >
-                            {activeTask ? (
-                              <div className="w-full">
-                                <PlanWrapper
-                                  name="action_step"
-                                  query_name="data_model"
-                                  record={activeTask}
-                                  action={
-                                    focused_entities["action_input"]?.action
-                                  }
-                                  // focused_item="action_input"
-                                  success_message_code="action_input_data_model_schema"
-                                />
-                                <PlanWrapper
-                                  name="list items"
-                                  query_name="data_model"
-                                  record={activeTask}
-                                  action={
-                                    focused_entities["action_input"]?.action
-                                  }
-                                  // focused_item="action_input"
-                                  success_message_code="action_input_data_model_schema"
-                                />
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-center p-4">
-                                <p className="text-sm text-gray-600 text-center">
-                                  Prompts for your input required to
-                                  successfully complete an action will
-                                  dynamically appear here.
-                                </p>
-                              </div>
-                            )}
-                          </Panel>
-
-                          <PanelResizeHandle>
-                            <ResizeHandle />
-                          </PanelResizeHandle>
-
-                          <Panel
-                            defaultSize={30}
-                            minSize={0}
-                            id="right"
-                            style={{
-                              display: shouldDisplayActionInputRightSection
-                                ? "block"
-                                : "none",
-                            }}
-                          >
-                            {/* <div
-                              className={`overflow-auto  p-3 ${
-                                effectiveScheme === "light"
-                                  ? "bg-gray-100"
-                                  : "bg-gray-800"
-                              }`}
-                              // style={{ height: "calc(100vh - 64px)" }}
-                            >
-                              <LogsWrapper
-                                record={activeTask}
-                              />
-                            </div> */}
-                          </Panel>
-                        </PanelGroup>
-                      </Accordion.Panel>
-                    </Accordion.Item>
-
-                    <Accordion.Item key="action_plan" value="action_plan">
-                      <Accordion.Control icon={<IconListDetails size={16} />}>
-                        <div className="flex justify-between items-center">
-                          <div>Execution</div>
-
-                          <div>
-                            <ComponentsToolbar
-                              include_components={[]}
                             ></ComponentsToolbar>
                           </div>
                         </div>
@@ -949,18 +774,7 @@ const Layout = ({
                                   ? "block"
                                   : "none",
                               }}
-                            >
-                              {/* <div
-                              className={`overflow-auto ${
-                                effectiveScheme === "light"
-                                  ? "bg-gray-100"
-                                  : "bg-gray-800"
-                              }`}
-                              // style={{ height: "calc(100vh - 64px)" }}
-                            >
-                              conversation history
-                            </div> */}
-                            </Panel>
+                            ></Panel>
 
                             <PanelResizeHandle>
                               <ResizeHandle />
@@ -991,21 +805,119 @@ const Layout = ({
                                   ? "block"
                                   : "none",
                               }}
-                            >
-                              {/* <div
-                              className={`overflow-auto  p-3 ${
-                                effectiveScheme === "light"
-                                  ? "bg-gray-100"
-                                  : "bg-gray-800"
-                              }`}
-                              // style={{ height: "calc(100vh - 64px)" }}
-                            >
-                              <LogsWrapper
-                                record={activeTask}
-                              />
-                            </div> */}
-                            </Panel>
+                            ></Panel>
                           </PanelGroup>
+                          <div className="flex justify-center w-full">
+                            <div className="w-1/5"></div>
+                            <div className="w-3/5">
+                              {activeTask &&
+                                focused_entities[activeTask?.id]?.["action"] ===
+                                  "save" && (
+                                  <div className="w-full">
+                                    <ActionInputWrapper
+                                      name="save"
+                                      query_name="data_model"
+                                      record={activeTask}
+                                      action="save"
+                                      success_message_code="action_input_data_model_schema"
+                                    />
+                                  </div>
+                                )}
+
+                              {activeTask &&
+                                focused_entities[activeTask?.id]?.["action"] ===
+                                  "search" && (
+                                  <div className="w-full">
+                                    <ActionInputWrapper
+                                      name="search"
+                                      query_name="data_model"
+                                      record={activeTask}
+                                      action="search"
+                                      success_message_code="action_input_data_model_schema"
+                                    />
+                                  </div>
+                                )}
+
+                              {activeTask &&
+                                focused_entities[activeTask?.id]?.["action"] ===
+                                  "execute" && (
+                                  <div className="w-full">
+                                    {/* <ActionInputWrapper
+                                      name="save"
+                                      query_name="data_model"
+                                      record={activeTask}
+                                      action="save"
+                                      success_message_code="action_input_data_model_schema"
+                                    /> */}
+                                    <div>execute</div>
+                                  </div>
+                                )}
+
+                              {/* {activeTask &&
+                              focused_entities[activeTask?.id]?.["action"] ===
+                                "execute" ? (
+                                <div className="w-full">
+                                  <ActionInputWrapper
+                                    execution_record={activeTask}
+                                    query_name="execution data model"
+                                    record={{
+                                      id: activeTask?.id,
+                                    }}
+                                    action={
+                                      focused_entities["action_input"]?.action
+                                    }
+                                    focused_item="action_input"
+                                    read_record_mode="local"
+                                    success_message_code="action_input_data_model_schema"
+                                  />
+                                </div>
+                              ) : null} */}
+
+                              {/* {(activeTask &&
+                                focused_entities[activeTask?.id]?.["action"]) ==
+                                "search" || action == "search" ? (
+                                <div
+                                  className="w-full pr-6 pl-6 pt-3 pb-3"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <GlobalSearchInput
+                                    placeholder={`Search for ${
+                                      focused_entities[activeTask?.id]?.[
+                                        "action"
+                                      ]
+                                    } modes`}
+                                    handleOptionSubmit={(item) =>
+                                     
+                                      console.log(item)
+                                    }
+                                    
+                                    activeFilters={[
+                                      {
+                                        id: 1,
+                                        name: `${
+                                          focused_entities[activeTask?.id]?.[
+                                            "action"
+                                          ]
+                                        } modes`,
+                                        description: `${
+                                          focused_entities[activeTask?.id]?.[
+                                            "action"
+                                          ]
+                                        } modes`,
+                                        entity_type: `${
+                                          focused_entities[activeTask?.id]?.[
+                                            "action"
+                                          ]
+                                        } modes`,
+                                        is_selected: true,
+                                      },
+                                    ]}
+                                  />
+                                </div>
+                              ) : null} */}
+                            </div>
+                            <div className="w-1/5"></div>
+                          </div>
 
                           {activeTask ? (
                             <div className="w-full">
@@ -1077,7 +989,33 @@ const Layout = ({
                       </div>
                     </Accordion.Panel>
                   </Accordion.Item> */}
-                  <Accordion.Item key="logs" value="logs">
+                  <Accordion.Item key="plan" value="plan">
+                    <Accordion.Control icon={<IconListTree size={16} />}>
+                      Plan
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      {activeTask ? (
+                        <div className="w-full">
+                          {" "}
+                          <PlanWrapper
+                            name="list items"
+                            query_name="data_model"
+                            record={activeTask}
+                            action={focused_entities["action_input"]?.action}
+                            success_message_code="action_input_data_model_schema"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-600 text-center">
+                            Action plan appears here.
+                          </p>
+                        </div>
+                      )}
+                    </Accordion.Panel>
+                  </Accordion.Item>
+
+                  {/* <Accordion.Item key="logs" value="logs">
                     <Accordion.Control icon={<IconListTree size={16} />}>
                       Action Input
                     </Accordion.Control>
@@ -1105,7 +1043,7 @@ const Layout = ({
                         </div>
                       )}
                     </Accordion.Panel>
-                  </Accordion.Item>
+                  </Accordion.Item> */}
                 </Accordion>
               </div>
             </Panel>

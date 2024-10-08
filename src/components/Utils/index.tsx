@@ -2083,26 +2083,28 @@ export function useTableColumns({
     () =>
       field_configurations?.map((item) => {
         return {
-          id: `${table_id}-${item?.name}`,
-          accessor: item?.accessor_key || item?.name, // Assuming each FieldConfiguration has a 'name' property
+          // id: `${table_id}-${item?.name}`,
+          id: item?.name,
+          accessorKey: item?.accessor_key || item?.name, // Assuming each FieldConfiguration has a 'name' property
           header: item?.name, // Assuming each FieldConfiguration has a 'name' property
-          cell: (row: RowData) => {
-            const rowId = `${row?.id}`; // Assuming each row has a unique 'id' property
+          filterFn: "includesString", // use built-in filter function
+          // cell: (row: RowData) => {
+          //   const rowId = `${row?.id}`; // Assuming each row has a unique 'id' property
 
-            return (
-              <div className="flex">
-                {/* {item?.name === "description" && (
-                  <DescriptionPopover
-                    rowId={rowId}
-                    isOpen={openedPopover === rowId}
-                    onOpen={handlePopoverOpen}
-                    onClose={handlePopoverClose}
-                  />
-                )} */}
-                <div dangerouslySetInnerHTML={{ __html: row[item?.name] }} />
-              </div>
-            );
-          },
+          //   return (
+          //     <div className="flex">
+          //       {/* {item?.name === "description" && (
+          //         <DescriptionPopover
+          //           rowId={rowId}
+          //           isOpen={openedPopover === rowId}
+          //           onOpen={handlePopoverOpen}
+          //           onClose={handlePopoverClose}
+          //         />
+          //       )} */}
+          //       <div dangerouslySetInnerHTML={{ __html: row[item?.name] }} />
+          //     </div>
+          //   );
+          // },
           // Add more properties as needed from item
         };
       }),
@@ -2233,35 +2235,35 @@ export function DebouncedInput({
     return () => clearTimeout(timeout);
   }, [value]);
 
-  const icon = (
-    <Tooltip label="toggle sql mode" position="left">
-      <div>
-        <ActionIcon
-          size="sm"
-          variant="outline"
-          // variant="outline"
-          // color="green"
-          // onClick={(e) => handleImplement(e)}
-          // disabled={!canSubmit}
-          // loading={mutationIsLoading || isSubmitting}
-          // onClick={(e) => handleExecuteSelected(e)}
-          // disabled={!canSubmit}
-          // loading={mutationIsLoading || isSubmitting}
-        >
-          {/* hide or reveal a natural languge input with correct context */}
-          <IconSql />
-        </ActionIcon>
-        {/* // {JSON.stringify(record?.natural_language_prompt)} */}
-      </div>
-    </Tooltip>
-  );
+  // const icon = (
+  //   <Tooltip label="toggle sql mode" position="left">
+  //     <div>
+  //       <ActionIcon
+  //         size="sm"
+  //         variant="outline"
+  //         // variant="outline"
+  //         // color="green"
+  //         // onClick={(e) => handleImplement(e)}
+  //         // disabled={!canSubmit}
+  //         // loading={mutationIsLoading || isSubmitting}
+  //         // onClick={(e) => handleExecuteSelected(e)}
+  //         // disabled={!canSubmit}
+  //         // loading={mutationIsLoading || isSubmitting}
+  //       >
+  //         {/* hide or reveal a natural languge input with correct context */}
+  //         <IconSql />
+  //       </ActionIcon>
+  //       {/* // {JSON.stringify(record?.natural_language_prompt)} */}
+  //     </div>
+  //   </Tooltip>
+  // );
 
   return (
     <TextInput
       size="sm"
       // {...props}
       placeholder={props?.placeholder}
-      leftSection={icon}
+      // leftSection={icon}
       value={value}
       onChange={(e) => setValue(e.target.value)}
     />
@@ -2363,3 +2365,31 @@ export const truncateText = (text: string, wordLimit: number): string => {
   }
   return text;
 };
+
+export function extractDefaultValues(model: any) {
+  const defaultValues: { [key: string]: any } = {};
+  const properties = model.schema.properties;
+
+  for (const key in properties) {
+    if (
+      properties[key].hasOwnProperty("default") &&
+      properties[key].default !== null
+    ) {
+      defaultValues[key] = properties[key].default;
+    }
+  }
+
+  return defaultValues;
+}
+
+export function extractLabelsFromDefaults(defaultValues: any) {
+  const labelValues: { [key: string]: any } = {};
+
+  for (const key in defaultValues) {
+    if (defaultValues[key].hasOwnProperty("label")) {
+      labelValues[key] = defaultValues[key].label;
+    }
+  }
+
+  return labelValues;
+}

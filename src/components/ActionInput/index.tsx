@@ -1,5 +1,7 @@
 import {
+  extractDefaultValues,
   extractIdentifier,
+  extractLabelsFromDefaults,
   getComponentByResourceType,
   useFetchActionDataByName,
   useFetchActionStepDataByState,
@@ -143,10 +145,24 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
   const formId = `${action}_${actionInputId}`; // Unique form identifier
 
+  const schemaDefaultValues = extractLabelsFromDefaults(
+    extractDefaultValues(data_model)
+  );
+  let defaultRecord = {};
+  // if action is save defaultRecord is the record.name + schemaDefaultValues
+  if (action === "save") {
+    defaultRecord = {
+      name: record?.name,
+      ...schemaDefaultValues,
+    };
+  } else {
+    defaultRecord = record;
+  }
+
   const defaultValueObjects = [
     // actionInputIds,
     identity_object,
-    record,
+    defaultRecord,
     action_input_form_values[action_input_form_values_key] || {},
     // action_input_form_values[proceed_action_input_form_values_key] || {},
   ];
@@ -461,6 +477,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         </div> */}
         {/* <div>{JSON.stringify(action_input_form_values_key)}</div> */}
         {/* <div>{JSON.stringify(record)}</div> */}
+        {/* <div>{JSON.stringify(extractDefaultValues(data_model))}</div> */}
 
         <Accordion defaultValue={["main", "description"]} multiple={true}>
           {Object.entries(
@@ -624,7 +641,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       {mutationError && (
         <MonacoEditor value={mutationError} language="json" height="50vh" />
       )}
-      <div
+      {/* <div
         className="flex justify-end w-full p-3"
         onClick={(e) => e.stopPropagation()}
       >
@@ -633,7 +650,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           entity_type="action_steps"
           action={action}
         ></ExternalSubmitButton>
-      </div>
+      </div> */}
     </>
   );
 };

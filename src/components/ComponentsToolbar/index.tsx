@@ -20,6 +20,7 @@ import {
   IconPencil,
   IconSitemap,
   IconCode,
+  IconSearch,
 } from "@tabler/icons-react";
 import { useAppStore } from "src/store";
 import Reveal from "@components/Reveal";
@@ -67,6 +68,7 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
     configure: IconTool,
     automate: IconSettingsAutomation,
     save: IconFileDownload,
+    search: IconSearch,
     execute: IconPlayerPlay,
     query: IconZoomCode,
     share: IconShare,

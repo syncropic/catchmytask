@@ -18,13 +18,24 @@ const MonacoEditor: React.FC<IEditor> = ({
   field = "query",
 }) => {
   const monaco = useMonaco();
-  const editorRef = useRef(null);
+  // useEffect(() => {
+  //   if (monaco) {
+  //     // Define a custom theme based on `vs-dark` with a slightly lighter background
+  //     monaco.editor.defineTheme("darkGrayTheme", {
+  //       base: "vs-dark", // Using the 'vs-dark' theme as the base
+  //       inherit: true, // Inherit default vs-dark rules
+  //       rules: [], // No changes to syntax highlighting rules
+  //       colors: {
+  //         "editor.background": "#2e2e2e", // Dark gray background (slightly lighter than vs-dark)
+  //       },
+  //     });
+
+  //     // Set the new theme
+  //     monaco.editor.setTheme("darkGrayTheme");
+  //   }
+  // }, [monaco]);
   const [code, setCode] = useState(() => {
-    if (typeof value === "object") {
-      return JSON.stringify(value, null, 2);
-    } else {
-      return value;
-    }
+    return typeof value === "object" ? JSON.stringify(value, null, 2) : value;
   });
 
   useEffect(() => {
@@ -35,36 +46,58 @@ const MonacoEditor: React.FC<IEditor> = ({
     }
   }, [value]);
 
-  useEffect(() => {
-    if (monaco) {
-      // Additional Monaco setup if needed
-    }
-  }, [monaco]);
-
-  function handleEditorDidMount() {
-    // Editor mount logic
+  function handleEditorDidMount(editor: any) {
+    // Ensure the monaco instance is available before binding commands
+    // if (!monaco) {
+    //   return;
+    // }
+    // Define keys that should stop propagation but still be handled by Monaco
+    // const commonKeys = [
+    //   monaco.KeyCode.Backspace,
+    //   monaco.KeyCode.Space,
+    //   monaco.KeyCode.Tab,
+    //   monaco.KeyCode.Enter,
+    // ];
+    // Bind the commands to the editor
+    // commonKeys.forEach((keyCode) => {
+    //   editor.addCommand(keyCode, function () {
+    //     // Let Monaco handle the key, but prevent the event from bubbling to parent
+    //     console.log(
+    //       `Key with keyCode ${keyCode} pressed, stopping propagation.`
+    //     );
+    //     // Note: No need for e.preventDefault() to avoid stopping default Monaco behavior
+    //   });
+    // });
+    // Also use the regular event system to stop propagation of other events
+    // editor.onKeyDown((e: any) => {
+    //   if (commonKeys.includes(e.keyCode)) {
+    //     e.stopPropagation(); // Stop event from propagating
+    //     console.log(
+    //       `Key with keyCode ${e.keyCode} pressed, stopping propagation.`
+    //     );
+    //   }
+    // });
+    // Stop propagation for mouse click events
+    // editor.onMouseDown((e: any) => {
+    //   e.event.stopPropagation(); // Stop mouse event from propagating
+    //   console.log("Mouse down, stopping propagation.");
+    // });
   }
 
   function handleEditorChange(value: any) {
-    // if language is json make sure to json parse the value first before setting it
     if (language === "json") {
       try {
         value = JSON.parse(value);
       } catch (e) {
-        console.log("error parsing json", e);
+        console.log("Error parsing JSON:", e);
       }
     }
     setValue(value);
-    // console.log("editor value", value);
   }
 
-  // const setValue = (value: any) => {
-  //   props?.setFieldValue(
-  //     props?.schema.title.toLowerCase().replace(/ /g, "_"),
-  //     value
-  //   );
-  // };
-
+  if (!monaco) {
+    return <div>Loading Monaco Editor...</div>;
+  }
   return (
     <Editor
       height={height}
