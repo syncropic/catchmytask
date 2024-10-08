@@ -1083,6 +1083,14 @@ export function useReadByState(state: any) {
 export function useReadRecordByState(state: any) {
   // const variables = state;
   const { runtimeConfig: config } = useAppStore();
+  if (state?.read_record_mode !== "remote") {
+    return {
+      data: state?.record,
+      isLoading: false,
+      error: null,
+      isError: false,
+    };
+  }
 
   const { data, isLoading, error, isError, refetch } = useCustom({
     url: `${config?.API_URL}/read`,

@@ -154,10 +154,9 @@ export const useAppStore = create(
       activeActionStep: null,
       setActiveActionStep: (actionStep) =>
         set((state) => ({ ...state, activeActionStep: actionStep })),
-      selectedRecords: [],
+      selectedRecords: {},
       setSelectedRecords: (records) =>
         set((state) => ({ ...state, selectedRecords: records })),
-
       component_input_mode: null,
       setComponentInputMode: (mode) =>
         set((state) => ({ ...state, component_input_mode: mode })),
@@ -178,6 +177,8 @@ export const useAppStore = create(
         set((state) => ({ ...state, display_mode: mode })),
       action: "execute",
       setAction: (action) => set((state) => ({ ...state, action: action })),
+      fields: {},
+      setFields: (fields) => set((state) => ({ ...state, fields })),
       activeApplication: null,
       setActiveApplication: (application) =>
         set((state) => ({ ...state, activeApplication: application })),
@@ -303,6 +304,13 @@ export const useAppStore = create(
           name: "profiles",
           description: "profiles",
           entity_type: "profiles",
+          is_selected: true,
+        },
+        {
+          id: 16,
+          name: "file types",
+          description: "file types",
+          entity_type: "file_types",
           is_selected: true,
         },
       ],

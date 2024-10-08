@@ -46,7 +46,6 @@ import {
   IconQuestionMark,
   IconLetterQ,
   IconCircleMinus,
-  IconSitemap,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -75,7 +74,6 @@ import ExternalSubmitButton from "@components/SubmitButton";
 import ActionInputToolbar from "@components/ActionInputToolbar";
 import { LogsWrapper } from "@components/LogsViewer";
 import Reveal from "@components/Reveal";
-import PlanWrapper from "@components/Plan";
 
 function InitializeApplication({
   activeApplicationId,
@@ -246,6 +244,34 @@ const Layout = ({
     }
   };
 
+  // const handleModeSelection = (item: any, id: string, action: string) => {
+  //   // console.log("Mode selection item:", item);
+  //   // console.log("Mode selection id:", id);
+  //   // console.log("Mode selection action:", action);
+
+  //   if (focused_entities) {
+  //     const new_focused_entities = { ...focused_entities };
+
+  //     // Ensure that the entity exists in the state
+  //     if (!new_focused_entities[id]) {
+  //       new_focused_entities[id] = {};
+  //     }
+
+  //     // Define the mode key based on the action
+  //     const modeKey = `${action}_mode`;
+
+  //     // Toggle the mode or set it to the new item
+  //     if (new_focused_entities[id][modeKey] === item) {
+  //       new_focused_entities[id][modeKey] = null; // Clear if already selected
+  //     } else {
+  //       new_focused_entities[id][modeKey] = item; // Set new item
+  //     }
+
+  //     // Update the state with the modified focused_entities
+  //     setFocusedEntities(new_focused_entities);
+  //   }
+  // };
+
   useEffect(() => {
     if (domainRecord?.["application"]) {
       setActiveApplication(domainRecord?.["application"]);
@@ -356,7 +382,7 @@ const Layout = ({
                             <StateView />
                           </Accordion.Panel>
                         </Accordion.Item>
-                        {/* <Accordion.Item key="logs" value="logs">
+                        <Accordion.Item key="logs" value="logs">
                           <Accordion.Control icon={<IconListTree size={16} />}>
                             Logs
                           </Accordion.Control>
@@ -373,7 +399,7 @@ const Layout = ({
                               </p>
                             </div>
                           </Accordion.Panel>
-                        </Accordion.Item> */}
+                        </Accordion.Item>
                       </Accordion>
                     )}
 
@@ -586,7 +612,7 @@ const Layout = ({
                               <StateView />
                             </Accordion.Panel>
                           </Accordion.Item>
-                          {/* <Accordion.Item key="logs" value="logs">
+                          <Accordion.Item key="logs" value="logs">
                             <Accordion.Control
                               icon={<IconListTree size={16} />}
                             >
@@ -606,7 +632,7 @@ const Layout = ({
                                 </p>
                               </div>
                             </Accordion.Panel>
-                          </Accordion.Item> */}
+                          </Accordion.Item>
                         </Accordion>
                       )}
                       {activeLayout?.mobileCustomComponents?.isDisplayed && (
@@ -726,6 +752,20 @@ const Layout = ({
                           <div className="pr-3">
                             <ComponentsToolbar
                               include_components={[
+                                // {
+                                //   action: "display",
+                                //   entity_type: "action_steps",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
+                                // {
+                                //   action: "query",
+                                //   entity_type: "action_steps",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
                                 {
                                   action: "plan",
                                   entity_type: "tasks",
@@ -740,7 +780,13 @@ const Layout = ({
                                   record: activeTask,
                                   onClick: updateComponentAction,
                                 },
-
+                                // {
+                                //   action: "implement",
+                                //   entity_type: "tasks",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
                                 {
                                   action: "execute",
                                   entity_type: "tasks",
@@ -748,6 +794,34 @@ const Layout = ({
                                   record: activeTask,
                                   onClick: updateComponentAction,
                                 },
+                                // {
+                                //   action: "save",
+                                //   entity_type: "action_steps",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
+                                // {
+                                //   action: "share",
+                                //   entity_type: "tasks",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
+                                // {
+                                //   action: "pin",
+                                //   entity_type: "tasks",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
+                                // {
+                                //   action: "cancel",
+                                //   entity_type: "action_steps",
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateComponentAction,
+                                // },
                               ]}
                             ></ComponentsToolbar>
                           </div>
@@ -781,6 +855,25 @@ const Layout = ({
                                 : "none",
                             }}
                           >
+                            {/* {focused_entities["action_input"]?.action ? (
+                              <div className="w-full">
+                                <ActionInputWrapper
+                                  name="task"
+                                  query_name="data_model"
+                                  record={activeTask}
+                                  action={
+                                    focused_entities[activeTask?.id]?.action
+                                  }
+                                  success_message_code="action_input_data_model_schema"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-center p-4">
+                                <p className="text-sm text-gray-600 text-center">
+                                  action steps action
+                                </p>
+                              </div>
+                            )} */}
                             <div className="w-full">
                               <ActionInputWrapper
                                 name="task"
@@ -808,27 +901,139 @@ const Layout = ({
                                 ? "block"
                                 : "none",
                             }}
-                          ></Panel>
+                          >
+                            {/* <div
+                              className={`overflow-auto  p-3 ${
+                                effectiveScheme === "light"
+                                  ? "bg-gray-100"
+                                  : "bg-gray-800"
+                              }`}
+                              // style={{ height: "calc(100vh - 64px)" }}
+                            >
+                              <LogsWrapper
+                                record={activeTask}
+                              />
+                            </div> */}
+                          </Panel>
                         </PanelGroup>
+                        {/* <ActionInputWrapper
+                          name="task"
+                          query_name="data_model"
+                          exclude_components={["input_mode", "submit_button"]}
+                          record={activeTask}
+                          success_message_code="action_input_data_model_schema"
+                          update_action_input_form_values_on_submit_success={
+                            true
+                          }
+                          nested_component={{
+                            data_model: {
+                              name: "task_config",
+                            },
+                          }}
+                          endpoint="plan"
+                          action_label="Catch"
+                        >
+                          <ActionInputWrapper
+                          name="task_config"
+                          query_name="data_model"
+                          success_message_code="action_input_data_model_schema"
+                          exclude_components={["input_mode", "submit_button"]}
+                        ></ActionInputWrapper>
+                        </ActionInputWrapper> */}
                       </Accordion.Panel>
                     </Accordion.Item>
 
-                    <Accordion.Item key="plan" value="plan">
-                      <Accordion.Control icon={<IconSitemap size={16} />}>
+                    <Accordion.Item key="action_input" value="action_input">
+                      <Accordion.Control icon={<IconForms size={16} />}>
                         <div className="flex justify-between items-center">
-                          <div>Plan</div>
-                          <div className="pr-3">
-                            <ComponentsToolbar
-                              include_components={[
+                          <div>action input</div>
+                          <div
+                            className="max-w-xs flex items-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* <SearchInput
+                              placeholder={`Search for ${
+                                focused_entities[activeTask?.id]?.["action"]
+                              } modes`}
+                              handleOptionSubmit={(item) =>
+                                handleModeSelection(
+                                  item,
+                                  activeTask?.id,
+                                  focused_entities[activeTask?.id]?.["action"]
+                                )
+                              }
+                              activeFilters={[
                                 {
-                                  action: "save",
-                                  entity_type: "tasks",
-                                  type: "action",
-                                  record: activeTask,
-                                  onClick: updateComponentAction,
+                                  id: 1,
+                                  name: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  description: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  entity_type: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  is_selected: true,
                                 },
                               ]}
-                            ></ComponentsToolbar>
+                            /> */}
+                            <div
+                              className="p-3"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {activeTask && (
+                                <ExternalSubmitButton
+                                  record={activeTask}
+                                  entity_type="tasks"
+                                  action={
+                                    focused_entities[activeTask?.id]?.[
+                                      "action"
+                                    ] || action
+                                  }
+                                ></ExternalSubmitButton>
+                                // <div>{JSON.stringify(action)}</div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="pr-3">
+                            <ActionInputToolbar
+                              include_components={[
+                                // {
+                                //   action: "display",
+                                //   tool: "display",
+                                //   entity_type:
+                                //     focused_entities["action_input"]
+                                //       ?.entity_type,
+                                //   type: "action",
+                                //   record: activeTask,
+                                //   onClick: updateActionInputTool,
+                                // },
+                                {
+                                  action: "clear",
+                                  tool: "clear",
+                                  entity_type: "action_input",
+                                  // entity_type:
+                                  //   focused_entities["action_input"]
+                                  //     ?.entity_type,
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateActionInputTool,
+                                },
+                                {
+                                  action: "reset",
+                                  tool: "reset",
+                                  entity_type: "action_input",
+                                  // entity_type:
+                                  //   focused_entities["action_input"]
+                                  //     ?.entity_type,
+                                  type: "action",
+                                  record: activeTask,
+                                  onClick: updateActionInputTool,
+                                },
+                              ]}
+                            ></ActionInputToolbar>
                           </div>
                         </div>
                       </Accordion.Control>
@@ -860,26 +1065,16 @@ const Layout = ({
                                 : "none",
                             }}
                           >
-                            {activeTask ? (
+                            {focused_entities["action_input"]?.action ? (
                               <div className="w-full">
-                                <PlanWrapper
-                                  name="action_step"
-                                  query_name="data_model"
-                                  record={activeTask}
+                                <ActionInputWrapper
+                                  execution_record={activeTask}
+                                  query_name="execution data model"
+                                  record={{}}
                                   action={
                                     focused_entities["action_input"]?.action
                                   }
-                                  // focused_item="action_input"
-                                  success_message_code="action_input_data_model_schema"
-                                />
-                                <PlanWrapper
-                                  name="list items"
-                                  query_name="data_model"
-                                  record={activeTask}
-                                  action={
-                                    focused_entities["action_input"]?.action
-                                  }
-                                  // focused_item="action_input"
+                                  focused_item="action_input"
                                   success_message_code="action_input_data_model_schema"
                                 />
                               </div>
@@ -928,11 +1123,103 @@ const Layout = ({
                     <Accordion.Item key="action_plan" value="action_plan">
                       <Accordion.Control icon={<IconListDetails size={16} />}>
                         <div className="flex justify-between items-center">
-                          <div>Execution</div>
+                          <div>action_steps</div>
+                          {/* <div
+                            className="max-w-xs flex items-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <SearchInput
+                              placeholder={`Search for ${
+                                focused_entities[activeTask?.id]?.["action"]
+                              } modes`}
+                              // description={`${entity_types["action_steps"]?.["action"]} mode`}
+                              handleOptionSubmit={(item) =>
+                                handleModeSelection(
+                                  item,
+                                  activeTask?.id,
+                                  focused_entities[activeTask?.id]?.["action"]
+                                )
+                              }
+                              // value={activeTask?.name || ""}
+                              // include_action_icons={["remove_from_state"]}
+                              activeFilters={[
+                                {
+                                  id: 1,
+                                  name: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  description: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  entity_type: `${
+                                    focused_entities[activeTask?.id]?.["action"]
+                                  } modes`,
+                                  is_selected: true,
+                                },
+                              ]}
+                            />
+                            <div
+                              className="p-3"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <ExternalSubmitButton
+                                record={activeTask}
+                                entity_type="action_steps"
+                                action={
+                                  focused_entities[activeTask?.id]?.["action"]
+                                }
+                              ></ExternalSubmitButton>
+                            </div>
+                          </div> */}
 
                           <div>
                             <ComponentsToolbar
-                              include_components={[]}
+                              include_components={
+                                [
+                                  // {
+                                  //   action: "display",
+                                  //   entity_type: "action_steps",
+                                  //   type: "action",
+                                  //   record: activeTask,
+                                  //   onClick: updateComponentAction,
+                                  // },
+                                  // {
+                                  //   action: "query",
+                                  //   entity_type: "action_steps",
+                                  //   type: "action",
+                                  //   record: activeTask,
+                                  //   onClick: updateComponentAction,
+                                  // },
+                                  // {
+                                  //   action: "execute",
+                                  //   entity_type: "action_steps",
+                                  //   type: "action",
+                                  //   record: activeTask,
+                                  //   onClick: updateComponentAction,
+                                  // },
+                                  // {
+                                  //   action: "save",
+                                  //   entity_type: "action_steps",
+                                  //   type: "action",
+                                  //   record: activeTask,
+                                  //   onClick: updateComponentAction,
+                                  // },
+                                  // {
+                                  //   action: "share",
+                                  //   entity_type: "action_steps",
+                                  //   type: "action",
+                                  //   record: activeTask,
+                                  //   onClick: updateComponentAction,
+                                  // },
+                                  // {
+                                  //   action: "cancel",
+                                  //   entity_type: "action_steps",
+                                  //   type: "action",
+                                  //   record: activeTask,
+                                  //   onClick: updateComponentAction,
+                                  // },
+                                ]
+                              }
                             ></ComponentsToolbar>
                           </div>
                         </div>
@@ -1006,21 +1293,16 @@ const Layout = ({
                             </div> */}
                             </Panel>
                           </PanelGroup>
-
-                          {activeTask ? (
-                            <div className="w-full">
-                              <ActionStepsWrapper
-                                entity_type="action_steps"
-                                record={activeTask}
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center p-4">
-                              <p className="text-sm text-gray-600 text-center">
-                                Selected action step executions appear here.
-                              </p>
-                            </div>
-                          )}
+                          <div>
+                            <ActionStepsWrapper
+                              entity_type="action_steps"
+                              record={activeTask}
+                              ui={{ rowExpansionTrigger: "always" }}
+                              nested_item="action_steps"
+                              exclude_components={[]}
+                              success_message_code="action_plan"
+                            />
+                          </div>
                         </div>
                       </Accordion.Panel>
                     </Accordion.Item>
@@ -1059,7 +1341,7 @@ const Layout = ({
                       <StateView />
                     </Accordion.Panel>
                   </Accordion.Item>
-                  {/* <Accordion.Item key="logs" value="logs">
+                  <Accordion.Item key="logs" value="logs">
                     <Accordion.Control icon={<IconListTree size={16} />}>
                       Logs
                     </Accordion.Control>
@@ -1075,35 +1357,6 @@ const Layout = ({
                           Live updating execution feedback from the system
                         </p>
                       </div>
-                    </Accordion.Panel>
-                  </Accordion.Item> */}
-                  <Accordion.Item key="logs" value="logs">
-                    <Accordion.Control icon={<IconListTree size={16} />}>
-                      Action Input
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      {activeTask ? (
-                        <div className="w-full">
-                          <ActionInputWrapper
-                            execution_record={activeTask}
-                            query_name="execution data model"
-                            record={{
-                              id: activeTask?.id,
-                            }}
-                            action={focused_entities["action_input"]?.action}
-                            focused_item="action_input"
-                            read_record_mode="local"
-                            success_message_code="action_input_data_model_schema"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center p-4">
-                          <p className="text-sm text-gray-600 text-center">
-                            Prompts for your input required to successfully
-                            complete an action will dynamically appear here.
-                          </p>
-                        </div>
-                      )}
                     </Accordion.Panel>
                   </Accordion.Item>
                 </Accordion>

@@ -62,7 +62,7 @@ import {
   type DropResult,
   Droppable,
 } from "@hello-pangea/dnd";
-import { TableTd } from "@mantine/core";
+import { Box, Button, TableTd } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconGripVertical } from "@tabler/icons-react";
 import {
@@ -71,6 +71,7 @@ import {
   DataTableDraggableRow,
 } from "mantine-datatable";
 import companies from "./companies.json";
+import RecordActionsWrapper from "@components/RecordActions";
 
 declare module "@tanstack/react-table" {
   //add fuzzy filter to the filterFns
@@ -337,27 +338,44 @@ export const ListEditorFormInput = ({ ...props }: any) => {
 
   const handleSelectValue = (value: any) => {
     // console.log("selected value", value);
-    setSelectedRecords(value);
+    let new_selected_records = {
+      ...selectedRecords,
+      [`${props?.action_input_form_values_key}`]: value,
+    };
+    setSelectedRecords(new_selected_records);
+  };
+  const handleClearFields = () => {
+    let new_selected_records = {
+      ...selectedRecords,
+      [`${props?.action_input_form_values_key}`]: [],
+    };
+    setSelectedRecords({});
   };
 
   const columns: DataTableColumn<RecordData>[] = [
     // add empty header column for the drag handle
     { accessor: "", hiddenContent: true, width: 50 },
     { accessor: "name" },
-    { accessor: "index", width: 40 },
+    { accessor: "index", width: 80 },
     // { accessor: "streetAddress", width: 150 },
     // { accessor: "city", width: 150 },
     // { accessor: "state", width: 150 },
   ];
   return (
     <>
+      <div className="p-1">
+        <Button size="compact-xs" onClick={handleClearFields}>
+          clear
+        </Button>
+      </div>
       {/* {props?.schema?.title && (
         <Text fw={500} size="sm">
           {props?.schema?.title}
         </Text>
       )} */}
       {/* <div>{JSON.stringify(selectedRecords)}</div> */}
-      {/* <div>{JSON.stringify(records)}</div> */}
+      {/* <div>{JSON.stringify(props?.action_input_form_values_key)}</div> */}
+      {/* <div>list editor</div> */}
       {/* <div>{JSON.stringify(props?.value)}</div> */}
       {/* {props?.value && (
         <NaturalLanguageEditor
@@ -374,9 +392,29 @@ export const ListEditorFormInput = ({ ...props }: any) => {
       {props?.value && (
         <DragDropContext onDragEnd={handleDragEnd}>
           <DataTable<RecordData>
-            columns={columns}
+            columns={[
+              ...columns,
+              {
+                accessor: "actions",
+                title: <Box mr={6}>actions</Box>,
+                textAlign: "right",
+                width: 80,
+                render: (record: any) => (
+                  // <div>record actions</div>
+                  <RecordActionsWrapper
+                    record={record}
+                    name="action_step"
+                    query_name="data_model"
+                    success_message_code="action_input_data_model_schema"
+                    // setExpandedRecordIds={setExpandedRecordIds}
+                    // invalidate_queries_on_submit_success={
+                    //   invalidate_queries_on_submit_success
+                    // }
+                  ></RecordActionsWrapper>
+                ),
+              },
+            ]}
             records={records}
-            // height={300}
             withTableBorder
             withColumnBorders
             tableWrapper={({ children }) => (
@@ -390,7 +428,9 @@ export const ListEditorFormInput = ({ ...props }: any) => {
               </Droppable>
             )}
             styles={{ table: { tableLayout: "fixed" } }}
-            selectedRecords={selectedRecords}
+            selectedRecords={
+              selectedRecords[`${props?.action_input_form_values_key}`] ?? []
+            }
             onSelectedRecordsChange={handleSelectValue}
             rowFactory={({
               record,
@@ -410,7 +450,6 @@ export const ListEditorFormInput = ({ ...props }: any) => {
                     {...rowProps}
                     {...provided.draggableProps}
                   >
-                    {/** custom drag handle */}
                     <TableTd
                       {...provided.dragHandleProps}
                       ref={provided.innerRef}

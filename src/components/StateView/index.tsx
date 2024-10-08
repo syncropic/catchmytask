@@ -67,7 +67,7 @@ export function StateView() {
           },
         ]}
       />
-      <SearchInput
+      {/* <SearchInput
         placeholder="Search for action steps"
         description="action steps"
         handleOptionSubmit={setActiveActionStep}
@@ -82,8 +82,8 @@ export function StateView() {
             is_selected: true,
           },
         ]}
-      />
-      <SearchInput
+      /> */}
+      {/* <SearchInput
         placeholder="Search for records"
         description="records"
         // onChange={setActiveActionStep}
@@ -98,7 +98,7 @@ export function StateView() {
             is_selected: true,
           },
         ]}
-      />
+      /> */}
     </>
   );
 }

@@ -32,13 +32,14 @@ export const ExternalSubmitButton = ({
   //   (state) => state.isSubmitting
   // );
   if (!formInstance) {
-    return <></>;
+    return (
+      <>{JSON.stringify(`form instance not available, formId: ${formId}`)}</>
+    );
   }
 
   return (
     <>
-      {/* <div>{JSON.stringify(formId)}</div>
-      <div>{JSON.stringify(action)}</div> */}
+      {/* <div>{JSON.stringify({ formId, action })}</div> */}
       <formInstance.Subscribe
         selector={(state: { canSubmit: any; isSubmitting: any }) => [
           state.canSubmit,

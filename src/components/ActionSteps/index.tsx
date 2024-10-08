@@ -9,6 +9,7 @@ import {
 import DataDisplay from "@components/DataDisplay";
 import { useAppStore } from "src/store";
 import _ from "lodash";
+import MonacoEditor from "@components/MonacoEditor";
 
 interface ActionStepsProps {
   entity_type: string;
@@ -36,15 +37,15 @@ export const ActionStepsWrapper = ({
   invalidate_queries_on_submit_success,
 }: // types,
 ActionStepsProps) => {
-  let state = {
-    // query_name: "action plan",
-    query_name: "read action plan data",
-    success_message_code: success_message_code,
-    task_id: record?.id,
-    // name: name,
-    // action_type: action_type,
-    // entity: entity,
-  };
+  // let state = {
+  //   // query_name: "action plan",
+  //   query_name: "read action plan data",
+  //   success_message_code: success_message_code,
+  //   task_id: record?.id,
+  //   // name: name,
+  //   // action_type: action_type,
+  //   // entity: entity,
+  // };
   // let record =
   //   action_input_form_values[`task_b79aaba2-a0d1-4fa7-9b68-0baebbd1b321`];
   // // let actionStepRecord = {
@@ -104,13 +105,13 @@ ActionStepsProps) => {
   //   error: actionStepDataError,
   // } = useFetchActionStepDataByState(state);
 
-  const { data, isLoading, error } = useFetchQueryDataByState(state);
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-  if (error) {
-    return <div>Error fetching action step data {JSON.stringify(error)}</div>;
-  }
+  // const { data, isLoading, error } = useFetchQueryDataByState(state);
+  // if (isLoading) {
+  //   return <div>Loading...</div>;
+  // }
+  // if (error) {
+  //   return <div>Error fetching action step data {JSON.stringify(error)}</div>;
+  // }
   // // length of the natural_language_query_form_values?.content_text has to be greater than 0 otherwise return null
   // if (
   //   natural_language_query_form_values?.content_text?.length === 0 ||
@@ -118,6 +119,18 @@ ActionStepsProps) => {
   // ) {
   //   return null;
   // }
+  let action_plan_state = {
+    id: record?.id,
+    query_name: "read action plan data with task info",
+    task_id: record?.id,
+    success_message_code: "action_plan",
+  };
+  const {
+    data: actionPlanData,
+    isLoading: actionPlanIsLoading,
+    error: actionPlanError,
+  } = useFetchQueryDataByState(action_plan_state);
+
   let data_fields = [
     {
       name: "description",
@@ -135,14 +148,17 @@ ActionStepsProps) => {
       name: "execution_runs",
     },
   ];
+  if (actionPlanError)
+    return <div>Error: {JSON.stringify(actionPlanError)}</div>;
+  if (actionPlanIsLoading) return <div>Loading...</div>;
 
   return (
     <>
-      {/* <div>action plan</div> */}
-      {/* <div>{JSON.stringify(nested_item)}</div> */}
-      {data && (
+      {/* <div>action plan execution</div> */}
+      {/* <div>{JSON.stringify(actionPlanData)}</div> */}
+      {/* <MonacoEditor value={data?.data} language="json" height="50vh" /> */}
+      {/* {data && (
         <>
-          {/* <div>{JSON.stringify(data)}</div> */}
           <DataDisplay
             data_items={
               data?.data?.find(
@@ -150,29 +166,27 @@ ActionStepsProps) => {
               )?.data || []
             }
             record={record || {}}
-            // data_fields={
-            //   (
-            //     data?.data?.find(
-            //       (item: any) => item?.message?.code === success_message_code
-            //     )?.data_fields || []
-            //   ).map((item: any) => ({
-            //     name: item?.name,
-            //     accessor: item?.name,
-            //   })) || []
-            // }
             data_fields={data_fields}
             entity_type={entity_type}
-            // read_write_mode={read_write_mode}
             isLoadingDataItems={isLoading}
-            // resource_group={success_message_code}
-            // execlude_components={exclude_components}
             ui={{}}
-            // invalidate_queries_on_submit_success={
-            //   invalidate_queries_on_submit_success
-            // }
+            action="execute"
           ></DataDisplay>
         </>
-      )}
+      )} */}
+      <DataDisplay
+        data_items={
+          actionPlanData?.data?.find(
+            (item: any) => item?.message?.code === "action_plan"
+          )?.data || []
+        }
+        record={record || {}}
+        data_fields={data_fields}
+        entity_type={entity_type}
+        // isLoadingDataItems={isLoading}
+        ui={{}}
+        action="execute"
+      ></DataDisplay>
     </>
   );
 };

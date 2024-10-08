@@ -133,6 +133,7 @@ export function DataDisplay<T extends Record<string, any>>({
   isLoadingDataItems,
   entity_type,
   ui,
+  action = "set_fields",
 }: // isLoadingDataItems,
 // resource_group,
 // execlude_components,
@@ -143,7 +144,8 @@ export function DataDisplay<T extends Record<string, any>>({
 DataDisplayComponentProps<T>) {
   // const { ref, width } = useElementSize();
   // const [isLarge, setIsLarge] = useState(true);
-  const { focused_entities, selectedRecords } = useAppStore();
+  const { focused_entities, selectedRecords, fields, setFields } =
+    useAppStore();
   // const { tableColumns } = useTableColumns({
   //   field_configurations: view_data?.data[0]?.field_configurations?.map(
   //     (nested_field: any) => mergeEdgeWithEntityValues(nested_field)
@@ -239,11 +241,42 @@ DataDisplayComponentProps<T>) {
   //   setRecords(data_items.slice(from, to));
   // }, [page, pageSize]);
 
+  useEffect(() => {
+    if (data_fields && record?.id) {
+      // Create the new fields object
+      const new_fields = {
+        ...fields,
+        [record.id]: data_fields,
+      };
+
+      // Check if the new fields are different from the current fields
+      const fieldsChanged =
+        JSON.stringify(fields[record.id]) !== JSON.stringify(data_fields);
+
+      if (fieldsChanged) {
+        setFields(new_fields);
+      }
+    }
+  }, [data_fields, record?.id, fields, setFields]);
+
+  // let selected_record_items_key = `${action}_action_input_${record?.id}`;
+  const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
+  const action_input_form_values_key = `action_input_${actionInputId}`;
+
   return (
     <>
       <div className="w-full">
-        {/* <div>{JSON.stringify(data_items)}</div> */}
-        {/* <div>{JSON.stringify(entity_type)}</div> */}
+        {/* <MonacoEditor
+          value={table?.getFilteredRowModel().rows.map((row) => row.original)}
+          language="json"
+          height="100vh"
+        /> */}
+        {/* <div>{JSON.stringify(record?.id)}</div> */}
+
+        {/* <div>{JSON.stringify(data_items)}</div>
+        <div>{JSON.stringify(entity_type)}</div> */}
+        {/* <div>{JSON.stringify(action_input_form_values_key)}</div> */}
+
         {/* <div>{JSON.stringify(record)}</div> */}
         {/* <div>{JSON.stringify(table?.getAllColumns())}</div> */}
         {/* <div>{width}</div> */}
@@ -253,39 +286,45 @@ DataDisplayComponentProps<T>) {
         {focused_entities[record?.id]?.["display_mode"]?.name === "board" ||
           (entity_type === "action_steps" && (
             <Board
-              data_fields={data_items?.filter(
-                (item) =>
-                  item &&
-                  selectedRecords.some(
-                    (record: any) => record.name === item.name
-                  )
-              )}
+              data_fields={
+                data_items?.filter(
+                  (item) =>
+                    item &&
+                    selectedRecords[`${action_input_form_values_key}`]?.some(
+                      (record: any) => record.name === item.name
+                    )
+                ) ?? []
+              }
             ></Board>
           ))}
 
-        {focused_entities[record?.id]?.["display_mode"]?.name === "table" && (
-          <TableView
-            data_items={data_items}
-            isLoadingDataItems={isLoadingDataItems ?? false}
-            data_fields={data_fields}
-            tableInstance={table}
-            resource_group={record?.entity_type || entity_type}
-            ui={ui || {}}
-            //  execlude_components={execlude_components}
-            //  invalidate_queries_on_submit_success={
-            //    invalidate_queries_on_submit_success
-            //  }
-            // view_data={view_data}
-          />
-        )}
+        {focused_entities[record?.id]?.["display_mode"]?.name !== "board" &&
+          entity_type !== "action_steps" && (
+            <TableView
+              data_items={data_items ?? []}
+              isLoadingDataItems={isLoadingDataItems ?? false}
+              data_fields={
+                selectedRecords[`${action_input_form_values_key}`] ?? []
+              }
+              tableInstance={table}
+              resource_group={record?.entity_type || entity_type}
+              ui={ui || {}}
+            />
+            // <div>
+            //   {JSON.stringify(
+            //     selectedRecords[`${action}_action_input_${record?.id}`]
+            //   )}
+            // </div>
+            // <div>{JSON.stringify(data_fields)}</div>
+          )}
 
-        {focused_entities[record?.id]?.["display_mode"]?.name === "json" && (
+        {/* {focused_entities[record?.id]?.["display_mode"]?.name === "json" && (
           <MonacoEditor
             value={table?.getFilteredRowModel().rows.map((row) => row.original)}
             language="json"
             height="100vh"
           />
-        )}
+        )} */}
       </div>
     </>
   );

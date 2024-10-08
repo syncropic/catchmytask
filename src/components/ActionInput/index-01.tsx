@@ -22,12 +22,7 @@ import {
   DynamicFormProps,
   IIdentity,
 } from "@components/interfaces";
-import {
-  BaseRecord,
-  HttpError,
-  useCustomMutation,
-  useGetIdentity,
-} from "@refinedev/core";
+import { useCustomMutation, useGetIdentity } from "@refinedev/core";
 import config from "src/config";
 import { debounce, update } from "lodash";
 import { useQueryClient } from "@tanstack/react-query";
@@ -68,21 +63,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const actionInputId =
     record?.id || data_model?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
 
-  // Define the response type for your specific data
-  type CustomMutationResponse<T> = {
-    data: T;
-    headers: Record<string, string>;
-  };
-
-  // handle toggleDisplay
-  const openDisplay = (section: string) => {
-    if (activeLayout) {
-      const newLayout = { ...activeLayout };
-      newLayout[section].isDisplayed = true;
-      setActiveLayout(newLayout);
-    }
-  };
-
   const {
     mutate,
     data: mutationData,
@@ -106,8 +86,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     setFocusedEntities,
     selectedRecords,
     setSelectedRecords,
-    activeLayout,
-    setActiveLayout,
   } = useAppStore();
 
   const identity_object = {
@@ -125,13 +103,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   //     : `${action}_${standardized_data_model_name}_${actionInputId}`;
 
   // const action_input_form_values_key = `${action}_action_input`;
-  // if focused_item == "actin_input" then use the action_input key
-  let action_input_form_values_key = "";
-  if (focused_item === "action_input") {
-    action_input_form_values_key = "action_input";
-  } else {
-    action_input_form_values_key = `action_input_${actionInputId}`;
-  }
+  const action_input_form_values_key = `action_input_${actionInputId}`;
 
   // let standardized_data_model_name = data_model?.name
   // ?.replace(/\s+/g, "_")
@@ -193,23 +165,13 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             // url: `${config.API_URL}/${endpoint ? endpoint : "execute-task"}`,
             url: `${config.API_URL}/${action_url}`,
             method: "post",
-            // ...(action === "save" && {
-            //   config: {
-            //     headers: {
-            //       responseType: "blob",
-            //     },
-            //   },
-            // }),
+            // values: generateRequestData(values),
             values: {
               action: {
                 id: action || activeAction?.id,
                 name: action || activeAction?.name,
               },
-              input_values: {
-                ...value,
-                action_input_form_values:
-                  action_input_form_values["action_input"] || {},
-              },
+              input_values: value,
               // credential: value?.credential || "surrealdb catchmytask dev",
               // data_model: data_model,
               application: {
@@ -252,100 +214,73 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               reject(error);
             },
             onSuccess: (data, variables, context) => {
-              const extendedData = data as CustomMutationResponse<any>;
-              // Extract the headers and content data
-              const contentDisposition =
-                extendedData?.headers?.["content-disposition"];
-              // console.log("Content Disposition:", contentDisposition);
-              const contentType = extendedData?.headers?.["content-type"];
-
-              // console.log("Content Type:", contentType);
-              // console.log("Extended Headers:", extendedData?.headers);
-              // Check if the response is for a file download
-              if (
-                contentDisposition &&
-                contentDisposition.includes("attachment")
-              ) {
-                // Create a JSON blob and trigger download
-                // const jsonBlob = new Blob([JSON.stringify(extendedData.data)], {
-                //   type: contentType,
-                // });
-                const blob = new Blob([extendedData.data], {
-                  type: contentType,
-                });
-                const link = document.createElement("a");
-                link.href = window.URL.createObjectURL(blob);
-
-                // Extract the filename from the content-disposition header
-                const filename = contentDisposition
-                  ? contentDisposition
-                      .split("filename=")[1]
-                      .replace(/"/g, "")
-                      .trim()
-                  : "downloaded_file.json";
-
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                // Create a JSON object with information about the file
-                const file = {
-                  filename: filename,
-                  type: contentType,
-                  size: blob.size,
+              // retrieve the item we are interested
+              let execute_mode_item = data?.data?.find(
+                (item: any) => item?.message?.code === "execute_mode"
+              );
+              // console.log(
+              //   "success_message_code_item",
+              //   success_message_code_item
+              // );
+              // if execute_mode_item is found we need to add it to the focused_entities object
+              if (execute_mode_item) {
+                // console.log("execute_mode_item", execute_mode_item);
+                let new_focused_entities = { ...focused_entities };
+                new_focused_entities["action_input"] = {
+                  ...new_focused_entities["action_input"],
+                  execute_mode: execute_mode_item["data"],
+                  action: "proceed_execute_with_action_input",
                 };
-                console.log("File:", file);
-
-                resolve(file);
-              } else {
-                // if there execute_mode it means user is being prompted to provide required values
-                let execute_mode_item = Array.isArray(data?.data)
-                  ? data.data.find(
-                      (item: any) => item?.message?.code === "execute_mode"
-                    )
-                  : null;
-
-                if (execute_mode_item) {
-                  // we need to open and display the form for the user to provide the required values
-                  // console.log("open action input");
-                  openDisplay("rightSection");
-                  // let new_focused_entities = { ...focused_entities };
-                  // new_focused_entities["action_input"] = {
-                  //   ...new_focused_entities["action_input"],
-                  //   execute_mode: execute_mode_item["data"],
-                  //   action: `proceed_${action}`,
-                  // };
-                  // new_focused_entities[record?.id] = {
-                  //   ...new_focused_entities[record?.id],
-                  //   action: `proceed_${action}`,
-                  // };
-                  // setFocusedEntities(new_focused_entities);
-                }
-
-                // let action_step_items = Array.isArray(data?.data)
-                //   ? data.data.filter(
-                //       (item: any) =>
-                //         item?.action_step?.id && item?.exit_code === 0
-                //     )
-                //   : [];
-                // let query_state = action_step_items.map((item: any) => ({
-                //   id: item?.action_step?.id,
-                //   success_message_code: item?.message?.code,
-                // }));
-
-                // query_state.forEach((state) => {
-                //   queryClient.invalidateQueries({
-                //     queryKey: [
-                //       `readByState_${JSON.stringify({
-                //         success_message_code: state?.success_message_code,
-                //       })}`,
-                //     ],
-                //   });
-                // });
-
-                resolve(data);
+                new_focused_entities[record?.id] = {
+                  ...new_focused_entities[record?.id],
+                  action: "proceed_execute_with_action_input",
+                };
+                setFocusedEntities(new_focused_entities);
               }
+              // invalidate appropriate queries to now refresh their data since mutation was successful
+              // retrieve the item we are interested
+              let action_step_items = Array.isArray(data?.data)
+                ? data.data.filter(
+                    (item: any) =>
+                      item?.action_step?.id && item?.exit_code === 0
+                  )
+                : [];
+              let query_state = action_step_items.map((item: any) => ({
+                id: item?.action_step?.id,
+                success_message_code: item?.message?.code,
+              }));
+
+              query_state.forEach((state) => {
+                queryClient.invalidateQueries({
+                  queryKey: [
+                    `readByState_${JSON.stringify({
+                      success_message_code: state?.success_message_code,
+                      // id: state?.id,
+                    })}`,
+                  ],
+                });
+              });
+              // // cache the result to a query that is viewable in multiple places
+              // queryClient.setQueryData(
+              //   [
+              //     `readByState_${JSON.stringify({
+              //       name: value?.name,
+              //       execution_order: value?.execution_order,
+              //       id: actionInputId,
+              //     })}`,
+              //   ],
+              //   (oldData = {}) => ({
+              //     ...{},
+              //     ...success_message_code_item,
+              //   })
+              // );
+
+              // // expand and navigate to the appropriate place, the results or input prompt
+              // if (setExpandedRecordIds) {
+              //   setExpandedRecordIds([actionInputId]);
+              //   // console.log("actionInputId", actionInputId);
+              // }
+              resolve(data);
             },
           }
         );
@@ -444,25 +379,21 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           form.handleSubmit();
         }}
       >
-        {/* <div>{JSON.stringify(focused_item)}</div> */}
-
-        {/* <div>{JSON.stringify(include_items)}</div> */}
-        {/* <div>{JSON.stringify(record?.list_items)}</div> */}
-        {/* <div>{JSON.stringify(form?.store?.state.values?.list_items)}</div> */}
-        {/* <div>
+        <div>
           {JSON.stringify({
             formId: formId,
             action_input_form_values_key: action_input_form_values_key,
-            action: action,
-            include_items: include_items,
-            record: record,
-            data_model: data_model,
+            // action: action,
+            // include_items: include_items,
+            // record: record,
+            // data_model: data_model,
           })}
-        </div> */}
-        {/* <div>{JSON.stringify(action_input_form_values_key)}</div> */}
-        {/* <div>{JSON.stringify(record)}</div> */}
-
-        <Accordion defaultValue={["main", "description"]} multiple={true}>
+        </div>
+        {/* <div>{JSON.stringify(proceed_action_input_form_values_key)}</div> */}
+        <Accordion
+          defaultValue={["main", "description", "high_level_plan"]}
+          multiple={true}
+        >
           {Object.entries(
             Object.keys(schema?.properties)
               .sort((a, b) => {
@@ -497,11 +428,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                         >
                           {(field) => (
                             <>
-                              {/* <div>
-                                {JSON.stringify(
-                                  form?.store?.state.values?.[key]
-                                )}
-                              </div> */}
                               <Component
                                 schema={schema.properties[key]}
                                 disabled={schema.properties[key]?.readOnly}
@@ -600,27 +526,13 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       </form>
       {/* <div>{JSON.stringify(mutationError)}</div> */}
       {/* <div>{JSON.stringify(mutationData)}</div> */}
-      {/* {mutationData && (
+      {mutationData && (
         <MonacoEditor
           value={mutationData?.data}
           language="json"
           height="50vh"
         />
-      )} */}
-      {/* if data.data contains at least one object with exit_code = 1 then show error message */}
-      {/* {mutationData?.data?.find((item: any) => item?.exit_code === 1) && (
-        <MonacoEditor value={mutationData} language="json" height="50vh" />
-      )} */}
-      {typeof mutationData?.data === "object" &&
-      !Array.isArray(mutationData?.data)
-        ? mutationData?.data?.find((item: any) => item?.exit_code === 1) && (
-            <MonacoEditor
-              value={JSON.stringify(mutationData, null, 2)}
-              language="json"
-              height="50vh"
-            />
-          )
-        : null}
+      )}
       {mutationError && (
         <MonacoEditor value={mutationError} language="json" height="50vh" />
       )}
@@ -628,11 +540,13 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         className="flex justify-end w-full p-3"
         onClick={(e) => e.stopPropagation()}
       >
-        <ExternalSubmitButton
-          record={record}
-          entity_type="action_steps"
-          action={action}
-        ></ExternalSubmitButton>
+        <>
+          <ExternalSubmitButton
+            record={record}
+            entity_type="action_steps"
+            action={action}
+          ></ExternalSubmitButton>
+        </>
       </div>
     </>
   );

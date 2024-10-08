@@ -33,7 +33,12 @@ export function ActionStepResults({
 ActionStepResultsProps) {
   // use read action step results by state
   // Create the key with the transformed data_model.name
-  const { action_input_form_values, activeTask } = useAppStore();
+  const {
+    action_input_form_values,
+    activeTask,
+    activeApplication,
+    activeSession,
+  } = useAppStore();
   // const proceed_action_input_form_values_key = `proceed_execute_with_action_input_create_freshdesk_ticket_from_zoom_engagement_data_models:lefd1wja8dcfmpa7a0cq`;
 
   // const defaultValueObjects = [
@@ -47,13 +52,30 @@ ActionStepResultsProps) {
   //   action_input_form_values[proceed_action_input_form_values_key] || {};
 
   // // const { global_variables } = useAppStore();
+  // const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
+  const actionInputId = "data_models:heblllgdhsuyfzpkg2tl";
+  const action_input_form_values_key = `action_input_${actionInputId}`;
   let state = {
     // global_variables: global_variables,
     success_message_code: record?.success_message_code,
     id: record?.id,
     action_steps: [record],
+    application: {
+      id: activeApplication?.id,
+      name: activeApplication?.name,
+    },
+    session: {
+      id: activeSession?.id,
+      name: activeSession?.name,
+    },
+    task: {
+      id: activeTask?.id,
+      name: activeTask?.name,
+    },
+    input_values:
+      action_input_form_values[`${action_input_form_values_key}`] || {},
     include_action_steps: [record?.execution_order || 0],
-    input_values: action_input_form_values?.action_input || {},
+    // input_values: action_input_form_values?.action_input || {},
   };
   const { data, isLoading, error, refetch } = useReadByState(state);
 
@@ -85,7 +107,7 @@ ActionStepResultsProps) {
   return (
     <>
       {/* <div>ActionStepResults</div> */}
-      <MonacoEditor value={data} language="json" height="75vh" />
+      {/* <MonacoEditor value={data} language="json" height="75vh" /> */}
       {/* <div>{JSON.stringify(record)}</div> */}
       {/* <div>action step results</div> */}
       {/* <div>{JSON.stringify(proceed_action_input_form_values)}</div> */}
@@ -105,7 +127,7 @@ ActionStepResultsProps) {
         <MonacoEditor value={data} language="json" height="50vh" />
       )} */}
       {/* if data.data contains no object with exit_code = 1 then show success message */}
-      {/* {data && data?.data?.find((item: any) => item?.exit_code !== 1) && (
+      {data && data?.data?.find((item: any) => item?.exit_code !== 1) && (
         <>
           <DataDisplay
             data_items={
@@ -120,22 +142,17 @@ ActionStepResultsProps) {
                   (item: any) =>
                     item?.message?.code === record?.success_message_code
                 )?.data_fields || []
-              )
-                .filter((item: any) =>
-                  record?.main_view_has_fields
-                    ? record.main_view_has_fields.includes(item?.name)
-                    : true
-                )
-                .map((item: any) => ({
-                  name: item?.name,
-                  accessor: item?.name,
-                })) || []
+              ).map((item: any) => ({
+                name: item?.name,
+                data_type: item?.data_type,
+                accessor: item?.name,
+              })) || []
             }
             record={record}
-           
+            entity_type="action_step_results"
           ></DataDisplay>
         </>
-      )} */}
+      )}
     </>
   );
 }

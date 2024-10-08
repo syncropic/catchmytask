@@ -169,6 +169,32 @@ export interface ActionInputWrapperProps {
   action_label?: string;
   records?: any;
   focused_item?: string;
+  read_record_mode?: string;
+}
+
+export interface PlanWrapperProps {
+  query_name?: string;
+  name?: string;
+  execution_record?: any;
+  action?: any;
+  action_type?: string;
+  entity?: string;
+  record?: any;
+  record_query?: any;
+  exclude_components?: string[];
+  children?: any;
+  nested_component?: any;
+  include_form_components?: string[];
+  setExpandedRecordIds?: (ids: string[]) => void;
+  success_message_code?: string;
+  invalidate_queries_on_submit_success?: string[];
+  description?: any;
+  update_action_input_form_values_on_submit_success?: boolean;
+  endpoint?: string;
+  action_label?: string;
+  records?: any;
+  focused_item?: string;
+  read_record_mode?: string;
 }
 
 export interface TabularViewComponentProps<T extends Record<string, any>> {
@@ -285,6 +311,7 @@ export interface DataDisplayComponentProps<T extends Record<string, any>> {
   // view_data: any;
   // data_columns: T[];
   data_fields: T[];
+  action?: any;
   // invalidate_queries_on_submit_success?: string[];
   // session?: ISession;
   // // initialStateColumnPinningLeft: string[];

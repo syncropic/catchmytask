@@ -16,8 +16,14 @@ import {
   IconTrash,
   IconForms,
   IconPlaylistAdd,
+  IconTallymark3,
+  IconPencil,
+  IconSitemap,
+  IconCode,
 } from "@tabler/icons-react";
 import { useAppStore } from "src/store";
+import Reveal from "@components/Reveal";
+import ActionInputWrapper from "@components/ActionInput";
 
 interface ComponentsToolbarProps {
   include_components: {
@@ -38,7 +44,7 @@ interface ComponentsToolbarProps {
 const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
   include_components = [],
 }) => {
-  const { focused_entities, setFocusedEntities } = useAppStore();
+  const { focused_entities, setFocusedEntities, fields } = useAppStore();
   const handleMenuClick = (action: string, record: any) => {
     // console.log("Menu action:", action);
     // focused_entities["action_input"].action = action;
@@ -68,6 +74,10 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
     display: IconPlayerStop,
     menu: IconMenu2,
     implement: IconPlaylistAdd,
+    plan: IconSitemap,
+    build: IconCode,
+    fields: IconTallymark3,
+    edit: IconPencil,
   };
 
   return (
@@ -119,6 +129,66 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
+          );
+        }
+
+        if (component?.action === "fields") {
+          return (
+            <Reveal
+              target={
+                // <Indicator inline label={activeFiltersCount} size={16} color="blue">
+                //   <Tooltip label="Filter" position="right">
+                //     <ActionIcon aria-label="filter" size="sm">
+                //       <IconFilter />
+                //     </ActionIcon>
+                //   </Tooltip>
+                // </Indicator>
+                <Tooltip label="Fields" position="right">
+                  <ActionIcon aria-label="filter" size="xs" variant="outline">
+                    <IconTallymark3 />
+                  </ActionIcon>
+                </Tooltip>
+              }
+              trigger="click"
+            >
+              {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            {searchFilters.map((item: FilterItem) => (
+              <Checkbox
+                checked={item.is_selected}
+                label={item.description}
+                key={item.id}
+                onChange={() => handleCheckboxChange(item.id)}
+              />
+            ))}
+          </div> */}
+              {/* <div>action step fields control</div> */}
+              {/* <div>{JSON.stringify(fields?.[component?.record?.id])}</div> */}
+              {true ? (
+                <div className="w-full">
+                  <ActionInputWrapper
+                    name="fields"
+                    query_name="data_model"
+                    record={{
+                      fields: fields?.[component?.record?.id],
+                      id: component?.record?.id,
+                    }}
+                    // action={
+                    //   focused_entities[activeTask?.id]?.action ||
+                    //   action
+                    // }
+                    action="set_fields"
+                    success_message_code="action_input_data_model_schema"
+                    read_record_mode="local"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center p-4">
+                  <p className="text-sm text-gray-600 text-center">
+                    data fields will appear here.
+                  </p>
+                </div>
+              )}
+            </Reveal>
           );
         }
 

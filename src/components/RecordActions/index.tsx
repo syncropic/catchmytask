@@ -33,10 +33,13 @@ import { v4 as uuidv4 } from "uuid";
 import { useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
 import {
+  IconCode,
   IconCursorText,
   IconEye,
   IconLock,
+  IconPencil,
   IconPlayerPlay,
+  IconTrash,
 } from "@tabler/icons-react";
 import ActionInputForm, { ActionInputWrapper } from "@components/ActionInput";
 
@@ -93,17 +96,34 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
 
   return (
     <>
-      {/* <div>ActionInputWrapper</div> */}
-      {/* <>{JSON.stringify(queryData)}</> */}
-      <div>
-        {/* <div>action input</div>
+      <div className="flex">
+        <Tooltip label="edit" position="left">
+          <ActionIcon size="sm" variant="subtle">
+            <IconPencil size={16} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="build" position="left">
+          <ActionIcon size="sm" variant="subtle" color="green">
+            <IconCode size={16} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="delete" position="left">
+          <ActionIcon size="sm" variant="subtle" color="red">
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Tooltip>
+      </div>
+      {/* <div>record actions wrapper</div>
+      <>{JSON.stringify(record)}</>
+      <div> */}
+      {/* <div>action input</div>
       {JSON.stringify(
         actionData?.data?.find(
           (item: any) => item?.message?.code === "query_success_results"
         )?.data
       )} */}
 
-        <ActionInputWrapper
+      {/* <ActionInputWrapper
           record={record}
           exclude_components={exclude_components}
           name={name}
@@ -128,15 +148,15 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
           invalidate_queries_on_submit_success={
             invalidate_queries_on_submit_success
           }
-        ></ActionInputWrapper>
-        {/* <Group gap={4} justify="right" wrap="nowrap">
+        ></ActionInputWrapper> */}
+      {/* <Group gap={4} justify="right" wrap="nowrap">
           <Tooltip label="execute" position="left">
             <ActionIcon size="sm" variant="subtle" color="green">
               <IconPlayerPlay size={16} />
             </ActionIcon>
           </Tooltip> */}
 
-        {/* <Tooltip label="view/edit/save" position="left">
+      {/* <Tooltip label="view/edit/save" position="left">
             <ActionIcon
               size="sm"
               variant="subtle"
@@ -145,7 +165,7 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
               <IconEye size={16} />
             </ActionIcon>
           </Tooltip> */}
-        {/* <Tooltip label="lock/add to state" position="left">
+      {/* <Tooltip label="lock/add to state" position="left">
             <ActionIcon
               size="sm"
               variant="subtle"
@@ -154,7 +174,7 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
               <IconLock size={16} />
             </ActionIcon>
           </Tooltip> */}
-        {/* <Tooltip label="insert into current cursor position" position="left">
+      {/* <Tooltip label="insert into current cursor position" position="left">
             <ActionIcon
               size="sm"
               variant="subtle"
@@ -163,7 +183,7 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
               <IconCursorText size={16} />
             </ActionIcon>
           </Tooltip> */}
-        {/* <ActionIcon
+      {/* <ActionIcon
                   size="sm"
                   variant="subtle"
                   color="blue"
@@ -171,7 +191,7 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
                 >
                   <IconEdit size={16} />
                 </ActionIcon> */}
-        {/* <ActionIcon
+      {/* <ActionIcon
                     size="sm"
                     variant="subtle"
                     color="red"
@@ -179,8 +199,7 @@ export const RecordActionsWrapper: React.FC<RowActionsWrapperProps> = ({
                   >
                     <IconTrash size={16} />
                   </ActionIcon> */}
-        {/* </Group> */}
-      </div>
+      {/* </Group> */}
     </>
   );
 };

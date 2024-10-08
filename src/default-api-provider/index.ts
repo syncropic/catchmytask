@@ -507,9 +507,9 @@ export const dataProvider = (
         break;
     }
 
-    const { data } = axiosResponse;
+    const { data, headers: responseHeaders } = axiosResponse;
 
-    return Promise.resolve({ data });
+    return Promise.resolve({ data, headers: responseHeaders });
   },
 });
 

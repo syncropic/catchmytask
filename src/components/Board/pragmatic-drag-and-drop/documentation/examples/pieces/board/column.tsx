@@ -52,7 +52,14 @@ import ExternalSubmitButton from "@components/SubmitButton";
 import SearchInput from "@components/SearchInput";
 import ActionInputWrapper from "@components/ActionInput";
 import { truncateText } from "@components/Utils";
-import { Button, Menu, rem, Text, useComputedColorScheme } from "@mantine/core";
+import {
+  Button,
+  Indicator,
+  Menu,
+  rem,
+  Text,
+  useComputedColorScheme,
+} from "@mantine/core";
 import { ActionStepResultsWrapper } from "@components/ActionStepResults";
 import {
   IconCopy,
@@ -61,6 +68,8 @@ import {
   IconSettings,
   IconTrash,
 } from "@tabler/icons-react";
+import Reveal from "@components/Reveal";
+import MonacoEditor from "@components/MonacoEditor";
 
 // const columnStyles = xcss({
 //   //   width: "250px",
@@ -420,7 +429,7 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
               //   alignBlock="center"
               className="flex flex-col"
             >
-              <div className="flex flex-row items-center p-3">
+              <div className="flex flex-row items-center justify-between p-3">
                 <div className="w-[250px]">
                   {/* <div
                   size="xxsmall"
@@ -430,11 +439,32 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                   >
                     {column?.name || column?.description}
                   </div> */}
-                  <Text truncate="end" size="xs">
+                  {/* <Text truncate="end" size="xs">
                     {column?.name || column?.description}
-                  </Text>
+                  </Text> */}
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Reveal
+                      trigger="click"
+                      target={
+                        <Text
+                          truncate="end"
+                          size="xs"
+                          className="text-blue-500 pl-3 pr-3"
+                        >
+                          {/* {truncateText(`${activeTask?.name}`, 3)} */}
+                          {column?.name || column?.description}
+                        </Text>
+                      }
+                    >
+                      <MonacoEditor
+                        value={column}
+                        language="json"
+                        height="50vh"
+                      />
+                    </Reveal>
+                  </div>
                 </div>
-                <div
+                {/* <div
                   className="max-w-xs flex items-center"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -442,7 +472,6 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                     placeholder={`Search for ${
                       focused_entities[column?.id]?.["action"]
                     } modes`}
-                    // description={`${entity_types["action_steps"]?.["action"]} mode`}
                     handleOptionSubmit={(item) =>
                       handleModeSelection(
                         item,
@@ -450,8 +479,6 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                         focused_entities[column?.id]?.["action"]
                       )
                     }
-                    // value={activeTask?.name || ""}
-                    // include_action_icons={["remove_from_state"]}
                     activeFilters={[
                       {
                         id: 1,
@@ -475,26 +502,33 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                       action={focused_entities[column?.id]?.["action"]}
                     ></ExternalSubmitButton>
                   </div>
-                </div>
+                </div> */}
                 <div>
                   <ComponentsToolbar
                     include_components={[
+                      // {
+                      //   action: "display",
+                      //   entity_type: "action_steps",
+                      //   type: "action",
+                      //   record: column,
+                      //   onClick: updateComponentAction,
+                      // },
+                      // {
+                      //   action: "query",
+                      //   entity_type: "action_steps",
+                      //   type: "action",
+                      //   record: column,
+                      //   onClick: updateComponentAction,
+                      // },
+                      // {
+                      //   action: "execute",
+                      //   entity_type: "action_steps",
+                      //   type: "action",
+                      //   record: column,
+                      //   onClick: updateComponentAction,
+                      // },
                       {
-                        action: "display",
-                        entity_type: "action_steps",
-                        type: "action",
-                        record: column,
-                        onClick: updateComponentAction,
-                      },
-                      {
-                        action: "query",
-                        entity_type: "action_steps",
-                        type: "action",
-                        record: column,
-                        onClick: updateComponentAction,
-                      },
-                      {
-                        action: "execute",
+                        action: "edit",
                         entity_type: "action_steps",
                         type: "action",
                         record: column,
@@ -507,27 +541,34 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                         record: column,
                         onClick: updateComponentAction,
                       },
+                      // {
+                      //   action: "share",
+                      //   entity_type: "action_steps",
+                      //   type: "action",
+                      //   record: column,
+                      //   onClick: updateComponentAction,
+                      // },
+                      // {
+                      //   action: "cancel",
+                      //   entity_type: "action_steps",
+                      //   type: "action",
+                      //   record: column,
+                      //   onClick: updateComponentAction,
+                      // },
                       {
-                        action: "share",
+                        action: "fields",
                         entity_type: "action_steps",
                         type: "action",
                         record: column,
                         onClick: updateComponentAction,
                       },
-                      {
-                        action: "cancel",
-                        entity_type: "action_steps",
-                        type: "action",
-                        record: column,
-                        onClick: updateComponentAction,
-                      },
-                      {
-                        action: "menu",
-                        entity_type: "action_steps",
-                        type: "action",
-                        record: column,
-                        onClick: updateComponentAction,
-                      },
+                      // {
+                      //   action: "menu",
+                      //   entity_type: "action_steps",
+                      //   type: "action",
+                      //   record: column,
+                      //   onClick: updateComponentAction,
+                      // },
                     ]}
                   ></ComponentsToolbar>
                 </div>
@@ -617,6 +658,28 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                     )}
                   </div>
                 )} */}
+                {focused_entities[column?.id]?.["action"] === "save" && (
+                  <div className="w-full">
+                    <ActionInputWrapper
+                      name="save"
+                      query_name="data_model"
+                      record={{ ...column, credential_id: "local device" }}
+                      action="save"
+                      success_message_code="action_input_data_model_schema"
+                    />
+                  </div>
+                )}
+                {focused_entities[column?.id]?.["action"] === "edit" && (
+                  <div className="w-full">
+                    <ActionInputWrapper
+                      name="action_step"
+                      query_name="data_model"
+                      record={column}
+                      action="edit"
+                      success_message_code="action_input_data_model_schema"
+                    />
+                  </div>
+                )}
               </div>
               {/* <ActionMenu /> */}
             </div>

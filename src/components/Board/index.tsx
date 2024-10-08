@@ -133,7 +133,7 @@ interface BoardComponentProps {
 
 export default function BoardComponent({ data_fields }: BoardComponentProps) {
   // loop through data_fields and add items key to each action step
-  let data_fields_with_items = data_fields.map((item) => {
+  let data_fields_with_items = data_fields?.map((item) => {
     item.items = [];
     return item;
   });
@@ -561,7 +561,12 @@ export default function BoardComponent({ data_fields }: BoardComponentProps) {
       <Board>
         <div className="flex h-[1200px] gap-3">
           {data.orderedColumnIds.map((columnId) => {
-            return <Column column={data.columnMap[columnId]} key={columnId} />;
+            return (
+              <>
+                {/* <div>column</div> */}
+                <Column column={data.columnMap[columnId]} key={columnId} />
+              </>
+            );
           })}
         </div>
       </Board>

@@ -33,7 +33,7 @@ function SearchInput<T extends Record<string, any>>({
   );
 
   useEffect(() => {
-    console.log("search input effect", query);
+    // console.log("search input effect", query);
 
     const handler = debounce(() => {
       setDebouncedQuery(query);
@@ -72,19 +72,45 @@ function SearchInput<T extends Record<string, any>>({
           })) || [];
       // console.log("search results setting autocompletedata effect", results);
       setAutocompleteData(results);
+      // console.log("results", results);
+      // search results with query and set
+      // replaceIdWithItem(query, results || []);
     }
   }, [data, success_message_code]);
 
   const enhancedHandleOptionSubmit = (value: string | null) => {
+    // console.log("enhancedHandleOptionSubmit", value);
     const selectedItem = autocompleteData.find(
       (item: any) => item.value === value
     );
+    // console.log("selectedItem", selectedItem);
     if (selectedItem) {
       if (handleOptionSubmit) handleOptionSubmit(selectedItem);
       if (onChange) onChange(selectedItem?.value);
       navigate(selectedItem);
     }
   };
+
+  // const replaceIdWithItem = (value: string | null, results: any) => {
+  //   console.log("replaceIdWithItem", value);
+  //   const selectedItem = results.find((item: any) => item.value === value);
+  //   console.log("results", results);
+  //   console.log("selectedItem", selectedItem);
+  //   if (selectedItem) {
+  //     if (handleOptionSubmit) handleOptionSubmit(selectedItem);
+  //     if (onChange) onChange(selectedItem?.value);
+  //     navigate(selectedItem);
+  //   }
+  // };
+
+  // perform the initial search after render if the query is not empty
+  // useEffect(() => {
+  //   if (query) {
+  //     setDebouncedQuery(query);
+  //     // enhancedHandleOptionSubmit(query);
+  //     enhancedHandleOptionSubmit(query);
+  //   }
+  // }, []);
 
   return (
     <div className="flex items-end w-full space-x-2">

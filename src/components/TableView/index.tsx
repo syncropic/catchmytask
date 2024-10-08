@@ -25,6 +25,7 @@ export function TableView<T extends Record<string, any>>({
   tableInstance,
   data_items,
   resource_group,
+  data_fields,
   ui,
   execlude_components,
   invalidate_queries_on_submit_success,
@@ -69,6 +70,15 @@ export function TableView<T extends Record<string, any>>({
     );
   }, [data_items, sortStatus]); // Trigger whenever data_items or sortStatus changes
 
+  const handleSelectValue = (value: any) => {
+    // console.log("selected value", value);
+    let new_selected_records = {
+      ...selectedRecords,
+      [resource_group]: value,
+    };
+    setSelectedRecords(new_selected_records);
+  };
+
   return (
     <>
       {/* <MonacoEditor value={data_items} language="json" height="50vh" /> */}
@@ -78,60 +88,35 @@ export function TableView<T extends Record<string, any>>({
         // onPageChange={(page) => console.log(page)}
         // recordsPerPage={10}
         columns={[
-          ...(tableInstance
-            ?.getVisibleFlatColumns()
+          ...(data_fields
             ?.map((column, index) => {
               return {
                 id: column.id,
-                accessor: column.columnDef.header,
-                render: column.columnDef.cell,
+                accessor: column.accessor,
+                render: (record: T) => {
+                  const value = record[column.accessor as keyof T];
+
+                  if (typeof value === "string") {
+                    // If value is a string, render it inside a div
+                    return <div>{value}</div>;
+                  } else if (typeof value === "object") {
+                    // If value is an object, render it as JSON
+                    return <div>{JSON.stringify(value)}</div>;
+                  } else {
+                    // If the value is neither, render it directly
+                    return <div>{String(value)}</div>;
+                  }
+                },
+                // render: column.columnDef.cell,
                 // sortable: column.getCanSort(),
                 // width: 20,
                 sortable: true,
-                // thProps: { style: { maxWidth: 20 } },
-                // tdProps: {
-                //   style: {
-                //     maxWidth: 20,
-                //     overflow: "hidden",
-                //     textOverflow: "ellipsis",
-                //     whiteSpace: "nowrap",
-                //   },
-                // },
-                // filter: (
-                //   <>
-                //     {column.getCanFilter() ? (
-                //       <div>
-                //         <Filter column={column} />
-                //       </div>
-                //     ) : null}
-                //   </>
-                // ),
+                noWrap: true,
               } as DataTableColumn<T>;
             })
             .filter((column) => {
               return !columns_to_filter_out.includes(String(column?.accessor));
             }) || []),
-          // {
-          //   accessor: "actions",
-          //   title: <Box mr={6}>actions</Box>,
-          //   textAlign: "right",
-          //   // width: "0%", // 👈 set width to 0%
-          //   width: 60,
-          //   render: (record: T) => (
-          //     <div>{null}</div>
-          //     // <RecordActionsWrapper
-          //     //   record={record}
-          //     //   name="action_step"
-          //     //   query_name="data_model"
-          //     //   success_message_code="action_input_data_model_schema"
-          //     //   include_form_components={["execute icon"]}
-          //     //   setExpandedRecordIds={setExpandedRecordIds}
-          //     //   invalidate_queries_on_submit_success={
-          //     //     invalidate_queries_on_submit_success
-          //     //   }
-          //     // ></RecordActionsWrapper>
-          //   ),
-          // },
         ]}
         records={records}
         sortStatus={sortStatus}
@@ -139,12 +124,15 @@ export function TableView<T extends Record<string, any>>({
         highlightOnHover={true}
         withColumnBorders={true}
         pinFirstColumn={true}
-        pinLastColumn={true}
+        // pinLastColumn={true}
         striped={true}
         // totalRecords={data_items.length}
+        height="70dvh"
+        minHeight={400}
+        maxHeight={1000}
         fz="xs"
-        selectedRecords={selectedRecords}
-        onSelectedRecordsChange={setSelectedRecords}
+        selectedRecords={selectedRecords[resource_group] ?? []}
+        onSelectedRecordsChange={handleSelectValue}
         // defaultColumnRender={(row, _, accessor) => {
         //   const data = row[accessor as keyof typeof row];
         //   return typeof data === "string" ? data : JSON.stringify(data);
