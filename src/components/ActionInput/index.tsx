@@ -227,13 +227,13 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
             // Extract column names from the query result schema fields
             const columnNames = downloadResult.schema.fields.map(
-              (field) => field.name
+              (field: any) => field.name
             );
 
             // Ensure the data is an array of arrays
             const dataWithHeaders = [
               columnNames,
-              ...downloadData.map((row) => Object.values(row)),
+              ...downloadData.map((row: any) => Object.values(row)),
             ];
 
             // Step 1: Create a new workbook and worksheet
@@ -242,20 +242,20 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
             // Step 2: Optionally, apply styling or formatting to the worksheet
             // Example: Making the first row (headers) bold
-            const headerRange = XLSX.utils.decode_range(worksheet["!ref"]);
-            for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
-              const cell = worksheet[XLSX.utils.encode_cell({ r: 0, c: C })];
-              if (cell) {
-                cell.s = {
-                  font: { bold: true },
-                  alignment: { horizontal: "center" },
-                  fill: { patternType: "solid", fgColor: { rgb: "FFFF00" } }, // Yellow background
-                };
-              }
-            }
+            // const headerRange = XLSX.utils.decode_range(worksheet["!ref"]);
+            // for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+            //   const cell = worksheet[XLSX.utils.encode_cell({ r: 0, c: C })];
+            //   if (cell) {
+            //     cell.s = {
+            //       font: { bold: true },
+            //       alignment: { horizontal: "center" },
+            //       fill: { patternType: "solid", fgColor: { rgb: "FFFF00" } }, // Yellow background
+            //     };
+            //   }
+            // }
 
             // Step 3: Add the worksheet to the workbook
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Issues Data");
+            XLSX.utils.book_append_sheet(workbook, worksheet, `${value?.name}`);
 
             // Step 4: Write the workbook to a Blob and trigger a download
             const wbout = XLSX.write(workbook, {
