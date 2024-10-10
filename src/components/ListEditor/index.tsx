@@ -464,6 +464,7 @@ export const ListEditorFormInput = ({ ...props }: any) => {
           />
         </DragDropContext>
       )}
+      <MonacoEditor value={props?.value} language="json" height="100vh" />
     </>
     // <div>monaco editor form input</div>
   );

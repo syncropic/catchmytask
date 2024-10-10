@@ -102,6 +102,7 @@ const Layout = ({
     setActiveLayout,
     activeActionInputLayout,
     setActiveApplication,
+    activeApplication,
     activeSession,
     activeTask,
     activeSections,
@@ -292,6 +293,35 @@ const Layout = ({
       setActiveApplication(domainRecord?.["application"]);
     }
   }, [domainRecord]);
+
+  useEffect(() => {
+    if (authenticatedData?.authenticated && activeTask?.id) {
+      // Construct the target URL
+      const targetUrl = `/tasks/show/${activeTask.id}?applicationId=${activeApplication?.id}&sessionId=${activeSession?.id}`;
+
+      // Check if the current URL is the same as the target URL
+      if (window.location.pathname + window.location.search !== targetUrl) {
+        // Perform the navigation if the target URL is different
+        go({
+          to: {
+            resource: "tasks",
+            action: "show",
+            id: activeTask.id,
+            meta: {
+              applicationId: activeApplication?.id,
+              sessionId: activeSession?.id,
+              taskId: activeTask.id,
+            },
+          },
+          query: {
+            applicationId: activeApplication?.id,
+            sessionId: activeSession?.id,
+          },
+          type: "push",
+        });
+      }
+    }
+  }, [authenticatedData, activeTask, activeApplication, activeSession, go]);
 
   if (isLoading || domainDataIsLoading) {
     return <>Loading...</> || null;
@@ -554,7 +584,7 @@ const Layout = ({
                   effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
                 }`}
                 style={{
-                  height: "calc(100vh - 64px)",
+                  height: "calc(100vh - 100px)",
                 }}
               >
                 <Accordion defaultValue={["search"]} multiple={true}>
@@ -728,8 +758,8 @@ const Layout = ({
                 <div
                   className="flex flex-col h-screen items-center justify-center p-4"
                   style={{
-                    height: "calc(100vh - 64px)",
-                    paddingBottom: "60px",
+                    height: "calc(100vh - 100px)",
+                    // paddingBottom: "60px",
                   }}
                 >
                   <Breadcrumbs />
@@ -746,8 +776,8 @@ const Layout = ({
                 <div
                   className="flex flex-col h-screen items-center justify-center p-4"
                   style={{
-                    height: "calc(100vh - 64px)",
-                    paddingBottom: "60px",
+                    height: "calc(100vh - 100px)",
+                    // paddingBottom: "60px",
                   }}
                 >
                   <Breadcrumbs />
@@ -763,8 +793,8 @@ const Layout = ({
                 <div
                   className="flex flex-col h-screen overflow-auto"
                   style={{
-                    height: "calc(100vh - 64px)",
-                    paddingBottom: "60px",
+                    height: "calc(100vh - 100px)",
+                    // paddingBottom: "60px",
                   }}
                 >
                   <Accordion defaultValue={["execution"]} multiple={true}>
@@ -1126,7 +1156,7 @@ const Layout = ({
                 className={`overflow-auto h-screen ${
                   effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
                 }`}
-                style={{ height: "calc(100vh - 64px)" }}
+                style={{ height: "calc(100vh - 100px)" }}
               >
                 <Accordion defaultValue={["action_input"]} multiple={true}>
                   <Accordion.Item key="state" value="state">
@@ -1170,7 +1200,7 @@ const Layout = ({
                             name="list items"
                             query_name="data_model"
                             record={activeTask}
-                            action={focused_entities["action_input"]?.action}
+                            action={"plan"}
                             success_message_code="action_input_data_model_schema"
                           />
                         </div>

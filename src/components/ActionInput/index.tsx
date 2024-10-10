@@ -196,6 +196,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
       // if action is not special then perform the following otherwise alert the action name
       if (action === "save") {
+        // alert(JSON.stringify(value));
         const fetchFromDuckDB = async () => {
           try {
             const conn = await initializeLocalDB();
@@ -492,23 +493,42 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   if (!data_model) return <div>No data model </div>;
   const { schema } = data_model;
 
+  // useEffect(() => {
+  //   // Instead of setting the form instance, track isSubmitting directly or ensure store is updated
+  //   setFormSubmitHandler(formId, form.handleSubmit);
+  //   setFormInstance(formId, form); // This is fine if you need to store form instance
+
+  //   return () => {
+  //     // Cleanup when the form is unmounted
+  //     setFormSubmitHandler(formId, undefined);
+  //     setFormInstance(formId, undefined); // Also clear the form instance to avoid stale data
+  //   };
+  // }, [
+  //   form,
+  //   action, // Should track only necessary dependencies
+  //   actionInputId,
+  //   setFormSubmitHandler,
+  //   setFormInstance,
+  // ]);
+  // Use useRef to keep a reference to the form instance
+  const formRef = useRef(form);
+
+  // Update formRef.current whenever form changes
   useEffect(() => {
-    // Instead of setting the form instance, track isSubmitting directly or ensure store is updated
+    formRef.current = form;
+  }, [form]);
+
+  // Set the form instance and submit handler in the store
+  useEffect(() => {
     setFormSubmitHandler(formId, form.handleSubmit);
-    setFormInstance(formId, form); // This is fine if you need to store form instance
+    setFormInstance(formId, formRef.current); // Use formRef.current for consistency
 
     return () => {
       // Cleanup when the form is unmounted
       setFormSubmitHandler(formId, undefined);
-      setFormInstance(formId, undefined); // Also clear the form instance to avoid stale data
+      setFormInstance(formId, undefined);
     };
-  }, [
-    form,
-    action, // Should track only necessary dependencies
-    actionInputId,
-    setFormSubmitHandler,
-    setFormInstance,
-  ]);
+  }, [formId, setFormSubmitHandler, setFormInstance]);
 
   // conditionally set include_items based on the name. read include items from the corresponding state variable. i.e query_mode.include_items for name = query
   let include_items: string[] = [];
@@ -551,6 +571,18 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           form.handleSubmit();
         }}
       >
+        <MonacoEditor
+          value={{
+            formId: formId,
+            action_input_form_values_key: action_input_form_values_key,
+            action: action,
+            include_items: include_items,
+            // record: record,
+            // data_model: data_model,
+          }}
+          language="json"
+          height="50vh"
+        />
         {/* <div>{JSON.stringify(focused_item)}</div> */}
 
         {/* <div>{JSON.stringify(include_items)}</div> */}

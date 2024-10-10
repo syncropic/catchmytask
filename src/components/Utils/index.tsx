@@ -2460,7 +2460,7 @@ export function useSessionNavigation() {
 }
 
 export function useNavigation() {
-  const { activeApplication } = useAppStore();
+  const { activeApplication, activeSession, activeTask } = useAppStore();
   const go = useGo();
 
   const navigate = (
@@ -2480,12 +2480,18 @@ export function useNavigation() {
       // setActiveSession(selectedSession);
       go({
         to: {
-          resource: "sessions",
+          resource: "tasks",
           action: "show",
           id: record.id,
           meta: {
             applicationId: activeApplication?.id,
+            sessionId: activeSession?.id,
+            taskId: record.id,
           },
+        },
+        query: {
+          applicationId: activeApplication?.id,
+          sessionId: activeSession?.id,
         },
         type: "push",
       });

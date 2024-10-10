@@ -1,6 +1,12 @@
 // import { NotificationsProvider } from "@mantine/notifications";
 import { Notifications } from "@mantine/notifications";
-import { AuthBindings, Refine, Action, IResourceItem } from "@refinedev/core";
+import {
+  AuthBindings,
+  Refine,
+  Action,
+  IResourceItem,
+  useGo,
+} from "@refinedev/core";
 import { useNotificationProvider } from "@refinedev/mantine";
 import routerProvider, { DocumentTitleHandler } from "@refinedev/nextjs-router";
 import type { NextPage } from "next";
@@ -105,21 +111,11 @@ const App = (props: React.PropsWithChildren) => {
   const runtimeConfig = useAppStore((state) => state.runtimeConfig);
   const { activeSession, activeApplication, activeTask, colorScheme } =
     useAppStore();
+  const go = useGo();
 
   useEffect(() => {
     fetchRuntimeConfig();
   }, [fetchRuntimeConfig]);
-
-  // useEffect(() => {
-  //   if (session?.error === "RefreshAccessTokenError") {
-  //     // signIn(); // Force sign in to resolve the error
-  //     // signout and push to login page
-  //     signOut({
-  //       redirect: true,
-  //       callbackUrl: "/login",
-  //     });
-  //   }
-  // }, [session]);
 
   if (status === "loading" || !runtimeConfig) {
     return <span>loading...</span>;
@@ -189,77 +185,7 @@ const App = (props: React.PropsWithChildren) => {
         error: new Error(error?.toString()),
       };
     },
-    // register: async ({ providerName, email, password }) => {
-    //   if (providerName) {
-    //     signIn(providerName, {
-    //       callbackUrl: to ? to.toString() : "/",
-    //       redirect: true,
-    //     });
 
-    //     return {
-    //       success: true,
-    //     };
-    //   }
-
-    //   const signUpResponse = await signIn("CredentialsSignUp", {
-    //     email,
-    //     password,
-    //     callbackUrl: to ? to.toString() : "/",
-    //     redirect: false,
-    //   });
-
-    //   if (!signUpResponse) {
-    //     return {
-    //       success: false,
-    //     };
-    //   }
-
-    //   const { ok, error } = signUpResponse;
-
-    //   if (ok) {
-    //     return {
-    //       success: true,
-    //       redirectTo: "/",
-    //     };
-    //   }
-
-    //   return {
-    //     success: false,
-    //     error: new Error(error?.toString()),
-    //   };
-    // },
-    // updatePassword: async (params) => {
-    //   if (params.password === "demodemo") {
-    //     //we can update password here
-    //     return {
-    //       success: true,
-    //       redirectTo: "/login",
-    //     };
-    //   }
-    //   return {
-    //     success: false,
-    //     error: {
-    //       message: "Update password failed",
-    //       name: "Invalid password",
-    //     },
-    //   };
-    // },
-    // forgotPassword: async (params) => {
-    //   if (params.email === "demo@refine.dev") {
-    //     //we can send email with reset password link here
-    //     return {
-    //       success: true,
-    //       redirectTo: "/login",
-    //     };
-    //   }
-    //   return {
-    //     success: false,
-    //     error: {
-    //       message: "Forgot password failed",
-    //       name: "Invalid email",
-    //     },
-    //   };
-    // },
     logout: async () => {
       signOut({
         redirect: true,
@@ -304,11 +230,6 @@ const App = (props: React.PropsWithChildren) => {
     },
   };
 
-  // exclude baselayout in /login page
-  // if (router.pathname === "/login") {
-  //   return <>{props.children}</>;
-  // }
-
   return (
     <>
       <MantineProvider
@@ -346,7 +267,12 @@ const App = (props: React.PropsWithChildren) => {
               list: "/sessions",
               create: "/:applicationId/sessions/create",
               edit: "/:applicationId/sessions/:id/edit",
-              show: "/:applicationId/sessions/:id",
+              show: "/:applicationId/sessions/:sessionId/tasks/:taskId",
+            },
+            {
+              name: "tasks",
+              list: "/tasks",
+              show: "/tasks/show/:id",
             },
           ]}
           options={{

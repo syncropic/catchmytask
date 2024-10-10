@@ -57,6 +57,8 @@ export const ExternalSubmitButton = ({
               onClick={() => {
                 if (formInstance?.handleSubmit) {
                   formInstance.handleSubmit(); // Trigger form submission
+                  // Optionally reset the form after a successful submission
+                  formInstance.reset();
                 } else {
                   console.error(
                     `No submit handler found for form ID: ${formId}`
