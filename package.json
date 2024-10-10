@@ -132,6 +132,7 @@
     "uuid": "^10.0.0",
     "wavesurfer-multitrack": "^0.4.11",
     "wavesurfer.js": "^7.6.4",
+    "xlsx": "^0.18.5",
     "zod": "^3.23.8",
     "zustand": "^4.4.7"
   },

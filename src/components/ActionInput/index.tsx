@@ -36,6 +36,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
 import MonacoEditor from "@components/MonacoEditor";
 import ExternalSubmitButton from "@components/SubmitButton";
+import { initializeLocalDB } from "src/local_db";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
   return (
@@ -188,184 +191,272 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       }
       setFocusedEntities(new_focused_entities);
 
-      const specialActions = ["proceed_execute_with_action_input", "save"]; // List of special actions
+      const specialActions = ["save"]; // List of special actions
       const action_url = specialActions.includes(action) ? "execute" : action; // Check if action is in the list and replace if necessary
 
-      return new Promise((resolve, reject) => {
-        let include_execution_orders = [];
-        // if action is save then include the execution_order value for the record
-        if (action === "save") {
-          include_execution_orders = [record?.execution_order || 1];
-        } else {
-          include_execution_orders = selectedRecords[
-            `${action_input_form_values_key}`
-          ]?.map((item: any) => item?.index) || [1];
-        }
-        mutate(
-          {
-            // url: `${config.API_URL}/catch-${
-            //   data_model?.name === "action_step_any" ? "any" : "action"
-            // }`,
-            // url: `${config.API_URL}/${endpoint ? endpoint : "execute-task"}`,
-            url: `${config.API_URL}/${action_url}`,
-            method: "post",
-            // ...(action === "save" && {
-            //   config: {
-            //     headers: {
-            //       responseType: "blob",
-            //     },
-            //   },
-            // }),
-            values: {
-              action: {
-                id: action || activeAction?.id,
-                name: action || activeAction?.name,
-              },
-              input_values: {
-                ...value,
-                action_input_form_values:
-                  action_input_form_values["action_input"] || {},
-              },
-              // credential: value?.credential || "surrealdb catchmytask dev",
-              // data_model: data_model,
-              application: {
-                id: activeApplication?.id,
-                name: activeApplication?.name,
-              },
-              session: {
-                id: activeSession?.id,
-                name: activeSession?.name,
-              },
-              task: {
-                id: activeTask?.id,
-                name: activeTask?.name,
-              },
-              // task_variables: {},
-              // global_variables: {
-              //   ...global_variables,
-              // },
-              // include_execution_orders: [record?.execution_order || 1],
-              include_execution_orders: include_execution_orders,
-              action_steps: records || [
-                {
-                  ...value,
-                  execution_order: value?.execution_order || 1,
-                  description: value?.description || "generic description",
-                  name: value?.name || "generic name",
-                  job: value?.description || "generic job",
-                  method: value?.method || "select",
-                  type: value?.type || "action_steps",
-                  credential: value?.credential || "surrealdb catchmytask dev",
-                  implement: value?.implement,
-                  success_message_code: success_message_code_selected,
-                },
-              ],
-            },
-          },
-          {
-            onError: (error, variables, context) => {
-              // console.log("onError", error);
-              reject(error);
-            },
-            onSuccess: (data, variables, context) => {
-              const extendedData = data as CustomMutationResponse<any>;
-              // Extract the headers and content data
-              const contentDisposition =
-                extendedData?.headers?.["content-disposition"];
-              // console.log("Content Disposition:", contentDisposition);
-              const contentType = extendedData?.headers?.["content-type"];
+      // if action is not special then perform the following otherwise alert the action name
+      if (action === "save") {
+        const fetchFromDuckDB = async () => {
+          try {
+            const conn = await initializeLocalDB();
+            // let downloadQuery = "SELECT * FROM issues";
+            let downloadQuery = value?.save_query;
+            const downloadResult = await conn.query(downloadQuery);
 
-              // console.log("Content Type:", contentType);
-              // console.log("Extended Headers:", extendedData?.headers);
-              // Check if the response is for a file download
-              if (
-                contentDisposition &&
-                contentDisposition.includes("attachment")
-              ) {
-                // Create a JSON blob and trigger download
-                // const jsonBlob = new Blob([JSON.stringify(extendedData.data)], {
-                //   type: contentType,
-                // });
-                const blob = new Blob([extendedData.data], {
-                  type: contentType,
-                });
-                const link = document.createElement("a");
-                link.href = window.URL.createObjectURL(blob);
+            // Debugging logs
+            console.log("Download result:", downloadResult);
+            console.log("Download result schema:", downloadResult?.schema);
+            console.log(
+              "Download result schema fields:",
+              downloadResult?.schema?.fields
+            );
 
-                // Extract the filename from the content-disposition header
-                const filename = contentDisposition
-                  ? contentDisposition
-                      .split("filename=")[1]
-                      .replace(/"/g, "")
-                      .trim()
-                  : "downloaded_file.json";
+            const downloadData = downloadResult.toArray();
 
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+            // Check if data exists
+            if (!downloadData || downloadData.length === 0) {
+              alert("No data available to download.");
+              return;
+            }
 
-                // Create a JSON object with information about the file
-                const file = {
-                  filename: filename,
-                  type: contentType,
-                  size: blob.size,
+            // Ensure that downloadResult.schema and downloadResult.schema.fields are not undefined
+            if (!downloadResult?.schema || !downloadResult?.schema?.fields) {
+              console.error("Schema information is not available.");
+              return;
+            }
+
+            // Extract column names from the query result schema fields
+            const columnNames = downloadResult.schema.fields.map(
+              (field) => field.name
+            );
+
+            // Ensure the data is an array of arrays
+            const dataWithHeaders = [
+              columnNames,
+              ...downloadData.map((row) => Object.values(row)),
+            ];
+
+            // Step 1: Create a new workbook and worksheet
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.aoa_to_sheet(dataWithHeaders);
+
+            // Step 2: Optionally, apply styling or formatting to the worksheet
+            // Example: Making the first row (headers) bold
+            const headerRange = XLSX.utils.decode_range(worksheet["!ref"]);
+            for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+              const cell = worksheet[XLSX.utils.encode_cell({ r: 0, c: C })];
+              if (cell) {
+                cell.s = {
+                  font: { bold: true },
+                  alignment: { horizontal: "center" },
+                  fill: { patternType: "solid", fgColor: { rgb: "FFFF00" } }, // Yellow background
                 };
-                console.log("File:", file);
-
-                resolve(file);
-              } else {
-                // if there execute_mode it means user is being prompted to provide required values
-                let execute_mode_item = Array.isArray(data?.data)
-                  ? data.data.find(
-                      (item: any) => item?.message?.code === "execute_mode"
-                    )
-                  : null;
-
-                if (execute_mode_item) {
-                  // we need to open and display the form for the user to provide the required values
-                  // console.log("open action input");
-                  openDisplay("rightSection");
-                  // let new_focused_entities = { ...focused_entities };
-                  // new_focused_entities["action_input"] = {
-                  //   ...new_focused_entities["action_input"],
-                  //   execute_mode: execute_mode_item["data"],
-                  //   action: `proceed_${action}`,
-                  // };
-                  // new_focused_entities[record?.id] = {
-                  //   ...new_focused_entities[record?.id],
-                  //   action: `proceed_${action}`,
-                  // };
-                  // setFocusedEntities(new_focused_entities);
-                }
-
-                // let action_step_items = Array.isArray(data?.data)
-                //   ? data.data.filter(
-                //       (item: any) =>
-                //         item?.action_step?.id && item?.exit_code === 0
-                //     )
-                //   : [];
-                // let query_state = action_step_items.map((item: any) => ({
-                //   id: item?.action_step?.id,
-                //   success_message_code: item?.message?.code,
-                // }));
-
-                // query_state.forEach((state) => {
-                //   queryClient.invalidateQueries({
-                //     queryKey: [
-                //       `readByState_${JSON.stringify({
-                //         success_message_code: state?.success_message_code,
-                //       })}`,
-                //     ],
-                //   });
-                // });
-
-                resolve(data);
               }
-            },
+            }
+
+            // Step 3: Add the worksheet to the workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Issues Data");
+
+            // Step 4: Write the workbook to a Blob and trigger a download
+            const wbout = XLSX.write(workbook, {
+              bookType: "xlsx",
+              type: "array",
+            });
+            const blob = new Blob([wbout], {
+              type: "application/octet-stream",
+            });
+            saveAs(blob, `${value?.name}.xlsx`);
+
+            console.log(
+              `${value?.name}.xlsx excel file created and downloaded successfully.`
+            );
+          } catch (err) {
+            console.error(
+              "Error querying DuckDB or generating Excel file:",
+              err
+            );
           }
-        );
-      });
+        };
+        // alert(JSON.stringify(value));
+        fetchFromDuckDB();
+      } else {
+        return new Promise((resolve, reject) => {
+          let include_execution_orders = [];
+          // if action is save then include the execution_order value for the record
+          if (action === "save") {
+            include_execution_orders = [record?.execution_order || 1];
+          } else {
+            include_execution_orders = selectedRecords[
+              `${action_input_form_values_key}`
+            ]?.map((item: any) => item?.index) || [1];
+          }
+          mutate(
+            {
+              // url: `${config.API_URL}/catch-${
+              //   data_model?.name === "action_step_any" ? "any" : "action"
+              // }`,
+              // url: `${config.API_URL}/${endpoint ? endpoint : "execute-task"}`,
+              url: `${config.API_URL}/${action_url}`,
+              method: "post",
+              // ...(action === "save" && {
+              //   config: {
+              //     headers: {
+              //       responseType: "blob",
+              //     },
+              //   },
+              // }),
+              values: {
+                action: {
+                  id: action || activeAction?.id,
+                  name: action || activeAction?.name,
+                },
+                input_values: {
+                  ...value,
+                  action_input_form_values:
+                    action_input_form_values["action_input"] || {},
+                },
+                // credential: value?.credential || "surrealdb catchmytask dev",
+                // data_model: data_model,
+                application: {
+                  id: activeApplication?.id,
+                  name: activeApplication?.name,
+                },
+                session: {
+                  id: activeSession?.id,
+                  name: activeSession?.name,
+                },
+                task: {
+                  id: activeTask?.id,
+                  name: activeTask?.name,
+                },
+                // task_variables: {},
+                // global_variables: {
+                //   ...global_variables,
+                // },
+                // include_execution_orders: [record?.execution_order || 1],
+                include_execution_orders: include_execution_orders,
+                action_steps: records || [
+                  {
+                    ...value,
+                    execution_order: value?.execution_order || 1,
+                    description: value?.description || "generic description",
+                    name: value?.name || "generic name",
+                    job: value?.description || "generic job",
+                    method: value?.method || "select",
+                    type: value?.type || "action_steps",
+                    credential:
+                      value?.credential || "surrealdb catchmytask dev",
+                    implement: value?.implement,
+                    success_message_code: success_message_code_selected,
+                  },
+                ],
+              },
+            },
+            {
+              onError: (error, variables, context) => {
+                // console.log("onError", error);
+                reject(error);
+              },
+              onSuccess: (data, variables, context) => {
+                const extendedData = data as CustomMutationResponse<any>;
+                // Extract the headers and content data
+                const contentDisposition =
+                  extendedData?.headers?.["content-disposition"];
+                // console.log("Content Disposition:", contentDisposition);
+                const contentType = extendedData?.headers?.["content-type"];
+
+                // console.log("Content Type:", contentType);
+                // console.log("Extended Headers:", extendedData?.headers);
+                // Check if the response is for a file download
+                if (
+                  contentDisposition &&
+                  contentDisposition.includes("attachment")
+                ) {
+                  // Create a JSON blob and trigger download
+                  // const jsonBlob = new Blob([JSON.stringify(extendedData.data)], {
+                  //   type: contentType,
+                  // });
+                  const blob = new Blob([extendedData.data], {
+                    type: contentType,
+                  });
+                  const link = document.createElement("a");
+                  link.href = window.URL.createObjectURL(blob);
+
+                  // Extract the filename from the content-disposition header
+                  const filename = contentDisposition
+                    ? contentDisposition
+                        .split("filename=")[1]
+                        .replace(/"/g, "")
+                        .trim()
+                    : "downloaded_file.json";
+
+                  link.download = filename;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+
+                  // Create a JSON object with information about the file
+                  const file = {
+                    filename: filename,
+                    type: contentType,
+                    size: blob.size,
+                  };
+                  console.log("File:", file);
+
+                  resolve(file);
+                } else {
+                  // if there execute_mode it means user is being prompted to provide required values
+                  let execute_mode_item = Array.isArray(data?.data)
+                    ? data.data.find(
+                        (item: any) => item?.message?.code === "execute_mode"
+                      )
+                    : null;
+
+                  if (execute_mode_item) {
+                    // we need to open and display the form for the user to provide the required values
+                    // console.log("open action input");
+                    openDisplay("rightSection");
+                    // let new_focused_entities = { ...focused_entities };
+                    // new_focused_entities["action_input"] = {
+                    //   ...new_focused_entities["action_input"],
+                    //   execute_mode: execute_mode_item["data"],
+                    //   action: `proceed_${action}`,
+                    // };
+                    // new_focused_entities[record?.id] = {
+                    //   ...new_focused_entities[record?.id],
+                    //   action: `proceed_${action}`,
+                    // };
+                    // setFocusedEntities(new_focused_entities);
+                  }
+
+                  // let action_step_items = Array.isArray(data?.data)
+                  //   ? data.data.filter(
+                  //       (item: any) =>
+                  //         item?.action_step?.id && item?.exit_code === 0
+                  //     )
+                  //   : [];
+                  // let query_state = action_step_items.map((item: any) => ({
+                  //   id: item?.action_step?.id,
+                  //   success_message_code: item?.message?.code,
+                  // }));
+
+                  // query_state.forEach((state) => {
+                  //   queryClient.invalidateQueries({
+                  //     queryKey: [
+                  //       `readByState_${JSON.stringify({
+                  //         success_message_code: state?.success_message_code,
+                  //       })}`,
+                  //     ],
+                  //   });
+                  // });
+
+                  resolve(data);
+                }
+              },
+            }
+          );
+        });
+      }
     },
   });
 
