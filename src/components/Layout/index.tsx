@@ -1051,69 +1051,6 @@ const Layout = ({
                                     <div>execute</div>
                                   </div>
                                 )}
-
-                              {/* {activeTask &&
-                              focused_entities[activeTask?.id]?.["action"] ===
-                                "execute" ? (
-                                <div className="w-full">
-                                  <ActionInputWrapper
-                                    execution_record={activeTask}
-                                    query_name="execution data model"
-                                    record={{
-                                      id: activeTask?.id,
-                                    }}
-                                    action={
-                                      focused_entities["action_input"]?.action
-                                    }
-                                    focused_item="action_input"
-                                    read_record_mode="local"
-                                    success_message_code="action_input_data_model_schema"
-                                  />
-                                </div>
-                              ) : null} */}
-
-                              {/* {(activeTask &&
-                                focused_entities[activeTask?.id]?.["action"]) ==
-                                "search" || action == "search" ? (
-                                <div
-                                  className="w-full pr-6 pl-6 pt-3 pb-3"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <GlobalSearchInput
-                                    placeholder={`Search for ${
-                                      focused_entities[activeTask?.id]?.[
-                                        "action"
-                                      ]
-                                    } modes`}
-                                    handleOptionSubmit={(item) =>
-                                     
-                                      console.log(item)
-                                    }
-                                    
-                                    activeFilters={[
-                                      {
-                                        id: 1,
-                                        name: `${
-                                          focused_entities[activeTask?.id]?.[
-                                            "action"
-                                          ]
-                                        } modes`,
-                                        description: `${
-                                          focused_entities[activeTask?.id]?.[
-                                            "action"
-                                          ]
-                                        } modes`,
-                                        entity_type: `${
-                                          focused_entities[activeTask?.id]?.[
-                                            "action"
-                                          ]
-                                        } modes`,
-                                        is_selected: true,
-                                      },
-                                    ]}
-                                  />
-                                </div>
-                              ) : null} */}
                             </div>
                             <div className="w-1/5"></div>
                           </div>
@@ -1237,29 +1174,6 @@ const Layout = ({
                           />
                         </div>
                       )}
-                      {/* <div>dynamic action input</div> */}
-                      {/* {activeTask ? (
-                        <div className="w-full">
-                          <ActionInputWrapper
-                            execution_record={activeTask}
-                            query_name="execution data model"
-                            record={{
-                              id: activeTask?.id,
-                            }}
-                            action={focused_entities["action_input"]?.action}
-                            focused_item="action_input"
-                            read_record_mode="local"
-                            success_message_code="action_input_data_model_schema"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center p-4">
-                          <p className="text-sm text-gray-600 text-center">
-                            Prompts for your input required to successfully
-                            complete an action will dynamically appear here.
-                          </p>
-                        </div>
-                      )} */}
                     </Accordion.Panel>
                   </Accordion.Item>
 
