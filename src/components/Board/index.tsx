@@ -137,22 +137,7 @@ export default function BoardComponent({ data_fields }: BoardComponentProps) {
     item.items = [];
     return item;
   });
-  //   const [data, setData] = useState<BoardState>(() => {
-  //     const columnMap = data_fields_with_items.reduce((acc, actionStep) => {
-  //       acc[actionStep.id] = actionStep;
-  //       return acc;
-  //     }, {} as ColumnMap);
 
-  //     const orderedColumnIds = data_fields_with_items.map(
-  //       (actionStep) => actionStep.id
-  //     );
-
-  //     return {
-  //       columnMap,
-  //       orderedColumnIds,
-  //       lastOperation: null,
-  //     };
-  //   });
   const [data, setData] = useState<BoardState>(() => {
     const columnMap = data_fields_with_items.reduce((acc, actionStep) => {
       acc[actionStep.id] = actionStep;
@@ -170,6 +155,24 @@ export default function BoardComponent({ data_fields }: BoardComponentProps) {
       lastOperation: null,
     };
   });
+
+  // Update state when data_fields changes
+  useEffect(() => {
+    const columnMap = data_fields_with_items.reduce((acc, actionStep) => {
+      acc[actionStep.id] = actionStep;
+      return acc;
+    }, {} as ColumnMap);
+
+    const orderedColumnIds = data_fields_with_items
+      .sort((a, b) => a.execution_order - b.execution_order)
+      .map((actionStep) => actionStep.id);
+
+    setData({
+      columnMap,
+      orderedColumnIds,
+      lastOperation: null,
+    });
+  }, [data_fields]);
 
   const stableData = useRef(data);
   useEffect(() => {

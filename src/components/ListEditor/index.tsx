@@ -280,10 +280,11 @@ export default DataDisplay;
 interface RecordData {
   id: string;
   name: string;
-  streetAddress: string;
-  city: string;
-  state: string;
-  missionStatement: string;
+  execution_order: number;
+  // streetAddress: string;
+  // city: string;
+  // state: string;
+  // missionStatement: string;
 }
 export const ListEditorFormInput = ({ ...props }: any) => {
   // const transformedRecords = props?.value?.map((item: string, index: any) => ({
@@ -322,7 +323,7 @@ export const ListEditorFormInput = ({ ...props }: any) => {
     items.splice(destinationIndex, 0, reorderedItem);
 
     let items_with_index = items.map((item, index) => {
-      return { ...item, index: index + 1 };
+      return { ...item, index: item?.execution_order };
     });
     setRecords(items_with_index);
     // notifications.show({
@@ -356,7 +357,7 @@ export const ListEditorFormInput = ({ ...props }: any) => {
     // add empty header column for the drag handle
     { accessor: "", hiddenContent: true, width: 50 },
     { accessor: "name" },
-    { accessor: "index", width: 80 },
+    { accessor: "execution_order", width: 80 },
     // { accessor: "streetAddress", width: 150 },
     // { accessor: "city", width: 150 },
     // { accessor: "state", width: 150 },
@@ -394,25 +395,21 @@ export const ListEditorFormInput = ({ ...props }: any) => {
           <DataTable<RecordData>
             columns={[
               ...columns,
-              {
-                accessor: "actions",
-                title: <Box mr={6}>actions</Box>,
-                textAlign: "right",
-                width: 80,
-                render: (record: any) => (
-                  // <div>record actions</div>
-                  <RecordActionsWrapper
-                    record={record}
-                    name="action_step"
-                    query_name="data_model"
-                    success_message_code="action_input_data_model_schema"
-                    // setExpandedRecordIds={setExpandedRecordIds}
-                    // invalidate_queries_on_submit_success={
-                    //   invalidate_queries_on_submit_success
-                    // }
-                  ></RecordActionsWrapper>
-                ),
-              },
+              // {
+              //   accessor: "actions",
+              //   title: <Box mr={6}>actions</Box>,
+              //   textAlign: "right",
+              //   width: 80,
+              //   render: (record: any) => (
+              //     // <div>record actions</div>
+              //     <RecordActionsWrapper
+              //       record={record}
+              //       name="action_step"
+              //       query_name="data_model"
+              //       success_message_code="action_input_data_model_schema"
+              //     ></RecordActionsWrapper>
+              //   ),
+              // },
             ]}
             records={records}
             withTableBorder
@@ -464,7 +461,7 @@ export const ListEditorFormInput = ({ ...props }: any) => {
           />
         </DragDropContext>
       )}
-      <MonacoEditor value={props?.value} language="json" height="100vh" />
+      {/* <MonacoEditor value={props?.value} language="json" height="100vh" /> */}
     </>
     // <div>monaco editor form input</div>
   );

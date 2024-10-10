@@ -242,6 +242,20 @@ DataDisplayComponentProps<T>) {
   // return board for action steps by default
   if (entity_type === "action_steps") {
     return (
+      // <div>
+      //   {JSON.stringify(selectedRecords[`${action_input_form_values_key}`])}
+      // </div>
+      // <div>
+      //   {JSON.stringify(
+      //     data_items?.filter(
+      //       (item: { name: string }) =>
+      //         item &&
+      //         selectedRecords[`${action_input_form_values_key}`]?.some(
+      //           (record: { name: string }) => record.name === item?.name
+      //         )
+      //     )
+      //   )}
+      // </div>
       <Board
         data_fields={data_items?.filter(
           (item: { name: string }) =>

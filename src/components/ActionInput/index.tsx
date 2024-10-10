@@ -571,7 +571,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           form.handleSubmit();
         }}
       >
-        <MonacoEditor
+        {/* <MonacoEditor
           value={{
             formId: formId,
             action_input_form_values_key: action_input_form_values_key,
@@ -582,7 +582,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           }}
           language="json"
           height="50vh"
-        />
+        /> */}
         {/* <div>{JSON.stringify(focused_item)}</div> */}
 
         {/* <div>{JSON.stringify(include_items)}</div> */}
