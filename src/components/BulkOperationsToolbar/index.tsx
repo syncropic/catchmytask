@@ -1,5 +1,5 @@
 import React from "react";
-import { ActionIcon, Indicator, Tooltip, Menu } from "@mantine/core";
+import { ActionIcon, Indicator, Tooltip, Menu, Button } from "@mantine/core";
 import {
   IconCircleMinus,
   IconCircleX,
@@ -24,13 +24,17 @@ import {
   IconLayoutSidebarLeftCollapseFilled,
   IconLayoutSidebarRightCollapseFilled,
   IconLayoutDistributeVertical,
+  IconCopyCheck,
+  IconUserPlus,
+  IconEye,
 } from "@tabler/icons-react";
 
 import { useAppStore } from "src/store";
 import Reveal from "@components/Reveal";
 import ActionInputWrapper from "@components/ActionInput";
+import SearchInput from "@components/SearchInput";
 
-interface ComponentsToolbarProps {
+interface BulkOperationsToolbarProps {
   include_components: {
     action: string;
     record: any;
@@ -46,7 +50,7 @@ interface ComponentsToolbarProps {
   }[];
 }
 
-const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
+const BulkOperationsToolbar: React.FC<BulkOperationsToolbarProps> = ({
   include_components = [],
 }) => {
   const { focused_entities, setFocusedEntities, fields } = useAppStore();
@@ -78,16 +82,21 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
     share: IconShare,
     cancel: IconCircleX,
     display: IconPlayerStop,
+    delete: IconTrash,
     menu: IconMenu2,
     implement: IconPlaylistAdd,
     plan: IconSitemap,
     build: IconCode,
     fields: IconTallymark3,
     edit: IconPencil,
+    close: IconCopyCheck,
+    bulk_update: IconForms,
+    assign: IconUserPlus,
+    view: IconEye,
   };
 
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-1 items-center">
       {include_components?.map((component, index) => {
         // Get the appropriate icon component
         const IconComponent = iconMap[component?.action];
@@ -158,6 +167,27 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
           );
         }
 
+        if (component?.action === "custom_actions") {
+          return (
+            <div className="flex max-w-xs">
+              <SearchInput
+                include_action_icons={[]}
+                size="xs"
+                placeholder="select custom action"
+                activeFilters={[
+                  {
+                    description: "actions",
+                    entity_type: "actions",
+                    id: 1,
+                    is_selected: true,
+                    name: "actions",
+                  },
+                ]}
+              />
+            </div>
+          );
+        }
+
         if (component?.action === "fields") {
           return (
             <Reveal
@@ -224,9 +254,9 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
             position="top"
             key={index}
           >
-            <ActionIcon
+            <Button
               aria-label={component?.action}
-              size="xs"
+              size="compact-xs"
               onClick={(e) =>
                 component?.onClick(
                   e,
@@ -236,17 +266,19 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
                   component?.type
                 )
               }
-              {...{
-                variant:
-                  focused_entities[component?.record?.id]?.[component?.type] ===
-                  component?.action
-                    ? "filled"
-                    : "outline",
-              }}
+              // {...{
+              //   variant:
+              //     focused_entities[component?.record?.id]?.[component?.type] ===
+              //     component?.action
+              //       ? "filled"
+              //       : "outline",
+              // }}
+              leftSection={IconComponent && <IconComponent size={16} />}
             >
-              {IconComponent && <IconComponent size={16} />}{" "}
+              {/* {IconComponent && <IconComponent size={16} />}{" "} */}
               {/* Render the icon */}
-            </ActionIcon>
+              {component?.action}
+            </Button>
           </Tooltip>
         );
 
@@ -262,4 +294,4 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
   );
 };
 
-export default ComponentsToolbar;
+export default BulkOperationsToolbar;

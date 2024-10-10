@@ -20,6 +20,7 @@ function SearchInput<T extends Record<string, any>>({
   disabled,
   include_action_icons,
   schema,
+  size,
 }: SearchInputComponentProps<T>) {
   const [query, setQuery] = useState(value || "");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -131,6 +132,7 @@ function SearchInput<T extends Record<string, any>>({
           description={description}
           error={isError ? error?.message : undefined}
           // limit={10}
+          size={size}
           maxDropdownHeight={300}
           onOptionSubmit={enhancedHandleOptionSubmit}
           disabled={disabled}

@@ -95,14 +95,8 @@ const LargeScreenHeader = ({
           </div>
         )}
 
-        {authenticatedData?.authenticated && (
+        {/* {authenticatedData?.authenticated && (
           <div className="hidden lg:block">
-            {/* <QuickActionsBar
-              name={activeApplication?.name}
-              heading={activeApplication?.heading}
-              subheading={activeApplication?.subheading}
-              description={activeApplication?.description}
-            /> */}
             <div>
               <Tooltip label="Toggle background mode" position="top">
                 <ActionIcon
@@ -120,11 +114,12 @@ const LargeScreenHeader = ({
               </Tooltip>
             </div>
           </div>
-        )}
+        )} */}
       </div>
       {authenticatedData?.authenticated && (
         <div className="hidden lg:block w-full items-center pl-4">
-          <SearchInput include_action_icons={["filter"]} />
+          {/* <SearchInput include_action_icons={["filter"]} /> */}
+          <SearchInput include_action_icons={[]} />
         </div>
       )}
 

@@ -319,9 +319,32 @@ export const useAppStore = create(
           entity_type: "file_types",
           is_selected: true,
         },
+        {
+          id: 17,
+          name: "actions",
+          description: "actions",
+          entity_type: "actions",
+          is_selected: true,
+        },
       ],
       setSearchFilters: (filters) =>
         set((state) => ({ ...state, searchFilters: filters })),
+      local_db: {},
+      setLocalDB: (local_db) => set((state) => ({ ...state, local_db })),
+      // Function to update a specific part of the local_db
+      updateLocalDB: (key, newData) =>
+        set((state) => {
+          const existingData = state.local_db[key] || {};
+          return {
+            local_db: {
+              ...state.local_db,
+              [key]: {
+                ...existingData,
+                ...newData,
+              },
+            },
+          };
+        }),
     }),
     {
       name: "catchmytask-store",

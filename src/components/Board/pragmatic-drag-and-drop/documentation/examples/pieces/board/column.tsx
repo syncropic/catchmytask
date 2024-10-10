@@ -527,20 +527,20 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                       //   record: column,
                       //   onClick: updateComponentAction,
                       // },
-                      {
-                        action: "edit",
-                        entity_type: "action_steps",
-                        type: "action",
-                        record: column,
-                        onClick: updateComponentAction,
-                      },
-                      {
-                        action: "save",
-                        entity_type: "action_steps",
-                        type: "action",
-                        record: column,
-                        onClick: updateComponentAction,
-                      },
+                      // {
+                      //   action: "edit",
+                      //   entity_type: "action_steps",
+                      //   type: "action",
+                      //   record: column,
+                      //   onClick: updateComponentAction,
+                      // },
+                      // {
+                      //   action: "save",
+                      //   entity_type: "action_steps",
+                      //   type: "action",
+                      //   record: column,
+                      //   onClick: updateComponentAction,
+                      // },
                       // {
                       //   action: "share",
                       //   entity_type: "action_steps",
@@ -562,13 +562,13 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                         record: column,
                         onClick: updateComponentAction,
                       },
-                      // {
-                      //   action: "menu",
-                      //   entity_type: "action_steps",
-                      //   type: "action",
-                      //   record: column,
-                      //   onClick: updateComponentAction,
-                      // },
+                      {
+                        action: "menu",
+                        entity_type: "action_steps",
+                        type: "action",
+                        record: column,
+                        onClick: updateComponentAction,
+                      },
                     ]}
                   ></ComponentsToolbar>
                 </div>

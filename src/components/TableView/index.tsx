@@ -85,6 +85,7 @@ export function TableView<T extends Record<string, any>>({
       {/* <MonacoEditor value={data_items} language="json" height="50vh" /> */}
       {/* <div>{JSON.stringify(tableInstance?.getVisibleFlatColumns())}</div> */}
       {/* <div>{JSON.stringify(data_fields)}</div> */}
+      {/* <div>{resource_group}</div> */}
 
       {tableInstance && tableInstance.getVisibleFlatColumns() && (
         <DataTable<T>

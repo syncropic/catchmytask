@@ -22,6 +22,7 @@
     "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator": "^1.1.2",
     "@atlaskit/primitives": "^12.1.0",
     "@codexteam/icons": "^0.3.0",
+    "@duckdb/duckdb-wasm": "^1.29.0",
     "@emotion/react": "^11.11.1",
     "@emotion/server": "^11.10.0",
     "@excalidraw/excalidraw": "^0.17.3",

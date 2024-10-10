@@ -77,6 +77,7 @@ import { LogsWrapper } from "@components/LogsViewer";
 import Reveal from "@components/Reveal";
 import PlanWrapper from "@components/Plan";
 import GlobalSearchInput from "@components/GlobalSearchInput";
+import BulkOperationsToolbar from "@components/BulkOperationsToolbar";
 
 function InitializeApplication({
   activeApplicationId,
@@ -98,6 +99,7 @@ const Layout = ({
   const { isLoading, data: authenticatedData } = useIsAuthenticated();
   const {
     activeLayout,
+    setActiveLayout,
     activeActionInputLayout,
     setActiveApplication,
     activeSession,
@@ -111,6 +113,7 @@ const Layout = ({
     focused_entities,
     setFocusedEntities,
     action,
+    selectedRecords,
   } = useAppStore();
   const computedColorScheme = useComputedColorScheme("light"); // Compute the color scheme, defaults to 'light'
   // Define a media query for large screens
@@ -213,6 +216,43 @@ const Layout = ({
       }
       setFocusedEntities(new_focused_entities);
     }
+  };
+
+  // handle toggleDisplay
+  const openDisplay = (section: string) => {
+    if (activeLayout) {
+      const newLayout = { ...activeLayout };
+      newLayout[section].isDisplayed = true;
+      setActiveLayout(newLayout);
+    }
+  };
+
+  const bulkActionSelect = (
+    e: any,
+    record: any,
+    entity_type: string,
+    action: string,
+    type: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // open right sidebar
+
+    if (focused_entities) {
+      const new_focused_entities = { ...focused_entities };
+      //   console.log("new_focused_entities", new_focused_entities);
+      //   console.log("id", id);
+      if (!new_focused_entities[record?.id]) {
+        new_focused_entities[record?.id] = {};
+      }
+      if (new_focused_entities[record?.id].action === action) {
+        new_focused_entities[record?.id].action = null;
+      } else {
+        new_focused_entities[record?.id].action = action;
+      }
+      setFocusedEntities(new_focused_entities);
+    }
+    openDisplay("rightSection");
   };
 
   const updateActionInputTool = (
@@ -388,9 +428,8 @@ const Layout = ({
                                 : "text-gray-300"
                             } text-center`}
                           >
-                            Personalize your interface further by including and
-                            configuring prebuilt and/or custom built components
-                            here.
+                            Pinned (or open in left sidebar) components will
+                            appear here.
                           </p>
                         </div>
                       </Accordion>
@@ -518,8 +557,8 @@ const Layout = ({
                   height: "calc(100vh - 64px)",
                 }}
               >
-                <Accordion defaultValue={[]} multiple={true}>
-                  <div className="flex items-center justify-center p-4">
+                <Accordion defaultValue={["search"]} multiple={true}>
+                  <div className="flex items-center justify-center">
                     <p
                       className={`text-sm ${
                         effectiveScheme === "light"
@@ -527,10 +566,65 @@ const Layout = ({
                           : "text-gray-300"
                       } text-center`}
                     >
-                      Personalize your interface further by including and
-                      configuring prebuilt and/or custom built components here.
+                      {/* Pinned (or open in left sidebar) components will appear
+                      here. */}
+                      Pinned
                     </p>
                   </div>
+                  <Accordion.Item key="search" value="search">
+                    <Accordion.Control icon={<IconSearch size={16} />}>
+                      search
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      {/* {activeTask &&
+                        focused_entities[activeTask?.id]?.["action"] ===
+                          "search" && (
+                          <div className="w-full">
+                            <ActionInputWrapper
+                              name="search"
+                              query_name="data_model"
+                              record={activeTask}
+                              action="search"
+                              success_message_code="action_input_data_model_schema"
+                            />
+                          </div>
+                        )} */}
+                      {activeTask && (
+                        <div className="w-full">
+                          <ActionInputWrapper
+                            name="search"
+                            query_name="data_model"
+                            record={activeTask}
+                            action="search"
+                            success_message_code="action_input_data_model_schema"
+                          />
+                        </div>
+                      )}
+                      {/* <div>search component</div> */}
+                      {/* {activeTask ? (
+                        <div className="w-full">
+                          <ActionInputWrapper
+                            execution_record={activeTask}
+                            query_name="execution data model"
+                            record={{
+                              id: activeTask?.id,
+                            }}
+                            action={focused_entities["action_input"]?.action}
+                            focused_item="action_input"
+                            read_record_mode="local"
+                            success_message_code="action_input_data_model_schema"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-600 text-center">
+                            Prompts for your input required to successfully
+                            complete an action will dynamically appear here.
+                          </p>
+                        </div>
+                      )} */}
+                    </Accordion.Panel>
+                  </Accordion.Item>
                 </Accordion>
               </div>
             </Panel>
@@ -720,15 +814,36 @@ const Layout = ({
                             onClick={(e) => e.stopPropagation()}
                           >
                             {activeTask && (
-                              <ExternalSubmitButton
-                                record={activeTask}
-                                entity_type="tasks"
-                                action={
-                                  focused_entities[activeTask?.id]?.[
-                                    "action"
-                                  ] || action
-                                }
-                              ></ExternalSubmitButton>
+                              <div className="flex items-center gap-2">
+                                {selectedRecords["issues"]?.length > 0 && (
+                                  <div onClick={(e) => e.stopPropagation()}>
+                                    <Reveal
+                                      trigger="click"
+                                      target={
+                                        <Text c="blue" size="xs">
+                                          {`${selectedRecords["issues"]?.length} selected`}
+                                        </Text>
+                                      }
+                                    >
+                                      <MonacoEditor
+                                        value={selectedRecords["issues"]}
+                                        language="json"
+                                        height="50vh"
+                                      />
+                                    </Reveal>
+                                  </div>
+                                )}
+
+                                <ExternalSubmitButton
+                                  record={activeTask}
+                                  entity_type="tasks"
+                                  action={
+                                    focused_entities[activeTask?.id]?.[
+                                      "action"
+                                    ] || action
+                                  }
+                                ></ExternalSubmitButton>
+                              </div>
                               // <div>{JSON.stringify(action)}</div>
                             )}
                           </div>
@@ -809,7 +924,61 @@ const Layout = ({
                           </PanelGroup>
                           <div className="flex justify-center w-full">
                             <div className="w-1/5"></div>
-                            <div className="w-3/5">
+                            <div className="w-3/5 pb-2 pt-2 flex gap-2">
+                              {selectedRecords["issues"]?.length > 0 && (
+                                <>
+                                  {/* <Text c="blue" size="xs">
+                                    {`${selectedRecords["issues"]?.length} selected`}
+                                  </Text> */}
+                                  <BulkOperationsToolbar
+                                    include_components={[
+                                      {
+                                        action: "view",
+                                        entity_type: "selected_records",
+                                        type: "action",
+                                        record: activeTask,
+                                        onClick: bulkActionSelect,
+                                      },
+                                      {
+                                        action: "bulk_update",
+                                        entity_type: "selected_records",
+                                        type: "action",
+                                        record: activeTask,
+                                        onClick: bulkActionSelect,
+                                      },
+                                      {
+                                        action: "close",
+                                        entity_type: "selected_records",
+                                        type: "action",
+                                        record: activeTask,
+                                        onClick: bulkActionSelect,
+                                      },
+                                      {
+                                        action: "assign",
+                                        entity_type: "selected_records",
+                                        type: "action",
+                                        record: activeTask,
+                                        onClick: bulkActionSelect,
+                                      },
+                                      {
+                                        action: "delete",
+                                        entity_type: "selected_records",
+                                        type: "action",
+                                        record: activeTask,
+                                        onClick: bulkActionSelect,
+                                      },
+                                      {
+                                        action: "custom_actions",
+                                        entity_type: "selected_records",
+                                        type: "action",
+                                        record: activeTask,
+                                        onClick: bulkActionSelect,
+                                      },
+                                    ]}
+                                  ></BulkOperationsToolbar>
+                                </>
+                              )}
+
                               {activeTask &&
                                 focused_entities[activeTask?.id]?.["action"] ===
                                   "save" && (
@@ -824,7 +993,7 @@ const Layout = ({
                                   </div>
                                 )}
 
-                              {activeTask &&
+                              {/* {activeTask &&
                                 focused_entities[activeTask?.id]?.["action"] ===
                                   "search" && (
                                   <div className="w-full">
@@ -836,7 +1005,7 @@ const Layout = ({
                                       success_message_code="action_input_data_model_schema"
                                     />
                                   </div>
-                                )}
+                                )} */}
 
                               {activeTask &&
                                 focused_entities[activeTask?.id]?.["action"] ===
@@ -959,7 +1128,7 @@ const Layout = ({
                 }`}
                 style={{ height: "calc(100vh - 64px)" }}
               >
-                <Accordion defaultValue={["logs"]} multiple={true}>
+                <Accordion defaultValue={["action_input"]} multiple={true}>
                   <Accordion.Item key="state" value="state">
                     <Accordion.Control icon={<IconStackBack size={16} />}>
                       State <Breadcrumbs />
@@ -1012,6 +1181,55 @@ const Layout = ({
                           </p>
                         </div>
                       )}
+                    </Accordion.Panel>
+                  </Accordion.Item>
+
+                  <Accordion.Item key="action_input" value="action_input">
+                    <Accordion.Control icon={<IconForms size={16} />}>
+                      {focused_entities[activeTask?.id]?.["action"] || action}{" "}
+                      action input
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      {activeTask && (
+                        <div className="w-full">
+                          <ActionInputWrapper
+                            name={
+                              focused_entities[activeTask?.id]?.["action"] ||
+                              action
+                            }
+                            query_name="data_model"
+                            record={activeTask}
+                            action={
+                              focused_entities[activeTask?.id]?.["action"] ||
+                              action
+                            }
+                            success_message_code="action_input_data_model_schema"
+                          />
+                        </div>
+                      )}
+                      {/* <div>dynamic action input</div> */}
+                      {/* {activeTask ? (
+                        <div className="w-full">
+                          <ActionInputWrapper
+                            execution_record={activeTask}
+                            query_name="execution data model"
+                            record={{
+                              id: activeTask?.id,
+                            }}
+                            action={focused_entities["action_input"]?.action}
+                            focused_item="action_input"
+                            read_record_mode="local"
+                            success_message_code="action_input_data_model_schema"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-600 text-center">
+                            Prompts for your input required to successfully
+                            complete an action will dynamically appear here.
+                          </p>
+                        </div>
+                      )} */}
                     </Accordion.Panel>
                   </Accordion.Item>
 

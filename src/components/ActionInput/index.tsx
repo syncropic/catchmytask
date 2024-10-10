@@ -479,7 +479,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         {/* <div>{JSON.stringify(record)}</div> */}
         {/* <div>{JSON.stringify(extractDefaultValues(data_model))}</div> */}
 
-        <Accordion defaultValue={["main", "description"]} multiple={true}>
+        <Accordion
+          defaultValue={["main", "description", "on local data"]}
+          multiple={true}
+        >
           {Object.entries(
             Object.keys(schema?.properties)
               .sort((a, b) => {

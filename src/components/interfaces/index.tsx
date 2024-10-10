@@ -272,7 +272,7 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   // data_columns: ColumnDef<RowData>[];
   name?: string;
   tableInstance?: TanStackTable<T>;
-  data_items?: [];
+  data_items?: any[];
   nested_data_items?: T[];
   record?: any;
   resource_group: string;
@@ -305,7 +305,7 @@ export interface DataDisplayComponentProps<T extends Record<string, any>> {
   // data_columns: ColumnDef<RowData>[];
   // name?: string;
   // tableInstance?: TanStackTable<T>;
-  data_items: [];
+  data_items: any[];
   // record?: any;
   // resource_group: string;
   // execlude_components?: string[];
@@ -313,6 +313,7 @@ export interface DataDisplayComponentProps<T extends Record<string, any>> {
   // data_columns: T[];
   data_fields: T[];
   action?: any;
+  resource_group?: string;
   // invalidate_queries_on_submit_success?: string[];
   // session?: ISession;
   // // initialStateColumnPinningLeft: string[];
@@ -1021,6 +1022,7 @@ export interface SearchInputComponentProps<T extends Record<string, any>> {
   disabled?: boolean;
   include_action_icons?: string[];
   schema?: any;
+  size?: string;
 }
 
 export interface GlobalSearchInputComponentProps<

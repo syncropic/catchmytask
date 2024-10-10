@@ -50,6 +50,7 @@ import { MRT_ColumnDef } from "mantine-react-table";
 import { useEffect, useMemo, useRef, useState } from "react";
 import DateTime from "src/components/DateTime";
 import { useAppStore } from "src/store";
+import { dropTableIfExists, saveToLocalDB } from "src/local_db";
 import { localDb } from "src/localDb";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDateTime, getCellStyleInline } from "src/utils";
@@ -1056,17 +1057,54 @@ export function useQueryByState(state: any) {
   return { data, isLoading, error, isError };
 }
 
+// export function useReadByState(state: any) {
+//   // const variables = state;
+//   const { runtimeConfig: config } = useAppStore();
+
+//   const { data, isLoading, error, isError, refetch } = useCustom({
+//     url: `${config?.API_URL}/read`,
+//     method: "post",
+//     config: {
+//       payload: {
+//         ...state,
+//       },
+//     },
+//     queryOptions: {
+//       queryKey: [
+//         `readByState_${JSON.stringify({
+//           success_message_code: state?.success_message_code,
+//         })}`,
+//       ],
+//       onSuccess: (data) => {
+//         console.log("success data", data);
+//       },
+//       onError: (error) => {
+//         console.log("error", error);
+//       },
+//     },
+//   });
+
+//   return { data, isLoading, error, isError, refetch };
+// }
+
 export function useReadByState(state: any) {
-  // const variables = state;
-  const { runtimeConfig: config } = useAppStore();
+  const {
+    runtimeConfig: config,
+    local_db,
+    setLocalDB,
+    updateLocalDB,
+  } = useAppStore();
+
+  // State variables for LocalDB operation statuses
+  const [isLocalDBLoading, setIsLocalDBLoading] = useState(false);
+  const [isLocalDBSuccess, setIsLocalDBSuccess] = useState(false);
+  const [localDBError, setLocalDBError] = useState(null);
 
   const { data, isLoading, error, isError, refetch } = useCustom({
     url: `${config?.API_URL}/read`,
     method: "post",
     config: {
-      payload: {
-        ...state,
-      },
+      payload: { ...state },
     },
     queryOptions: {
       queryKey: [
@@ -1074,10 +1112,110 @@ export function useReadByState(state: any) {
           success_message_code: state?.success_message_code,
         })}`,
       ],
+      onSuccess: async (fetchedData) => {
+        // console.log("Fetched data successfully:", fetchedData);
+        // table name is the success message code
+        let tableName = state.success_message_code;
+
+        // Extract data_items and data_fields from the fetched data
+        const dataRecord = fetchedData?.data?.find(
+          (item: any) => item?.message?.code === state.success_message_code
+        );
+
+        const data_items = dataRecord?.data || [];
+        const data_fields = (dataRecord?.data_fields || []).map(
+          (field: any) => ({
+            name: field?.name,
+            data_type: field?.data_type,
+          })
+        );
+
+        // Save to DuckDB local_db
+        if (data_items.length > 0 && data_fields.length > 0) {
+          setIsLocalDBLoading(true);
+          setLocalDBError(null);
+          setIsLocalDBSuccess(false);
+          // Update the state with functional updates
+          // setLocalDB((prevLocalDB) => ({
+          //   ...prevLocalDB,
+          //   [tableName]: {
+          //     isLocalDBLoading: true,
+          //     isLocalDBSuccess: false,
+          //     localDBError: null,
+          //   },
+          // }));
+          let item = {
+            isLocalDBLoading: true,
+            isLocalDBSuccess: false,
+            localDBError: null,
+          };
+          updateLocalDB(tableName, item);
+          // console.log("Local DB item init:", item);
+
+          try {
+            await dropTableIfExists(tableName);
+            await saveToLocalDB(data_items, tableName, data_fields);
+            console.log("Data saved to DuckDB successfully");
+            setIsLocalDBSuccess(true);
+            let success_item = {
+              isLocalDBLoading: false,
+              isLocalDBSuccess: true,
+              localDBError: null,
+            };
+            updateLocalDB(tableName, success_item);
+            // console.log(
+            //   `Local DB item success item: ${tableName}`,
+            //   success_item
+            // );
+            // setLocalDB(item);
+            // let success_merged = { ...local_db, ...success_item };
+            // console.log("Local DB item success item:", success_item);
+            // setLocalDB(local_db_item);
+            // console.log("Local DB item success:", tableName, local_db_item);
+            // success message code
+            // console.log("Data saved to Table:", tableName);
+            // console.log("Data saved to DuckDB:", data_items);
+            // console.log("Data fields:", data_fields);
+          } catch (error) {
+            console.error("Error saving data to DuckDB:", error);
+            setLocalDBError(error as any);
+            // setLocalDB({
+            //   ...local_db,
+            //   [tableName]: {
+            //     isLocalDBLoading: false,
+            //     isLocalDBSuccess: false,
+            //     localDBError: error,
+            //   },
+            // });
+          } finally {
+            setIsLocalDBLoading(false);
+            // setLocalDB({
+            //   ...local_db,
+            //   [tableName]: {
+            //     isLocalDBLoading: false,
+            //     isLocalDBSuccess: false,
+            //     localDBError: null,
+            //   },
+            // });
+          }
+        }
+      },
+      onError: (fetchError) => {
+        console.log("Error fetching data:", fetchError);
+      },
     },
   });
 
-  return { data, isLoading, error, isError, refetch };
+  return {
+    data,
+    isLoading,
+    error,
+    isError,
+    refetch,
+    isLocalDBLoading,
+    isLocalDBSuccess,
+    localDBError,
+  };
 }
 
 export function useReadRecordByState(state: any) {
@@ -2392,4 +2530,10 @@ export function extractLabelsFromDefaults(defaultValues: any) {
   }
 
   return labelValues;
+}
+
+export function isAllLocalDBSuccess(localDBState: any) {
+  return Object.values(localDBState).every(
+    (item: any) => item.isLocalDBSuccess === true
+  );
 }
