@@ -1157,23 +1157,26 @@ const Layout = ({
                       action input
                     </Accordion.Control>
                     <Accordion.Panel>
-                      {activeTask && (
-                        <div className="w-full">
-                          <ActionInputWrapper
-                            name={
-                              focused_entities[activeTask?.id]?.["action"] ||
-                              action
-                            }
-                            query_name="data_model"
-                            record={activeTask}
-                            action={
-                              focused_entities[activeTask?.id]?.["action"] ||
-                              action
-                            }
-                            success_message_code="action_input_data_model_schema"
-                          />
-                        </div>
-                      )}
+                      {activeTask &&
+                        !["save"]?.includes(
+                          focused_entities[activeTask?.id]?.["action"] || action
+                        ) && (
+                          <div className="w-full">
+                            <ActionInputWrapper
+                              name={
+                                focused_entities[activeTask?.id]?.["action"] ||
+                                action
+                              }
+                              query_name="data_model"
+                              record={activeTask}
+                              action={
+                                focused_entities[activeTask?.id]?.["action"] ||
+                                action
+                              }
+                              success_message_code="action_input_data_model_schema"
+                            />
+                          </div>
+                        )}
                     </Accordion.Panel>
                   </Accordion.Item>
 

@@ -84,7 +84,8 @@ import RecordsActionWrapper from "@components/RecordsAction";
 import Board from "@components/Board";
 
 import dynamic from "next/dynamic";
-import { initializeLocalDB } from "src/local_db";
+// import { initializeLocalDB } from "src/local_db";
+import { useDuckDB } from "pages/_app";
 
 // Dynamically import Nivo components to support ESM
 const ResponsivePie = dynamic(
@@ -164,6 +165,7 @@ export function DataDisplay<T extends Record<string, any>>({
 DataDisplayComponentProps<T>) {
   // const { ref, width } = useElementSize();
   // const [isLarge, setIsLarge] = useState(true);
+
   const { focused_entities, selectedRecords, fields, setFields } =
     useAppStore();
 
@@ -309,6 +311,7 @@ const SummaryComponent = ({
   entity_type?: string;
 }) => {
   // let selected_record_items_key = `${action}_action_input_${record?.id}`;
+  const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
 
   const { activeTask, selectedRecords, local_db } = useAppStore();
   const actionInputId =
@@ -393,7 +396,7 @@ const SummaryComponent = ({
     // console.log("tableName", tableName);
     // console.log("allLocalDBSuccess", allLocalDBSuccess);
     const fetchFromDuckDB = async () => {
-      if (allLocalDBSuccess && selectedActionSteps) {
+      if (allLocalDBSuccess && selectedActionSteps && dbInstance) {
         // let data_fields =
         //   data?.data?.find(
         //     (item: any) => item?.message?.code === record?.success_message_code
@@ -405,7 +408,7 @@ const SummaryComponent = ({
         // setDataFields(data_fields);
         const results = [];
         try {
-          const conn = await initializeLocalDB();
+          // const conn = await initializeLocalDB();
           console.log("allLocalDBSuccess", allLocalDBSuccess);
           console.log("selectedActionSteps", selectedActionSteps);
           // filter only selected action steps when succcess_message_code is 'items_payment_analysis'
@@ -436,7 +439,7 @@ const SummaryComponent = ({
                 `Checking if table exists: ${tableName} // ${checkTableQuery}`
               );
 
-              const tableCheckResult = await conn.query(checkTableQuery);
+              const tableCheckResult = await dbInstance.query(checkTableQuery);
               const tableExists = tableCheckResult.toArray()[0]?.count > 0;
 
               if (!tableExists) {
@@ -450,7 +453,7 @@ const SummaryComponent = ({
                 `Executing query for table: ${tableName} // ${query}`
               );
 
-              const result = await conn.query(query);
+              const result = await dbInstance.query(query);
               let count = result.toArray()[0]?.count || 0;
 
               // Convert count to a regular number if it is a BigInt
@@ -479,7 +482,7 @@ const SummaryComponent = ({
       }
     };
     fetchFromDuckDB();
-  }, [selectedActionSteps, allLocalDBSuccess]);
+  }, [selectedActionSteps, allLocalDBSuccess, dbInstance]);
 
   // console.log("allLocalDBSuccess", allLocalDBSuccess);
   // console.log("selectedActionSteps", selectedActionSteps);

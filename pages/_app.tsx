@@ -17,6 +17,7 @@ import { accessControlProvider } from "src/access-control-provider";
 import BaseLayout from "src/components/Layout";
 import defaultApiDataProvider from "../src/default-api-provider";
 import { Avatar, createTheme, MantineProvider } from "@mantine/core";
+import { initializeLocalDB, saveDatabaseToLocalStorage } from "src/local_db";
 // import config from "src/config";
 // core styles are required for all packages
 // import "@mantine/core/styles.css";
@@ -43,7 +44,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { registerLicense } from "@syncfusion/ej2-base";
 // import { useRuntimeConfig } from "@components/Utils";
 import { useAppStore } from "src/store";
-import { useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 // Registering Syncfusion license key
 registerLicense(
@@ -103,6 +104,12 @@ type ExtendedAppProps = AppProps & {
   Component: ExtendedNextPage;
 };
 
+// Create a context for the DuckDB instance
+const DuckDBContext = createContext<any>(null);
+
+// Custom hook to use the DuckDB context
+export const useDuckDB = () => useContext(DuckDBContext);
+
 const App = (props: React.PropsWithChildren) => {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -112,6 +119,26 @@ const App = (props: React.PropsWithChildren) => {
   const { activeSession, activeApplication, activeTask, colorScheme } =
     useAppStore();
   const go = useGo();
+
+  const [dbInstance, setDbInstance] = useState<any>(null);
+
+  useEffect(() => {
+    // Initialize DuckDB instance once
+    const initializeDB = async () => {
+      const db = await initializeLocalDB();
+      setDbInstance(db);
+    };
+
+    initializeDB();
+
+    // Save the database state to local storage on page unload
+    window.addEventListener("beforeunload", saveDatabaseToLocalStorage);
+
+    // Clean up event listener on component unmount
+    return () => {
+      window.removeEventListener("beforeunload", saveDatabaseToLocalStorage);
+    };
+  }, []);
 
   useEffect(() => {
     fetchRuntimeConfig();
@@ -232,60 +259,61 @@ const App = (props: React.PropsWithChildren) => {
 
   return (
     <>
-      <MantineProvider
-        theme={theme}
-        defaultColorScheme={colorScheme?.scheme || "auto"}
-      >
-        <Notifications position="top-right" />
-        <Refine
-          routerProvider={routerProvider}
-          dataProvider={{
-            default: defaultApiDataProvider(API_URL, getToken, getStateIds),
-          }}
-          notificationProvider={useNotificationProvider}
-          authProvider={authProvider}
-          accessControlProvider={accessControlProvider}
-          resources={[
-            {
-              name: "home",
-              list: "/home",
-            },
-            {
-              name: "profile",
-              list: "/profile",
-            },
-            {
-              name: "applications",
-              list: "/applications",
-              create: "/applications/create",
-              edit: "/applications/edit/:id",
-              show: "/applications/show/:id",
-            },
-
-            {
-              name: "sessions",
-              list: "/sessions",
-              create: "/:applicationId/sessions/create",
-              edit: "/:applicationId/sessions/:id/edit",
-              show: "/:applicationId/sessions/:sessionId/tasks/:taskId",
-            },
-            {
-              name: "tasks",
-              list: "/tasks",
-              show: "/tasks/show/:id",
-            },
-          ]}
-          options={{
-            syncWithLocation: true,
-            warnWhenUnsavedChanges: true,
-            projectId: "OpGcqe-gAGTnn-eW9pDg",
-          }}
+      <DuckDBContext.Provider value={dbInstance}>
+        <MantineProvider
+          theme={theme}
+          defaultColorScheme={colorScheme?.scheme || "auto"}
         >
-          {/* <div>
+          <Notifications position="top-right" />
+          <Refine
+            routerProvider={routerProvider}
+            dataProvider={{
+              default: defaultApiDataProvider(API_URL, getToken, getStateIds),
+            }}
+            notificationProvider={useNotificationProvider}
+            authProvider={authProvider}
+            accessControlProvider={accessControlProvider}
+            resources={[
+              {
+                name: "home",
+                list: "/home",
+              },
+              {
+                name: "profile",
+                list: "/profile",
+              },
+              {
+                name: "applications",
+                list: "/applications",
+                create: "/applications/create",
+                edit: "/applications/edit/:id",
+                show: "/applications/show/:id",
+              },
+
+              {
+                name: "sessions",
+                list: "/sessions",
+                create: "/:applicationId/sessions/create",
+                edit: "/:applicationId/sessions/:id/edit",
+                show: "/:applicationId/sessions/:sessionId/tasks/:taskId",
+              },
+              {
+                name: "tasks",
+                list: "/tasks",
+                show: "/tasks/show/:id",
+              },
+            ]}
+            options={{
+              syncWithLocation: true,
+              warnWhenUnsavedChanges: true,
+              projectId: "OpGcqe-gAGTnn-eW9pDg",
+            }}
+          >
+            {/* <div>
             MYAPP //{" "}
             {JSON.stringify(session?.token?.account?.providerAccountId)}
           </div> */}
-          {/* <button
+            {/* <button
             onClick={() =>
               signOut({
                 redirect: true,
@@ -295,15 +323,16 @@ const App = (props: React.PropsWithChildren) => {
           >
             logout
           </button> */}
-          {router.pathname === "/login" && <div>{props.children}</div>}
-          {router.pathname !== "/login" && (
-            <BaseLayout>{props.children}</BaseLayout>
-          )}
+            {router.pathname === "/login" && <div>{props.children}</div>}
+            {router.pathname !== "/login" && (
+              <BaseLayout>{props.children}</BaseLayout>
+            )}
 
-          <DocumentTitleHandler handler={customTitleHandler} />
-          <ReactQueryDevtools initialIsOpen={false} />
-        </Refine>
-      </MantineProvider>
+            <DocumentTitleHandler handler={customTitleHandler} />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </Refine>
+        </MantineProvider>
+      </DuckDBContext.Provider>
     </>
   );
 };

@@ -5,7 +5,7 @@ import { useReadByState } from "@components/Utils";
 import { useAppStore } from "src/store";
 import { Text } from "@mantine/core";
 import { useEffect, useState } from "react";
-import { initializeLocalDB } from "src/local_db";
+import { useDuckDB } from "pages/_app"; // Import the useDuckDB hook
 
 interface ActionStepResultsProps {
   record?: any;
@@ -140,18 +140,18 @@ export function ActionStepResults({
     activeApplication,
     activeSession,
   } = useAppStore();
+  const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
 
-  // const { globalQuery } = useGlobalQueryStore();
   let tableName = record?.success_message_code;
-
   const actionInputId = record?.id || "data_models:heblllgdhsuyfzpkg2tl";
   const action_input_form_values_key = `action_input_${actionInputId}`;
   const task_action_input_form_values_key = `action_input_${activeTask?.id}`;
+
   let globalQuery =
     action_input_form_values[`${task_action_input_form_values_key}`]?.query ||
     null;
+
   let state = {
-    // global_variables: global_variables,
     success_message_code: record?.success_message_code,
     id: record?.id,
     action_steps: [record],
@@ -170,60 +170,40 @@ export function ActionStepResults({
     input_values:
       action_input_form_values[`${action_input_form_values_key}`] || {},
     include_action_steps: [record?.execution_order || 0],
-    // input_values: action_input_form_values?.action_input || {},
   };
+
   const { data, isLoading, error, refetch, isLocalDBSuccess } =
     useReadByState(state);
 
-  // Local state to store fetched data from DuckDB
-  // const [dataItems, setDataItems] = useState([]);
-  // const [dataFields, setDataFields] = useState([]);
-  // const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState(null as any);
-  // Use the useReadByState function to fetch data
-  // const { data, isLoading, error, refetch } = useReadByState(state);
-
-  // State to store filtered data from DuckDB
   const [dataItems, setDataItems] = useState<[]>([]);
   const [dataFields, setDataFields] = useState<[]>([]);
 
-  // Effect to trigger DuckDB query whenever globalQuery or tableName changes
   useEffect(() => {
-    // console.log("globalQuery", globalQuery);
-    // console.log("tableName", tableName);
-    // console.log("data", data);
     const fetchFromDuckDB = async () => {
-      if (data && isLocalDBSuccess) {
+      if (dbInstance && data && isLocalDBSuccess) {
         let data_fields =
           data?.data?.find(
             (item: any) => item?.message?.code === record?.success_message_code
           )?.data_fields || [];
-        // console.log("globalQuery", globalQuery);
-        // console.log("tableName", tableName);
-        // console.log("data", data);
-        // console.log("data_fields", data_fields);
         setDataFields(data_fields);
+
         try {
-          const conn = await initializeLocalDB();
-          // Set the max expression depth to a higher value
-          // await conn.query("SET max_expression_depth TO 1000");
-          let query = globalQuery
+          const query = globalQuery
             ? `SELECT * FROM ${tableName} WHERE ${globalQuery}`
             : `SELECT * FROM ${tableName}`;
           console.log("Executing DuckDB query:", query);
-          const result = await conn.query(query);
-          // console.log("DuckDB query result:", result);
-          // Use the data fields from the fetched data
+
+          // Execute the query using the DuckDB instance
+          const result = await dbInstance.query(query);
           setDataItems(result.toArray());
-          // close the connection
-          // conn.close();
         } catch (err) {
           console.error("Error querying DuckDB:", err);
         }
       }
     };
+
     fetchFromDuckDB();
-  }, [globalQuery, tableName, data, isLocalDBSuccess]);
+  }, [dbInstance, globalQuery, tableName, data, isLocalDBSuccess]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -237,12 +217,6 @@ export function ActionStepResults({
 
   return (
     <>
-      {/* <div>{action_input_form_values_key}</div> */}
-      {/* <div>{globalQuery}</div> */}
-      {/* {JSON.stringify(isLocalDBSuccess)} */}
-      {/* {JSON.stringify(dataFields)}
-      {JSON.stringify(dataItems)} */}
-
       {dataFields && dataItems && (
         <DataDisplay
           data_items={dataItems || []}

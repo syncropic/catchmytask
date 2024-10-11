@@ -21,6 +21,7 @@ import TaskList from "@tiptap/extension-task-list";
 import styles from "./NaturalLanguageEditor.module.css";
 import suggestion from "./suggestion";
 import SearchInput from "@components/SearchInput";
+import { useEffect } from "react";
 
 // import "./styles.scss";
 
@@ -118,30 +119,38 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
     },
   });
 
-  let actions = [
-    {
-      label: "Templates",
-      name: "select_template",
-      icon: "IconLibrary",
-      disabled: false,
-    },
-  ];
+  // Add useEffect to update editor content when value prop changes
+  useEffect(() => {
+    if (editor && value) {
+      // Update the editor content when the value prop changes
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
 
-  const iconMapping: { [key: string]: JSX.Element } = {
-    IconScribble: <IconScribble stroke={1.5} size="1rem" />,
-    IconFiles: <IconFiles stroke={1.5} size="1rem" />,
-    IconPaperclip: <IconPaperclip stroke={1.5} size="1rem" />,
-    IconMicrophone: <IconMicrophone stroke={1.5} size="1rem" />,
-    IconVideo: <IconVideo stroke={1.5} size="1rem" />,
-    IconCamera: <IconCamera stroke={1.5} size="1rem" />,
-    IconLibrary: <IconLibrary stroke={1.5} size="1rem" />,
-    IconBaseline: <IconBaseline stroke={1.5} size="1rem" />,
-    IconClearFormatting: <IconClearFormatting stroke={1.5} size="1rem" />,
-    IconCode: <IconCode stroke={1.5} size="1rem" />,
-  };
+  // let actions = [
+  //   {
+  //     label: "Templates",
+  //     name: "select_template",
+  //     icon: "IconLibrary",
+  //     disabled: false,
+  //   },
+  // ];
 
-  const canSubmit = form.useStore((state: any) => state.canSubmit);
-  const isSubmitting = form.useStore((state: any) => state.isSubmitting);
+  // const iconMapping: { [key: string]: JSX.Element } = {
+  //   IconScribble: <IconScribble stroke={1.5} size="1rem" />,
+  //   IconFiles: <IconFiles stroke={1.5} size="1rem" />,
+  //   IconPaperclip: <IconPaperclip stroke={1.5} size="1rem" />,
+  //   IconMicrophone: <IconMicrophone stroke={1.5} size="1rem" />,
+  //   IconVideo: <IconVideo stroke={1.5} size="1rem" />,
+  //   IconCamera: <IconCamera stroke={1.5} size="1rem" />,
+  //   IconLibrary: <IconLibrary stroke={1.5} size="1rem" />,
+  //   IconBaseline: <IconBaseline stroke={1.5} size="1rem" />,
+  //   IconClearFormatting: <IconClearFormatting stroke={1.5} size="1rem" />,
+  //   IconCode: <IconCode stroke={1.5} size="1rem" />,
+  // };
+
+  // const canSubmit = form.useStore((state: any) => state.canSubmit);
+  // const isSubmitting = form.useStore((state: any) => state.isSubmitting);
 
   return (
     <RichTextEditor editor={editor}>
@@ -181,7 +190,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
 
       <RichTextEditor.Content />
       <RichTextEditor.Toolbar>
-        <RichTextEditor.ControlsGroup>
+        {/* <RichTextEditor.ControlsGroup>
           <SearchInput
             placeholder="templates"
             // description="tasks"
@@ -198,7 +207,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
               },
             ]}
           />
-        </RichTextEditor.ControlsGroup>
+        </RichTextEditor.ControlsGroup> */}
         {/* <RichTextEditor.ControlsGroup>
           <Tooltip label="Run">
             <RichTextEditor.Control

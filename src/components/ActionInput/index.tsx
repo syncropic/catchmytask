@@ -36,9 +36,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
 import MonacoEditor from "@components/MonacoEditor";
 import ExternalSubmitButton from "@components/SubmitButton";
-import { initializeLocalDB } from "src/local_db";
+// import { initializeLocalDB } from "src/local_db";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { useDuckDB } from "pages/_app";
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
   return (
@@ -64,6 +65,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const queryClient = useQueryClient();
   const { data: identity } = useGetIdentity<IIdentity>();
   const { setFormSubmitHandler, setFormInstance } = useTransientStore();
+  const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
 
   // Generate the ID once and persist it across re-renders
   // const generatedIdRef = useRef(uuidv4());
@@ -199,10 +201,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         // alert(JSON.stringify(value));
         const fetchFromDuckDB = async () => {
           try {
-            const conn = await initializeLocalDB();
+            // const conn = await initializeLocalDB();
             // let downloadQuery = "SELECT * FROM issues";
             let downloadQuery = value?.save_query;
-            const downloadResult = await conn.query(downloadQuery);
+            const downloadResult = await dbInstance.query(downloadQuery);
 
             // Debugging logs
             console.log("Download result:", downloadResult);
@@ -461,6 +463,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     },
   });
 
+  const [templateUpdate, setTemplateUpdate] = useState(0);
+
   const debouncedLog = debounce((values) => {
     // let form_input_values: { [key: string]: any } = {};
     // form_input_values[`${data_model?.name}_${record?.id || generatedId}`] =
@@ -490,26 +494,81 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     };
   }, [form.store, debouncedLog]);
 
+  // if a template field value changes, read the record from the server and update the form values
+  // Fetch the template using the existing hook
+  // Use useRef to store the previous value of the template
+  // const previousTemplateValue = useRef<string | null>(null);
+
+  // Extract the current template value from the form's state
+  const currentTemplateValue = form.store.state.values.template;
+
+  // Define the read record state for fetching the template
+  let read_template_state = {
+    credential: "surrealdb catchmytask dev",
+    success_message_code: currentTemplateValue,
+    record: { id: currentTemplateValue },
+    read_record_mode: "remote",
+  };
+
+  // Fetch the template using the existing hook
+  const {
+    data: templateData,
+    isLoading: templateIsLoading,
+    error: templateError,
+  } = useReadRecordByState(read_template_state);
+
+  useEffect(() => {
+    // Only make the call if the template value has changed and is not null/undefined
+    if (currentTemplateValue) {
+      // Update the previous template value
+      // previousTemplateValue.current = currentTemplateValue;
+
+      // Check if data is fully fetched and available
+      if (templateData && !templateIsLoading && !templateError) {
+        const templateRecord = templateData?.data?.find(
+          (item: any) => item?.message?.code === currentTemplateValue
+        )?.data[0];
+
+        if (templateRecord) {
+          console.log(
+            "Fetched Template data before setting form values:",
+            templateRecord
+          );
+          // form.setFieldValue("name", templateRecord.name ?? "");
+          // form.setFieldValue("query", templateRecord.query ?? "");
+          // setTemplateUpdate((prev) => prev + 1);
+          // set field values in bulk
+          let keysToExclude = [
+            "id",
+            "author_id",
+            "created_datetime",
+            "updated_datetime",
+            "deleted_datetime",
+            "added_datetime",
+            "author",
+            "entity_type",
+          ];
+          Object.entries(templateRecord).forEach(([key, value]) => {
+            if (!keysToExclude.includes(key)) {
+              form.setFieldValue(key, value);
+            }
+          });
+        }
+      } else if (templateError) {
+        console.error("Error fetching template data:", templateError);
+      }
+    }
+  }, [
+    currentTemplateValue,
+    templateData,
+    templateIsLoading,
+    templateError,
+    form,
+  ]);
+
   if (!data_model) return <div>No data model </div>;
   const { schema } = data_model;
 
-  // useEffect(() => {
-  //   // Instead of setting the form instance, track isSubmitting directly or ensure store is updated
-  //   setFormSubmitHandler(formId, form.handleSubmit);
-  //   setFormInstance(formId, form); // This is fine if you need to store form instance
-
-  //   return () => {
-  //     // Cleanup when the form is unmounted
-  //     setFormSubmitHandler(formId, undefined);
-  //     setFormInstance(formId, undefined); // Also clear the form instance to avoid stale data
-  //   };
-  // }, [
-  //   form,
-  //   action, // Should track only necessary dependencies
-  //   actionInputId,
-  //   setFormSubmitHandler,
-  //   setFormInstance,
-  // ]);
   // Use useRef to keep a reference to the form instance
   const formRef = useRef(form);
 
@@ -535,33 +594,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   // if data_model use the data_model.schema.required as the default include_items
   include_items = schema?.required || [];
 
-  // if (focused_item === "action_input") {
-  //   include_items =
-  //     focused_entities["action_input"]?.["execute_mode"]?.["include_items"] ||
-  //     [];
-  // } else if (data_model?.name === "task") {
-  //   include_items = [
-  //     "description",
-  //     "author_id",
-  //     "profile_id",
-  //     "id",
-  //     "name",
-  //     "include_execution_orders",
-  //     "high_level_plan",
-  //   ];
-  // } else if (data_model?.name === "fields") {
-  //   include_items = ["fields"];
-  // } else if (
-  //   !focused_entities[record?.id]?.[`${action}_mode`] &&
-  //   focused_entities[record?.id]?.["query_mode"]
-  // ) {
-  //   include_items =
-  //     focused_entities[record?.id]?.["query_mode"]?.["include_items"] || [];
-  // } else {
-  //   include_items =
-  //     focused_entities[record?.id]?.[`${action}_mode`]?.["include_items"] || [];
-  // }
-
   return (
     <>
       <form
@@ -571,6 +603,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           form.handleSubmit();
         }}
       >
+        {/* Include templateUpdate to force re-render */}
+        {/* <div>Template Update Count: {templateUpdate}</div> */}
         {/* <MonacoEditor
           value={{
             formId: formId,
@@ -602,10 +636,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         {/* <div>{JSON.stringify(record)}</div> */}
         {/* <div>{JSON.stringify(extractDefaultValues(data_model))}</div> */}
 
-        <Accordion
-          defaultValue={["main", "description", "on local data"]}
-          multiple={true}
-        >
+        <Accordion defaultValue={["main", "on local data"]} multiple={true}>
           {Object.entries(
             Object.keys(schema?.properties)
               .sort((a, b) => {

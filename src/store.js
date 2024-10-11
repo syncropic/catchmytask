@@ -28,27 +28,6 @@ export const useTransientStore = create((set) => ({
         },
       },
     })),
-
-  // Remove a form from the store
-  // removeForm: (formId) =>
-  //   set((state) => {
-  //     const newForms = { ...state.forms };
-  //     delete newForms[formId];
-  //     return { forms: newForms };
-  //   }),
-
-  // // Retrieve the submit handler for a specific form
-  // getFormSubmitHandler: (formId) => (state) =>
-  //   state.forms?.[formId]?.submitForm || null,
-
-  // // Retrieve the form instance for a specific form
-  // getFormInstance: (formId) => (state) =>
-  //   state.forms?.[formId]?.formInstance || null,
-
-  // // Example non-persisted state (you can add more)
-  // nonPersistedState: null,
-  // setNonPersistedState: (stateValue) =>
-  //   set((state) => ({ nonPersistedState: stateValue })),
 }));
 
 export const useAppStore = create(
@@ -324,6 +303,13 @@ export const useAppStore = create(
           name: "actions",
           description: "actions",
           entity_type: "actions",
+          is_selected: true,
+        },
+        {
+          id: 18,
+          name: "views",
+          description: "views",
+          entity_type: "views",
           is_selected: true,
         },
       ],

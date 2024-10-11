@@ -1,9 +1,14 @@
 // services/local_db.js
-// services/local_db.js
 import * as duckdb from "@duckdb/duckdb-wasm";
 
 let localDBConnection = null;
+let dbInstance = null;
 
+/**
+ * Initializes the DuckDB instance if not already initialized.
+ * If a saved state exists in local storage, it loads the database from the saved state.
+ * @returns {Promise<any>} The DuckDB connection instance.
+ */
 export async function initializeLocalDB() {
   if (!localDBConnection) {
     try {
@@ -21,20 +26,58 @@ export async function initializeLocalDB() {
       // Initialize the asynchronous version of DuckDB-Wasm
       const worker = new Worker(worker_url);
       const logger = new duckdb.ConsoleLogger();
-      const db = new duckdb.AsyncDuckDB(logger, worker);
+      dbInstance = new duckdb.AsyncDuckDB(logger, worker);
 
       // Instantiate the database with the Wasm bundle
-      await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-      localDBConnection = await db.connect();
+      await dbInstance.instantiate(bundle.mainModule, bundle.pthreadWorker);
 
       // Revoke the worker URL to avoid memory leaks
       URL.revokeObjectURL(worker_url);
+
+      // Check if there is a saved database state in local storage
+      const savedDatabase = localStorage.getItem("duckdb_database");
+      if (savedDatabase) {
+        // Load the saved state into the database
+        await dbInstance.loadFromBuffer(
+          new Uint8Array(JSON.parse(savedDatabase))
+        );
+        console.log("DuckDB database loaded from local storage.");
+      }
+
+      localDBConnection = await dbInstance.connect();
     } catch (error) {
       console.error("Error initializing DuckDB-Wasm:", error);
       throw error;
     }
   }
   return localDBConnection;
+}
+
+/**
+ * Saves the current state of the DuckDB database to local storage.
+ */
+export async function saveDatabaseToLocalStorage() {
+  if (dbInstance) {
+    try {
+      // Save the current state of the database to a buffer
+      const buffer = await dbInstance.serialize();
+      localStorage.setItem(
+        "duckdb_database",
+        JSON.stringify(Array.from(buffer))
+      );
+      console.log("DuckDB database state saved to local storage.");
+    } catch (error) {
+      console.error("Error saving DuckDB database to local storage:", error);
+    }
+  }
+}
+
+/**
+ * Clears the DuckDB database state from local storage.
+ */
+export function clearDatabaseFromLocalStorage() {
+  localStorage.removeItem("duckdb_database");
+  console.log("DuckDB database state cleared from local storage.");
 }
 
 const typeMapping = {
@@ -51,6 +94,12 @@ const typeMapping = {
   unknown: "VARCHAR",
 };
 
+/**
+ * Saves data to the DuckDB instance, creating a table if it doesn't already exist.
+ * @param {Array} data - The data to be inserted.
+ * @param {string} tableName - The name of the table.
+ * @param {Array} dataFields - The fields that define the structure of the table.
+ */
 export async function saveToLocalDB(data, tableName, dataFields) {
   const conn = await initializeLocalDB();
 
@@ -142,12 +191,13 @@ export async function saveToLocalDB(data, tableName, dataFields) {
   }
 }
 
-// function to drop table if exists
+/**
+ * Drops a table if it exists in the DuckDB instance.
+ * @param {string} tableName - The name of the table to drop.
+ */
 export async function dropTableIfExists(tableName) {
   const conn = await initializeLocalDB();
   const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
   await conn.query(dropQuery);
   console.log(`Table dropped successfully: ${tableName}`);
-  // close the connection
-  // await conn.close();
 }
