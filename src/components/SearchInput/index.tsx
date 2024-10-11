@@ -26,7 +26,8 @@ function SearchInput<T extends Record<string, any>>({
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [autocompleteData, setAutocompleteData] = useState<any[]>([]);
   const abortController = useRef<AbortController>();
-  const { searchFilters } = useAppStore();
+  const { searchFilters, activeTask, activeApplication, activeSession } =
+    useAppStore();
   const navigate = useNavigation();
 
   const globalActiveFilters = searchFilters.filter(
@@ -52,8 +53,10 @@ function SearchInput<T extends Record<string, any>>({
   const state = {
     query_name: "search",
     search_term: debouncedQuery,
-    success_message_code,
-    // filters: selected_filters,
+    success_message_code: success_message_code,
+    session_id: activeSession?.id,
+    task_id: activeTask?.id,
+    application_id: activeApplication?.id,
     tables: selected_filters
       .map((filter: { entity_type: any }) => filter.entity_type)
       .join(", "),
@@ -180,6 +183,8 @@ function SearchInput<T extends Record<string, any>>({
 
   return (
     <div className="flex items-end w-full space-x-2">
+      {/* {JSON.stringify(state)} */}
+      {/* {JSON.stringify(selected_filters)} */}
       <div className="flex-grow">
         <Autocomplete
           value={query}
