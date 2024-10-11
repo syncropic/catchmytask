@@ -277,15 +277,15 @@ DataDisplayComponentProps<T>) {
 
 export default DataDisplay;
 
-interface RecordData {
-  id: string;
-  name: string;
-  execution_order: number;
-  // streetAddress: string;
-  // city: string;
-  // state: string;
-  // missionStatement: string;
-}
+// interface RecordData {
+//   id: string;
+//   name: string;
+//   execution_order: number;
+//   // streetAddress: string;
+//   // city: string;
+//   // state: string;
+//   // missionStatement: string;
+// }
 export const ListEditorFormInput = ({ ...props }: any) => {
   // const transformedRecords = props?.value?.map((item: string, index: any) => ({
   //   id: uuidv4(), // Generate a unique ID for each item
@@ -297,7 +297,7 @@ export const ListEditorFormInput = ({ ...props }: any) => {
   // const [records, setRecords] = useState<RecordData[]>(transformedRecords);
   // const { selectedRecords, setSelectedRecords } = useAppStore();
 
-  const [records, setRecords] = useState<RecordData[]>([]); // Initialize with an empty array
+  const [records, setRecords] = useState<any[]>([]); // Initialize with an empty array
   const { selectedRecords, setSelectedRecords } = useAppStore();
 
   // Update records whenever props.value changes
@@ -308,6 +308,10 @@ export const ListEditorFormInput = ({ ...props }: any) => {
         ...item,
         id: item?.name.replace(/ /g, "_"),
       }));
+      // sort by execution order
+      transformedRecords.sort((a: any, b: any) =>
+        a.execution_order > b.execution_order ? 1 : -1
+      );
       setRecords(transformedRecords); // Update state with transformed records
       // console.log("transformedRecords", transformedRecords);
     }
@@ -353,7 +357,7 @@ export const ListEditorFormInput = ({ ...props }: any) => {
     setSelectedRecords({});
   };
 
-  const columns: DataTableColumn<RecordData>[] = [
+  const columns: DataTableColumn<any>[] = [
     // add empty header column for the drag handle
     { accessor: "", hiddenContent: true, width: 50 },
     { accessor: "name" },
@@ -392,7 +396,7 @@ export const ListEditorFormInput = ({ ...props }: any) => {
       )} */}
       {props?.value && (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <DataTable<RecordData>
+          <DataTable<any>
             columns={[
               ...columns,
               // {
@@ -435,7 +439,7 @@ export const ListEditorFormInput = ({ ...props }: any) => {
               rowProps,
               children,
             }: {
-              record: RecordData;
+              record: any;
               index: number;
               rowProps: any;
               children: React.ReactNode;

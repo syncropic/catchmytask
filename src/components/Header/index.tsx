@@ -8,9 +8,12 @@ import { useAppStore } from "src/store";
 import SearchBar from "@components/SearchBar";
 import QuickActionsBar from "@components/QuickActionsBar";
 import ColorSchemeToggle from "@components/ColorSchemeToggle";
-import { ActionIcon, Tooltip } from "@mantine/core";
+import { ActionIcon, Tooltip, Text } from "@mantine/core";
 import { IconLetterB, IconMenu2 } from "@tabler/icons-react";
 import SearchInput from "@components/SearchInput";
+import Reveal from "@components/Reveal";
+import MonacoEditor from "@components/MonacoEditor";
+import PinActionStepsToggle from "@components/PinActionStepsToggle";
 
 interface HeaderComponentProps {
   authenticatedData?: any;
@@ -25,8 +28,13 @@ const LargeScreenHeader = ({
   activeApplication,
   go,
 }: HeaderComponentProps) => {
-  const { sessionConfig, setSessionConfig, activeLayout, setActiveLayout } =
-    useAppStore();
+  const {
+    sessionConfig,
+    setSessionConfig,
+    activeLayout,
+    setActiveLayout,
+    activeTask,
+  } = useAppStore();
 
   // handle toggleDisplay
   const toggleDisplay = (section: string) => {
@@ -121,6 +129,26 @@ const LargeScreenHeader = ({
           <SearchInput include_action_icons={[]} />
         </div>
       )} */}
+      {authenticatedData?.authenticated && activeTask && (
+        <Reveal
+          trigger="click"
+          target={
+            <Text
+              truncate="end"
+              size="xs"
+              className="text-blue-500 pl-3 pr-3 cursor-pointer"
+            >
+              {activeTask?.name}
+            </Text>
+          }
+        >
+          <MonacoEditor value={activeTask} language="json" height="50vh" />
+        </Reveal>
+      )}
+
+      {authenticatedData?.authenticated && activeTask && (
+        <PinActionStepsToggle />
+      )}
 
       {<UserMenu />}
     </div>

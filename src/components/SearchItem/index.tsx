@@ -20,14 +20,18 @@ const truncateText = (text: string, wordLimit: number): string => {
 
 // Custom rendering for each search result
 const renderSearchItem = (props: any) => {
-  const { value, entity_type, label, description, author_id } = props?.option;
+  const { value, entity_type, label, description, author_id, summary } =
+    props?.option;
 
   // Find the position of the entity_type in the value
   const startIndex = value.indexOf(entity_type);
   const endIndex = startIndex + entity_type?.length;
 
+  // use summary as excerpt if available otherwise use description
+  let excerpt = summary || description;
+
   // Truncate the description to 100 words
-  const truncatedDescription = truncateText(description, 20);
+  const truncatedExcerpt = truncateText(excerpt, 20);
   const truncatedLabel = truncateText(label, 10);
 
   return (
@@ -57,7 +61,7 @@ const renderSearchItem = (props: any) => {
 
       {/* Third row: Display the truncated description */}
       <Text size="xs" color="dimmed">
-        {truncatedDescription}
+        {truncatedExcerpt}
       </Text>
     </Group>
   );

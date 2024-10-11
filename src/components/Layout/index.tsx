@@ -48,6 +48,9 @@ import {
   IconLetterQ,
   IconCircleMinus,
   IconSitemap,
+  IconChartBar,
+  IconTimelineEventPlus,
+  IconSquare,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -116,6 +119,9 @@ const Layout = ({
     focused_entities,
     setFocusedEntities,
     selectedRecords,
+    pinned_action_steps,
+    pinned_main_action,
+    setPinnedMainAction,
   } = useAppStore();
   const computedColorScheme = useComputedColorScheme("light"); // Compute the color scheme, defaults to 'light'
   // Define a media query for large screens
@@ -218,6 +224,16 @@ const Layout = ({
         new_focused_entities[record?.id].action = action;
       }
       setFocusedEntities(new_focused_entities);
+    }
+    // if action is search or save open the leftSection
+    if (["search", "save"].includes(action)) {
+      openDisplay("leftSection");
+      // update pinned_main_action by toggling i.e if the action is already pinned, unpin it
+      if (pinned_main_action === action) {
+        setPinnedMainAction(null);
+      } else {
+        setPinnedMainAction(action);
+      }
     }
   };
 
@@ -623,7 +639,8 @@ const Layout = ({
                       </Accordion.Control>
                       <Accordion.Panel>
                         {/* // using different components for different actions to avoid conflicts */}
-                        {activeTask && ["search"]?.includes(action) && (
+                        {(activeTask && ["search"].includes(action)) ||
+                        (activeTask && pinned_main_action === "search") ? (
                           <div className="w-full">
                             <ActionInputWrapper
                               name={action}
@@ -633,8 +650,10 @@ const Layout = ({
                               success_message_code="action_input_data_model_schema"
                             />
                           </div>
-                        )}
-                        {activeTask && ["save"]?.includes(action) && (
+                        ) : null}
+
+                        {(activeTask && ["save"].includes(action)) ||
+                        (activeTask && pinned_main_action === "save") ? (
                           <div className="w-full">
                             <ActionInputWrapper
                               name={action}
@@ -644,7 +663,7 @@ const Layout = ({
                               success_message_code="action_input_data_model_schema"
                             />
                           </div>
-                        )}
+                        ) : null}
                       </Accordion.Panel>
                     </Accordion.Item>
                   )}
@@ -791,7 +810,7 @@ const Layout = ({
                   }}
                 >
                   <Accordion defaultValue={["execution"]} multiple={true}>
-                    <Accordion.Item key="task" value="task">
+                    {/* <Accordion.Item key="task" value="task">
                       <Accordion.Control icon={<IconLetterQ size={16} />}>
                         <div className="flex justify-between items-center">
                           <div>Task</div>
@@ -799,15 +818,13 @@ const Layout = ({
                             <Reveal
                               trigger="click"
                               target={
-                                <Indicator label="i" offset={3}>
-                                  <Text
-                                    truncate="end"
-                                    size="xs"
-                                    className="text-blue-500 pl-3 pr-3"
-                                  >
-                                    {activeTask?.name}
-                                  </Text>
-                                </Indicator>
+                                <Text
+                                  truncate="end"
+                                  size="xs"
+                                  className="text-blue-500 pl-3 pr-3"
+                                >
+                                  {activeTask?.name}
+                                </Text>
                               }
                             >
                               <MonacoEditor
@@ -826,7 +843,7 @@ const Layout = ({
                         </div>
                       </Accordion.Control>
                       <Accordion.Panel></Accordion.Panel>
-                    </Accordion.Item>
+                    </Accordion.Item> */}
 
                     <Accordion.Item key="execution" value="execution">
                       <Accordion.Control icon={<IconListDetails size={16} />}>
@@ -1031,7 +1048,16 @@ const Layout = ({
                 }`}
                 style={{ height: "calc(100vh - 100px)" }}
               >
-                <Accordion defaultValue={["action_input"]} multiple={true}>
+                <Accordion
+                  defaultValue={[
+                    "action_input",
+                    "plan",
+                    "summary",
+                    "activity",
+                    "issues",
+                  ]}
+                  multiple={true}
+                >
                   <Accordion.Item key="state" value="state">
                     <Accordion.Control icon={<IconStackBack size={16} />}>
                       State <Breadcrumbs />
@@ -1061,6 +1087,95 @@ const Layout = ({
                       </div>
                     </Accordion.Panel>
                   </Accordion.Item> */}
+
+                  {action && !["save", "search"]?.includes(action) && (
+                    <Accordion.Item key="action_input" value="action_input">
+                      <Accordion.Control icon={<IconForms size={16} />}>
+                        {action} action input
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        {activeTask && (
+                          <div className="w-full">
+                            <ActionInputWrapper
+                              name={action}
+                              query_name="data_model"
+                              record={activeTask}
+                              action={action}
+                              success_message_code="action_input_data_model_schema"
+                            />
+                          </div>
+                        )}
+                      </Accordion.Panel>
+                    </Accordion.Item>
+                  )}
+
+                  {pinned_action_steps["summary"]?.is_displayed && (
+                    <Accordion.Item key="summary" value="summary">
+                      <Accordion.Control icon={<IconChartBar size={16} />}>
+                        Summary
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <div className="flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-600 text-center">
+                            Action step named "summary" will appear here when
+                            pinned (coming soon).
+                          </p>
+                        </div>
+                        {/* {activeTask ? (
+                        <div className="w-full">
+                          {" "}
+                          <PlanWrapper
+                            name="list items"
+                            query_name="data_model"
+                            record={activeTask}
+                            action={"plan"}
+                            success_message_code="action_input_data_model_schema"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-600 text-center">
+                            Action plan appears here.
+                          </p>
+                        </div>
+                      )} */}
+                      </Accordion.Panel>
+                    </Accordion.Item>
+                  )}
+
+                  {pinned_action_steps["activity"]?.is_displayed && (
+                    <Accordion.Item key="activity" value="activity">
+                      <Accordion.Control
+                        icon={<IconTimelineEventPlus size={16} />}
+                      >
+                        Activity
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <div className="flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-600 text-center">
+                            Action step named "activity" will appear here when
+                            pinned (coming soon).
+                          </p>
+                        </div>
+                      </Accordion.Panel>
+                    </Accordion.Item>
+                  )}
+
+                  {pinned_action_steps["issues"]?.is_displayed && (
+                    <Accordion.Item key="issues" value="issues">
+                      <Accordion.Control icon={<IconSquare size={16} />}>
+                        Issues
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <div className="flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-600 text-center">
+                            Action step named "issues" will appear here when
+                            pinned (coming soon).
+                          </p>
+                        </div>
+                      </Accordion.Panel>
+                    </Accordion.Item>
+                  )}
                   <Accordion.Item key="plan" value="plan">
                     <Accordion.Control icon={<IconListTree size={16} />}>
                       Plan
@@ -1086,56 +1201,6 @@ const Layout = ({
                       )}
                     </Accordion.Panel>
                   </Accordion.Item>
-                  {action && !["save", "search"]?.includes(action) && (
-                    <Accordion.Item key="action_input" value="action_input">
-                      <Accordion.Control icon={<IconForms size={16} />}>
-                        {action} action input
-                      </Accordion.Control>
-                      <Accordion.Panel>
-                        {activeTask && (
-                          <div className="w-full">
-                            <ActionInputWrapper
-                              name={action}
-                              query_name="data_model"
-                              record={activeTask}
-                              action={action}
-                              success_message_code="action_input_data_model_schema"
-                            />
-                          </div>
-                        )}
-                      </Accordion.Panel>
-                    </Accordion.Item>
-                  )}
-
-                  {/* <Accordion.Item key="logs" value="logs">
-                    <Accordion.Control icon={<IconListTree size={16} />}>
-                      Action Input
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      {activeTask ? (
-                        <div className="w-full">
-                          <ActionInputWrapper
-                            execution_record={activeTask}
-                            query_name="execution data model"
-                            record={{
-                              id: activeTask?.id,
-                            }}
-                            action={focused_entities["action_input"]?.action}
-                            focused_item="action_input"
-                            read_record_mode="local"
-                            success_message_code="action_input_data_model_schema"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center p-4">
-                          <p className="text-sm text-gray-600 text-center">
-                            Prompts for your input required to successfully
-                            complete an action will dynamically appear here.
-                          </p>
-                        </div>
-                      )}
-                    </Accordion.Panel>
-                  </Accordion.Item> */}
                 </Accordion>
               </div>
             </Panel>

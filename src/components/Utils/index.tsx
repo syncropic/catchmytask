@@ -74,6 +74,9 @@ import {
   IconLayoutSidebarLeftCollapseFilled,
   IconLayoutSidebarRightCollapseFilled,
   IconLayoutDistributeVertical,
+  IconChartBar,
+  IconTimelineEventPlus,
+  IconSquare,
 } from "@tabler/icons-react";
 import { localDb } from "src/localDb";
 import { useQueryClient } from "@tanstack/react-query";
@@ -2592,4 +2595,7 @@ export const iconMap: Record<string, React.ElementType> = {
   build: IconCode,
   fields: IconTallymark3,
   edit: IconPencil,
+  summary: IconChartBar,
+  activity: IconTimelineEventPlus,
+  issues: IconSquare,
 };

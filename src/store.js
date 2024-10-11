@@ -188,6 +188,16 @@ export const useAppStore = create(
       searchFilters: [],
       setSearchFilters: (filters) =>
         set((state) => ({ ...state, searchFilters: filters })),
+      pinned_action_steps: {
+        summary: {},
+        activity: {},
+        issues: {},
+      },
+      setPinnedActionSteps: (actionSteps) =>
+        set((state) => ({ ...state, pinned_action_steps: actionSteps })),
+      pinned_main_action: null,
+      setPinnedMainAction: (action) =>
+        set((state) => ({ ...state, pinned_main_action: action })),
       local_db: {},
       setLocalDB: (local_db) => set((state) => ({ ...state, local_db })),
       // Function to update a specific part of the local_db
