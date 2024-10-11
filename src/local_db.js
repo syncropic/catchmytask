@@ -100,9 +100,7 @@ const typeMapping = {
  * @param {string} tableName - The name of the table.
  * @param {Array} dataFields - The fields that define the structure of the table.
  */
-export async function saveToLocalDB(data, tableName, dataFields) {
-  const conn = await initializeLocalDB();
-
+export async function saveToLocalDB(data, tableName, dataFields, dbInstance) {
   // Dynamically create the table based on data fields
   let columns = [];
   const primaryKey = "id";
@@ -142,7 +140,7 @@ export async function saveToLocalDB(data, tableName, dataFields) {
           );
         `;
   console.log("Create Table Query:", createTableQuery);
-  await conn.query(createTableQuery);
+  await dbInstance.query(createTableQuery);
 
   // Ensure there is at least one row to insert
   if (data.length === 0) {
@@ -177,9 +175,9 @@ export async function saveToLocalDB(data, tableName, dataFields) {
 
   // Execute the batch insert
   try {
-    await conn.query("BEGIN TRANSACTION;");
-    await conn.query(insertQuery);
-    await conn.query("COMMIT;");
+    await dbInstance.query("BEGIN TRANSACTION;");
+    await dbInstance.query(insertQuery);
+    await dbInstance.query("COMMIT;");
     console.log(`Data inserted successfully into table: ${tableName}`);
   } catch (error) {
     await conn.query("ROLLBACK;");
@@ -191,13 +189,13 @@ export async function saveToLocalDB(data, tableName, dataFields) {
   }
 }
 
-/**
- * Drops a table if it exists in the DuckDB instance.
- * @param {string} tableName - The name of the table to drop.
- */
-export async function dropTableIfExists(tableName) {
-  const conn = await initializeLocalDB();
-  const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
-  await conn.query(dropQuery);
-  console.log(`Table dropped successfully: ${tableName}`);
-}
+// /**
+//  * Drops a table if it exists in the DuckDB instance.
+//  * @param {string} tableName - The name of the table to drop.
+//  */
+// export async function dropTableIfExists(tableName) {
+//   const conn = await initializeLocalDB();
+//   const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
+//   await conn.query(dropQuery);
+//   console.log(`Table dropped successfully: ${tableName}`);
+// }

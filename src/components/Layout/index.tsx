@@ -1,6 +1,7 @@
 import NaturalLanguageQuery from "@components/NaturalLanguageQuery";
 import {
   getComponentByKey,
+  iconMap,
   truncateText,
   useFetchDomainDataByDomain,
 } from "@components/Utils";
@@ -114,12 +115,12 @@ const Layout = ({
     setEntityTypes,
     focused_entities,
     setFocusedEntities,
-    action,
     selectedRecords,
   } = useAppStore();
   const computedColorScheme = useComputedColorScheme("light"); // Compute the color scheme, defaults to 'light'
   // Define a media query for large screens
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
+  let action = focused_entities[activeTask?.id]?.["action"];
 
   // Determine whether the panel should be displayed
   const shouldDisplayLeftSection =
@@ -595,7 +596,7 @@ const Layout = ({
                   height: "calc(100vh - 100px)",
                 }}
               >
-                <Accordion defaultValue={["search"]} multiple={true}>
+                <Accordion defaultValue={["main_action"]} multiple={true}>
                   <div className="flex items-center justify-center">
                     <p
                       className={`text-sm ${
@@ -609,60 +610,44 @@ const Layout = ({
                       Pinned
                     </p>
                   </div>
-                  <Accordion.Item key="search" value="search">
-                    <Accordion.Control icon={<IconSearch size={16} />}>
-                      search
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      {/* {activeTask &&
-                        focused_entities[activeTask?.id]?.["action"] ===
-                          "search" && (
+                  {action && (
+                    <Accordion.Item key="main_action" value="main_action">
+                      <Accordion.Control
+                        icon={
+                          iconMap[action]
+                            ? React.createElement(iconMap[action], { size: 16 })
+                            : null
+                        }
+                      >
+                        {action}
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        {/* // using different components for different actions to avoid conflicts */}
+                        {activeTask && ["search"]?.includes(action) && (
                           <div className="w-full">
                             <ActionInputWrapper
-                              name="search"
+                              name={action}
                               query_name="data_model"
                               record={activeTask}
-                              action="search"
+                              action={action}
                               success_message_code="action_input_data_model_schema"
                             />
                           </div>
-                        )} */}
-                      {activeTask && (
-                        <div className="w-full">
-                          <ActionInputWrapper
-                            name="search"
-                            query_name="data_model"
-                            record={activeTask}
-                            action="search"
-                            success_message_code="action_input_data_model_schema"
-                          />
-                        </div>
-                      )}
-                      {/* <div>search component</div> */}
-                      {/* {activeTask ? (
-                        <div className="w-full">
-                          <ActionInputWrapper
-                            execution_record={activeTask}
-                            query_name="execution data model"
-                            record={{
-                              id: activeTask?.id,
-                            }}
-                            action={focused_entities["action_input"]?.action}
-                            focused_item="action_input"
-                            read_record_mode="local"
-                            success_message_code="action_input_data_model_schema"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center p-4">
-                          <p className="text-sm text-gray-600 text-center">
-                            Prompts for your input required to successfully
-                            complete an action will dynamically appear here.
-                          </p>
-                        </div>
-                      )} */}
-                    </Accordion.Panel>
-                  </Accordion.Item>
+                        )}
+                        {activeTask && ["save"]?.includes(action) && (
+                          <div className="w-full">
+                            <ActionInputWrapper
+                              name={action}
+                              query_name="data_model"
+                              record={activeTask}
+                              action={action}
+                              success_message_code="action_input_data_model_schema"
+                            />
+                          </div>
+                        )}
+                      </Accordion.Panel>
+                    </Accordion.Item>
+                  )}
                 </Accordion>
               </div>
             </Panel>
@@ -871,18 +856,14 @@ const Layout = ({
                                     </Reveal>
                                   </div>
                                 )}
-
-                                <ExternalSubmitButton
-                                  record={activeTask}
-                                  entity_type="tasks"
-                                  action={
-                                    focused_entities[activeTask?.id]?.[
-                                      "action"
-                                    ] || action
-                                  }
-                                ></ExternalSubmitButton>
+                                {action && (
+                                  <ExternalSubmitButton
+                                    record={activeTask}
+                                    entity_type="tasks"
+                                    action={action}
+                                  ></ExternalSubmitButton>
+                                )}
                               </div>
-                              // <div>{JSON.stringify(action)}</div>
                             )}
                           </div>
 
@@ -896,13 +877,6 @@ const Layout = ({
                                   record: activeTask,
                                   onClick: updateComponentAction,
                                 },
-                                // {
-                                //   action: "execute",
-                                //   entity_type: "action_steps",
-                                //   type: "action",
-                                //   record: activeTask,
-                                //   onClick: updateComponentAction,
-                                // },
                                 {
                                   action: "save",
                                   entity_type: "action_steps",
@@ -965,9 +939,6 @@ const Layout = ({
                             <div className="w-3/5 pb-2 pt-2 flex gap-2">
                               {selectedRecords["issues"]?.length > 0 && (
                                 <>
-                                  {/* <Text c="blue" size="xs">
-                                    {`${selectedRecords["issues"]?.length} selected`}
-                                  </Text> */}
                                   <BulkOperationsToolbar
                                     include_components={[
                                       {
@@ -1016,49 +987,6 @@ const Layout = ({
                                   ></BulkOperationsToolbar>
                                 </>
                               )}
-
-                              {activeTask &&
-                                focused_entities[activeTask?.id]?.["action"] ===
-                                  "save" && (
-                                  <div className="w-full">
-                                    <ActionInputWrapper
-                                      name="save"
-                                      query_name="data_model"
-                                      record={activeTask}
-                                      action="save"
-                                      success_message_code="action_input_data_model_schema"
-                                    />
-                                  </div>
-                                )}
-
-                              {/* {activeTask &&
-                                focused_entities[activeTask?.id]?.["action"] ===
-                                  "search" && (
-                                  <div className="w-full">
-                                    <ActionInputWrapper
-                                      name="search"
-                                      query_name="data_model"
-                                      record={activeTask}
-                                      action="search"
-                                      success_message_code="action_input_data_model_schema"
-                                    />
-                                  </div>
-                                )} */}
-
-                              {activeTask &&
-                                focused_entities[activeTask?.id]?.["action"] ===
-                                  "execute" && (
-                                  <div className="w-full">
-                                    {/* <ActionInputWrapper
-                                      name="save"
-                                      query_name="data_model"
-                                      record={activeTask}
-                                      action="save"
-                                      success_message_code="action_input_data_model_schema"
-                                    /> */}
-                                    <div>execute</div>
-                                  </div>
-                                )}
                             </div>
                             <div className="w-1/5"></div>
                           </div>
@@ -1158,35 +1086,26 @@ const Layout = ({
                       )}
                     </Accordion.Panel>
                   </Accordion.Item>
-
-                  <Accordion.Item key="action_input" value="action_input">
-                    <Accordion.Control icon={<IconForms size={16} />}>
-                      {focused_entities[activeTask?.id]?.["action"] || action}{" "}
-                      action input
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      {activeTask &&
-                        !["save"]?.includes(
-                          focused_entities[activeTask?.id]?.["action"] || action
-                        ) && (
+                  {action && !["save", "search"]?.includes(action) && (
+                    <Accordion.Item key="action_input" value="action_input">
+                      <Accordion.Control icon={<IconForms size={16} />}>
+                        {action} action input
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        {activeTask && (
                           <div className="w-full">
                             <ActionInputWrapper
-                              name={
-                                focused_entities[activeTask?.id]?.["action"] ||
-                                action
-                              }
+                              name={action}
                               query_name="data_model"
                               record={activeTask}
-                              action={
-                                focused_entities[activeTask?.id]?.["action"] ||
-                                action
-                              }
+                              action={action}
                               success_message_code="action_input_data_model_schema"
                             />
                           </div>
                         )}
-                    </Accordion.Panel>
-                  </Accordion.Item>
+                      </Accordion.Panel>
+                    </Accordion.Item>
+                  )}
 
                   {/* <Accordion.Item key="logs" value="logs">
                     <Accordion.Control icon={<IconListTree size={16} />}>

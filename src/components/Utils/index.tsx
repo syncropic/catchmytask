@@ -50,7 +50,31 @@ import { MRT_ColumnDef } from "mantine-react-table";
 import { useEffect, useMemo, useRef, useState } from "react";
 import DateTime from "src/components/DateTime";
 import { useAppStore } from "src/store";
-import { dropTableIfExists, saveToLocalDB } from "src/local_db";
+// import { dropTableIfExists, saveToLocalDB } from "src/local_db";
+import {
+  IconCircleMinus,
+  IconCircleX,
+  IconFileDownload,
+  IconMenu2,
+  IconPin,
+  IconPlayerPlay,
+  IconPlayerStop,
+  IconSettingsAutomation,
+  IconShare,
+  IconTool,
+  IconZoomCode,
+  IconCopy,
+  IconTrash,
+  IconForms,
+  IconPlaylistAdd,
+  IconTallymark3,
+  IconPencil,
+  IconSitemap,
+  IconSearch,
+  IconLayoutSidebarLeftCollapseFilled,
+  IconLayoutSidebarRightCollapseFilled,
+  IconLayoutDistributeVertical,
+} from "@tabler/icons-react";
 import { localDb } from "src/localDb";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDateTime, getCellStyleInline } from "src/utils";
@@ -118,6 +142,8 @@ import { Checkbox } from "@components/Checkbox";
 import SearchInput from "@components/SearchInput";
 import { useClickOutside, useDisclosure } from "@mantine/hooks";
 import { ListEditorFormInput } from "@components/ListEditor";
+import { useDuckDB } from "pages/_app";
+import { saveToLocalDB } from "src/local_db";
 // import MediaPlayerController from "@components/MediaPlayerController";
 // import MediaPlayerTimeline from "@components/MediaPlayerTimeline";
 
@@ -1095,6 +1121,8 @@ export function useReadByState(state: any) {
     updateLocalDB,
   } = useAppStore();
 
+  const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
+
   // State variables for LocalDB operation statuses
   const [isLocalDBLoading, setIsLocalDBLoading] = useState(false);
   const [isLocalDBSuccess, setIsLocalDBSuccess] = useState(false);
@@ -1153,8 +1181,9 @@ export function useReadByState(state: any) {
           // console.log("Local DB item init:", item);
 
           try {
-            await dropTableIfExists(tableName);
-            await saveToLocalDB(data_items, tableName, data_fields);
+            const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
+            await dbInstance.query(dropQuery);
+            await saveToLocalDB(data_items, tableName, data_fields, dbInstance);
             console.log("Data saved to DuckDB successfully");
             setIsLocalDBSuccess(true);
             let success_item = {
@@ -2543,3 +2572,24 @@ export function isAllLocalDBSuccess(localDBState: any) {
     (item: any) => item.isLocalDBSuccess === true
   );
 }
+
+// Icon mapping object
+export const iconMap: Record<string, React.ElementType> = {
+  pin: IconPin,
+  remove: IconCircleMinus,
+  configure: IconTool,
+  automate: IconSettingsAutomation,
+  save: IconFileDownload,
+  search: IconSearch,
+  execute: IconPlayerPlay,
+  query: IconZoomCode,
+  share: IconShare,
+  cancel: IconCircleX,
+  display: IconPlayerStop,
+  menu: IconMenu2,
+  implement: IconPlaylistAdd,
+  plan: IconSitemap,
+  build: IconCode,
+  fields: IconTallymark3,
+  edit: IconPencil,
+};

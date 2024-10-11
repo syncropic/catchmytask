@@ -473,7 +473,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     },
   });
 
-  const [templateUpdate, setTemplateUpdate] = useState(0);
+  // const [templateUpdate, setTemplateUpdate] = useState(0);
 
   const debouncedLog = debounce((values) => {
     // let form_input_values: { [key: string]: any } = {};
@@ -613,6 +613,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           form.handleSubmit();
         }}
       >
+        {/* <div>{JSON.stringify(action_input_form_values_key)}</div> */}
         {/* Include templateUpdate to force re-render */}
         {/* <div>Template Update Count: {templateUpdate}</div> */}
         {/* <MonacoEditor
@@ -642,7 +643,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             data_model: data_model,
           })}
         </div> */}
-        {/* <div>{JSON.stringify(action_input_form_values_key)}</div> */}
         {/* <div>{JSON.stringify(record)}</div> */}
         {/* <div>{JSON.stringify(extractDefaultValues(data_model))}</div> */}
 

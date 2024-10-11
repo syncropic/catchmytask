@@ -154,7 +154,7 @@ export const useAppStore = create(
       display_mode: null,
       setDisplayMode: (mode) =>
         set((state) => ({ ...state, display_mode: mode })),
-      action: "execute",
+      action: null,
       setAction: (action) => set((state) => ({ ...state, action: action })),
       fields: {},
       setFields: (fields) => set((state) => ({ ...state, fields })),
