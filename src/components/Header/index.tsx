@@ -116,12 +116,11 @@ const LargeScreenHeader = ({
           </div>
         )} */}
       </div>
-      {authenticatedData?.authenticated && (
+      {/* {authenticatedData?.authenticated && (
         <div className="hidden lg:block w-full items-center pl-4">
-          {/* <SearchInput include_action_icons={["filter"]} /> */}
           <SearchInput include_action_icons={[]} />
         </div>
-      )}
+      )} */}
 
       {<UserMenu />}
     </div>

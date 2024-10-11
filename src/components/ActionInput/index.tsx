@@ -137,7 +137,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   if (focused_item === "action_input") {
     action_input_form_values_key = "action_input";
   } else {
-    action_input_form_values_key = `action_input_${actionInputId}`;
+    action_input_form_values_key = `${action}_action_input_${actionInputId}`;
   }
 
   // let standardized_data_model_name = data_model?.name
@@ -203,7 +203,9 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           try {
             // const conn = await initializeLocalDB();
             // let downloadQuery = "SELECT * FROM issues";
-            let downloadQuery = value?.save_query;
+            // console.log(`Form values for ${formId}:`, value);
+            let downloadQuery = value?.query;
+            console.log("Executing dowloadQuery:", downloadQuery);
             const downloadResult = await dbInstance.query(downloadQuery);
 
             // Debugging logs
@@ -274,10 +276,18 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               `${value?.name}.xlsx excel file created and downloaded successfully.`
             );
           } catch (err) {
-            console.error(
-              "Error querying DuckDB or generating Excel file:",
-              err
-            );
+            let errorMessage = "";
+            // if err is object then json stringify otherwise just display the error message
+            // if (typeof err === "object") {
+            //   errorMessage = `Error querying or generating excel file. ${JSON.stringify(
+            //     err
+            //   )}`;
+            // } else {
+            //   errorMessage = `Error querying or generating excel file. ${err}`;
+            // }
+            errorMessage = `Error querying or generating excel file. ${err}`;
+            console.error(`Error querying or generating excel file.`, err);
+            alert(errorMessage);
           }
         };
         // alert(JSON.stringify(value));

@@ -11,8 +11,6 @@ export function StateView() {
     activeSession,
     activeTask,
     setActiveTask,
-    activeActionStep,
-    setActiveActionStep,
   } = useAppStore();
   // const navigateToSession = useSessionNavigation(); // Get the navigation function
   // const handleOptionSubmit = (value: string) => {
@@ -20,11 +18,14 @@ export function StateView() {
   // };
   return (
     <>
+      {/* <div>{JSON.stringify(activeApplication?.disabled_sections)}</div> */}
       <SearchInput
         placeholder="Search for applications"
         description="applications"
         value={activeApplication?.name || ""}
-        disabled
+        disabled={activeApplication?.disabled_sections?.includes(
+          "select_application"
+        )}
         activeFilters={[
           {
             id: 1,
@@ -40,6 +41,9 @@ export function StateView() {
         description="sessions"
         handleOptionSubmit={setActiveSession}
         value={activeSession?.name || ""}
+        disabled={activeApplication?.disabled_sections?.includes(
+          "select_session"
+        )}
         include_action_icons={["remove_from_state"]}
         activeFilters={[
           {

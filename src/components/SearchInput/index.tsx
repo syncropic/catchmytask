@@ -88,6 +88,7 @@ function SearchInput<T extends Record<string, any>>({
     if (selectedItem) {
       if (handleOptionSubmit) handleOptionSubmit(selectedItem);
       if (onChange) onChange(selectedItem?.value);
+      console.log("navigate", selectedItem);
       navigate(selectedItem);
     }
   };
@@ -112,6 +113,70 @@ function SearchInput<T extends Record<string, any>>({
   //     enhancedHandleOptionSubmit(query);
   //   }
   // }, []);
+
+  // Define the read record state for fetching the template
+  // let read_session_state = {
+  //   credential: "surrealdb catchmytask dev",
+  //   success_message_code: currentTemplateValue,
+  //   record: { id: currentTemplateValue },
+  //   read_record_mode: "remote",
+  // };
+
+  // Fetch the template using the existing hook
+  // const {
+  //   data: templateData,
+  //   isLoading: templateIsLoading,
+  //   error: templateError,
+  // } = useReadRecordByState(read_session_state);
+
+  // useEffect(() => {
+  //   // Only make the call if the template value has changed and is not null/undefined
+  //   if (currentTemplateValue) {
+  //     // Update the previous template value
+  //     // previousTemplateValue.current = currentTemplateValue;
+
+  //     // Check if data is fully fetched and available
+  //     if (templateData && !templateIsLoading && !templateError) {
+  //       const templateRecord = templateData?.data?.find(
+  //         (item: any) => item?.message?.code === currentTemplateValue
+  //       )?.data[0];
+
+  //       if (templateRecord) {
+  //         console.log(
+  //           "Fetched Template data before setting form values:",
+  //           templateRecord
+  //         );
+  //         // form.setFieldValue("name", templateRecord.name ?? "");
+  //         // form.setFieldValue("query", templateRecord.query ?? "");
+  //         // setTemplateUpdate((prev) => prev + 1);
+  //         // set field values in bulk
+  //         let keysToExclude = [
+  //           "id",
+  //           "author_id",
+  //           "created_datetime",
+  //           "updated_datetime",
+  //           "deleted_datetime",
+  //           "added_datetime",
+  //           "author",
+  //           "entity_type",
+  //         ];
+  //         Object.entries(templateRecord).forEach(([key, value]) => {
+  //           if (!keysToExclude.includes(key)) {
+  //             form.setFieldValue(key, value);
+  //           }
+  //         });
+  //       }
+  //     } else if (templateError) {
+  //       console.error("Error fetching template data:", templateError);
+  //     }
+  //   }
+  // }, [
+  //   currentTemplateValue,
+  //   templateData,
+  //   templateIsLoading,
+  //   templateError,
+  //   form,
+  // ]);
 
   return (
     <div className="flex items-end w-full space-x-2">

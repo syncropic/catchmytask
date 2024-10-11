@@ -102,6 +102,7 @@ const Layout = ({
     setActiveLayout,
     activeActionInputLayout,
     setActiveApplication,
+    setActiveSession,
     activeApplication,
     activeSession,
     activeTask,
@@ -291,6 +292,13 @@ const Layout = ({
   useEffect(() => {
     if (domainRecord?.["application"]) {
       setActiveApplication(domainRecord?.["application"]);
+    }
+    // when there is no active session and there is a default session in the domain record, set the active session to the default session
+    if (
+      !activeSession &&
+      domainRecord?.["application"]?.["defaults"]?.["session"]
+    ) {
+      setActiveSession(domainRecord?.["application"]["defaults"]["session"]);
     }
   }, [domainRecord]);
 
@@ -692,9 +700,9 @@ const Layout = ({
                           : "bg-gray-800"
                       }`}
                     >
-                      <div className="p-3">
+                      {/* <div className="p-3">
                         <SearchInput />
-                      </div>
+                      </div> */}
                       {/* <StateView /> */}
                       {activeLayout?.mobileStateView?.isDisplayed && (
                         <Accordion defaultValue={["state"]} multiple={true}>

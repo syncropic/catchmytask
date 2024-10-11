@@ -240,9 +240,11 @@ DataDisplayComponentProps<T>) {
 
   // let selected_record_items_key = `${action}_action_input_${record?.id}`;
   const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
-  const action_input_form_values_key = `action_input_${actionInputId}`;
+  let action_input_form_values_key = `${action}_action_input_${actionInputId}`;
   // return board for action steps by default
   if (entity_type === "action_steps") {
+    action_input_form_values_key = `plan_action_input_${actionInputId}`;
+
     return (
       // <div>
       //   {JSON.stringify(selectedRecords[`${action_input_form_values_key}`])}
