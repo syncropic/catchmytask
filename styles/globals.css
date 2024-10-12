@@ -12,7 +12,7 @@
 @import "../node_modules/@syncfusion/ej2-grids/styles/material.css";
 @import "../node_modules/@syncfusion/ej2-react-spreadsheet/styles/material.css"; */
 /* 👇 Make sure the styles are applied in the correct order */
-@layer mantine, mantine-datatable;
+@layer mantine, mantine-datatable, mantine-contextmenu;
 
 .login-container {
   display: flex;

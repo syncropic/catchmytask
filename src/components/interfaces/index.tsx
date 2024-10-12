@@ -281,6 +281,8 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   // data_columns: T[];
   data_fields: T[];
   invalidate_queries_on_submit_success?: string[];
+  setSorting?: any;
+  sorting?: any;
   // session?: ISession;
   // // initialStateColumnPinningLeft: string[];
   // customTableConfig?: any;

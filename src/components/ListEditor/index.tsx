@@ -297,39 +297,53 @@ export const ListEditorFormInput = ({ ...props }: any) => {
   // const [records, setRecords] = useState<RecordData[]>(transformedRecords);
   // const { selectedRecords, setSelectedRecords } = useAppStore();
 
-  const [records, setRecords] = useState<any[]>([]); // Initialize with an empty array
+  // const [records, setRecords] = useState<any[]>([]); // Initialize with an empty array
   const { selectedRecords, setSelectedRecords } = useAppStore();
+  const { sortedRecords, setSortedRecords } = useAppStore();
 
   // Update records whenever props.value changes
   // for id use the item with all spaces replaced with _
-  useEffect(() => {
-    if (props.value && props.value.length > 0) {
-      const transformedRecords = props.value.map((item: any) => ({
-        ...item,
-        id: item?.name.replace(/ /g, "_"),
-      }));
-      // sort by execution order
-      transformedRecords.sort((a: any, b: any) =>
-        a.execution_order > b.execution_order ? 1 : -1
-      );
-      setRecords(transformedRecords); // Update state with transformed records
-      // console.log("transformedRecords", transformedRecords);
-    }
-  }, [props.value]); // Dependency array ensures effect runs when props.value changes
+  // useEffect(() => {
+  //   if (props.value && props.value.length > 0) {
+  //     const transformedRecords = props.value.map((item: any) => ({
+  //       ...item,
+  //       id: item?.id || item?.name.replace(/ /g, "_"),
+  //     }));
+  //     // sort by execution order
+  //     transformedRecords.sort((a: any, b: any) => (a.index > b.index ? 1 : -1));
+  //     setRecords(transformedRecords); // Update state with transformed records
+  //     console.log("transformedRecords", transformedRecords);
+  //   }
+  // }, [props.value, records]); // Dependency array ensures effect runs when props.value changes
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
-    const items = Array.from(records);
+    const items = Array.from(
+      sortedRecords[`${props?.action_input_form_values_key}`] ||
+        transformRecords(props?.value)
+    );
     const sourceIndex = result.source.index;
     const destinationIndex = result.destination.index;
     const [reorderedItem] = items.splice(sourceIndex, 1);
     items.splice(destinationIndex, 0, reorderedItem);
 
-    let items_with_index = items.map((item, index) => {
-      return { ...item, index: item?.execution_order };
+    let items_with_index = items.map((item: any, index: number) => {
+      return { ...item, index: index + 1 };
     });
-    setRecords(items_with_index);
+    // get list of sorted records with id, index, name
+    let sorted_records = items_with_index.map((item) => {
+      return { id: item.id, index: item.index, name: item.name };
+    });
+    // set sorted records to form input
+    let new_sorted_records = {
+      ...sortedRecords,
+      [`${props?.action_input_form_values_key}`]: sorted_records,
+    };
+    // set sorted records to global state
+    setSortedRecords(new_sorted_records);
+    // setRecords(items_with_index);
+
     // notifications.show({
     //   title: "Table reordered",
     //   message: `The company named "${
@@ -354,18 +368,24 @@ export const ListEditorFormInput = ({ ...props }: any) => {
       ...selectedRecords,
       [`${props?.action_input_form_values_key}`]: [],
     };
-    setSelectedRecords({});
+    setSelectedRecords(new_selected_records);
   };
 
   const columns: DataTableColumn<any>[] = [
     // add empty header column for the drag handle
     { accessor: "", hiddenContent: true, width: 50 },
     { accessor: "name" },
-    { accessor: "execution_order", width: 80 },
-    // { accessor: "streetAddress", width: 150 },
-    // { accessor: "city", width: 150 },
-    // { accessor: "state", width: 150 },
+    { accessor: "index", width: 80 },
   ];
+  // takes a list of items and if item has no id, use the name with all spaces replaced with _ and in loweracase as the id
+  const transformRecords = (items: any[]) => {
+    return items.map((item: any) => {
+      return {
+        ...item,
+        id: item?.id || item?.name.replace(/ /g, "_").toLowerCase(),
+      };
+    });
+  };
   return (
     <>
       <div className="p-1">
@@ -415,11 +435,19 @@ export const ListEditorFormInput = ({ ...props }: any) => {
               //   ),
               // },
             ]}
-            records={records}
+            // records={records}
+            records={
+              sortedRecords[`${props?.action_input_form_values_key}`] ||
+              transformRecords(props?.value)
+            }
             withTableBorder
             withColumnBorders
             tableWrapper={({ children }) => (
-              <Droppable droppableId="datatable">
+              <Droppable
+                droppableId={
+                  `${props?.action_input_form_values_key}` || "datatable"
+                }
+              >
                 {(provided) => (
                   <div {...provided.droppableProps} ref={provided.innerRef}>
                     {children}

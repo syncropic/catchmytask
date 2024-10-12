@@ -632,6 +632,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
         {/* <div>{JSON.stringify(include_items)}</div> */}
         {/* <div>{JSON.stringify(record?.list_items)}</div> */}
+        {/* <div>{JSON.stringify(form?.store?.state.values)}</div> */}
+
         {/* <div>{JSON.stringify(form?.store?.state.values?.list_items)}</div> */}
         {/* <div>
           {JSON.stringify({
@@ -870,7 +872,17 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
     error: recordError,
   } = useReadRecordByState(read_record_state);
 
-  if (error) return <div>Error: {JSON.stringify(error)}</div>;
+  if (error)
+    return (
+      <MonacoEditor
+        value={{
+          data: error?.response?.data,
+          status: error?.response?.status,
+        }}
+        language="json"
+        height="25vh"
+      />
+    );
   if (isLoading) return <div>Loading...</div>;
 
   return (

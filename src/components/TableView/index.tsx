@@ -1,28 +1,30 @@
 import { ResultsComponentProps } from "@components/interfaces";
-import { useMediaQuery, useViewportSize } from "@mantine/hooks";
+import { useClipboard, useMediaQuery, useViewportSize } from "@mantine/hooks";
 import { flexRender } from "@tanstack/react-table";
 import { Table as TanStackTable, ColumnDef } from "@tanstack/react-table";
 import {
   DataTable,
   DataTableColumn,
   DataTableSortStatus,
+  useDataTableColumns,
 } from "mantine-datatable";
 import { useEffect, useState } from "react";
 import { getColumnIdWithoutResourceGroup } from "src/utils";
 import { Column } from "@tanstack/react-table";
 import React from "react";
 import { DebouncedInput } from "@components/Utils";
-import { ActionIcon, Box, Group, Tooltip } from "@mantine/core";
+import { ActionIcon, Box, Button, Group, Tooltip } from "@mantine/core";
 import { useAppStore } from "src/store";
 import RecordActionsWrapper from "@components/RecordActions";
 import { sortBy } from "lodash";
 import ActionStepEditor from "@components/ActionStepEditor";
 import MonacoEditor from "@components/MonacoEditor";
-import { IconChevronRight } from "@tabler/icons-react";
+import { IconChevronRight, IconCopy, IconEye } from "@tabler/icons-react";
 import clsx from "clsx";
 import classes from "./NestedTablesExample.module.css";
 import { access } from "fs";
 import { render } from "react-dom";
+import { useContextMenu } from "mantine-contextmenu";
 
 const PAGE_SIZES = [10, 15, 20];
 
@@ -34,6 +36,8 @@ export function TableView<T extends Record<string, any>>({
   ui,
   execlude_components,
   invalidate_queries_on_submit_success,
+  setSorting,
+  sorting,
 }: ResultsComponentProps<T>) {
   // const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
   const {
@@ -42,8 +46,12 @@ export function TableView<T extends Record<string, any>>({
     selectedRecords,
     setSelectedRecords,
   } = useAppStore();
+
   // Media query for screens smaller than 640px (mobile devices)
   const isMobile = useMediaQuery("(max-width: 640px)");
+  const { showContextMenu } = useContextMenu();
+  const isTouch = useMediaQuery("(pointer: coarse)");
+  const clipboard = useClipboard({ timeout: 500 });
 
   // let columns_to_filter_out = ["select", "actions", "details"];
 
@@ -52,9 +60,15 @@ export function TableView<T extends Record<string, any>>({
     string[]
   >([]);
 
-  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<T>>({
-    columnAccessor: "execution_order",
-    direction: "asc",
+  // const [localSortStatus, localSetSortStatus] = useState<DataTableSortStatus<T>>({
+  //   columnAccessor: "id",
+  //   direction: "asc",
+  // });
+  const [localSortStatus, localSetSortStatus] = useState<
+    DataTableSortStatus<T>
+  >({
+    columnAccessor: sorting?.[0]?.id ?? "id", // Defaults to "id" if sorting is undefined or empty
+    direction: sorting?.[0]?.desc ? "desc" : "asc", // Maps desc: true to "desc" and desc: false to "asc"
   });
   // const [records, setRecords] = useState(
   //   sortBy(
@@ -80,93 +94,185 @@ export function TableView<T extends Record<string, any>>({
     setSelectedRecords(new_selected_records);
   };
 
+  const key = resource_group;
+
+  const [currentColumns, setCurrentColumns] = useState<DataTableColumn<T>[]>(
+    []
+  );
+
+  // Effect to update columns whenever data_fields or sorting changes
+  useEffect(() => {
+    if (tableInstance) {
+      const sortedColumns = [
+        // Sort data_fields based on the index and map over them to build columns in the correct order
+        ...data_fields
+          .sort((a, b) => a.index - b.index)
+          .map((field) => {
+            const column = tableInstance
+              .getVisibleFlatColumns()
+              .find((col) => col.columnDef.header === field.name);
+
+            if (!column) return null;
+
+            return {
+              id: column.id,
+              accessor: column.columnDef.header,
+              ellipsis: true,
+              draggable: false,
+              render: (record: T) => {
+                const value = record[column.columnDef.header as keyof T];
+                if (
+                  typeof value === "string" &&
+                  ["id", "related_id", "record_id", "name"].includes(
+                    String(column.columnDef.header)
+                  )
+                ) {
+                  return (
+                    <div className="flex">
+                      <div>{value}</div>
+                    </div>
+                  );
+                } else if (typeof value === "string") {
+                  return <div>{value}</div>;
+                } else if (typeof value === "object") {
+                  return <div>{JSON.stringify(value)}</div>;
+                } else {
+                  return <div>{String(value)}</div>;
+                }
+              },
+              resizable: true,
+              sortable: column.getCanSort(),
+              filter: <Filter column={column} />,
+            } as DataTableColumn<T>;
+          })
+          .filter(Boolean), // Filter out any null values if a column is not found
+
+        // Ensure the "expand" column is always last
+        {
+          accessor: "expand",
+          title: (
+            <div className="flex justify-end">
+              <Tooltip
+                label={
+                  expandedRecordIds.length === 0 ? "Expand All" : "Collapse All"
+                }
+                position="top"
+                withArrow
+              >
+                <div className="cursor-pointer" onClick={() => toggleAllRows()}>
+                  <IconChevronRight
+                    className={clsx(classes.icon, classes.expandIcon, {
+                      [classes.expandIconRotated]: expandedRecordIds.length > 0,
+                      "text-blue-500": expandedRecordIds.length > 0,
+                    })}
+                  />
+                </div>
+              </Tooltip>
+            </div>
+          ),
+          ellipsis: true,
+          draggable: false,
+          resizable: false,
+          width: 60,
+          render: (record: T) => (
+            <div className="flex">
+              <IconChevronRight
+                className={clsx(classes.icon, classes.expandIcon, {
+                  [classes.expandIconRotated]: expandedRecordIds.includes(
+                    String(
+                      record?.id ||
+                        record?.related_id ||
+                        record?.record_id ||
+                        record?.name
+                    )
+                  ),
+                })}
+              />
+            </div>
+          ),
+          filter: null, // No filter for actions column
+        } as DataTableColumn<T>,
+      ];
+
+      // Update the currentColumns state to trigger a rerender with new columns
+      setCurrentColumns(
+        sortedColumns.filter((col): col is DataTableColumn<T> => col !== null)
+      );
+    }
+  }, [data_fields, tableInstance, expandedRecordIds]);
+
+  // Helper function to get record ID based on priority order
+  const getRecordId = (record: any) => {
+    return (
+      record?.id || record?.related_id || record?.record_id || record?.name
+    );
+  };
+  // Toggle all rows at once
+  const toggleAllRows = () => {
+    const allRecords =
+      tableInstance
+        ?.getFilteredRowModel()
+        .rows.map((row) => getRecordId(row.original)) || [];
+
+    if (expandedRecordIds.length === 0) {
+      // Expand all rows
+      setExpandedRecordIds(allRecords);
+    } else {
+      // Collapse all rows
+      setExpandedRecordIds([]);
+    }
+  };
+
+  // set sorting function
+  const customSetSorting = (sortStatus: DataTableSortStatus<T>) => {
+    localSetSortStatus(sortStatus);
+    let mapped_item = {
+      id: sortStatus.columnAccessor,
+      desc: sortStatus.direction === "desc",
+    };
+    // // alert(JSON.stringify(mapped_item));
+    setSorting([mapped_item]);
+  };
+
   return (
     <>
       {/* <MonacoEditor value={data_items} language="json" height="50vh" /> */}
       {/* <div>{JSON.stringify(tableInstance?.getVisibleFlatColumns())}</div> */}
       {/* <div>{JSON.stringify(data_fields)}</div> */}
       {/* <div>{resource_group}</div> */}
+      {/* <div>{JSON.stringify(nested_data_items)}</div> */}
+      {/* <div className="flex justify-end">
+        <Button
+          size="compact-xs"
+          onClick={toggleAllRows}
+          variant={expandedRecordIds.length === 0 ? "outline" : "filled"}
+        >
+          {expandedRecordIds.length === 0 ? "expand all" : "collapse all"}
+        </Button>
+      </div> */}
+      {/* <div>{JSON.stringify(sorting)}</div> */}
 
       {tableInstance && tableInstance.getVisibleFlatColumns() && (
         <DataTable<T>
           // page={1}
           // onPageChange={(page) => console.log(page)}
           // recordsPerPage={10}
-
-          columns={tableInstance
-            .getVisibleFlatColumns()
-            .map((column) => {
-              return {
-                id: column.id,
-                accessor: column.columnDef.header,
-                width: 300,
-                render: (record: T) => {
-                  const value = record[column.columnDef.header as keyof T];
-
-                  if (
-                    typeof value === "string" &&
-                    ["record_id", "id", "name"].includes(
-                      String(column.columnDef.header)
-                    )
-                  ) {
-                    // If value is a string, render it inside a div
-                    return (
-                      <div className="flex">
-                        <IconChevronRight
-                          className={clsx(classes.icon, classes.expandIcon, {
-                            [classes.expandIconRotated]:
-                              expandedRecordIds.includes(value),
-                          })}
-                        />
-                        <div>{value}</div>
-                      </div>
-                    );
-                  } else if (
-                    typeof value === "string" &&
-                    !["record_id", "id", "name"].includes(
-                      String(column.columnDef.header)
-                    )
-                  ) {
-                    // If value is a string, render it inside a div
-                    return <div>{value}</div>;
-                  } else if (typeof value === "object") {
-                    // If value is an object, render it as JSON
-                    return <div>{JSON.stringify(value)}</div>;
-                  } else {
-                    // If the value is neither, render it directly
-                    return <div>{String(value)}</div>;
-                  }
-                },
-                sortable: true,
-                // sortable: column.getCanSort(),
-                // column.getCanFilter()
-                filter: (
-                  <>
-                    {true ? (
-                      <div>
-                        <Filter column={column} />
-                      </div>
-                    ) : null}
-                  </>
-                ),
-              } as DataTableColumn<T>;
-            })
-            .filter((column) => {
-              return data_fields
-                .map((item) => item?.name)
-                .includes(String(column?.accessor));
-            })}
+          storeColumnsKey={key}
+          // columns={effectiveColumns as DataTableColumn<T>[]}
+          columns={currentColumns}
+          // records={tableInstance
+          //   .getFilteredRowModel()
+          //   .rows.map((row) => row.original)}
           records={tableInstance
-            .getFilteredRowModel()
+            .getSortedRowModel()
             .rows.map((row) => row.original)}
-          // records={records}
-          // records={records}
-          sortStatus={sortStatus}
-          onSortStatusChange={setSortStatus}
+          sortStatus={localSortStatus}
+          onSortStatusChange={customSetSorting}
           highlightOnHover={true}
           withColumnBorders={true}
           pinFirstColumn={true}
-          // pinLastColumn={true}
+          textSelectionDisabled={isTouch} // 👈 disable text selection on touch devices
+          pinLastColumn={true}
           striped={true}
           // totalRecords={data_items.length}
           height="70dvh"
@@ -186,6 +292,23 @@ export function TableView<T extends Record<string, any>>({
             //   setActiveAction(record);
             // }
           }}
+          onRowContextMenu={({ record, event }) =>
+            showContextMenu([
+              {
+                key: "copy-record-to-clipboard",
+                icon: <IconCopy size={16} />,
+                onClick: () => clipboard.copy(record),
+                // showNotification({
+                //   message: `Clicked on view context-menu action for ${record.name} company`,
+                //   withBorder: true,
+                // }),
+              },
+            ])(event)
+          }
+          onCellClick={({ event, record, index, column, columnIndex }) => {
+            // console.log("cell value clicked", record[column?.accessor]);
+            clipboard.copy(record[column?.accessor]);
+          }}
           rowExpansion={{
             allowMultiple: true,
             initiallyExpanded: ({ record: { state } }) => true,
@@ -195,7 +318,7 @@ export function TableView<T extends Record<string, any>>({
             },
             content: ({ record, collapse }) => (
               <>
-                {true ? (
+                {nested_data_items ? (
                   <DataTable
                     noHeader
                     withColumnBorders
@@ -298,7 +421,19 @@ export function TableView<T extends Record<string, any>>({
                       ),
                     }}
                   />
-                ) : null}
+                ) : (
+                  <div
+                    className={`${
+                      isMobile ? "w-[400px]" : "w-full"
+                    } max-w-full max-h-screen overflow-y-auto p-4`}
+                  >
+                    <MonacoEditor
+                      value={record}
+                      language="json"
+                      height="25vh"
+                    />
+                  </div>
+                )}
               </>
             ),
           }}

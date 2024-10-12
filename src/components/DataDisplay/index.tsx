@@ -166,8 +166,13 @@ DataDisplayComponentProps<T>) {
   // const { ref, width } = useElementSize();
   // const [isLarge, setIsLarge] = useState(true);
 
-  const { focused_entities, selectedRecords, fields, setFields } =
-    useAppStore();
+  const {
+    focused_entities,
+    selectedRecords,
+    sortedRecords,
+    fields,
+    setFields,
+  } = useAppStore();
 
   const { tableColumns } = useTableColumns({
     field_configurations: data_fields?.map((nested_field: any) =>
@@ -175,15 +180,20 @@ DataDisplayComponentProps<T>) {
     ),
     table_id: record?.id,
   });
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    {
+      id: "priority",
+      desc: true, // sort by name in descending order by default
+    },
+  ]);
   // const [viewAsvalue, setViewAsValue] = useState(
   //   view_data?.data[0]?.view_as ?? ""
   // );
   // const [viewAsvalue, setViewAsValue] = useState("table");
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
+  // const [globalFilter, setGlobalFilter] = useState("");
+  // const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  // const [rowSelection, setRowSelection] = useState({});
 
   const table = useReactTable({
     data: data_items ?? [],
@@ -194,30 +204,36 @@ DataDisplayComponentProps<T>) {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
+    // onColumnVisibilityChange: setColumnVisibility,
     // onColumnVisibilityChange: handleColumnVisibilityChange,
-    onRowSelectionChange: setRowSelection,
-    onGlobalFilterChange: setGlobalFilter,
+    // onRowSelectionChange: setRowSelection,
+    // onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: "includesString", //apply fuzzy filter to the global filter (most common use case for fuzzy filter)
     filterFns: {
       //add the fuzzy filter to the filter functions
       fuzzy: fuzzyFilter,
     }, //define as a filter function that can be used in column definitions
     state: {
-      // sorting,
+      sorting,
       columnFilters,
       // columnVisibility,
       // rowSelection,
       // globalFilter,
     },
-    // initialState: {
-    //   columnFilters: [
-    //     {
-    //       id: "payment_status_comparison",
-    //       value: `match`, // filter the name column by 'John' by default
-    //     },
-    //   ],
-    // },
+    initialState: {
+      // columnFilters: [
+      //   {
+      //     id: "payment_status_comparison",
+      //     value: `match`, // filter the name column by 'John' by default
+      //   },
+      // ],
+      // sorting: [
+      //   {
+      //     id: "priority",
+      //     desc: true, // sort by name in descending order by default
+      //   },
+      // ],
+    },
   });
 
   useEffect(() => {
@@ -290,13 +306,25 @@ DataDisplayComponentProps<T>) {
         height="75vh"
       /> */}
       <TableView
-        // data_items={data_items ?? []}
         isLoadingDataItems={isLoadingDataItems ?? false}
-        data_fields={selectedRecords[`${action_input_form_values_key}`] ?? []}
+        data_fields={
+          sortedRecords[`${action_input_form_values_key}`]
+            ? sortedRecords[`${action_input_form_values_key}`].filter(
+                (sortedRecord: any) =>
+                  selectedRecords[`${action_input_form_values_key}`]?.some(
+                    (selectedRecord: any) =>
+                      selectedRecord.name === sortedRecord.name
+                  )
+              )
+            : selectedRecords[`${action_input_form_values_key}`] || data_fields
+        }
+        // data_fields={currentDataFields} // Use the state-driven columns
         tableInstance={table}
         resource_group={
           record?.success_message_code || record?.entity_type || entity_type
         }
+        setSorting={setSorting}
+        sorting={sorting}
         ui={ui || {}}
       />
     </>
@@ -840,6 +868,7 @@ DataDisplayComponentProps<T>) {
         // data_items={data_items ?? []}
         isLoadingDataItems={isLoadingDataItems ?? false}
         // data_fields={selectedRecords[`${action_input_form_values_key}`] ?? []}
+        // data_fields={selectedRecords[`${action_input_form_values_key}`] || data_fields}
         data_fields={data_fields}
         tableInstance={table}
         resource_group={

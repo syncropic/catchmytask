@@ -136,6 +136,9 @@ export const useAppStore = create(
       selectedRecords: {},
       setSelectedRecords: (records) =>
         set((state) => ({ ...state, selectedRecords: records })),
+      sortedRecords: {},
+      setSortedRecords: (records) =>
+        set((state) => ({ ...state, sortedRecords: records })),
       component_input_mode: null,
       setComponentInputMode: (mode) =>
         set((state) => ({ ...state, component_input_mode: mode })),

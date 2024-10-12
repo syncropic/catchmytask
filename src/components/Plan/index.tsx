@@ -109,7 +109,14 @@ export const PlanWrapper: React.FC<PlanWrapperProps> = ({
   //   error: actionPlanError,
   // } = useReadRecordByState(read_record_state);
 
-  if (error) return <div>Error: {JSON.stringify(error)}</div>;
+  if (error)
+    return (
+      <MonacoEditor
+        value={{ data: error?.response?.data, status: error?.response?.status }}
+        language="json"
+        height="25vh"
+      />
+    );
   if (isLoading || actionPlanIsLoading) return <div>Loading...</div>;
 
   return (

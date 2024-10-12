@@ -110,6 +110,7 @@
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.390.0",
+    "mantine-contextmenu": "^7.12.2",
     "mantine-datatable": "^7.12.4",
     "mantine-react-table": "^1.3.4",
     "music-metadata-browser": "^2.5.10",

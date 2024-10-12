@@ -32,6 +32,7 @@ import "@mantine/tiptap/styles.css";
 // you are using components from the corresponding package
 import "@mantine/notifications/styles.css";
 import "@mantine/dates/styles.css";
+import "mantine-contextmenu/styles.layer.css";
 // import '@mantine/dates/styles.css';
 // import '@mantine/dropzone/styles.css';
 // import '@mantine/code-highlight/styles.css';
@@ -45,6 +46,7 @@ import { registerLicense } from "@syncfusion/ej2-base";
 // import { useRuntimeConfig } from "@components/Utils";
 import { useAppStore } from "src/store";
 import { createContext, useContext, useEffect, useState } from "react";
+import { ContextMenuProvider } from "mantine-contextmenu";
 
 // Registering Syncfusion license key
 registerLicense(
@@ -264,56 +266,57 @@ const App = (props: React.PropsWithChildren) => {
           theme={theme}
           defaultColorScheme={colorScheme?.scheme || "auto"}
         >
-          <Notifications position="top-right" />
-          <Refine
-            routerProvider={routerProvider}
-            dataProvider={{
-              default: defaultApiDataProvider(API_URL, getToken, getStateIds),
-            }}
-            notificationProvider={useNotificationProvider}
-            authProvider={authProvider}
-            accessControlProvider={accessControlProvider}
-            resources={[
-              {
-                name: "home",
-                list: "/home",
-              },
-              {
-                name: "profile",
-                list: "/profile",
-              },
-              {
-                name: "applications",
-                list: "/applications",
-                create: "/applications/create",
-                edit: "/applications/edit/:id",
-                show: "/applications/show/:id",
-              },
+          <ContextMenuProvider>
+            <Notifications position="top-right" />
+            <Refine
+              routerProvider={routerProvider}
+              dataProvider={{
+                default: defaultApiDataProvider(API_URL, getToken, getStateIds),
+              }}
+              notificationProvider={useNotificationProvider}
+              authProvider={authProvider}
+              accessControlProvider={accessControlProvider}
+              resources={[
+                {
+                  name: "home",
+                  list: "/home",
+                },
+                {
+                  name: "profile",
+                  list: "/profile",
+                },
+                {
+                  name: "applications",
+                  list: "/applications",
+                  create: "/applications/create",
+                  edit: "/applications/edit/:id",
+                  show: "/applications/show/:id",
+                },
 
-              {
-                name: "sessions",
-                list: "/sessions",
-                create: "/:applicationId/sessions/create",
-                edit: "/:applicationId/sessions/:id/edit",
-                show: "/:applicationId/sessions/:sessionId/tasks/:taskId",
-              },
-              {
-                name: "tasks",
-                list: "/tasks",
-                show: "/tasks/show/:id",
-              },
-            ]}
-            options={{
-              syncWithLocation: true,
-              warnWhenUnsavedChanges: true,
-              projectId: "OpGcqe-gAGTnn-eW9pDg",
-            }}
-          >
-            {/* <div>
+                {
+                  name: "sessions",
+                  list: "/sessions",
+                  create: "/:applicationId/sessions/create",
+                  edit: "/:applicationId/sessions/:id/edit",
+                  show: "/:applicationId/sessions/:sessionId/tasks/:taskId",
+                },
+                {
+                  name: "tasks",
+                  list: "/tasks",
+                  show: "/tasks/show/:id",
+                },
+              ]}
+              options={{
+                syncWithLocation: true,
+                warnWhenUnsavedChanges: true,
+                projectId: "OpGcqe-gAGTnn-eW9pDg",
+              }}
+            >
+              {/* <div>
             MYAPP //{" "}
             {JSON.stringify(session?.token?.account?.providerAccountId)}
           </div> */}
-            {/* <button
+              {/* <button
             onClick={() =>
               signOut({
                 redirect: true,
@@ -323,14 +326,15 @@ const App = (props: React.PropsWithChildren) => {
           >
             logout
           </button> */}
-            {router.pathname === "/login" && <div>{props.children}</div>}
-            {router.pathname !== "/login" && (
-              <BaseLayout>{props.children}</BaseLayout>
-            )}
+              {router.pathname === "/login" && <div>{props.children}</div>}
+              {router.pathname !== "/login" && (
+                <BaseLayout>{props.children}</BaseLayout>
+              )}
 
-            <DocumentTitleHandler handler={customTitleHandler} />
-            <ReactQueryDevtools initialIsOpen={false} />
-          </Refine>
+              <DocumentTitleHandler handler={customTitleHandler} />
+              <ReactQueryDevtools initialIsOpen={false} />
+            </Refine>
+          </ContextMenuProvider>
         </MantineProvider>
       </DuckDBContext.Provider>
     </>

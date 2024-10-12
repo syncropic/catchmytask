@@ -149,7 +149,16 @@ ActionStepsProps) => {
     },
   ];
   if (actionPlanError)
-    return <div>Error: {JSON.stringify(actionPlanError)}</div>;
+    return (
+      <MonacoEditor
+        value={{
+          data: actionPlanError?.response?.data,
+          status: actionPlanError?.response?.status,
+        }}
+        language="json"
+        height="25vh"
+      />
+    );
   if (actionPlanIsLoading) return <div>Loading...</div>;
 
   return (

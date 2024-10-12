@@ -353,7 +353,16 @@ const Layout = ({
   }
 
   if (domainDataError) {
-    return <>{JSON.stringify(domainDataError)}</>;
+    return (
+      <MonacoEditor
+        value={{
+          data: domainDataError?.response?.data,
+          status: domainDataError?.response?.status,
+        }}
+        language="json"
+        height="75vh"
+      />
+    );
   }
 
   if (!authenticatedData?.authenticated && parsed?.pathname == "/login") {

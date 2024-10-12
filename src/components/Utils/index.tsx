@@ -2258,6 +2258,7 @@ export function useTableColumns({
           accessorKey: item?.accessor_key || item?.name, // Assuming each FieldConfiguration has a 'name' property
           header: item?.name, // Assuming each FieldConfiguration has a 'name' property
           filterFn: "includesString", // use built-in filter function
+          sortingFn: "alphanumeric",
           // cell: (row: RowData) => {
           //   const rowId = `${row?.id}`; // Assuming each row has a unique 'id' property
 
