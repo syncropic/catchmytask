@@ -8,8 +8,14 @@ import { useAppStore } from "src/store";
 import SearchBar from "@components/SearchBar";
 import QuickActionsBar from "@components/QuickActionsBar";
 import ColorSchemeToggle from "@components/ColorSchemeToggle";
+import AutomationsToggle from "@components/AutomationsToggle";
+
 import { ActionIcon, Tooltip, Text } from "@mantine/core";
-import { IconLetterB, IconMenu2 } from "@tabler/icons-react";
+import {
+  IconLetterB,
+  IconMenu2,
+  IconSettingsAutomation,
+} from "@tabler/icons-react";
 import SearchInput from "@components/SearchInput";
 import Reveal from "@components/Reveal";
 import MonacoEditor from "@components/MonacoEditor";
@@ -129,6 +135,9 @@ const LargeScreenHeader = ({
           <SearchInput include_action_icons={[]} />
         </div>
       )} */}
+
+      {authenticatedData?.authenticated && activeTask && <AutomationsToggle />}
+
       {authenticatedData?.authenticated && activeTask && (
         <Reveal
           trigger="click"
@@ -136,7 +145,7 @@ const LargeScreenHeader = ({
             <Text
               truncate="end"
               size="xs"
-              className="text-blue-500 pl-3 pr-3 cursor-pointer"
+              className="text-blue-500 pr-3 cursor-pointer"
             >
               {activeTask?.name}
             </Text>

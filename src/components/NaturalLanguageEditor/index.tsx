@@ -13,6 +13,7 @@ import {
   IconBaseline,
   IconClearFormatting,
   IconCode,
+  IconLoader,
 } from "@tabler/icons-react";
 import Highlight from "@tiptap/extension-highlight";
 import Mention from "@tiptap/extension-mention";
@@ -22,6 +23,8 @@ import styles from "./NaturalLanguageEditor.module.css";
 import suggestion from "./suggestion";
 import SearchInput from "@components/SearchInput";
 import { useEffect } from "react";
+import { ActionIcon, Button, Tooltip } from "@mantine/core";
+import { useAppStore } from "src/store";
 
 // import "./styles.scss";
 
@@ -34,6 +37,7 @@ interface NaturalLanguageEditorProps {
   setValue?: (value: any) => void;
   form?: any;
   isLoading?: boolean;
+  action_input_form_values_key?: string;
   // setValues?: (values: any) => void;
   // handleSubmit?: (e: any) => void;
 
@@ -61,6 +65,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
   setValue = () => {},
   form,
   isLoading = false,
+  action_input_form_values_key = "",
   // setValues,
   // handleSubmit,
   // language = "json",
@@ -119,6 +124,8 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
     },
   });
 
+  const { live_generate, setLiveGenerate } = useAppStore();
+
   // Add useEffect to update editor content when value prop changes
   useEffect(() => {
     if (editor && value) {
@@ -151,6 +158,25 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
 
   // const canSubmit = form.useStore((state: any) => state.canSubmit);
   // const isSubmitting = form.useStore((state: any) => state.isSubmitting);
+
+  const toggleLiveGenerate = (action_input_form_values_key: string) => {
+    // Create a copy of the live_generate object
+    let newLiveGenerate = { ...live_generate };
+
+    // Ensure the key exists in newLiveGenerate, initialize it if not
+    if (!newLiveGenerate[action_input_form_values_key]) {
+      newLiveGenerate[action_input_form_values_key] = {
+        is_live_generating: false,
+      };
+    }
+
+    // Toggle the is_live_generating state
+    newLiveGenerate[action_input_form_values_key].is_live_generating =
+      !newLiveGenerate[action_input_form_values_key].is_live_generating;
+
+    // Update global state
+    setLiveGenerate(newLiveGenerate);
+  };
 
   return (
     <RichTextEditor editor={editor}>
@@ -208,26 +234,48 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
             ]}
           />
         </RichTextEditor.ControlsGroup> */}
-        {/* <RichTextEditor.ControlsGroup>
-          <Tooltip label="Run">
+        <RichTextEditor.ControlsGroup>
+          <Tooltip label="When activated, just describe or partially fill in this form and let the system automatically and in realtime generate other part of the form, including queries and code that you can immediately edit to your liking before executing">
             <RichTextEditor.Control
               // onClick={() => form?.handleSubmit()}
-              aria-label="Submit"
+              aria-label="Live Generate"
               // title="Run"
               // disabled={form?.Subscribe}
             >
-              <Button
-                size="xs"
-                type="submit"
-                // loading={mutationIsLoading || isSubmitting}
-                loading={isLoading || isSubmitting}
-                disabled={!canSubmit}
-              >
-                Submit
-              </Button>
+              {live_generate[action_input_form_values_key]
+                ?.is_live_generating ? (
+                // Button with rightSection for loading state
+                <Button
+                  size="compact-xs"
+                  // variant="filled"
+                  variant="gradient"
+                  gradient={{ from: "blue", to: "teal", deg: 72 }}
+                  onClick={() =>
+                    toggleLiveGenerate(action_input_form_values_key)
+                  }
+                  rightSection={
+                    <ActionIcon loading>
+                      <IconLoader size={18} />
+                    </ActionIcon>
+                  }
+                >
+                  Live Generating
+                </Button>
+              ) : (
+                // Button for normal state
+                <Button
+                  size="compact-xs"
+                  variant="outline"
+                  onClick={() =>
+                    toggleLiveGenerate(action_input_form_values_key)
+                  }
+                >
+                  Live Generate
+                </Button>
+              )}
             </RichTextEditor.Control>
           </Tooltip>
-        </RichTextEditor.ControlsGroup> */}
+        </RichTextEditor.ControlsGroup>
       </RichTextEditor.Toolbar>
     </RichTextEditor>
   );
@@ -249,11 +297,12 @@ export const NaturalLanguageEditorFormInput = ({ ...props }: any) => {
           {props?.schema?.title}
         </Text>
       )} */}
-      {/* <div>{JSON.stringify(props?.value)}</div> */}
+      {/* <div>{JSON.stringify(props?.action_input_form_values_key)}</div> */}
       {props?.value && (
         <NaturalLanguageEditor
           // {...props?.schema}
           // value={props?.value}
+          action_input_form_values_key={props?.action_input_form_values_key}
           value={props?.value}
           setValue={props?.onChange}
           form={props?.form}

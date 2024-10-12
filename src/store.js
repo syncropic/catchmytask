@@ -164,11 +164,9 @@ export const useAppStore = create(
       activeApplication: null,
       setActiveApplication: (application) =>
         set((state) => ({ ...state, activeApplication: application })),
-
       action_input_form_values: {},
       setActionInputFormValues: (values) =>
         set((state) => ({ ...state, action_input_form_values: values })),
-
       sessionConfig: {
         interaction_mode: "interactive",
       },
@@ -201,6 +199,9 @@ export const useAppStore = create(
       pinned_main_action: null,
       setPinnedMainAction: (action) =>
         set((state) => ({ ...state, pinned_main_action: action })),
+      live_generate: {},
+      setLiveGenerate: (liveGenerate) =>
+        set((state) => ({ ...state, live_generate: liveGenerate })),
       local_db: {},
       setLocalDB: (local_db) => set((state) => ({ ...state, local_db })),
       // Function to update a specific part of the local_db
