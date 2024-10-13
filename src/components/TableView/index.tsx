@@ -47,6 +47,8 @@ export function TableView<T extends Record<string, any>>({
     setSelectedRecords,
   } = useAppStore();
 
+  const { height, width } = useViewportSize();
+
   // Media query for screens smaller than 640px (mobile devices)
   const isMobile = useMediaQuery("(max-width: 640px)");
   const { showContextMenu } = useContextMenu();
@@ -275,9 +277,10 @@ export function TableView<T extends Record<string, any>>({
           pinLastColumn={true}
           striped={true}
           // totalRecords={data_items.length}
-          height="70dvh"
-          minHeight={400}
-          maxHeight={1000}
+          // height="70dvh"
+          // minHeight={400}
+          // 75% of the viewport height as the maximum height
+          maxHeight={height * 0.75}
           fz="xs"
           selectedRecords={selectedRecords[resource_group] ?? []}
           onSelectedRecordsChange={handleSelectValue}

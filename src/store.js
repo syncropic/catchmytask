@@ -186,6 +186,9 @@ export const useAppStore = create(
       globalFilterQuery: "",
       setGlobalFilterQuery: (query) =>
         set((state) => ({ ...state, globalFilterQuery: query })),
+      globalQuery: {},
+      setGlobalQuery: (query) =>
+        set((state) => ({ ...state, globalQuery: query })),
       searchFilters: [],
       setSearchFilters: (filters) =>
         set((state) => ({ ...state, searchFilters: filters })),

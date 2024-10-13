@@ -1,7 +1,11 @@
 import DataDisplay from "@components/DataDisplay";
 import MonacoEditor from "@components/MonacoEditor";
 import Reveal from "@components/Reveal";
-import { isAllLocalDBSuccess, useReadByState } from "@components/Utils";
+import {
+  createIssueIdSubquery,
+  isAllLocalDBSuccess,
+  useReadByState,
+} from "@components/Utils";
 import { useAppStore } from "src/store";
 import { Text } from "@mantine/core";
 import { useEffect, useState } from "react";
@@ -21,16 +25,26 @@ export function ActionStepResults({
     activeTask,
     activeApplication,
     activeSession,
+    globalQuery,
+    setGlobalQuery,
   } = useAppStore();
   const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
 
   let tableName = record?.success_message_code;
   const actionInputId = record?.id || "data_models:heblllgdhsuyfzpkg2tl";
   const action_input_form_values_key = `action_input_${actionInputId}`;
-  const task_action_input_form_values_key = `action_input_${activeTask?.id}`;
+  const search_action_input_form_values_key = `search_action_input_${activeTask?.id}`;
+  // const save_action_input_form_values_key = `save_action_input_${activeTask?.id}`;
+  let globalQueryTable = globalQuery?.tables[0] || null;
 
-  let globalQuery =
-    action_input_form_values[`${task_action_input_form_values_key}`]?.query ||
+  // for global query if search is present prioritize that otherwise use save - or most recently updated - fix this last part
+
+  // let globalQuery =
+  //   action_input_form_values[`${search_action_input_form_values_key}`]?.query ||
+  //   action_input_form_values[`${save_action_input_form_values_key}`]?.query ||
+  //   null;
+  let globalQueryValue =
+    action_input_form_values[`${search_action_input_form_values_key}`]?.query ||
     null;
 
   let state = {
@@ -57,6 +71,8 @@ export function ActionStepResults({
   const { data, isLoading, error, isLocalDBSuccess } = useReadByState(state);
 
   const [dataItems, setDataItems] = useState<[]>([]);
+  const [actionStepGlobalDynamicQuery, setActionStepGlobalDynamicQuery] =
+    useState<string | null>(null);
   // const [dataFields, setDataFields] = useState<[]>([]);
 
   // useEffect(() => {
@@ -97,19 +113,67 @@ export function ActionStepResults({
         //   )?.data_fields || [];
 
         // setDataFields(data_fields);
+        let actionStepGlobalDynamicQueryVar = null;
+        if (globalQueryTable == tableName && globalQueryValue) {
+          actionStepGlobalDynamicQueryVar = globalQueryValue;
+        } else if (globalQueryTable == tableName && !globalQueryValue) {
+          actionStepGlobalDynamicQueryVar = `SELECT * FROM ${tableName}`;
+        } else {
+          // dynamically create this using the items from the global query // separate parent and child use effects to react to different parts of the state, one after items have been added
+          let issueIdSubquery = globalQueryValue
+            ? createIssueIdSubquery(globalQueryValue)
+            : null;
+          actionStepGlobalDynamicQueryVar = globalQueryValue
+            ? `SELECT * FROM ${tableName} WHERE issue_id IN (${issueIdSubquery})`
+            : `SELECT * FROM ${tableName}`;
+        }
+        // alert(globalQueryValue);
+        setActionStepGlobalDynamicQuery(actionStepGlobalDynamicQueryVar);
+
+        // setActionStepGlobalDynamicQuery(actionStepGlobalDynamicQuery);
 
         try {
-          const query = globalQuery
-            ? `SELECT * FROM ${tableName} WHERE ${globalQuery}`
-            : `SELECT * FROM ${tableName}`;
+          // const query = globalQueryValue
+          //   ? `SELECT * FROM ${tableName} WHERE ${globalQuery}`
+          //   : `SELECT * FROM ${tableName}`;
+          // const query = globalQueryValue
+          //   ? `${globalQueryValue}`
+          //   : `SELECT * FROM ${tableName}`;
+          // query to get the related_ids from the active global query
 
-          console.log("Executing DuckDB query:", query);
-
-          // Execute the query using the DuckDB instance
-          const result = await dbInstance.query(query);
+          console.log(
+            "Executing DuckDB query:",
+            actionStepGlobalDynamicQueryVar
+          );
+          const result = await dbInstance.query(
+            actionStepGlobalDynamicQueryVar
+          );
           setDataItems(result.toArray());
-
-          console.log("DuckDB Query Result:", result.toArray());
+          // if (globalQueryTable == tableName) {
+          //   // the table that we are querying, when we get query results we save that in the global query to be used to filter every other
+          //   // and when that gloabl query changes, update the other action steps
+          //   const result = await dbInstance.query(
+          //     actionStepGlobalDynamicQueryVar
+          //   );
+          //   setDataItems(result.toArray());
+          //   // let new_global_query = {
+          //   //   ...globalQuery,
+          //   // };
+          //   // new_global_query["items"] = result
+          //   //   .toArray()
+          //   //   .map((item: any) => item?.issue_id);
+          //   // setGlobalQuery(new_global_query);
+          //   // setFilteredRelatedIds
+          //   // let related_ids_query = `SELECT session_id FROM ${globalQueryTable}`;
+          // } else {
+          //   // actionStepGlobalDynamicQueryVar = `SELECT * FROM ${tableName}`;
+          //   // Execute the query using the DuckDB instance
+          //   // const result = await dbInstance.query(
+          //   //   actionStepGlobalDynamicQueryVar
+          //   // );
+          //   // setDataItems(result.toArray());
+          //   // console.log("DuckDB Query Result:", result.toArray());
+          // }
         } catch (err) {
           console.error("Error querying DuckDB:", err);
         }
@@ -117,7 +181,7 @@ export function ActionStepResults({
     };
 
     fetchFromDuckDB();
-  }, [dbInstance, globalQuery, tableName, data, isLocalDBSuccess]);
+  }, [dbInstance, globalQueryValue, tableName, data, isLocalDBSuccess]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -133,17 +197,22 @@ export function ActionStepResults({
     <>
       {/* <MonacoEditor
         value={{
-          data_items: dataItems,
-          data_fieds:
-            data?.data?.find(
-              (item: any) =>
-                item?.message?.code === record?.success_message_code
-            )?.data_fields || [],
+          globalQueryValue: globalQueryValue,
+          globalQueryTable: globalQueryTable,
+          actionStepGlobalDynamicQuery: actionStepGlobalDynamicQuery,
+          // data_items: dataItems,
+          // data_fieds:
+          //   data?.data?.find(
+          //     (item: any) =>
+          //       item?.message?.code === record?.success_message_code
+          //   )?.data_fields || [],
         }}
         language="json"
-        height="75vh"
+        height="25vh"
       /> */}
-
+      {/* <div>{globalQueryValue}</div> */}
+      {/* <div>{JSON.stringify(globalQueryTable)}</div> */}
+      {/* <div>{actionStepGlobalDynamicQuery}</div> */}
       {dataItems && (
         <DataDisplay
           data_items={dataItems || []}

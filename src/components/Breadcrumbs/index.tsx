@@ -58,15 +58,18 @@ function Breadcrumbs() {
   ));
 
   return (
-    <div className="flex flex-wrap items-start py-2">
-      <MantineBreadcrumbs
-        separator="→"
-        separatorMargin="md"
-        mt="xs"
-        className="flex flex-wrap"
-      >
-        {breadcrumbItems}
-      </MantineBreadcrumbs>
+    <div className="flex flex-col">
+      <div>State</div>
+      <div className="flex flex-wrap items-start py-2">
+        <MantineBreadcrumbs
+          separator="→"
+          separatorMargin="md"
+          mt="xs"
+          className="flex flex-wrap"
+        >
+          {breadcrumbItems}
+        </MantineBreadcrumbs>
+      </div>
     </div>
   );
 }

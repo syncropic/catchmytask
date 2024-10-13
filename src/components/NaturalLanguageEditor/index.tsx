@@ -235,7 +235,13 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
           />
         </RichTextEditor.ControlsGroup> */}
         <RichTextEditor.ControlsGroup>
-          <Tooltip label="When activated, just describe or partially fill in this form and let the system automatically and in realtime generate other part of the form, including queries and code that you can immediately edit to your liking before executing">
+          <Tooltip
+            multiline
+            w={220}
+            withArrow
+            transitionProps={{ duration: 200 }}
+            label="When activated, just describe or partially fill in this form and let the system automatically and in realtime generate other parts of the form, including queries and code that you can immediately edit to your liking before executing"
+          >
             <RichTextEditor.Control
               // onClick={() => form?.handleSubmit()}
               aria-label="Live Generate"

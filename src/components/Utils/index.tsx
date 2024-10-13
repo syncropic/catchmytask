@@ -2576,7 +2576,7 @@ export function isAllLocalDBSuccess(
   selectedActionSteps: any
 ) {
   const success_message_codes = new Set(
-    selectedActionSteps.map((action: any) => action.success_message_code)
+    selectedActionSteps?.map((action: any) => action?.success_message_code)
   );
 
   // Ensure all keys in localDBState that match success_message_codes have isLocalDBSuccess as true
@@ -2608,3 +2608,52 @@ export const iconMap: Record<string, React.ElementType> = {
   activity: IconTimelineEventPlus,
   issues: IconSquare,
 };
+
+export const useDuckDBSchema = () => {
+  const [tables, setTables] = useState([]);
+  const dbInstance = useDuckDB();
+
+  useEffect(() => {
+    const fetchSchema = async () => {
+      try {
+        const result = await dbInstance.query(`
+          SELECT table_name, column_name 
+          FROM information_schema.columns
+        `);
+        const schemaData = result.toArray();
+        const groupedTables = schemaData.reduce((acc: any, row: any) => {
+          if (!acc[row.table_name]) {
+            acc[row.table_name] = [];
+          }
+          acc[row.table_name].push(row.column_name);
+          return acc;
+        }, {});
+        setTables(groupedTables);
+      } catch (error) {
+        console.error("Error fetching schema from DuckDB:", error);
+      }
+    };
+
+    fetchSchema();
+  }, [dbInstance]);
+
+  return tables;
+};
+
+export function createIssueIdSubquery(subquery: string): string {
+  // Extract the FROM clause and optional WHERE clause from the subquery
+  const fromClauseMatch = subquery.match(/FROM\s+[\w.]+(\s+WHERE\s+.*)?/i);
+
+  if (!fromClauseMatch) {
+    // throw new Error("Invalid subquery: FROM clause not found.");
+    return "";
+  }
+
+  // Extract the FROM and WHERE clauses
+  const fromClause = fromClauseMatch[0];
+
+  // Dynamically create the subquery with issue_id
+  const issueIdSubquery = `SELECT issue_id ${fromClause}`;
+
+  return issueIdSubquery.trim();
+}

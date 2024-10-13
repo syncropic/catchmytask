@@ -41,13 +41,20 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useDuckDB } from "pages/_app";
 
+type ValidationError = string;
+
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
   return (
     <>
       {field.state.meta.isTouched && field.state.meta.errors.length ? (
-        <em>{field.state.meta.errors.join(",")}</em>
-      ) : null}
-      {field.state.meta.isValidating ? "Validating..." : null}
+        <em style={{ color: "red" }}>{field.state.meta.errors.join(",")}</em>
+      ) : field.state.meta.isValidating ? (
+        "Validating..."
+      ) : (
+        !field.state.meta.errors.length && (
+          <em style={{ color: "green" }}>Looks good!</em>
+        )
+      )}
     </>
   );
 }
@@ -112,9 +119,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     focused_entities,
     setFocusedEntities,
     selectedRecords,
-    setSelectedRecords,
     activeLayout,
     setActiveLayout,
+    globalQuery,
+    setGlobalQuery,
   } = useAppStore();
 
   const identity_object = {
@@ -476,26 +484,62 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   // const [templateUpdate, setTemplateUpdate] = useState(0);
 
   const debouncedLog = debounce((values) => {
-    // let form_input_values: { [key: string]: any } = {};
-    // form_input_values[`${data_model?.name}_${record?.id || generatedId}`] =
-    //   values;
-
-    // const key = `${data_model?.name}_${actionInputId}`;
-    // // replace all spaces with underscores and convert to lowercase the value of data_model.name
-    // let standardized_data_model_name = data_model?.name
-    // Convert the data_model.name by replacing spaces with underscores and converting to lowercase
-
-    // console.log("key", key);
-    // console.log(values);
     setActionInputFormValues({
       ...action_input_form_values,
       [action_input_form_values_key]: values,
     });
   }, 300); // 300ms debounce delay, adjust as needed
 
+  // useEffect(() => {
+  //   const unsubscribe = form.store.subscribe(() => {
+  //     debouncedLog(form.store.state.values);
+  //   });
+
+  //   return () => {
+  //     unsubscribe();
+  //     debouncedLog.cancel(); // Cancel any pending debounced calls on unmount
+  //   };
+  // }, [form.store, debouncedLog]);
+  // useEffect(() => {
+  //   const unsubscribe = form.store.subscribe(() => {
+  //     const currentValues = form.store.state.values;
+
+  //     // Check if form is valid before logging to state
+  //     if (form.store.state.isValid) {
+  //       debouncedLog(currentValues);
+  //     }
+  //   });
+
+  //   return () => {
+  //     unsubscribe();
+  //     debouncedLog.cancel(); // Cancel any pending debounced calls on unmount
+  //   };
+  // }, [form.store, debouncedLog]);
+
+  // Store the previous validity state
+  const previousIsValid = useRef(false);
+
+  // Debounced function to log the values only if the form is valid
+  // const debouncedLog = debounce((values) => {
+  //   setActionInputFormValues((prevState) => ({
+  //     ...prevState,
+  //     [action_input_form_values_key]: values,
+  //   }));
+  // }, 300); // 300ms debounce delay, adjust as needed
+
   useEffect(() => {
     const unsubscribe = form.store.subscribe(() => {
-      debouncedLog(form.store.state.values);
+      const currentValues = form.store.state.values;
+      const isValid = form.store.state.isValid;
+
+      // If form is valid, and the previous state was not valid or hasn't logged yet, log the values
+      // if (isValid && !previousIsValid.current) {
+      //   debouncedLog(currentValues);
+      // }
+      debouncedLog(currentValues);
+
+      // Update the ref to track the current validity status for future reference
+      previousIsValid.current = isValid;
     });
 
     return () => {
@@ -526,6 +570,71 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     isLoading: templateIsLoading,
     error: templateError,
   } = useReadRecordByState(read_template_state);
+
+  // const debouncedValidation = debounce(async (value) => {
+  //   try {
+  //     await dbInstance.query(`EXPLAIN ${value}`); // Run a lightweight query to check syntax
+  //     return undefined; // No errors, query is valid
+  //   } catch (error) {
+  //     return "Invalid SQL syntax"; // Return error message
+  //   }
+  // }, 300); // Adjust debounce time as needed
+  // Create a debounced validation function using a wrapper to return a Promise
+  // const debouncedValidation = debounce((value, resolve, reject) => {
+  //   dbInstance
+  //     .query(`EXPLAIN ${value}`)
+  //     .then(() => resolve(undefined)) // Query is valid, resolve with no error
+  //     .catch((error) => {
+  //       const detailedErrorMessage = error.message || "Invalid SQL syntax"; // Detailed error
+  //       resolve(detailedErrorMessage); // Resolve with error message
+  //     });
+  // }, 300);
+  // Table name extraction logic integrated into debounced validation
+  const debouncedValidation = debounce((value, resolve, reject) => {
+    // const dbInstance = useDuckDB();
+    // const { setTables } = useTableStore.getState();
+
+    dbInstance
+      .query(`EXPLAIN ${value}`) // Validate the query
+      .then((result: any) => {
+        // Query is valid, resolve with no error
+        resolve(undefined);
+        // use simple regex to extract table names from the query value
+        const tableRegex = /(?:FROM|JOIN)\s+([a-zA-Z0-9_]+)/gi;
+        const tables = [...value.matchAll(tableRegex)].map((match) => match[1]);
+        console.log("Extracted tables:", tables);
+
+        // // Extract table names from the EXPLAIN result
+        // const plan = result.toString();
+        // console.log("Query EXPLAIN:", result);
+        // console.log("Query Plan:", plan);
+        // // const tableRegex = /(?:FROM|JOIN)\s+([a-zA-Z0-9_]+)/gi;
+        // const tableRegex = /SEQ_SCAN\s+(\w+)/gi;
+        // const tables = [...plan.matchAll(tableRegex)].map((match) => match[1]);
+        // console.log("Extracted tables:", tables);
+
+        if (tables) {
+          let new_global_query = { ...globalQuery };
+          new_global_query["tables"] = tables;
+          setGlobalQuery(new_global_query);
+          // alert(`Extracted tables:, ${tables}`);
+        }
+        // // Store extracted table names in Zustand
+        // setTables(tables);
+        // console.log("Extracted tables:", tables);
+      })
+      .catch((error: any) => {
+        const detailedErrorMessage = error.message || "Invalid SQL syntax"; // Detailed error message
+        resolve(detailedErrorMessage); // Resolve with error message
+      });
+  }, 300);
+
+  // Create a function that wraps debounced validation in a Promise
+  const debouncedValidationPromise = (value: any) => {
+    return new Promise((resolve, reject) => {
+      debouncedValidation(value, resolve, reject); // Call the debounced function
+    });
+  };
 
   useEffect(() => {
     // Only make the call if the template value has changed and is not null/undefined
@@ -671,15 +780,49 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 {groupFields
                   .filter((key) => include_items.includes(key)) // Filter based on include_items state
                   .map((key) => {
+                    const fieldName = schema.properties[key]?.title
+                      .toLowerCase()
+                      .replace(/ /g, "_");
                     const Component = getComponentByResourceType(
                       schema.properties[key]?.component as ComponentKey
                     );
                     return (
                       <div key={schema.properties[key]?.title} className="mb-4">
                         <form.Field
-                          name={schema.properties[key]?.title
-                            .toLowerCase()
-                            .replace(/ /g, "_")}
+                          name={fieldName}
+                          // validators={
+                          //   fieldName === "query"
+                          //     ? {
+                          //         onChangeAsync: async ({ value }) => {
+                          //           // Await the debounced validation function
+                          //           // Validate only if value is not empty
+                          //           if (value) {
+                          //             const error =
+                          //               await debouncedValidationPromise(value);
+                          //             return error || undefined; // Return error if present, otherwise undefined
+                          //           }
+                          //           return undefined; // Return undefined if value is empty
+                          //         },
+                          //       }
+                          //     : undefined
+                          // }
+                          validators={
+                            fieldName === "query"
+                              ? {
+                                  onChangeAsync: async ({ value }) => {
+                                    if (value) {
+                                      const error =
+                                        await debouncedValidationPromise(value);
+                                      // Assuming `debouncedValidationPromise` returns an error string if there's an issue
+                                      if (error) {
+                                        return error as ValidationError; // Ensure the returned error is a valid ValidationError type
+                                      }
+                                    }
+                                    return undefined; // No error
+                                  },
+                                }
+                              : undefined
+                          }
                         >
                           {(field) => (
                             <>
@@ -717,7 +860,11 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                                 form={form}
                                 isLoading={mutationIsLoading}
                               />
-                              <FieldInfo field={field} />
+                              {fieldName === "query" && (
+                                <FieldInfo field={field} />
+                              )}
+
+                              {/* <div>fieldinfo here</div> */}
                             </>
                           )}
                         </form.Field>
@@ -729,7 +876,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           ))}
 
           {/* Handle implement Keys */}
-          {record?.implement && include_items.includes("implement") && (
+          {/* {record?.implement && include_items.includes("implement") && (
             <Accordion.Item value="implement" key="implement">
               <Accordion.Control>
                 <Title c="orange" order={5}>
@@ -781,7 +928,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 })}
               </Accordion.Panel>
             </Accordion.Item>
-          )}
+          )} */}
         </Accordion>
       </form>
       {/* <div>{JSON.stringify(mutationError)}</div> */}

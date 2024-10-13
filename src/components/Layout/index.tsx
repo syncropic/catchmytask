@@ -724,7 +724,7 @@ const Layout = ({
                             <Accordion.Control
                               icon={<IconStackBack size={16} />}
                             >
-                              State <Breadcrumbs />
+                              <Breadcrumbs />
                               <Text component="span" fw={700}>
                                 {activeSession?.internal_id}
                               </Text>
@@ -1070,10 +1070,10 @@ const Layout = ({
                 >
                   <Accordion.Item key="state" value="state">
                     <Accordion.Control icon={<IconStackBack size={16} />}>
-                      State <Breadcrumbs />
-                      <Text component="span" fw={700}>
+                      <Breadcrumbs />
+                      {/* <Text component="span" fw={700}>
                         {activeSession?.internal_id}
-                      </Text>
+                      </Text> */}
                     </Accordion.Control>
                     <Accordion.Panel>
                       <StateView />
