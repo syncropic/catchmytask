@@ -1097,3 +1097,14 @@ export interface DynamicFormProps {
   include_form_components?: string[];
   focused_item?: string;
 }
+
+// This file will define the structure and configuration of accordion sections.
+
+export interface AccordionSection {
+  key: string;
+  title: React.ReactNode; // Accepts string or React component
+  Component: React.FC<any>; // The React component to render
+  icon: React.ReactNode; // The icon for the section
+  isVisible?: boolean; // Optional visibility flag
+  [key: string]: any; // Any extra dynamic properties for future extensions
+}

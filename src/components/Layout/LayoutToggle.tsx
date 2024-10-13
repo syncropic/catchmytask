@@ -28,7 +28,7 @@ export const LayoutToggle: React.FC<LayoutToggleAndSearchProps> = ({}) => {
   return (
     <div className="flex items-center gap-4">
       <div>
-        <Tooltip label="Toggle left pane" position="top">
+        <Tooltip label="Toggle left section" position="top">
           <ActionIcon
             // size="compact-xs"
             size="sm"
@@ -45,7 +45,7 @@ export const LayoutToggle: React.FC<LayoutToggleAndSearchProps> = ({}) => {
         </Tooltip>
       </div>
       <div>
-        <Tooltip label="Toggle center pane" position="top">
+        <Tooltip label="Toggle center section" position="top">
           <ActionIcon
             // size="compact-xs"
             size="sm"
@@ -62,7 +62,7 @@ export const LayoutToggle: React.FC<LayoutToggleAndSearchProps> = ({}) => {
         </Tooltip>
       </div>
       <div>
-        <Tooltip label="Toggle right pane" position="top">
+        <Tooltip label="Toggle right section" position="top">
           <ActionIcon
             // size="compact-xs"
             size="sm"

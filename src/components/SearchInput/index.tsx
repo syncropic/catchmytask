@@ -213,7 +213,7 @@ function SearchInput<T extends Record<string, any>>({
           <FilterComponent />
         </Tooltip>
       )}
-      {include_action_icons?.includes("remove_from_state") && (
+      {/* {include_action_icons?.includes("remove_from_state") && (
         <Tooltip label="Remove from state" position="top">
           <ActionIcon
             size="xs"
@@ -225,7 +225,7 @@ function SearchInput<T extends Record<string, any>>({
             <IconX size={18} />
           </ActionIcon>
         </Tooltip>
-      )}
+      )} */}
       {include_action_icons?.includes("add_new_item") && (
         <Tooltip label="Add new item" position="top">
           <ActionIcon

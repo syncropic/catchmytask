@@ -77,6 +77,7 @@ import {
   IconChartBar,
   IconTimelineEventPlus,
   IconSquare,
+  IconStackBack,
 } from "@tabler/icons-react";
 import { localDb } from "src/localDb";
 import { useQueryClient } from "@tanstack/react-query";
@@ -143,7 +144,7 @@ import { NaturalLanguageEditorFormInput } from "@components/NaturalLanguageEdito
 import AccordionList from "@components/List/AccordionList";
 import { Checkbox } from "@components/Checkbox";
 import SearchInput from "@components/SearchInput";
-import { useClickOutside, useDisclosure } from "@mantine/hooks";
+import { useClickOutside, useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { ListEditorFormInput } from "@components/ListEditor";
 import { useDuckDB } from "pages/_app";
 import { saveToLocalDB } from "src/local_db";
@@ -2607,6 +2608,7 @@ export const iconMap: Record<string, React.ElementType> = {
   summary: IconChartBar,
   activity: IconTimelineEventPlus,
   issues: IconSquare,
+  state: IconStackBack,
 };
 
 export const useDuckDBSchema = () => {
@@ -2657,3 +2659,7 @@ export function createIssueIdSubquery(subquery: string): string {
 
   return issueIdSubquery.trim();
 }
+
+export const useIsMobile = () => {
+  return useMediaQuery("(max-width: 1024px)");
+};

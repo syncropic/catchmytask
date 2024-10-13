@@ -59,16 +59,24 @@ function Breadcrumbs() {
 
   return (
     <div className="flex flex-col">
-      <div>State</div>
+      {/* <div>State</div> */}
       <div className="flex flex-wrap items-start py-2">
-        <MantineBreadcrumbs
-          separator="→"
-          separatorMargin="md"
-          mt="xs"
-          className="flex flex-wrap"
+        <Tooltip
+          multiline
+          w={220}
+          withArrow
+          transitionProps={{ duration: 200 }}
+          label="When activated, just describe or partially fill in this form and let the system automatically and in realtime generate other parts of the form, including queries and code that you can immediately edit to your liking before executing"
         >
-          {breadcrumbItems}
-        </MantineBreadcrumbs>
+          <MantineBreadcrumbs
+            separator="→"
+            separatorMargin="md"
+            mt="xs"
+            className="flex flex-wrap"
+          >
+            State {breadcrumbItems}
+          </MantineBreadcrumbs>
+        </Tooltip>
       </div>
     </div>
   );
