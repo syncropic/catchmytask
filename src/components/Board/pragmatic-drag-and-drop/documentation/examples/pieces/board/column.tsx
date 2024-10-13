@@ -464,97 +464,11 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                     </Reveal>
                   </div>
                 </div>
-                {/* <div
-                  className="max-w-xs flex items-center"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <SearchInput
-                    placeholder={`Search for ${
-                      focused_entities[column?.id]?.["action"]
-                    } modes`}
-                    handleOptionSubmit={(item) =>
-                      handleModeSelection(
-                        item,
-                        column.id,
-                        focused_entities[column?.id]?.["action"]
-                      )
-                    }
-                    activeFilters={[
-                      {
-                        id: 1,
-                        name: `${
-                          focused_entities[column?.id]?.["action"]
-                        } modes`,
-                        description: `${
-                          focused_entities[column?.id]?.["action"]
-                        } modes`,
-                        entity_type: `${
-                          focused_entities[column?.id]?.["action"]
-                        } modes`,
-                        is_selected: true,
-                      },
-                    ]}
-                  />
-                  <div className="p-3" onClick={(e) => e.stopPropagation()}>
-                    <ExternalSubmitButton
-                      record={column}
-                      entity_type="action_steps"
-                      action={focused_entities[column?.id]?.["action"]}
-                    ></ExternalSubmitButton>
-                  </div>
-                </div> */}
+               
                 <div>
                   <ComponentsToolbar
                     include_components={[
-                      // {
-                      //   action: "display",
-                      //   entity_type: "action_steps",
-                      //   type: "action",
-                      //   record: column,
-                      //   onClick: updateComponentAction,
-                      // },
-                      // {
-                      //   action: "query",
-                      //   entity_type: "action_steps",
-                      //   type: "action",
-                      //   record: column,
-                      //   onClick: updateComponentAction,
-                      // },
-                      // {
-                      //   action: "execute",
-                      //   entity_type: "action_steps",
-                      //   type: "action",
-                      //   record: column,
-                      //   onClick: updateComponentAction,
-                      // },
-                      // {
-                      //   action: "edit",
-                      //   entity_type: "action_steps",
-                      //   type: "action",
-                      //   record: column,
-                      //   onClick: updateComponentAction,
-                      // },
-                      // {
-                      //   action: "save",
-                      //   entity_type: "action_steps",
-                      //   type: "action",
-                      //   record: column,
-                      //   onClick: updateComponentAction,
-                      // },
-                      // {
-                      //   action: "share",
-                      //   entity_type: "action_steps",
-                      //   type: "action",
-                      //   record: column,
-                      //   onClick: updateComponentAction,
-                      // },
-                      // {
-                      //   action: "cancel",
-                      //   entity_type: "action_steps",
-                      //   type: "action",
-                      //   record: column,
-                      //   onClick: updateComponentAction,
-                      // },
+                      
                       {
                         action: "fields",
                         entity_type: "action_steps",
@@ -574,90 +488,7 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                 </div>
               </div>
               <div>
-                {/* {focused_entities[column?.id]?.["form_is_visible"] && (
-                  <div>
-                    {focused_entities[column?.id]?.["action"] === "display" && (
-                      <ActionInputWrapper
-                        name="display"
-                        query_name="data_model"
-                        record={activeTask}
-                        action="display"
-                        // include_form_components={["natural language prompt"]}
-                        success_message_code="action_input_data_model_schema"
-                        update_action_input_form_values_on_submit_success={true}
-                        endpoint="display"
-                        action_label="Display"
-                      ></ActionInputWrapper>
-                    )}
-
-                    {focused_entities[column?.id]?.["action"] === "query" && (
-                      <ActionInputWrapper
-                        name="action_step"
-                        query_name="data_model"
-                        record={column}
-                        action="query"
-                        // include_form_components={["natural language prompt"]}
-                        success_message_code="action_input_data_model_schema"
-                        update_action_input_form_values_on_submit_success={true}
-                        endpoint="query"
-                        action_label="Query"
-                      ></ActionInputWrapper>
-                    )}
-                    {focused_entities[column?.id]?.["action"] === "execute" && (
-                      <ActionInputWrapper
-                        name="action_step"
-                        query_name="data_model"
-                        record={column}
-                        action="execute"
-                        // include_form_components={["natural language prompt"]}
-                        success_message_code="action_input_data_model_schema"
-                        update_action_input_form_values_on_submit_success={true}
-                        endpoint="execute"
-                        action_label="Execute"
-                      ></ActionInputWrapper>
-                    )}
-                    {focused_entities[column?.id]?.["action"] === "save" && (
-                      <ActionInputWrapper
-                        name="save"
-                        query_name="data_model"
-                        record={column}
-                        action="save"
-                        // include_form_components={["natural language prompt"]}
-                        success_message_code="action_input_data_model_schema"
-                        update_action_input_form_values_on_submit_success={true}
-                        endpoint="save"
-                        action_label="Save"
-                      ></ActionInputWrapper>
-                    )}
-                    {focused_entities[column?.id]?.["action"] === "share" && (
-                      <ActionInputWrapper
-                        name="share"
-                        query_name="data_model"
-                        record={column}
-                        action="share"
-                        // include_form_components={["natural language prompt"]}
-                        success_message_code="action_input_data_model_schema"
-                        update_action_input_form_values_on_submit_success={true}
-                        endpoint="share"
-                        action_label="Share"
-                      ></ActionInputWrapper>
-                    )}
-
-                    {focused_entities[column?.id]?.["action"] === "cancel" && (
-                      <ActionInputWrapper
-                        name="cancel"
-                        query_name="data_model"
-                        record={column}
-                        action="cancel"
-                        // include_form_components={["natural language prompt"]}
-                        success_message_code="action_input_data_model_schema"
-                        update_action_input_form_values_on_submit_success={true}
-                        endpoint="cancel"
-                        action_label="Cancel"
-                      ></ActionInputWrapper>
-                    )}
-                  </div>
-                )} */}
+                
                 {focused_entities[column?.id]?.["action"] === "save" && (
                   <div className="w-full">
                     <ActionInputWrapper

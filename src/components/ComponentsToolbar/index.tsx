@@ -1,26 +1,8 @@
 import React from "react";
 import { ActionIcon, Indicator, Tooltip, Menu } from "@mantine/core";
 import {
-  IconCircleMinus,
-  IconCircleX,
-  IconFileDownload,
   IconMenu2,
-  IconPin,
-  IconPlayerPlay,
-  IconPlayerStop,
-  IconSettingsAutomation,
-  IconShare,
-  IconTool,
-  IconZoomCode,
-  IconCopy,
-  IconTrash,
-  IconForms,
-  IconPlaylistAdd,
   IconTallymark3,
-  IconPencil,
-  IconSitemap,
-  IconCode,
-  IconSearch,
   IconLayoutSidebarLeftCollapseFilled,
   IconLayoutSidebarRightCollapseFilled,
   IconLayoutDistributeVertical,
@@ -29,6 +11,7 @@ import {
 import { useAppStore } from "src/store";
 import Reveal from "@components/Reveal";
 import ActionInputWrapper from "@components/ActionInput";
+import { iconMap } from "@components/Utils";
 
 interface ComponentsToolbarProps {
   include_components: {
@@ -63,27 +46,6 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
       new_focused_entities["action_input"].record = record;
     }
     setFocusedEntities(new_focused_entities);
-  };
-
-  // Icon mapping object
-  const iconMap: Record<string, React.ElementType> = {
-    pin: IconPin,
-    remove: IconCircleMinus,
-    configure: IconTool,
-    automate: IconSettingsAutomation,
-    save: IconFileDownload,
-    search: IconSearch,
-    execute: IconPlayerPlay,
-    query: IconZoomCode,
-    share: IconShare,
-    cancel: IconCircleX,
-    display: IconPlayerStop,
-    menu: IconMenu2,
-    implement: IconPlaylistAdd,
-    plan: IconSitemap,
-    build: IconCode,
-    fields: IconTallymark3,
-    edit: IconPencil,
   };
 
   return (
@@ -161,6 +123,7 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({
         if (component?.action === "fields") {
           return (
             <Reveal
+              key={index}
               target={
                 // <Indicator inline label={activeFiltersCount} size={16} color="blue">
                 //   <Tooltip label="Filter" position="right">

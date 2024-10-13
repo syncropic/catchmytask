@@ -46,6 +46,7 @@ function Breadcrumbs() {
 
     <Reveal
       trigger="click"
+      key={index}
       target={
         <Text size="sm" className="text-blue-500 whitespace-normal">
           {item.title}

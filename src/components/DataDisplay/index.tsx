@@ -11,31 +11,6 @@ import {
   DataDisplayComponentProps,
   ResultsComponentProps,
 } from "@components/interfaces";
-import { aggregate_views, views } from "@data/index";
-import {
-  ActionIcon,
-  Switch,
-  TextInput,
-  Tooltip,
-  Input,
-  rem,
-  Button,
-  Tabs,
-  Text,
-} from "@mantine/core";
-import {
-  IconCode,
-  IconColumns,
-  IconDatabase,
-  IconDownload,
-  IconEye,
-  IconFileDownload,
-  IconLink,
-  IconPlayerPlay,
-  IconCircleX,
-  IconZoomCode,
-  IconShare,
-} from "@tabler/icons-react";
 // import _, { set } from "lodash";
 import {
   ColumnDef,
@@ -58,17 +33,7 @@ import {
   getPaginationRowModel,
 } from "@tanstack/react-table";
 
-// import { Button } from "@components/Button";
-import { Checkbox } from "@components/Checkbox";
-
-// import { Input } from "@components/Input";
-import Reveal from "@components/Reveal";
-import ActivateActionsSelection from "@components/ActivateActionsSelection";
 import TableView from "@components/TableView";
-import SpreadsheetView from "@components/SpreadsheetView";
-import SelectViewAs from "@components/SelectViewAs";
-import { getColumnIdWithoutResourceGroup } from "src/utils";
-import { Card, Group, Badge, Container } from "@mantine/core";
 
 // A TanStack fork of Kent C. Dodds' match-sorter library that provides ranking information
 import {
@@ -78,28 +43,12 @@ import {
 } from "@tanstack/match-sorter-utils";
 import { useEffect, useState } from "react";
 import { useElementSize } from "@mantine/hooks";
-import ActionInputWrapper from "@components/ActionInput";
 import { useAppStore } from "src/store";
-import RecordsActionWrapper from "@components/RecordsAction";
 import Board from "@components/Board";
 
 import dynamic from "next/dynamic";
 // import { initializeLocalDB } from "src/local_db";
 import { useDuckDB } from "pages/_app";
-
-// Dynamically import Nivo components to support ESM
-const ResponsivePie = dynamic(
-  () => import("@nivo/pie").then((mod) => mod.ResponsivePie),
-  { ssr: false }
-);
-const ResponsiveLine = dynamic(
-  () => import("@nivo/line").then((mod) => mod.ResponsiveLine),
-  { ssr: false }
-);
-const ResponsiveBar = dynamic(
-  () => import("@nivo/bar").then((mod) => mod.ResponsiveBar),
-  { ssr: false }
-);
 
 declare module "@tanstack/react-table" {
   //add fuzzy filter to the filterFns
@@ -301,7 +250,19 @@ DataDisplayComponentProps<T>) {
   return (
     <>
       {/* <MonacoEditor
-        value={record?.success_message_code}
+        value={{
+          data_items: data_items,
+          data_fieds: sortedRecords[`${action_input_form_values_key}`]
+            ? sortedRecords[`${action_input_form_values_key}`].filter(
+                (sortedRecord: any) =>
+                  selectedRecords[`${action_input_form_values_key}`]?.some(
+                    (selectedRecord: any) =>
+                      selectedRecord.name === sortedRecord.name
+                  )
+              )
+            : selectedRecords[`${action_input_form_values_key}`] || data_fields,
+          records: table.getSortedRowModel().rows.map((row) => row.original),
+        }}
         language="json"
         height="75vh"
       /> */}
@@ -318,7 +279,6 @@ DataDisplayComponentProps<T>) {
               )
             : selectedRecords[`${action_input_form_values_key}`] || data_fields
         }
-        // data_fields={currentDataFields} // Use the state-driven columns
         tableInstance={table}
         resource_group={
           record?.success_message_code || record?.entity_type || entity_type
@@ -560,188 +520,6 @@ const SummaryComponent = ({
   );
 };
 
-const DataAnalysisExample = () => {
-  return (
-    <div className="min-h-screen p-10 bg-gray-100">
-      <Container>
-        {/* Dashboard Title */}
-        {/* <Text className="text-4xl font-bold mb-6">
-          Travel Automation Analytics Dashboard
-        </Text> */}
-
-        {/* Overview Section */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card shadow="sm" p="lg" className="bg-white">
-            <Group className="mb-3">
-              <Text>Total Bookings</Text>
-              <Badge color="green">+12%</Badge>
-            </Group>
-            <Text className="text-3xl font-semibold">8,430</Text>
-          </Card>
-
-          <Card shadow="sm" p="lg" className="bg-white">
-            <Group className="mb-3">
-              <Text>Pending Issues</Text>
-              <Badge color="red">+18%</Badge>
-            </Group>
-            <Text className="text-3xl font-semibold">320</Text>
-          </Card>
-
-          <Card shadow="sm" p="lg" className="bg-white">
-            <Group className="mb-3">
-              <Text>Successful Payments</Text>
-              <Badge color="blue">+15%</Badge>
-            </Group>
-            <Text className="text-3xl font-semibold">$3.5M</Text>
-          </Card>
-
-          <Card shadow="sm" p="lg" className="bg-white">
-            <Group className="mb-3">
-              <Text>Cancellations</Text>
-              <Badge color="orange">-5%</Badge>
-            </Group>
-            <Text className="text-3xl font-semibold">780</Text>
-          </Card>
-        </div>
-
-        {/* Pie Chart Section */}
-        <Card shadow="sm" p="lg" className="bg-white mb-8">
-          <Text className="text-xl font-bold mb-4">
-            Booking Distribution by Service Type
-          </Text>
-          <div className="h-80">
-            <ResponsivePie
-              data={[
-                { label: "Flights", value: 45 } as {
-                  label: string;
-                  value: number;
-                },
-                { label: "Hotels", value: 25 },
-                { label: "Cars", value: 15 },
-                { label: "Transfers", value: 10 },
-                { label: "Activities", value: 5 },
-              ]}
-              margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-              innerRadius={0.5}
-              padAngle={0.7}
-              cornerRadius={3}
-              activeOuterRadiusOffset={8}
-            />
-          </div>
-        </Card>
-
-        {/* Issue Trends Section */}
-        <Card shadow="sm" p="lg" className="bg-white mb-8">
-          <Text className="text-xl font-bold mb-4">
-            Issues Trends (Open vs Closed)
-          </Text>
-          <div className="h-80">
-            <ResponsiveBar
-              data={[
-                { month: "January", open: 100, closed: 80 },
-                { month: "February", open: 150, closed: 120 },
-                { month: "March", open: 200, closed: 180 },
-                { month: "April", open: 170, closed: 160 },
-                { month: "May", open: 220, closed: 200 },
-              ]}
-              keys={["open", "closed"]}
-              indexBy="month"
-              margin={{ top: 40, right: 50, bottom: 50, left: 60 }}
-              axisBottom={{
-                legend: "Month",
-                legendPosition: "middle",
-                legendOffset: 32,
-              }}
-              axisLeft={{ legend: "Issues", legendOffset: -40 }}
-              colors={{ scheme: "paired" }}
-              labelSkipWidth={12}
-              labelSkipHeight={12}
-              enableGridY={true}
-            />
-          </div>
-        </Card>
-
-        {/* Bar Chart Section */}
-        <Card shadow="sm" p="lg" className="bg-white mb-8">
-          <Text className="text-xl font-bold mb-4">Issues by Category</Text>
-          <div className="h-80">
-            <ResponsiveBar
-              data={[
-                { category: "Payment", issues: 120 },
-                { category: "Supplier Mismatch", issues: 90 },
-                { category: "Cancellation Errors", issues: 60 },
-                { category: "Booking Confirmations", issues: 50 },
-              ]}
-              keys={["issues"]}
-              indexBy="category"
-              margin={{ top: 40, right: 50, bottom: 50, left: 60 }}
-              axisBottom={{
-                legend: "Category",
-                legendPosition: "middle",
-                legendOffset: 32,
-              }}
-              axisLeft={{ legend: "Issues", legendOffset: -40 }}
-            />
-          </div>
-        </Card>
-
-        {/* Table Section */}
-        <Card shadow="sm" p="lg" className="bg-white mb-8">
-          <Text className="text-xl font-bold mb-4">
-            Top Issues Requiring Escalation
-          </Text>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2 border-b-2">Issue Type</th>
-                  <th className="px-4 py-2 border-b-2">Category</th>
-                  <th className="px-4 py-2 border-b-2">Affected Bookings</th>
-                  <th className="px-4 py-2 border-b-2">Pending Since</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="px-4 py-2 border-b">Payment Discrepancy</td>
-                  <td className="px-4 py-2 border-b">Payment</td>
-                  <td className="px-4 py-2 border-b">45</td>
-                  <td className="px-4 py-2 border-b">5 days</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 border-b">Supplier Mismatch</td>
-                  <td className="px-4 py-2 border-b">Supplier</td>
-                  <td className="px-4 py-2 border-b">30</td>
-                  <td className="px-4 py-2 border-b">3 days</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 border-b">
-                    Unconfirmed Cancellations
-                  </td>
-                  <td className="px-4 py-2 border-b">Cancellation</td>
-                  <td className="px-4 py-2 border-b">20</td>
-                  <td className="px-4 py-2 border-b">7 days</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </Card>
-
-        {/* Summary Section */}
-        <Card shadow="sm" p="lg" className="bg-white mb-8">
-          <Text className="text-xl font-bold mb-4">
-            Summary of Margins and Financials
-          </Text>
-          <Text>Total Revenue: $3.5M</Text>
-          <Text>Total Costs: $2.1M</Text>
-          <Text>Profit Margin: 40%</Text>
-          <Text>Refunds Processed: $200k</Text>
-          <Text>Pending Refunds: $50k</Text>
-        </Card>
-      </Container>
-    </div>
-  );
-};
-
 export function SummaryDisplay<T extends Record<string, any>>({
   display_mode,
   data_items,
@@ -814,51 +592,6 @@ DataDisplayComponentProps<T>) {
     //   ],
     // },
   });
-
-  // useEffect(() => {
-  //   if (data_fields && record?.id) {
-  //     // Create the new fields object
-  //     const new_fields = {
-  //       ...fields,
-  //       [record.id]: data_fields,
-  //     };
-
-  //     // Check if the new fields are different from the current fields
-  //     const fieldsChanged =
-  //       JSON.stringify(fields[record.id]) !== JSON.stringify(data_fields);
-
-  //     if (fieldsChanged) {
-  //       setFields(new_fields);
-  //     }
-  //   }
-  // }, [data_fields, record?.id, fields, setFields]);
-
-  // // let selected_record_items_key = `${action}_action_input_${record?.id}`;
-  // const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
-  // const action_input_form_values_key = `action_input_${actionInputId}`;
-  // // return board for action steps by default
-  // if (entity_type === "action_steps") {
-  //   return (
-  //     <Board
-  //       data_fields={data_items?.filter(
-  //         (item: { name: string }) =>
-  //           item &&
-  //           selectedRecords[`${action_input_form_values_key}`]?.some(
-  //             (record: { name: string }) => record.name === item?.name
-  //           )
-  //       )}
-  //     ></Board>
-  //   );
-  // }
-  // // return summary if record?.name === "summary"
-  // if (record?.name === "summary") {
-  //   return <SummaryComponent />;
-  // }
-
-  // // return summary if record?.name === "summary"
-  // if (entity_type === "summary") {
-  //   return <div>summary entity type</div>;
-  // }
 
   // default return table view
   return (
