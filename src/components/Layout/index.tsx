@@ -82,6 +82,7 @@ import Reveal from "@components/Reveal";
 import PlanWrapper from "@components/Plan";
 import GlobalSearchInput from "@components/GlobalSearchInput";
 import BulkOperationsToolbar from "@components/BulkOperationsToolbar";
+import PinnedActionStepResults from "@components/PinnedActionStepResults";
 
 function InitializeApplication({
   activeApplicationId,
@@ -1124,34 +1125,26 @@ const Layout = ({
                         Summary
                       </Accordion.Control>
                       <Accordion.Panel>
-                        <div className="flex items-center justify-center p-4">
-                          <p className="text-sm text-gray-600 text-center">
-                            Action step named "summary" will appear here when
-                            pinned (coming soon).
-                          </p>
-                        </div>
-                        {/* {activeTask ? (
-                        <div className="w-full">
-                          {" "}
-                          <PlanWrapper
-                            name="list items"
-                            query_name="data_model"
-                            record={activeTask}
-                            action={"plan"}
-                            success_message_code="action_input_data_model_schema"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center p-4">
-                          <p className="text-sm text-gray-600 text-center">
-                            Action plan appears here.
-                          </p>
-                        </div>
-                      )} */}
+                        {activeTask &&
+                        selectedRecords[
+                          `plan_action_input_${activeTask?.id}`
+                        ]?.some(
+                          (record: { name: string }) =>
+                            record.name === "summary"
+                        ) ? (
+                          <PinnedActionStepResults success_message_code="summary" />
+                        ) : (
+                          <div className="flex items-center justify-center p-4">
+                            <p className="text-sm text-gray-600 text-center">
+                              Action step named "summary" will appear here when
+                              pinned.
+                            </p>
+                          </div>
+                        )}
                       </Accordion.Panel>
                     </Accordion.Item>
                   )}
-
+                  {/* // activity */}
                   {pinned_action_steps["activity"]?.is_displayed && (
                     <Accordion.Item key="activity" value="activity">
                       <Accordion.Control
@@ -1160,31 +1153,52 @@ const Layout = ({
                         Activity
                       </Accordion.Control>
                       <Accordion.Panel>
-                        <div className="flex items-center justify-center p-4">
-                          <p className="text-sm text-gray-600 text-center">
-                            Action step named "activity" will appear here when
-                            pinned (coming soon).
-                          </p>
-                        </div>
+                        {activeTask &&
+                        selectedRecords[
+                          `plan_action_input_${activeTask?.id}`
+                        ]?.some(
+                          (record: { name: string }) =>
+                            record.name === "activity"
+                        ) ? (
+                          <PinnedActionStepResults success_message_code="activity" />
+                        ) : (
+                          <div className="flex items-center justify-center p-4">
+                            <p className="text-sm text-gray-600 text-center">
+                              Action step named "activity" will appear here when
+                              pinned.
+                            </p>
+                          </div>
+                        )}
                       </Accordion.Panel>
                     </Accordion.Item>
                   )}
 
+                  {/* // issues */}
                   {pinned_action_steps["issues"]?.is_displayed && (
                     <Accordion.Item key="issues" value="issues">
                       <Accordion.Control icon={<IconSquare size={16} />}>
                         Issues
                       </Accordion.Control>
                       <Accordion.Panel>
-                        <div className="flex items-center justify-center p-4">
-                          <p className="text-sm text-gray-600 text-center">
-                            Action step named "issues" will appear here when
-                            pinned (coming soon).
-                          </p>
-                        </div>
+                        {activeTask &&
+                        selectedRecords[
+                          `plan_action_input_${activeTask?.id}`
+                        ]?.some(
+                          (record: { name: string }) => record.name === "issues"
+                        ) ? (
+                          <PinnedActionStepResults success_message_code="issues" />
+                        ) : (
+                          <div className="flex items-center justify-center p-4">
+                            <p className="text-sm text-gray-600 text-center">
+                              Action step named "issues" will appear here when
+                              pinned.
+                            </p>
+                          </div>
+                        )}
                       </Accordion.Panel>
                     </Accordion.Item>
                   )}
+
                   <Accordion.Item key="plan" value="plan">
                     <Accordion.Control icon={<IconListTree size={16} />}>
                       Plan

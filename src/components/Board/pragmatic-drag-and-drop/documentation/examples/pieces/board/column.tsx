@@ -464,11 +464,10 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                     </Reveal>
                   </div>
                 </div>
-               
+
                 <div>
                   <ComponentsToolbar
                     include_components={[
-                      
                       {
                         action: "fields",
                         entity_type: "action_steps",
@@ -488,7 +487,6 @@ export const Column = memo(function Column({ column }: { column: ActionStep }) {
                 </div>
               </div>
               <div>
-                
                 {focused_entities[column?.id]?.["action"] === "save" && (
                   <div className="w-full">
                     <ActionInputWrapper
@@ -563,62 +561,62 @@ function SafariColumnPreview({ column }: { column: ActionStep }) {
   );
 }
 
-function ActionMenu() {
-  return (
-    <DropdownMenu trigger={DropdownMenuTrigger}>
-      <ActionMenuItems />
-    </DropdownMenu>
-  );
-}
+// function ActionMenu() {
+//   return (
+//     <DropdownMenu trigger={DropdownMenuTrigger}>
+//       <ActionMenuItems />
+//     </DropdownMenu>
+//   );
+// }
 
-function ActionMenuItems() {
-  const { columnId } = useColumnContext();
-  const { getColumns, reorderColumn } = useBoardContext();
+// function ActionMenuItems() {
+//   const { columnId } = useColumnContext();
+//   const { getColumns, reorderColumn } = useBoardContext();
 
-  const columns = getColumns();
-  const startIndex = columns.findIndex((column) => column.id === columnId);
+//   const columns = getColumns();
+//   const startIndex = columns.findIndex((column) => column.id === columnId);
 
-  const moveLeft = useCallback(() => {
-    reorderColumn({
-      startIndex,
-      finishIndex: startIndex - 1,
-    });
-  }, [reorderColumn, startIndex]);
+//   const moveLeft = useCallback(() => {
+//     reorderColumn({
+//       startIndex,
+//       finishIndex: startIndex - 1,
+//     });
+//   }, [reorderColumn, startIndex]);
 
-  const moveRight = useCallback(() => {
-    reorderColumn({
-      startIndex,
-      finishIndex: startIndex + 1,
-    });
-  }, [reorderColumn, startIndex]);
+//   const moveRight = useCallback(() => {
+//     reorderColumn({
+//       startIndex,
+//       finishIndex: startIndex + 1,
+//     });
+//   }, [reorderColumn, startIndex]);
 
-  const isMoveLeftDisabled = startIndex === 0;
-  const isMoveRightDisabled = startIndex === columns.length - 1;
+//   const isMoveLeftDisabled = startIndex === 0;
+//   const isMoveRightDisabled = startIndex === columns.length - 1;
 
-  return (
-    <DropdownItemGroup>
-      <DropdownItem onClick={moveLeft} isDisabled={isMoveLeftDisabled}>
-        Move left
-      </DropdownItem>
-      <DropdownItem onClick={moveRight} isDisabled={isMoveRightDisabled}>
-        Move right
-      </DropdownItem>
-    </DropdownItemGroup>
-  );
-}
+//   return (
+//     <DropdownItemGroup>
+//       <DropdownItem onClick={moveLeft} isDisabled={isMoveLeftDisabled}>
+//         Move left
+//       </DropdownItem>
+//       <DropdownItem onClick={moveRight} isDisabled={isMoveRightDisabled}>
+//         Move right
+//       </DropdownItem>
+//     </DropdownItemGroup>
+//   );
+// }
 
-function DropdownMenuTrigger({
-  triggerRef,
-  ...triggerProps
-}: CustomTriggerProps) {
-  return (
-    <IconButton
-      ref={mergeRefs([triggerRef])}
-      appearance="subtle"
-      label="Actions"
-      spacing="compact"
-      icon={MoreIcon}
-      {...triggerProps}
-    />
-  );
-}
+// function DropdownMenuTrigger({
+//   triggerRef,
+//   ...triggerProps
+// }: CustomTriggerProps) {
+//   return (
+//     <IconButton
+//       ref={mergeRefs([triggerRef])}
+//       appearance="subtle"
+//       label="Actions"
+//       spacing="compact"
+//       icon={MoreIcon}
+//       {...triggerProps}
+//     />
+//   );
+// }

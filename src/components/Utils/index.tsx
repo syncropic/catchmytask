@@ -2571,10 +2571,18 @@ export function extractLabelsFromDefaults(defaultValues: any) {
   return labelValues;
 }
 
-export function isAllLocalDBSuccess(localDBState: any) {
-  return Object.values(localDBState).every(
-    (item: any) => item.isLocalDBSuccess === true
+export function isAllLocalDBSuccess(
+  localDBState: any,
+  selectedActionSteps: any
+) {
+  const success_message_codes = new Set(
+    selectedActionSteps.map((action: any) => action.success_message_code)
   );
+
+  // Ensure all keys in localDBState that match success_message_codes have isLocalDBSuccess as true
+  return Object.keys(localDBState)
+    .filter((key: any) => success_message_codes.has(key))
+    .every((key: any) => localDBState[key].isLocalDBSuccess === true);
 }
 
 // Icon mapping object
