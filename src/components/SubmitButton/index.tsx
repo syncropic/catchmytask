@@ -32,9 +32,7 @@ export const ExternalSubmitButton = ({
   //   (state) => state.isSubmitting
   // );
   if (!formInstance) {
-    return (
-      <>{JSON.stringify(`form instance not available, formId: ${formId}`)}</>
-    );
+    return <>form instance unavailable</>;
   }
 
   return (

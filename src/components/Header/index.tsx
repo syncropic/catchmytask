@@ -2,7 +2,11 @@ import React from "react";
 import LayoutToggle from "@components/Layout/LayoutToggle";
 import UserMenu from "@components/Layout/UserMenu";
 import { LogoName } from "@components/LogoName/LogoName";
-import { useFetchDomainDataByDomain } from "@components/Utils";
+import {
+  getLabel,
+  getTooltipLabel,
+  useFetchDomainDataByDomain,
+} from "@components/Utils";
 import { useGo } from "@refinedev/core";
 import { useAppStore } from "src/store";
 import SearchBar from "@components/SearchBar";
@@ -20,6 +24,7 @@ import SearchInput from "@components/SearchInput";
 import Reveal from "@components/Reveal";
 import MonacoEditor from "@components/MonacoEditor";
 import PinActionStepsToggle from "@components/PinActionStepsToggle";
+import CustomTooltipComponent from "@components/CustomTooltipComponent";
 
 interface HeaderComponentProps {
   authenticatedData?: any;
@@ -142,13 +147,17 @@ const LargeScreenHeader = ({
         <Reveal
           trigger="click"
           target={
-            <Text
-              truncate="end"
-              size="xs"
-              className="text-blue-500 pr-3 cursor-pointer"
+            <Tooltip
+              multiline
+              w={220}
+              withArrow
+              transitionProps={{ duration: 200 }}
+              label={getTooltipLabel(activeTask)}
             >
-              {activeTask?.name}
-            </Text>
+              <Text size="sm" className="text-blue-500 whitespace-normal">
+                {getLabel(activeTask)}
+              </Text>
+            </Tooltip>
           }
         >
           <MonacoEditor value={activeTask} language="json" height="50vh" />

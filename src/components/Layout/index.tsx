@@ -1,23 +1,79 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Authenticated, useIsAuthenticated } from "@refinedev/core";
+import {
+  Authenticated,
+  useGo,
+  useIsAuthenticated,
+  useParsed,
+} from "@refinedev/core";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import ResizeHandle from "@components/ResizeHandle";
 import { useDomainData } from "@components/Utils/useDomainData";
 import { useSessionAndTask } from "@components/Utils/useSessionAndTask";
 import AccordionComponent from "@components/AccordionComponent";
 import ErrorComponent from "@components/ErrorComponent";
-import { sampleAccordionConfig } from "./sampleAccordionConfig";
 import Breadcrumbs from "@components/Breadcrumbs";
-import QuickActionsBar from "@components/QuickActionsBar";
-import StateView from "@components/StateView";
 import AppLayout from "./AppLayout";
-import { useMediaQuery } from "@mantine/hooks";
 import { useAppStore } from "src/store"; // Zustand store
-import { useComputedColorScheme, Highlight } from "@mantine/core";
+import { useComputedColorScheme, Highlight, Button } from "@mantine/core";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react"; // Icons for scroll hints
-import { useIsMobile } from "@components/Utils";
-import { searchAccordionConfig } from "./searchActionAccordionConfig";
+import {
+  getComponentByKey,
+  useBulkActionSelect,
+  useIsMobile,
+} from "@components/Utils";
+import { searchActionAccordionConfig } from "./searchActionAccordionConfig";
 import { stateViewAccordionConfig } from "./stateViewAccordionConfig";
+import { planViewAccordionConfig } from "./planAccordionConfig";
+import { executionAccordionConfig } from "./executionAccordionConfig";
+import { saveActionAccordionConfig } from "./saveActionAccordionConfig";
+import { summaryViewAccordionConfig } from "./summaryAccordionConfig";
+import { issuesViewAccordionConfig } from "./issuesAccordionConfig";
+import { actionInputAccordionConfig } from "./actionInputAccordionConfig";
+import InitializeApplication from "@components/Utils/InitializeApplication";
+import { ComponentKey } from "@components/interfaces";
+import MonacoEditor from "@components/MonacoEditor";
+
+// Handling redirect to task/session when authenticated
+interface RedirectToActiveTaskParams {
+  authenticatedData: any;
+  activeTask: any;
+  activeSession: any;
+  activeApplication: any;
+  go: any;
+}
+
+function redirectToActiveTask({
+  authenticatedData,
+  activeTask,
+  activeSession,
+  activeApplication,
+  go,
+}: RedirectToActiveTaskParams) {
+  useEffect(() => {
+    if (authenticatedData?.authenticated && activeTask?.id) {
+      const targetUrl = `/tasks/show/${activeTask.id}?applicationId=${activeApplication?.id}&sessionId=${activeSession?.id}`;
+      if (window.location.pathname + window.location.search !== targetUrl) {
+        go({
+          to: {
+            resource: "tasks",
+            action: "show",
+            id: activeTask.id,
+            meta: {
+              applicationId: activeApplication?.id || null,
+              sessionId: activeSession?.id || null,
+              taskId: activeTask.id,
+            },
+          },
+          query: {
+            applicationId: activeApplication?.id || null,
+            sessionId: activeSession?.id || null,
+          },
+          type: "push",
+        });
+      }
+    }
+  }, [authenticatedData, activeTask, activeApplication, activeSession, go]);
+}
 
 const Layout = ({
   children,
@@ -26,10 +82,16 @@ const Layout = ({
   children: React.ReactNode;
   noAuth?: boolean;
 }) => {
+  // const {
+  //   domainData,
+  //   isLoading: isLoadingDomainData,
+  //   error: errorDomainData,
+  //   domainRecord,
+  // } = useDomainData();
   const {
     domainData,
     isLoading: isLoadingDomainData,
-    error: errorDomainData,
+    error: domainDataError,
     domainRecord,
   } = useDomainData();
   const {
@@ -46,7 +108,10 @@ const Layout = ({
     activeTask,
     activeSession,
     focused_entities,
+    selectedRecords,
+    pinned_action_steps,
   } = useAppStore(); // Accessing layout state from Zustand
+  const { bulkActionSelect } = useBulkActionSelect();
 
   const { leftSection, centerSection, rightSection } = activeLayout; // Destructure the sections for visibility checks
 
@@ -55,6 +120,17 @@ const Layout = ({
     colorScheme.scheme === "auto" ? computedColorScheme : colorScheme.scheme;
 
   useSessionAndTask(domainRecord);
+  const go = useGo(); // Navigation function
+  const parsed = useParsed(); // Parsed pathname from useParsed hook
+
+  // Redirect handling for task and session
+  redirectToActiveTask({
+    authenticatedData,
+    activeTask,
+    activeSession,
+    activeApplication: domainRecord?.application,
+    go,
+  });
 
   let action = focused_entities[activeTask?.id]?.["action"];
 
@@ -84,18 +160,97 @@ const Layout = ({
     return () => clearTimeout(timer);
   }, []);
 
-  if (isLoadingDomainData || isLoadingAuthenticatedData) return <>Loading...</>;
-  if (errorDomainData || errorAuthenticatedData) {
-    let component = errorDomainData
-      ? "error loading domain data"
-      : "error loading authenticated data";
+  // if (isLoadingDomainData || isLoadingAuthenticatedData) return <>Loading...</>;
+  // if (errorDomainData || errorAuthenticatedData) {
+  //   let component = errorDomainData
+  //     ? "error loading domain data"
+  //     : "error loading authenticated data";
+  //   return (
+  //     <ErrorComponent
+  //       error={errorDomainData || isLoadingAuthenticatedData}
+  //       component={component}
+  //     />
+  //   );
+  // }
+
+  // Redirect and render logic based on the user's authentication status and path
+  if (isLoadingAuthenticatedData || isLoadingDomainData) {
+    return <>Loading...</> || null;
+  }
+
+  if (domainDataError) {
     return (
-      <ErrorComponent
-        error={errorDomainData || isLoadingAuthenticatedData}
-        component={component}
+      <MonacoEditor
+        value={{
+          data: domainDataError?.response?.data,
+          status: domainDataError?.response?.status,
+        }}
+        language="json"
+        height="75vh"
       />
     );
   }
+
+  if (!authenticatedData?.authenticated && parsed?.pathname === "/login") {
+    return <>{children}</>;
+  }
+
+  if (!authenticatedData?.authenticated && parsed?.pathname === "/") {
+    const domain_data =
+      domainData?.data?.find(
+        (item: any) => item?.message?.code === "query_success_results"
+      )?.data?.[0] || {};
+
+    const visible_sections =
+      domain_data?.domain?.metadata?.visible_sections || null;
+    const application = domain_data?.application || null;
+
+    return (
+      <>
+        <AppLayout authenticatedData={authenticatedData}>
+          <InitializeApplication>
+            <>
+              {visible_sections &&
+                visible_sections.map((section: string) => {
+                  const Component = getComponentByKey(section as ComponentKey);
+                  return (
+                    <Component
+                      title={application["titles"]?.find(
+                        (title: any) =>
+                          title["metadata"]["section"] === `${section}`
+                      )}
+                      items={application[section]}
+                      entity_type={section}
+                      key={section}
+                    ></Component>
+                  );
+                })}
+            </>
+          </InitializeApplication>
+        </AppLayout>
+      </>
+    );
+  }
+
+  if (!authenticatedData?.authenticated && parsed?.pathname !== "/login") {
+    return (
+      <>
+        <Button
+          size="xs"
+          onClick={() => {
+            go({
+              to: "/login",
+              type: "push",
+            });
+          }}
+        >
+          Sign In
+        </Button>
+      </>
+    );
+  }
+
+  // Return the authenticated layout with your existing logic
 
   return (
     <Authenticated key="home" redirectOnFail="/login">
@@ -111,9 +266,9 @@ const Layout = ({
               {/* Left section content */}
               {action && pinned_main_action === action && (
                 <AccordionComponent
-                  sections={searchAccordionConfig}
-                  activeTask={domainRecord?.activeTask}
-                  activeSession={domainRecord?.activeSession}
+                  sections={searchActionAccordionConfig}
+                  activeTask={activeTask}
+                  activeSession={activeSession}
                 />
               )}
 
@@ -174,8 +329,8 @@ const Layout = ({
               {/* Right section content */}
               <AccordionComponent
                 sections={stateViewAccordionConfig}
-                activeTask={domainRecord?.activeTask}
-                activeSession={domainRecord?.activeSession}
+                activeTask={activeTask}
+                activeSession={activeSession}
               />
               {/* Right Scroll Gradient */}
 
@@ -207,16 +362,21 @@ const Layout = ({
                 style={{ display: leftSection.isDisplayed ? "block" : "none" }}
               >
                 <div
-                  className={`lg:block overflow-auto h-screen ${
+                  className={`lg:block overflow-auto h-[80vh] ${
                     effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
                   }`}
                 >
                   {/* Left section content */}
-                  {action && pinned_main_action === action && (
+                  {action && pinned_main_action === "search" && (
                     <AccordionComponent
-                      sections={searchAccordionConfig}
-                      activeTask={domainRecord?.activeTask}
-                      activeSession={domainRecord?.activeSession}
+                      sections={searchActionAccordionConfig}
+                      defaultExpandedValues={["search"]}
+                    />
+                  )}
+                  {action && pinned_main_action === "save" && (
+                    <AccordionComponent
+                      sections={saveActionAccordionConfig}
+                      defaultExpandedValues={["save"]}
                     />
                   )}
                 </div>
@@ -230,10 +390,21 @@ const Layout = ({
                   <ResizeHandle />
                 </PanelResizeHandle>
                 <Panel defaultSize={60} minSize={30}>
-                  <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-                    {/* <QuickActionsBar />
-                    <StateView />
-                    {/* {children} */}
+                  <div className="">
+                    {/* // to load in the page content */}
+                    {activeSession && activeTask && children}
+                    {/* accordion components in the center section */}
+                    {activeTask && (
+                      <AccordionComponent
+                        sections={executionAccordionConfig}
+                        activeTask={activeTask}
+                        activeSession={activeSession}
+                        bulkActionSelect={bulkActionSelect}
+                        selectedRecords={selectedRecords}
+                        defaultExpandedValues={["execution"]}
+                      />
+                    )}
+
                     {!activeSession && (
                       <div
                         className="flex flex-col h-screen items-center justify-center p-4"
@@ -242,6 +413,8 @@ const Layout = ({
                           // paddingBottom: "60px",
                         }}
                       >
+                        {children}
+
                         <Breadcrumbs />
                         <p className="text-sm text-gray-600 text-center max-w-sm">
                           <Highlight color="violet" highlight="session">
@@ -259,6 +432,8 @@ const Layout = ({
                           // paddingBottom: "60px",
                         }}
                       >
+                        {children}
+
                         <Breadcrumbs />
                         <p className="text-sm text-gray-600 text-center max-w-sm">
                           <Highlight color="lime" highlight="task">
@@ -267,6 +442,7 @@ const Layout = ({
                         </p>
                       </div>
                     )}
+                    {/* {children} */}
                   </div>
                 </Panel>
               </>
@@ -286,18 +462,57 @@ const Layout = ({
                   }}
                 >
                   <div
-                    className={`overflow-auto h-screen ${
+                    className={`overflow-auto h-[80vh] ${
                       effectiveScheme === "light"
                         ? "bg-gray-100"
                         : "bg-gray-800"
                     }`}
                   >
-                    {/* Placeholder for right panel content */}
+                    {/* state view */}
                     <AccordionComponent
                       sections={stateViewAccordionConfig}
-                      activeTask={domainRecord?.activeTask}
-                      activeSession={domainRecord?.activeSession}
+                      activeTask={activeTask}
+                      activeSession={activeSession}
                     />
+                    {/* pinned action step issues */}
+                    {activeTask &&
+                      action &&
+                      !["save", "search"]?.includes(action) && (
+                        <AccordionComponent
+                          sections={actionInputAccordionConfig}
+                          selectedRecords={selectedRecords}
+                          action={action}
+                          activeTask={activeTask}
+                          defaultExpandedValues={["action_input"]}
+                        />
+                      )}
+                    {/* pinned action step summary */}
+                    {activeTask &&
+                      pinned_action_steps["summary"]?.is_displayed && (
+                        <AccordionComponent
+                          sections={summaryViewAccordionConfig}
+                          selectedRecords={selectedRecords}
+                          defaultExpandedValues={["summary"]}
+                        />
+                      )}
+                    {/* pinned action step issues */}
+                    {activeTask &&
+                      pinned_action_steps["issues"]?.is_displayed && (
+                        <AccordionComponent
+                          sections={issuesViewAccordionConfig}
+                          selectedRecords={selectedRecords}
+                          defaultExpandedValues={["issues"]}
+                        />
+                      )}
+                    {/* plan accordion component */}
+                    {activeTask && (
+                      <AccordionComponent
+                        sections={planViewAccordionConfig}
+                        activeTask={activeTask}
+                        activeSession={activeSession}
+                        defaultExpandedValues={["plan"]}
+                      />
+                    )}
                   </div>
                 </Panel>
               </>

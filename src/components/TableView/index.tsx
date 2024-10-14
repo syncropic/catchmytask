@@ -13,7 +13,15 @@ import { getColumnIdWithoutResourceGroup } from "src/utils";
 import { Column } from "@tanstack/react-table";
 import React from "react";
 import { DebouncedInput } from "@components/Utils";
-import { ActionIcon, Box, Button, Group, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Card,
+  Group,
+  Tooltip,
+  Text,
+} from "@mantine/core";
 import { useAppStore } from "src/store";
 import RecordActionsWrapper from "@components/RecordActions";
 import { sortBy } from "lodash";
@@ -25,6 +33,22 @@ import classes from "./NestedTablesExample.module.css";
 import { access } from "fs";
 import { render } from "react-dom";
 import { useContextMenu } from "mantine-contextmenu";
+import dynamic from "next/dynamic";
+// import { initializeLocalDB } from "src/local_db";
+
+// Dynamically import Nivo components to support ESM
+const ResponsivePie = dynamic(
+  () => import("@nivo/pie").then((mod) => mod.ResponsivePie),
+  { ssr: false }
+);
+const ResponsiveLine = dynamic(
+  () => import("@nivo/line").then((mod) => mod.ResponsiveLine),
+  { ssr: false }
+);
+const ResponsiveBar = dynamic(
+  () => import("@nivo/bar").then((mod) => mod.ResponsiveBar),
+  { ssr: false }
+);
 
 const PAGE_SIZES = [10, 15, 20];
 
@@ -265,6 +289,7 @@ export function TableView<T extends Record<string, any>>({
           // records={tableInstance
           //   .getFilteredRowModel()
           //   .rows.map((row) => row.original)}
+          {...(resource_group !== "summary" && { height: "60vh" })} // dynamically include or exclude height
           records={tableInstance
             .getSortedRowModel()
             .rows.map((row) => row.original)}
@@ -314,9 +339,9 @@ export function TableView<T extends Record<string, any>>({
           }}
           rowExpansion={{
             allowMultiple: true,
-            initiallyExpanded: ({ record: { state } }) => true,
+            initiallyExpanded: ({ record: { id } }) => id === "issues",
             expanded: {
-              recordIds: expandedRecordIds,
+              recordIds: ["issues", ...expandedRecordIds],
               onRecordIdsChange: setExpandedRecordIds,
             },
             content: ({ record, collapse }) => (
@@ -430,11 +455,41 @@ export function TableView<T extends Record<string, any>>({
                       isMobile ? "w-[400px]" : "w-full"
                     } max-w-full max-h-screen overflow-y-auto p-4`}
                   >
-                    <MonacoEditor
+                    {/* <MonacoEditor
                       value={record}
                       language="json"
                       height="25vh"
-                    />
+                    /> */}
+                    {/* Bar Chart Section */}
+                    <Card shadow="sm" p="lg" className="bg-white mb-8">
+                      <Text className="font-bold mb-4">
+                        Issues by Resolution Status
+                      </Text>
+                      <div className="h-80">
+                        <ResponsiveBar
+                          data={[
+                            { category: "closed", issues: 10 },
+                            { category: "open", issues: 16 },
+                            { category: "pending", issues: 4 },
+                          ]}
+                          keys={["issues"]}
+                          indexBy="category"
+                          margin={{ top: 40, right: 50, bottom: 50, left: 60 }}
+                          colors={({ data }) => {
+                            if (data.category === "closed") return "#66BB6A"; // Pleasant green
+                            if (data.category === "open") return "#EF5350"; // Pleasant red
+                            if (data.category === "pending") return "#FFA726"; // Pleasant orange
+                            return "#888"; // Default color
+                          }}
+                          axisBottom={{
+                            legend: "Category",
+                            legendPosition: "middle",
+                            legendOffset: 32,
+                          }}
+                          axisLeft={{ legend: "Issues", legendOffset: -40 }}
+                        />
+                      </div>
+                    </Card>
                   </div>
                 )}
               </>

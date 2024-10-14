@@ -373,18 +373,22 @@ export const ListEditorFormInput = ({ ...props }: any) => {
 
   const columns: DataTableColumn<any>[] = [
     // add empty header column for the drag handle
-    { accessor: "", hiddenContent: true, width: 50 },
-    { accessor: "name" },
-    { accessor: "index", width: 80 },
+    { accessor: "", hiddenContent: true, width: 30 },
+    { accessor: "name", ellipsis: true },
+    { accessor: "index" },
   ];
   // takes a list of items and if item has no id, use the name with all spaces replaced with _ and in loweracase as the id
   const transformRecords = (items: any[]) => {
-    return items.map((item: any) => {
+    let transformedRecords = items.map((item: any, index: number) => {
       return {
         ...item,
         id: item?.id || item?.name.replace(/ /g, "_").toLowerCase(),
+        index: item?.index || index + 1,
       };
     });
+    // sort by index in ascending order
+    transformedRecords.sort((a: any, b: any) => (a.index > b.index ? 1 : -1));
+    return transformedRecords;
   };
   return (
     <>
@@ -435,13 +439,14 @@ export const ListEditorFormInput = ({ ...props }: any) => {
               //   ),
               // },
             ]}
-            // records={records}
             records={
               sortedRecords[`${props?.action_input_form_values_key}`] ||
               transformRecords(props?.value)
             }
             withTableBorder
             withColumnBorders
+            pinFirstColumn
+            // pinLastColumn
             tableWrapper={({ children }) => (
               <Droppable
                 droppableId={

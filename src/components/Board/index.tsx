@@ -562,7 +562,7 @@ export default function BoardComponent({ data_fields }: BoardComponentProps) {
   return (
     <BoardContext.Provider value={contextValue}>
       <Board>
-        <div className="flex h-[1200px] gap-3">
+        <div className="flex h-[75vh] gap-3">
           {data.orderedColumnIds.map((columnId) => {
             return (
               <>

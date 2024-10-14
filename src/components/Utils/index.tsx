@@ -78,6 +78,10 @@ import {
   IconTimelineEventPlus,
   IconSquare,
   IconStackBack,
+  IconListDetails,
+  IconCopyCheck,
+  IconEye,
+  IconUserPlus,
 } from "@tabler/icons-react";
 import { localDb } from "src/localDb";
 import { useQueryClient } from "@tanstack/react-query";
@@ -1288,9 +1292,11 @@ export function useReadRecordByState(state: any) {
     queryOptions: {
       queryKey: [
         `readByState_${JSON.stringify({
-          success_message_code: state?.success_message_code,
+          id: state?.record?.id,
+          success_message_code: state?.success_message_code || "record_read",
         })}`,
       ],
+      enabled: state?.enable_query || true,
     },
   });
 
@@ -2493,42 +2499,103 @@ export function useSessionNavigation() {
   return navigateToSession;
 }
 
+// export function useNavigation() {
+//   const { activeApplication, activeSession, activeTask } = useAppStore();
+//   const go = useGo();
+
+//   const navigate = (
+//     record: any
+//     // sessionId: string,
+//     // sessions: { id: string; name: string }[]
+//   ) => {
+//     // const selectedSession = sessions.find(
+//     //   (session) => session.id === sessionId
+//     // );
+
+//     // console.log(`Navigating to session: ${sessionId}`);
+//     // console.log(`Selected session: ${selectedSession}`);
+//     // console.log(sessions);
+
+//     if (record?.entity_type === "tasks") {
+//       // setActiveSession(selectedSession);
+//       go({
+//         to: {
+//           resource: "tasks",
+//           action: "show",
+//           id: record.id,
+//           meta: {
+//             applicationId: activeApplication?.id,
+//             sessionId: activeSession?.id,
+//             taskId: record.id,
+//           },
+//         },
+//         query: {
+//           applicationId: activeApplication?.id,
+//           sessionId: activeSession?.id,
+//         },
+//         // type: "push",
+//       });
+//     }
+//   };
+
+//   return navigate;
+// }
+
 export function useNavigation() {
   const { activeApplication, activeSession, activeTask } = useAppStore();
   const go = useGo();
 
-  const navigate = (
-    record: any
-    // sessionId: string,
-    // sessions: { id: string; name: string }[]
-  ) => {
-    // const selectedSession = sessions.find(
-    //   (session) => session.id === sessionId
-    // );
-
-    // console.log(`Navigating to session: ${sessionId}`);
-    // console.log(`Selected session: ${selectedSession}`);
-    // console.log(sessions);
-
+  const navigate = (record: any) => {
     if (record?.entity_type === "tasks") {
-      // setActiveSession(selectedSession);
-      go({
-        to: {
-          resource: "tasks",
-          action: "show",
-          id: record.id,
-          meta: {
+      // Construct the target URL given the passed record
+      const targetUrl = record?.id
+        ? `/tasks/show/${record.id}?applicationId=${activeApplication?.id}&sessionId=${activeSession?.id}`
+        : "/home";
+
+      // Check if the current URL is the same as the target URL
+      if (
+        window.location.pathname + window.location.search !== targetUrl &&
+        record?.id
+      ) {
+        go({
+          to: {
+            resource: "tasks",
+            action: "show",
+            id: record.id,
+            meta: {
+              applicationId: activeApplication?.id,
+              sessionId: activeSession?.id,
+              taskId: record.id,
+            },
+          },
+          query: {
             applicationId: activeApplication?.id,
             sessionId: activeSession?.id,
-            taskId: record.id,
           },
-        },
-        query: {
-          applicationId: activeApplication?.id,
-          sessionId: activeSession?.id,
-        },
-        type: "push",
-      });
+        });
+      } else if (
+        window.location.pathname + window.location.search !== targetUrl &&
+        !record?.id
+      ) {
+        go({
+          to: {
+            resource: "home",
+            action: "list",
+            // id: record.id,
+            // meta: {
+            //   applicationId: activeApplication?.id,
+            //   sessionId: activeSession?.id,
+            //   taskId: record.id,
+            // },
+          },
+          // query: {
+          //   applicationId: activeApplication?.id,
+          //   sessionId: activeSession?.id,
+          // },
+        });
+      } else {
+        console.log("You are already on this page");
+      }
     }
   };
 
@@ -2609,6 +2676,12 @@ export const iconMap: Record<string, React.ElementType> = {
   activity: IconTimelineEventPlus,
   issues: IconSquare,
   state: IconStackBack,
+  execution: IconListDetails,
+  delete: IconTrash,
+  close: IconCopyCheck,
+  bulk_update: IconForms,
+  assign: IconUserPlus,
+  view: IconEye,
 };
 
 export const useDuckDBSchema = () => {
@@ -2662,4 +2735,136 @@ export function createIssueIdSubquery(subquery: string): string {
 
 export const useIsMobile = () => {
   return useMediaQuery("(max-width: 1024px)");
+};
+
+// Utility function to get the tooltip label
+export const getTooltipLabel = (item: {
+  entity_type?: string;
+  title?: string;
+  name?: string;
+  id?: string;
+}) => {
+  const entityType = item?.entity_type ? item.entity_type : "";
+  const name =
+    item?.title || item?.name || item?.id || (!item?.entity_type ? "item" : "");
+
+  // If entity type exists, show it with colon and name
+  return `Click to see ${entityType}${
+    entityType && name ? ": " : ""
+  }${name} details or expand to update`;
+};
+
+export const getLabel = (item: {
+  title?: string;
+  name?: string;
+  id?: string;
+}) => {
+  // Return title, name, or id, and fallback to 'item' if none are present
+  return item?.title || item?.name || item?.id || "item";
+};
+
+export const useUpdateComponentAction = () => {
+  const {
+    focused_entities,
+    setFocusedEntities,
+    pinned_main_action,
+    setPinnedMainAction,
+    activeLayout,
+    setActiveLayout,
+  } = useAppStore();
+
+  // handle toggleDisplay
+  const openDisplay = (section: string) => {
+    if (activeLayout) {
+      const newLayout = { ...activeLayout };
+      newLayout[section].isDisplayed = true;
+      setActiveLayout(newLayout);
+    }
+  };
+
+  const updateComponentAction = (
+    e: any,
+    record: any,
+    entity_type: string,
+    action: string,
+    type: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (focused_entities) {
+      const new_focused_entities = { ...focused_entities };
+
+      if (!new_focused_entities[record?.id]) {
+        new_focused_entities[record?.id] = {};
+      }
+
+      if (new_focused_entities[record?.id].action === action) {
+        new_focused_entities[record?.id].action = null;
+      } else {
+        new_focused_entities[record?.id].action = action;
+      }
+      setFocusedEntities(new_focused_entities);
+    }
+
+    if (["search", "save"].includes(action)) {
+      openDisplay("leftSection");
+
+      if (pinned_main_action === action) {
+        setPinnedMainAction(null);
+      } else {
+        setPinnedMainAction(action);
+      }
+    }
+  };
+
+  return { updateComponentAction };
+};
+
+export const useBulkActionSelect = () => {
+  const {
+    focused_entities,
+    setFocusedEntities,
+    activeLayout,
+    setActiveLayout,
+  } = useAppStore();
+
+  const bulkActionSelect = (
+    e: any,
+    record: any,
+    entity_type: string,
+    action: string,
+    type: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // handle toggleDisplay
+    const openDisplay = (section: string) => {
+      if (activeLayout) {
+        const newLayout = { ...activeLayout };
+        newLayout[section].isDisplayed = true;
+        setActiveLayout(newLayout);
+      }
+    };
+
+    if (focused_entities) {
+      const new_focused_entities = { ...focused_entities };
+
+      if (!new_focused_entities[record?.id]) {
+        new_focused_entities[record?.id] = {};
+      }
+
+      if (new_focused_entities[record?.id].action === action) {
+        new_focused_entities[record?.id].action = null;
+      } else {
+        new_focused_entities[record?.id].action = action;
+      }
+      setFocusedEntities(new_focused_entities);
+    }
+
+    openDisplay("rightSection");
+  };
+
+  return { bulkActionSelect };
 };

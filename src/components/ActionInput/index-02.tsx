@@ -69,7 +69,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   records,
   focused_item,
 }) => {
-  // const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
   const { data: identity } = useGetIdentity<IIdentity>();
   const { setFormSubmitHandler, setFormInstance } = useTransientStore();
   const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
@@ -79,10 +79,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
   // Access the persisted ID using generatedIdRef.current
   // const generatedId = generatedIdRef.current;
-  // const actionInputId =
-  //   record?.id || data_model?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
-  let actionInputId = record?.id;
-  let action_input_form_values_key = `${action}_${actionInputId}`;
+  const actionInputId =
+    record?.id || data_model?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
 
   // Define the response type for your specific data
   type CustomMutationResponse<T> = {
@@ -107,7 +105,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     error: mutationError,
   } = useCustomMutation({
     mutationOptions: {
-      mutationKey: [action_input_form_values_key],
+      mutationKey: [`action-input-${actionInputId}`],
     },
   });
 
@@ -143,12 +141,12 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
   // const action_input_form_values_key = `${action}_action_input`;
   // if focused_item == "actin_input" then use the action_input key
-  // let action_input_form_values_key = "";
-  // if (focused_item === "action_input") {
-  //   action_input_form_values_key = "action_input";
-  // } else {
-  //   action_input_form_values_key = `${action}_action_input_${actionInputId}`;
-  // }
+  let action_input_form_values_key = "";
+  if (focused_item === "action_input") {
+    action_input_form_values_key = "action_input";
+  } else {
+    action_input_form_values_key = `${action}_action_input_${actionInputId}`;
+  }
 
   // let standardized_data_model_name = data_model?.name
   // ?.replace(/\s+/g, "_")
@@ -158,7 +156,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   // const proceed_action_input_form_values_key = `proceed_execute_with_action_input_${standardized_data_model_name}_${actionInputId}`;
   // const proceed_action_input_form_values_key = "action_input";
 
-  const formId = action_input_form_values_key; // Unique form identifier
+  const formId = `${action}_${actionInputId}`; // Unique form identifier
 
   const schemaDefaultValues = extractLabelsFromDefaults(
     extractDefaultValues(data_model)
@@ -492,8 +490,42 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     });
   }, 300); // 300ms debounce delay, adjust as needed
 
+  // useEffect(() => {
+  //   const unsubscribe = form.store.subscribe(() => {
+  //     debouncedLog(form.store.state.values);
+  //   });
+
+  //   return () => {
+  //     unsubscribe();
+  //     debouncedLog.cancel(); // Cancel any pending debounced calls on unmount
+  //   };
+  // }, [form.store, debouncedLog]);
+  // useEffect(() => {
+  //   const unsubscribe = form.store.subscribe(() => {
+  //     const currentValues = form.store.state.values;
+
+  //     // Check if form is valid before logging to state
+  //     if (form.store.state.isValid) {
+  //       debouncedLog(currentValues);
+  //     }
+  //   });
+
+  //   return () => {
+  //     unsubscribe();
+  //     debouncedLog.cancel(); // Cancel any pending debounced calls on unmount
+  //   };
+  // }, [form.store, debouncedLog]);
+
   // Store the previous validity state
   const previousIsValid = useRef(false);
+
+  // Debounced function to log the values only if the form is valid
+  // const debouncedLog = debounce((values) => {
+  //   setActionInputFormValues((prevState) => ({
+  //     ...prevState,
+  //     [action_input_form_values_key]: values,
+  //   }));
+  // }, 300); // 300ms debounce delay, adjust as needed
 
   useEffect(() => {
     const unsubscribe = form.store.subscribe(() => {
@@ -571,6 +603,15 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         const tableRegex = /(?:FROM|JOIN)\s+([a-zA-Z0-9_]+)/gi;
         const tables = [...value.matchAll(tableRegex)].map((match) => match[1]);
         console.log("Extracted tables:", tables);
+
+        // // Extract table names from the EXPLAIN result
+        // const plan = result.toString();
+        // console.log("Query EXPLAIN:", result);
+        // console.log("Query Plan:", plan);
+        // // const tableRegex = /(?:FROM|JOIN)\s+([a-zA-Z0-9_]+)/gi;
+        // const tableRegex = /SEQ_SCAN\s+(\w+)/gi;
+        // const tables = [...plan.matchAll(tableRegex)].map((match) => match[1]);
+        // console.log("Extracted tables:", tables);
 
         if (tables) {
           let new_global_query = { ...globalQuery };
@@ -681,6 +722,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           form.handleSubmit();
         }}
       >
+        {/* <div>{JSON.stringify(action_input_form_values_key)}</div> */}
         {/* Include templateUpdate to force re-render */}
         {/* <div>Template Update Count: {templateUpdate}</div> */}
         {/* <MonacoEditor
@@ -689,24 +731,31 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             action_input_form_values_key: action_input_form_values_key,
             action: action,
             include_items: include_items,
-          }}
-          language="json"
-          height="50vh"
-        /> */}
-        {/* <MonacoEditor
-          value={{
             // record: record,
             // data_model: data_model,
-            // default_values: extractDefaultValues(data_model)
           }}
           language="json"
           height="50vh"
         /> */}
         {/* <div>{JSON.stringify(focused_item)}</div> */}
+
         {/* <div>{JSON.stringify(include_items)}</div> */}
         {/* <div>{JSON.stringify(record?.list_items)}</div> */}
         {/* <div>{JSON.stringify(form?.store?.state.values)}</div> */}
+
         {/* <div>{JSON.stringify(form?.store?.state.values?.list_items)}</div> */}
+        {/* <div>
+          {JSON.stringify({
+            formId: formId,
+            action_input_form_values_key: action_input_form_values_key,
+            action: action,
+            include_items: include_items,
+            record: record,
+            data_model: data_model,
+          })}
+        </div> */}
+        {/* <div>{JSON.stringify(record)}</div> */}
+        {/* <div>{JSON.stringify(extractDefaultValues(data_model))}</div> */}
 
         <Accordion defaultValue={["main", "on local data"]} multiple={true}>
           {Object.entries(
@@ -741,6 +790,22 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                       <div key={schema.properties[key]?.title} className="mb-4">
                         <form.Field
                           name={fieldName}
+                          // validators={
+                          //   fieldName === "query"
+                          //     ? {
+                          //         onChangeAsync: async ({ value }) => {
+                          //           // Await the debounced validation function
+                          //           // Validate only if value is not empty
+                          //           if (value) {
+                          //             const error =
+                          //               await debouncedValidationPromise(value);
+                          //             return error || undefined; // Return error if present, otherwise undefined
+                          //           }
+                          //           return undefined; // Return undefined if value is empty
+                          //         },
+                          //       }
+                          //     : undefined
+                          // }
                           validators={
                             fieldName === "query"
                               ? {
@@ -809,6 +874,61 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               </Accordion.Panel>
             </Accordion.Item>
           ))}
+
+          {/* Handle implement Keys */}
+          {/* {record?.implement && include_items.includes("implement") && (
+            <Accordion.Item value="implement" key="implement">
+              <Accordion.Control>
+                <Title c="orange" order={5}>
+                  Implement
+                </Title>
+              </Accordion.Control>
+              <Accordion.Panel>
+                {Object.entries(record.implement).map(([key, value]) => {
+                  const Component = getComponentByResourceType(
+                    "MonacoEditorFormInput"
+                  ); // Default to TextInput
+                  let field_key = `implement.${key
+                    .toLowerCase()
+                    .replace(/ /g, "_")}`;
+                  return (
+                    <div key={field_key} className="mb-4">
+                      <form.Field name={field_key}>
+                        {(field) => (
+                          <>
+                            <Component
+                              schema={{
+                                component: "MonacoEditorFormInput",
+                                default: null,
+                                placeholder: `Enter ${field_key}`,
+                                size: "lg",
+                                title: field_key,
+                                type: "string",
+                                language: "python",
+                                // ...value, // Use any additional properties from implement value
+                              }}
+                              action_input_form_values_key={
+                                action_input_form_values_key
+                              }
+                              form_id={formId}
+                              label={field_key}
+                              record={record}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={field.handleChange}
+                              form={form}
+                              isLoading={mutationIsLoading}
+                            />
+                            <FieldInfo field={field} />
+                          </>
+                        )}
+                      </form.Field>
+                    </div>
+                  );
+                })}
+              </Accordion.Panel>
+            </Accordion.Item>
+          )} */}
         </Accordion>
       </form>
       {/* <div>{JSON.stringify(mutationError)}</div> */}
@@ -914,6 +1034,43 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
 
   return (
     <>
+      {/* <MonacoEditor
+        value={
+          recordData?.data?.find(
+            (item: any) => item?.message?.code === record?.id
+          )?.data[0]
+        }
+        language="json"
+        height="50vh"
+      /> */}
+
+      {/* <div>
+        {JSON.stringify(
+          recordData?.data?.find(
+            (item: any) => item?.message?.code === record?.id
+          )?.data[0]
+        )}
+      </div> */}
+      {/* <div>{JSON.stringify(execution_record)}</div>
+    <div>{JSON.stringify(record)}</div> */}
+      {/* <>{JSON.stringify(recordData)}</> */}
+      {/* <div>
+        {JSON.stringify(
+          data?.data?.find(
+            (item: any) => item?.message?.code === success_message_code
+          )?.data[0]?.data_model
+        )}
+      </div> */}
+      {/* <MonacoEditor
+        value={
+          data?.data?.find(
+            (item: any) => item?.message?.code === success_message_code
+          )?.data[0]?.data_model
+        }
+        language="json"
+        height="50vh"
+      /> */}
+
       <div>
         {(!data?.data && !error && !isLoading && description) || null}
 

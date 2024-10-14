@@ -33,6 +33,7 @@ import { useAppStore } from "src/store";
 import Reveal from "@components/Reveal";
 import ActionInputWrapper from "@components/ActionInput";
 import SearchInput from "@components/SearchInput";
+import { iconMap } from "@components/Utils";
 
 interface BulkOperationsToolbarProps {
   include_components: {
@@ -67,32 +68,6 @@ const BulkOperationsToolbar: React.FC<BulkOperationsToolbarProps> = ({
       new_focused_entities["action_input"].record = record;
     }
     setFocusedEntities(new_focused_entities);
-  };
-
-  // Icon mapping object
-  const iconMap: Record<string, React.ElementType> = {
-    pin: IconPin,
-    remove: IconCircleMinus,
-    configure: IconTool,
-    automate: IconSettingsAutomation,
-    save: IconFileDownload,
-    search: IconSearch,
-    execute: IconPlayerPlay,
-    query: IconZoomCode,
-    share: IconShare,
-    cancel: IconCircleX,
-    display: IconPlayerStop,
-    delete: IconTrash,
-    menu: IconMenu2,
-    implement: IconPlaylistAdd,
-    plan: IconSitemap,
-    build: IconCode,
-    fields: IconTallymark3,
-    edit: IconPencil,
-    close: IconCopyCheck,
-    bulk_update: IconForms,
-    assign: IconUserPlus,
-    view: IconEye,
   };
 
   return (

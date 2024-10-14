@@ -331,7 +331,7 @@ const App = (props: React.PropsWithChildren) => {
                 <BaseLayout>{props.children}</BaseLayout>
               )}
 
-              <DocumentTitleHandler handler={customTitleHandler} />
+              {/* <DocumentTitleHandler handler={customTitleHandler} /> */}
               <ReactQueryDevtools initialIsOpen={false} />
             </Refine>
           </ContextMenuProvider>

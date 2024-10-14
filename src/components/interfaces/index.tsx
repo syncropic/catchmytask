@@ -307,6 +307,7 @@ export interface DataDisplayComponentProps<T extends Record<string, any>> {
   // data_columns: ColumnDef<RowData>[];
   // name?: string;
   // tableInstance?: TanStackTable<T>;
+  display?: string;
   data_items: any[];
   // record?: any;
   // resource_group: string;
@@ -1025,6 +1026,7 @@ export interface SearchInputComponentProps<T extends Record<string, any>> {
   include_action_icons?: string[];
   schema?: any;
   size?: string;
+  navigateOnSelect?: boolean;
 }
 
 export interface GlobalSearchInputComponentProps<

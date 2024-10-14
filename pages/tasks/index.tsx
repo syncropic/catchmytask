@@ -1,6 +1,6 @@
 import React from "react";
 export const PageList: React.FC = () => {
-  return <div>show task page</div>;
+  return <div>list tasks page</div>;
 };
 export default PageList;
 // import {

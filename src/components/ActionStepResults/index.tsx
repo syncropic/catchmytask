@@ -33,9 +33,9 @@ export function ActionStepResults({
   let tableName = record?.success_message_code;
   const actionInputId = record?.id || "data_models:heblllgdhsuyfzpkg2tl";
   const action_input_form_values_key = `action_input_${actionInputId}`;
-  const search_action_input_form_values_key = `search_action_input_${activeTask?.id}`;
+  const search_action_input_form_values_key = `search_${activeTask?.id}`;
   // const save_action_input_form_values_key = `save_action_input_${activeTask?.id}`;
-  let globalQueryTable = globalQuery?.tables[0] || null;
+  let globalQueryTable = globalQuery?.tables?.[0] || null;
 
   // for global query if search is present prioritize that otherwise use save - or most recently updated - fix this last part
 
@@ -278,7 +278,7 @@ export function ActionStepResultsLocalDB({
   const actionInputId =
     activeTask?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
   // use the plan to access all the action steps
-  const action_input_form_values_key = `plan_action_input_${actionInputId}`;
+  const action_input_form_values_key = `plan_${actionInputId}`;
   let selectedActionSteps = selectedRecords[`${action_input_form_values_key}`];
 
   // // State to store filtered data from DuckDB
@@ -333,11 +333,12 @@ export function ActionStepResultsLocalDB({
             (item: any) => !excludeItems.includes(item.success_message_code)
           );
           for (const table of filteredSelectedActionSteps) {
-            const tableName = table.success_message_code;
+            const tableName = table.name;
 
             try {
               // Check if the table exists in the DuckDB database
               const checkTableQuery = `SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_name = '${tableName}'`;
+              // console.log("table", table);
               console.log(
                 `Checking if table exists: ${tableName} // ${checkTableQuery}`
               );
@@ -421,12 +422,12 @@ export function ActionStepResultsLocalDB({
 
   return (
     <>
-      {/* <div>ActionStepResultsLocalDB</div>
-      <MonacoEditor
+      {/* <div>ActionStepResultsLocalDB</div> */}
+      {/* <MonacoEditor
         value={{
-          // selectedActionSteps: selectedActionSteps,
-          // action_input_form_values_key: action_input_form_values_key,
-          // allLocalDBSuccess: allLocalDBSuccess,
+          selectedActionSteps: selectedActionSteps,
+          action_input_form_values_key: action_input_form_values_key,
+          allLocalDBSuccess: allLocalDBSuccess,
           // local_db: local_db,
           summaryData: summaryData,
         }}

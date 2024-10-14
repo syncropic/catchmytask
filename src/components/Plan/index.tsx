@@ -1,51 +1,16 @@
 import {
-  extractIdentifier,
-  getComponentByResourceType,
-  useFetchActionDataByName,
-  useFetchActionStepDataByState,
   useFetchActionStepsDataByState,
   useFetchDataModelByState,
   useFetchQueryDataByState,
   useReadRecordByState,
 } from "@components/Utils";
-import { useAppStore, useTransientStore } from "src/store";
-import { Accordion, Button, Title } from "@mantine/core";
-// import { ActionControlFormWrapper } from "@components/ActionControlForm";
-import type { FieldApi } from "@tanstack/react-form";
-import { useForm } from "@tanstack/react-form";
-// import { IconArrowsVertical } from "@tabler/icons-react";
-import { Children, useEffect, useRef, useState } from "react";
 import {
   PlanWrapperProps,
   ActionStepsActionInputFormProps,
-  ComponentKey,
-  DynamicFormProps,
-  IIdentity,
 } from "@components/interfaces";
-import {
-  BaseRecord,
-  HttpError,
-  useCustomMutation,
-  useGetIdentity,
-} from "@refinedev/core";
-import config from "src/config";
-import { debounce, update } from "lodash";
-import { useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
 import MonacoEditor from "@components/MonacoEditor";
-import ExternalSubmitButton from "@components/SubmitButton";
 import { ActionInputForm } from "@components/ActionInput";
-
-function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
-  return (
-    <>
-      {field.state.meta.isTouched && field.state.meta.errors.length ? (
-        <em>{field.state.meta.errors.join(",")}</em>
-      ) : null}
-      {field.state.meta.isValidating ? "Validating..." : null}
-    </>
-  );
-}
 
 // export default ActionInput;
 
@@ -56,22 +21,12 @@ export const PlanWrapper: React.FC<PlanWrapperProps> = ({
   action_type,
   entity,
   record,
-  record_query,
-  exclude_components = [],
   children,
-  nested_component,
-  setExpandedRecordIds,
   success_message_code,
-  invalidate_queries_on_submit_success,
   description,
-  update_action_input_form_values_on_submit_success,
-  endpoint,
-  action_label,
   records,
   action,
-  include_form_components,
   focused_item,
-  read_record_mode,
 }) => {
   // get the action step data model
   let state = {
@@ -123,7 +78,6 @@ export const PlanWrapper: React.FC<PlanWrapperProps> = ({
     <>
       {/* <MonacoEditor value={data} language="json" height="50vh" /> */}
       {/* <MonacoEditor value={actionPlanData} language="json" height="50vh" /> */}
-
       {/* <MonacoEditor
         value={
           recordData?.data?.find(
@@ -171,13 +125,6 @@ export const PlanWrapper: React.FC<PlanWrapperProps> = ({
                 (item: any) => item?.message?.code === success_message_code
               )?.data[0]?.data_model
             }
-            // record={
-            //   read_record_mode
-            //     ? recordData
-            //     : recordData?.data?.find(
-            //         (item: any) => item?.message?.code === record?.id
-            //       )?.data[0]
-            // }
             record={{
               ...record,
               list_items:

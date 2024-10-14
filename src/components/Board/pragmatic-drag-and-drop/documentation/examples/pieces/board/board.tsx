@@ -4,6 +4,7 @@ import { autoScrollWindowForElements } from "@atlaskit/pragmatic-drag-and-drop-a
 import { Box, xcss } from "@atlaskit/primitives";
 import { useBoardContext } from "@components/Board";
 import { ScrollArea } from "@mantine/core";
+import styles from "./ScrollArea.module.css"; // Import CSS module
 
 type BoardProps = {
   children: ReactNode;
@@ -38,7 +39,12 @@ const Board = forwardRef<HTMLDivElement, BoardProps>(
     }, [instanceId]);
 
     return (
-      <ScrollArea>
+      <ScrollArea
+        classNames={{
+          viewport: styles.viewport,
+          scrollbar: styles.horizontalScrollbar,
+        }}
+      >
         <Box ref={ref}>{children}</Box>
       </ScrollArea>
     );

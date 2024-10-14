@@ -74,22 +74,6 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   return itemRank.passed;
 };
 
-// Define a custom fuzzy sort function that will sort by rank if the row has ranking information
-// const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
-//   let dir = 0;
-
-//   // Only sort by rank if the column has ranking information
-//   if (rowA.columnFiltersMeta[columnId]) {
-//     dir = compareItems(
-//       rowA.columnFiltersMeta[columnId]?.itemRank!,
-//       rowB.columnFiltersMeta[columnId]?.itemRank!
-//     );
-//   }
-
-//   // Provide an alphanumeric fallback for when the item ranks are equal
-//   return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir;
-// };
-
 export interface RowData {
   [key: string]: any;
 }
@@ -104,14 +88,8 @@ export function DataDisplay<T extends Record<string, any>>({
   entity_type,
   ui,
   action = "set_fields",
-}: // isLoadingDataItems,
-// resource_group,
-// execlude_components,
-// name,
-// read_write_mode,
-// ui,
-// invalidate_queries_on_submit_success,
-DataDisplayComponentProps<T>) {
+  display,
+}: DataDisplayComponentProps<T>) {
   // const { ref, width } = useElementSize();
   // const [isLarge, setIsLarge] = useState(true);
 
@@ -205,47 +183,11 @@ DataDisplayComponentProps<T>) {
 
   // let selected_record_items_key = `${action}_action_input_${record?.id}`;
   const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
-  let action_input_form_values_key = `${action}_action_input_${actionInputId}`;
+  let action_input_form_values_key = `${action}_${actionInputId}`;
   // return board for action steps by default
-  if (entity_type === "action_steps") {
-    action_input_form_values_key = `plan_action_input_${actionInputId}`;
-
-    return (
-      // <div>
-      //   {JSON.stringify(selectedRecords[`${action_input_form_values_key}`])}
-      // </div>
-      // <div>
-      //   {JSON.stringify(
-      //     data_items?.filter(
-      //       (item: { name: string }) =>
-      //         item &&
-      //         selectedRecords[`${action_input_form_values_key}`]?.some(
-      //           (record: { name: string }) => record.name === item?.name
-      //         )
-      //     )
-      //   )}
-      // </div>
-      <Board
-        data_fields={data_items?.filter(
-          (item: { name: string }) =>
-            item &&
-            selectedRecords[`${action_input_form_values_key}`]?.some(
-              (record: { name: string }) => record.name === item?.name
-            )
-        )}
-      ></Board>
-    );
+  if (display === "board") {
+    return <Board data_fields={data_items}></Board>;
   }
-  // // return summary if record?.name === "summary"
-  // if (record?.name === "summary") {
-  //   return <SummaryComponent record={record} entity_type={entity_type} />;
-  // }
-
-  // // return summary if record?.name === "summary"
-  // if (entity_type === "summary") {
-  //   return <div>summary entity type</div>;
-  // }
-
   // default return table view
   return (
     <>

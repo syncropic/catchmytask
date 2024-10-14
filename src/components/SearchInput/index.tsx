@@ -5,8 +5,9 @@ import { useFetchQueryDataByState, useNavigation } from "@components/Utils";
 import renderSearchItem from "@components/SearchItem";
 import { useAppStore } from "src/store";
 import { FilterItem, SearchInputComponentProps } from "@components/interfaces";
-import { IconPlus, IconTrash, IconX } from "@tabler/icons-react";
+import { IconCopy, IconPlus, IconTrash, IconX } from "@tabler/icons-react";
 import FilterComponent from "@components/Filter";
+import { useGo } from "@refinedev/core";
 
 function SearchInput<T extends Record<string, any>>({
   activeFilters,
@@ -21,6 +22,7 @@ function SearchInput<T extends Record<string, any>>({
   include_action_icons,
   schema,
   size,
+  navigateOnSelect = false,
 }: SearchInputComponentProps<T>) {
   const [query, setQuery] = useState(value || "");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -35,8 +37,6 @@ function SearchInput<T extends Record<string, any>>({
   );
 
   useEffect(() => {
-    // console.log("search input effect", query);
-
     const handler = debounce(() => {
       setDebouncedQuery(query);
     }, 300);
@@ -83,103 +83,37 @@ function SearchInput<T extends Record<string, any>>({
   }, [data, success_message_code]);
 
   const enhancedHandleOptionSubmit = (value: string | null) => {
-    // console.log("enhancedHandleOptionSubmit", value);
-    const selectedItem = autocompleteData.find(
-      (item: any) => item.value === value
-    );
-    // console.log("selectedItem", selectedItem);
-    if (selectedItem) {
-      if (handleOptionSubmit) handleOptionSubmit(selectedItem);
-      if (onChange) onChange(selectedItem?.value);
-      console.log("navigate", selectedItem);
-      navigate(selectedItem);
+    // if value is null just run handleOptionSubmit
+    if (value === "remove_from_state") {
+      // setActiveTask(null);
+      // alert("Task removed from state");
+      // console.log("enhancedHandleOptionSubmit", value);
+      setQuery("");
+      if (navigateOnSelect) navigate({ entity_type: "tasks" }); // this will trigger navigating to url specified when there is no record?.id i.e null for instance go to /home
+      // set to false to avoid triggering refetch and then after a while set back to null so it can be refetched when using links
+      // Set a timeout to set the task to null after a delay
+      setTimeout(() => {
+        // setActiveTask(null); // Now set it to null after navigating
+        if (handleOptionSubmit) handleOptionSubmit(null);
+        if (onChange) onChange(null);
+      }, 3000); // Adjust the delay time (500ms) as necessary
+      if (handleOptionSubmit) handleOptionSubmit(false);
+      if (onChange) onChange(false);
+      return;
+    } else {
+      const selectedItem = autocompleteData.find(
+        (item: any) => item.value === value
+      );
+      // console.log("selectedItem", selectedItem);
+      if (selectedItem) {
+        if (handleOptionSubmit) handleOptionSubmit(selectedItem);
+        if (onChange) onChange(selectedItem?.value);
+        if (navigateOnSelect) {
+          navigate(selectedItem);
+        }
+      }
     }
   };
-
-  // const replaceIdWithItem = (value: string | null, results: any) => {
-  //   console.log("replaceIdWithItem", value);
-  //   const selectedItem = results.find((item: any) => item.value === value);
-  //   console.log("results", results);
-  //   console.log("selectedItem", selectedItem);
-  //   if (selectedItem) {
-  //     if (handleOptionSubmit) handleOptionSubmit(selectedItem);
-  //     if (onChange) onChange(selectedItem?.value);
-  //     navigate(selectedItem);
-  //   }
-  // };
-
-  // perform the initial search after render if the query is not empty
-  // useEffect(() => {
-  //   if (query) {
-  //     setDebouncedQuery(query);
-  //     // enhancedHandleOptionSubmit(query);
-  //     enhancedHandleOptionSubmit(query);
-  //   }
-  // }, []);
-
-  // Define the read record state for fetching the template
-  // let read_session_state = {
-  //   credential: "surrealdb catchmytask dev",
-  //   success_message_code: currentTemplateValue,
-  //   record: { id: currentTemplateValue },
-  //   read_record_mode: "remote",
-  // };
-
-  // Fetch the template using the existing hook
-  // const {
-  //   data: templateData,
-  //   isLoading: templateIsLoading,
-  //   error: templateError,
-  // } = useReadRecordByState(read_session_state);
-
-  // useEffect(() => {
-  //   // Only make the call if the template value has changed and is not null/undefined
-  //   if (currentTemplateValue) {
-  //     // Update the previous template value
-  //     // previousTemplateValue.current = currentTemplateValue;
-
-  //     // Check if data is fully fetched and available
-  //     if (templateData && !templateIsLoading && !templateError) {
-  //       const templateRecord = templateData?.data?.find(
-  //         (item: any) => item?.message?.code === currentTemplateValue
-  //       )?.data[0];
-
-  //       if (templateRecord) {
-  //         console.log(
-  //           "Fetched Template data before setting form values:",
-  //           templateRecord
-  //         );
-  //         // form.setFieldValue("name", templateRecord.name ?? "");
-  //         // form.setFieldValue("query", templateRecord.query ?? "");
-  //         // setTemplateUpdate((prev) => prev + 1);
-  //         // set field values in bulk
-  //         let keysToExclude = [
-  //           "id",
-  //           "author_id",
-  //           "created_datetime",
-  //           "updated_datetime",
-  //           "deleted_datetime",
-  //           "added_datetime",
-  //           "author",
-  //           "entity_type",
-  //         ];
-  //         Object.entries(templateRecord).forEach(([key, value]) => {
-  //           if (!keysToExclude.includes(key)) {
-  //             form.setFieldValue(key, value);
-  //           }
-  //         });
-  //       }
-  //     } else if (templateError) {
-  //       console.error("Error fetching template data:", templateError);
-  //     }
-  //   }
-  // }, [
-  //   currentTemplateValue,
-  //   templateData,
-  //   templateIsLoading,
-  //   templateError,
-  //   form,
-  // ]);
 
   return (
     <div className="flex items-end w-full space-x-2">
@@ -213,28 +147,46 @@ function SearchInput<T extends Record<string, any>>({
           <FilterComponent />
         </Tooltip>
       )}
-      {/* {include_action_icons?.includes("remove_from_state") && (
+      {include_action_icons?.includes("remove_from_state") && (
         <Tooltip label="Remove from state" position="top">
           <ActionIcon
             size="xs"
             variant="default"
             aria-label="Clear from state"
-            onClick={() => enhancedHandleOptionSubmit(null)}
+            onClick={() => enhancedHandleOptionSubmit("remove_from_state")}
+            // onClick={() => console.log("Clear from state")}
             style={{ visibility: disabled ? "hidden" : "visible" }}
+            // disabled={true}
           >
             <IconX size={18} />
           </ActionIcon>
         </Tooltip>
-      )} */}
-      {include_action_icons?.includes("add_new_item") && (
-        <Tooltip label="Add new item" position="top">
+      )}
+      {include_action_icons?.includes("dublicate") && (
+        <Tooltip label="Dublicate" position="top">
           <ActionIcon
             size="xs"
             variant="filled"
             color="blue"
-            aria-label="Add new entity"
-            onClick={() => console.log("Add new entity")}
+            aria-label="Dublicate"
+            onClick={() => console.log("Dublicate")}
             style={{ visibility: disabled ? "hidden" : "visible" }}
+            disabled={true}
+          >
+            <IconCopy size={18} />
+          </ActionIcon>
+        </Tooltip>
+      )}
+      {include_action_icons?.includes("add_new_item") && (
+        <Tooltip label="Add new" position="top">
+          <ActionIcon
+            size="xs"
+            variant="filled"
+            color="blue"
+            aria-label="Add new"
+            onClick={() => console.log("Add new")}
+            style={{ visibility: disabled ? "hidden" : "visible" }}
+            disabled={true}
           >
             <IconPlus size={18} />
           </ActionIcon>

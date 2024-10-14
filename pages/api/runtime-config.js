@@ -7,7 +7,7 @@ export default function handler(req, res) {
     ),
     DOMAIN_URL: String(
       process.env.NEXT_PUBLIC_DOMAIN_URL ||
-        "https://catchmytask.com"
+        "https://stormy.reports.snowstormtech.com"
     ),
     APP_NAME: String(process.env.NEXT_PUBLIC_APP_NAME || "catchmytask"),
   });

@@ -60,7 +60,12 @@ export function StateView() {
         description="tasks"
         handleOptionSubmit={setActiveTask}
         value={activeTask?.name || ""}
-        include_action_icons={["remove_from_state"]}
+        include_action_icons={[
+          "remove_from_state",
+          "add_new_item",
+          "dublicate",
+        ]}
+        navigateOnSelect={true}
         activeFilters={[
           {
             id: 1,
