@@ -68,11 +68,11 @@ export function PinnedActionStepResults({
 
   return (
     <>
-      {/* <div>pinned action step results</div> */}
       {/* <MonacoEditor
         value={{
+          component: "pinned action step results",
           // data_items: dataItems,
-          // record: record,
+          record: record,
           // data_items:
           //   data?.data?.find(
           //     (item: any) => item?.message?.code === "action_plan"

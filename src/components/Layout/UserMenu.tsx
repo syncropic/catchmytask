@@ -24,7 +24,8 @@ import {
 } from "@tabler/icons-react";
 import UserButton from "./UserButton";
 import { useAppStore } from "src/store";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
+// import MonacoEditor from "@components/MonacoEditor";
 
 export const UserMenu = () => {
   const { list } = useNavigation();
@@ -38,8 +39,6 @@ export const UserMenu = () => {
 
   // handle logout
   const handleLogout = () => {
-    // deleteToken from localStorage
-    localStorage.removeItem("cmt_auth_token");
     logout();
   };
   if (!user) {
@@ -76,83 +75,6 @@ export const UserMenu = () => {
         </Menu.Target>
         {/* ...Menu.Items */}
         <Menu.Dropdown>
-          {user.email === "david.wanjala@snowstormtech.com" && (
-            <>
-              <Menu.Label>Quick Access</Menu.Label>
-              {/* navigate to connections view */}
-              {/* <Menu.Item
-                leftSection={<IconComponents size={14} />}
-                onClick={() => handleFloatingWindowMenuSelection("connections")}
-              >
-                Resources
-              </Menu.Item> */}
-              <Menu.Item
-                leftSection={<IconMail size={14} />}
-                // onClick={() => handleFloatingWindowMenuSelection("messages")}
-              >
-                Mailbox
-              </Menu.Item>
-              {/* <Menu.Item
-                leftSection={<IconSettings size={14} />}
-                onClick={() => handleFloatingWindowMenuSelection("automations")}
-              >
-                Automations
-              </Menu.Item> */}
-              {/* <Menu.Item
-                leftSection={<IconFiles size={14} />}
-                onClick={() =>
-                  handleFloatingWindowMenuSelection("file_browser")
-                }
-              >
-                File Browser
-              </Menu.Item> */}
-              {/* <Menu.Item
-                leftSection={<IconClipboard size={14} />}
-                onClick={() => handleFloatingWindowMenuSelection("scratchpad")}
-              >
-                Scratchpad
-              </Menu.Item> */}
-              {/* <Menu.Item
-                leftSection={<IconListCheck size={14} />}
-                onClick={() =>
-                  handleFloatingWindowMenuSelection("execution_trace")
-                }
-              >
-                Execution Trace
-              </Menu.Item> */}
-              {/* <Menu.Item
-                leftSection={<IconUserPlus size={14} />}
-                onClick={() =>
-                  handleFloatingWindowMenuSelection("recommendations")
-                }
-              >
-                Recommendations
-              </Menu.Item> */}
-              {/* <Menu.Item
-                leftSection={<IconApps size={14} />}
-                onClick={() => list("applications")}
-              >
-                Applications
-              </Menu.Item> */}
-              {/* <Menu.Item
-                leftSection={<IconDatabase size={14} />}
-                onClick={() => list("datasets")}
-              >
-                Datasets
-              </Menu.Item> */}
-              {/* <Menu.Item
-                leftSection={<IconComponents size={14} />}
-                onClick={() => list("sessions")}
-              >
-                Sessions
-              </Menu.Item> */}
-              {/* <Menu.Item
-                leftSection={<IconSearch size={14} />}
-              >
-                Spotlight
-              </Menu.Item> */}
-            </>
-          )}
           {/* <Menu.Label>Profile</Menu.Label> */}
           <Menu.Item leftSection={<IconUserCircle size={14} />} disabled>
             Switch Profile
@@ -181,6 +103,13 @@ export const UserMenu = () => {
           >
             Logout
           </Menu.Item>
+          {/* <MonacoEditor
+            value={{
+              user: user,
+            }}
+            language="json"
+            height="75vh"
+          /> */}
         </Menu.Dropdown>
       </Menu>
     </Group>

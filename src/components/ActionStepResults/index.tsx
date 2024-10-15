@@ -263,6 +263,9 @@ export const ActionStepResultsWrapper = ({
       ) : (
         <ActionStepResults record={record}></ActionStepResults>
       )}
+      {/* {record?.metadata?.query_run_location !== "local_db" && (
+        <ActionStepResults record={record}></ActionStepResults>
+      )} */}
     </>
   );
 };
@@ -333,7 +336,7 @@ export function ActionStepResultsLocalDB({
             (item: any) => !excludeItems.includes(item.success_message_code)
           );
           for (const table of filteredSelectedActionSteps) {
-            const tableName = table.name;
+            const tableName = table.success_message_code;
 
             try {
               // Check if the table exists in the DuckDB database
@@ -345,6 +348,7 @@ export function ActionStepResultsLocalDB({
 
               const tableCheckResult = await dbInstance.query(checkTableQuery);
               const tableExists = tableCheckResult.toArray()[0]?.count > 0;
+              console.log(`Table ${tableName} exists: ${tableExists}`);
 
               if (!tableExists) {
                 console.log(`Table ${tableName} does not exist. Skipping.`);
@@ -425,17 +429,17 @@ export function ActionStepResultsLocalDB({
       {/* <div>ActionStepResultsLocalDB</div> */}
       {/* <MonacoEditor
         value={{
-          selectedActionSteps: selectedActionSteps,
+          // selectedActionSteps: selectedActionSteps,
           action_input_form_values_key: action_input_form_values_key,
           allLocalDBSuccess: allLocalDBSuccess,
-          // local_db: local_db,
-          summaryData: summaryData,
+          local_db: local_db,
+          // summaryData: summaryData,
         }}
         language="json"
         height="75vh"
       /> */}
 
-      {summaryData && data_fields && (
+      {summaryData?.length > 0 && data_fields && (
         <DataDisplay
           data_items={summaryData || []}
           data_fields={data_fields}

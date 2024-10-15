@@ -394,7 +394,12 @@ export function TableView<T extends Record<string, any>>({
             allowMultiple: true,
             initiallyExpanded: ({ record: { id } }) => id === "issues",
             expanded: {
-              recordIds: ["issues", ...expandedRecordIds],
+              recordIds: [
+                "issues",
+                "payment_analysis",
+                "supplier_analysis",
+                ...expandedRecordIds,
+              ],
               onRecordIdsChange: setExpandedRecordIds,
             },
             content: ({ record, collapse }) => (

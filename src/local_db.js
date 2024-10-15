@@ -214,6 +214,6 @@ async function createTableAndInsertData(
         INSERT INTO ${tableName} (${columnNames.join(", ")})
         VALUES ${valuesClauses.join(",\n    ")};
     `;
-  console.log("Insert Query:", insertQuery);
+  // console.log("Insert Query:", insertQuery);
   await dbInstance.query(insertQuery);
 }
