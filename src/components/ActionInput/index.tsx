@@ -38,8 +38,10 @@ import MonacoEditor from "@components/MonacoEditor";
 import ExternalSubmitButton from "@components/SubmitButton";
 // import { initializeLocalDB } from "src/local_db";
 import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { useDuckDB } from "pages/_app";
+import { showNotification } from "@mantine/notifications";
 
 type ValidationError = string;
 
@@ -58,6 +60,27 @@ function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
     </>
   );
 }
+
+// Function to map class names to ExcelJS ARGB colors
+const getExcelJSStyleFromClass = (className: string) => {
+  switch (className) {
+    case "bg-green-500":
+      return { fgColor: { argb: "FF4CAF50" } }; // Green background
+    case "bg-red-500":
+      return { fgColor: { argb: "FFFF0000" } }; // Red background
+    case "bg-gray-500":
+      return { fgColor: { argb: "FF9E9E9E" } }; // Gray background
+    case "bg-orange-500":
+      return { fgColor: { argb: "FFFFA500" } }; // Orange background
+    default:
+      return null;
+  }
+};
+
+// Utility function to calculate column width based on header length
+const calculateColumnWidth = (header: any) => {
+  return Math.max(header.length + 8, 15); // Add padding and set a minimum width
+};
 
 export const ActionInputForm: React.FC<DynamicFormProps> = ({
   data_model,
@@ -83,6 +106,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   //   record?.id || data_model?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
   let actionInputId = record?.id;
   let action_input_form_values_key = `${action}_${actionInputId}`;
+  const [activeTemplateRecord, setActiveTemplateRecord] = useState<any>(null);
 
   // Define the response type for your specific data
   type CustomMutationResponse<T> = {
@@ -125,6 +149,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     setActiveLayout,
     globalQuery,
     setGlobalQuery,
+    views,
+    setViews,
   } = useAppStore();
 
   const identity_object = {
@@ -245,58 +271,197 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               (field: any) => field.name
             );
 
-            // Ensure the data is an array of arrays
-            const dataWithHeaders = [
-              columnNames,
-              ...downloadData.map((row: any) => Object.values(row)),
-            ];
+            // // Ensure the data is an array of arrays
+            // const dataWithHeaders = [
+            //   columnNames,
+            //   ...downloadData.map((row: any) => Object.values(row)),
+            // ];
 
             // Step 1: Create a new workbook and worksheet
-            const workbook = XLSX.utils.book_new();
-            const worksheet = XLSX.utils.aoa_to_sheet(dataWithHeaders);
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet(`${value?.name}`);
 
-            // Step 2: Optionally, apply styling or formatting to the worksheet
-            // Example: Making the first row (headers) bold
-            // const headerRange = XLSX.utils.decode_range(worksheet["!ref"]);
-            // for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
-            //   const cell = worksheet[XLSX.utils.encode_cell({ r: 0, c: C })];
-            //   if (cell) {
-            //     cell.s = {
-            //       font: { bold: true },
-            //       alignment: { horizontal: "center" },
-            //       fill: { patternType: "solid", fgColor: { rgb: "FFFF00" } }, // Yellow background
-            //     };
-            //   }
-            // }
+            // Step 2: Add headers and apply formatting to the headers
+            worksheet.columns = columnNames.map((col: any) => ({
+              header: col,
+              key: col,
+              width: 20, // Adjust column width here
+            }));
 
-            // Step 3: Add the worksheet to the workbook
-            XLSX.utils.book_append_sheet(workbook, worksheet, `${value?.name}`);
+            // Apply refined dark mode styling to the header row (first row)
+            worksheet.getRow(1).eachCell((cell) => {
+              cell.font = {
+                bold: true,
+                size: 14,
+                color: { argb: "FFD3D3D3" }, // Light gray text color
+              };
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FF2C2C2C" }, // Dark gray background color
+              };
+              cell.alignment = { horizontal: "center", vertical: "middle" }; // Center alignment
 
-            // Step 4: Write the workbook to a Blob and trigger a download
-            const wbout = XLSX.write(workbook, {
-              bookType: "xlsx",
-              type: "array",
+              // Make the border stand out more
+              cell.border = {
+                top: { style: "medium", color: { argb: "FFCCCCCC" } }, // Lighter gray for visibility
+                left: { style: "medium", color: { argb: "FFCCCCCC" } },
+                bottom: { style: "medium", color: { argb: "FFCCCCCC" } },
+                right: { style: "medium", color: { argb: "FFCCCCCC" } },
+              };
             });
-            const blob = new Blob([wbout], {
-              type: "application/octet-stream",
+
+            // Step 3: Convert BigInt values and Add data rows
+            downloadData.forEach((row: any) => {
+              const convertedRow = Object.fromEntries(
+                Object.entries(row).map(([key, value]) => {
+                  if (typeof value === "bigint") {
+                    return [key, value.toString()]; // Convert BigInt to string
+                  }
+                  return [key, value];
+                })
+              );
+              worksheet.addRow(convertedRow);
+            });
+
+            // Step 4: Apply conditional formatting based on view.fields
+            let active_template_record_view_key = null;
+
+            if (activeTemplateRecord) {
+              active_template_record_view_key =
+                activeTemplateRecord?.success_message_code
+                  ? activeTemplateRecord?.success_message_code
+                      .toLowerCase()
+                      .replace(/\s+/g, "_")
+                  : activeTemplateRecord?.name
+                      .toLowerCase()
+                      .replace(/\s+/g, "_");
+            }
+
+            if (active_template_record_view_key) {
+              let active_view = views[active_template_record_view_key];
+
+              active_view.fields.forEach((field: any) => {
+                if (field.conditional_formatting) {
+                  const targetColumnIndex =
+                    columnNames.indexOf(field.field_name) + 1; // Get the index of the field to apply formatting
+                  const comparisonColumnIndex =
+                    columnNames.indexOf(
+                      field.conditional_formatting.field_name
+                    ) + 1; // Get the index of the comparison field
+
+                  if (targetColumnIndex > 0 && comparisonColumnIndex > 0) {
+                    worksheet.eachRow((row, rowNumber) => {
+                      if (rowNumber === 1) return; // Skip header row
+
+                      const targetCell = row.getCell(targetColumnIndex); // Cell where formatting will be applied
+                      const comparisonCell = row.getCell(comparisonColumnIndex); // Cell used for comparison
+                      const comparisonCellValue = String(comparisonCell.value)
+                        .toLowerCase()
+                        .trim(); // Normalize comparison value
+
+                      // Find the matching rule for conditional formatting
+                      const matchingRule =
+                        field.conditional_formatting.rules.find(
+                          (rule: any) =>
+                            String(rule.value).toLowerCase().trim() ===
+                            comparisonCellValue
+                        );
+
+                      if (matchingRule) {
+                        const style = getExcelJSStyleFromClass(
+                          matchingRule.class
+                        );
+                        if (style) {
+                          targetCell.fill = {
+                            type: "pattern",
+                            pattern: "solid",
+                            ...style,
+                          };
+                          targetCell.font = { color: { argb: "FFFFFFFF" } }; // White text color
+                        }
+                      }
+                    });
+                  }
+                }
+              });
+            }
+
+            // Freeze the first row (header) and the first 3 columns by default
+            worksheet.views = [
+              { state: "frozen", ySplit: 1, xSplit: 3 }, // Freeze the first row and the specific column
+            ];
+            // Step 6: Adjust column widths
+            worksheet.columns.forEach((column, index) => {
+              const header = columnNames[index];
+              column.width = calculateColumnWidth(header);
+            });
+
+            // Step 7: Add a summary sheet
+            const summarySheet = workbook.addWorksheet("summary");
+
+            // Add headers to the summary sheet (id, count) and format them like the main sheet
+            summarySheet.columns = [
+              { header: "id", key: "id", width: 20 },
+              { header: "count", key: "count", width: 20 },
+            ];
+
+            summarySheet.getRow(1).eachCell((cell) => {
+              cell.font = {
+                bold: true,
+                size: 14,
+                color: { argb: "FFD3D3D3" }, // Light gray text color
+              };
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FF2C2C2C" }, // Dark gray background color
+              };
+              cell.alignment = { horizontal: "center", vertical: "middle" };
+
+              cell.border = {
+                top: { style: "medium", color: { argb: "FFCCCCCC" } }, // Lighter gray for visibility
+                left: { style: "medium", color: { argb: "FFCCCCCC" } },
+                bottom: { style: "medium", color: { argb: "FFCCCCCC" } },
+                right: { style: "medium", color: { argb: "FFCCCCCC" } },
+              };
+            });
+
+            // Step 8: Add a row to the summary sheet with the id and count of rows from the main sheet
+            summarySheet.addRow({
+              id: value?.name || "Sheet Name",
+              count: downloadData.length,
+            });
+
+            // Freeze the first row (header) and the first 3 columns by default
+            summarySheet.views = [
+              { state: "frozen", ySplit: 1, xSplit: 3 }, // Freeze the first row and the specific column
+            ];
+
+            // Step 9: Write the workbook to a Blob and trigger a download
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             });
             saveAs(blob, `${value?.name}.xlsx`);
+
+            // Step 7: Show success notification after saving
+            setTimeout(() => {
+              showNotification({
+                title: "Saved successfully",
+                message: `${value?.name}.xlsx excel file created successfully.`,
+                color: "green",
+                autoClose: 2000, // Close notification after 2 seconds
+              });
+            }, 500); // Small delay to ensure file save is triggered first
 
             console.log(
               `${value?.name}.xlsx excel file created and downloaded successfully.`
             );
           } catch (err) {
             let errorMessage = "";
-            // if err is object then json stringify otherwise just display the error message
-            // if (typeof err === "object") {
-            //   errorMessage = `Error querying or generating excel file. ${JSON.stringify(
-            //     err
-            //   )}`;
-            // } else {
-            //   errorMessage = `Error querying or generating excel file. ${err}`;
-            // }
             errorMessage = `Error querying or generating excel file. ${err}`;
-            console.error(`Error querying or generating excel file.`, err);
+            console.error(errorMessage);
             alert(errorMessage);
           }
         };
@@ -631,6 +796,18 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               form.setFieldValue(key, value);
             }
           });
+          // setViews
+          let new_views = { ...views };
+          // key is the value of success_message_code or name on the template in all lower case and underscored
+          let key = templateRecord?.success_message_code
+            ? templateRecord?.success_message_code
+                .toLowerCase()
+                .replace(/\s+/g, "_")
+            : templateRecord?.name.toLowerCase().replace(/\s+/g, "_");
+          new_views[key] = templateRecord;
+          setViews(new_views);
+          // also set active template
+          setActiveTemplateRecord(templateRecord);
         }
       } else if (templateError) {
         console.error("Error fetching template data:", templateError);

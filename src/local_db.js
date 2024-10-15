@@ -91,16 +91,19 @@ export function clearDatabaseFromLocalStorage() {
 
 // Type mapping between field types and DuckDB-compatible types
 const typeMapping = {
-  string: "VARCHAR",
-  integer: "INTEGER",
+  integer: "BIGINT",
+  unsigned_integer: "UBIGINT",
   float: "DOUBLE",
+  complex: "DOUBLE",
+  string: "VARCHAR",
   boolean: "BOOLEAN",
   datetime: "TIMESTAMP",
-  uuid: "UUID",
-  date: "DATE",
-  object: "JSON",
-  array: "JSON",
-  object_array: "JSON",
+  timedelta: "INTERVAL",
+  category: "VARCHAR",
+  sparse: "VARCHAR",
+  period: "VARCHAR",
+  interval: "INTERVAL",
+  mixed: "VARCHAR",
   unknown: "VARCHAR",
 };
 
@@ -142,71 +145,6 @@ export async function saveToLocalDB(data, tableName, dataFields, dbInstance) {
   }
 }
 
-/**
- * Creates a table dynamically based on the provided data fields and inserts the data.
- * Handles large integers by using BIGINT.
- * @param {Array} data - The data to be inserted.
- * @param {string} tableName - The name of the table.
- * @param {Array} dataFields - The fields that define the structure of the table.
- */
-// async function createTableAndInsertData(
-//   data,
-//   tableName,
-//   dataFields,
-//   dbInstance
-// ) {
-//   // Build the CREATE TABLE query dynamically based on the data fields
-//   const columns = dataFields.map((field) => {
-//     let type = typeMapping[field.data_type] || "VARCHAR"; // Default to VARCHAR
-//     if (field.data_type === "integer") {
-//       const sampleValue = data.find((item) => item[field.name] !== undefined)?.[
-//         field.name
-//       ];
-//       if (sampleValue > 2147483647) type = "BIGINT"; // Handle large integers
-//     }
-//     return `${field.name} ${type}`;
-//   });
-
-//   const createTableQuery = `
-//         CREATE TABLE IF NOT EXISTS ${tableName} (
-//             ${columns.join(",\n    ")}
-//         );
-//     `;
-//   console.log("Create Table Query:", createTableQuery);
-//   await dbInstance.query(createTableQuery);
-
-//   // Ensure there is data to insert
-//   if (data.length === 0) {
-//     console.warn(`No data to insert into table: ${tableName}`);
-//     return;
-//   }
-
-//   // Prepare the INSERT statement dynamically
-//   const columnNames = dataFields.map((field) => field.name);
-//   const valuesClauses = data.map((record) => {
-//     const values = columnNames.map((column) => {
-//       let value = record[column];
-//       // Serialize objects or arrays as JSON
-//       if (typeof value === "object" && value !== null) {
-//         value = JSON.stringify(value);
-//       }
-//       // Escape single quotes to avoid SQL injection
-//       if (typeof value === "string") {
-//         return `'${value.replace(/'/g, "''")}'`;
-//       }
-//       return value !== undefined ? value : "NULL"; // Handle undefined values as NULL
-//     });
-//     return `(${values.join(", ")})`;
-//   });
-
-//   const insertQuery = `
-//         INSERT INTO ${tableName} (${columnNames.join(", ")})
-//         VALUES ${valuesClauses.join(",\n    ")};
-//     `;
-//   console.log("Insert Query:", insertQuery);
-//   await dbInstance.query(insertQuery);
-// }
-
 async function createTableAndInsertData(
   data,
   tableName,
@@ -216,12 +154,12 @@ async function createTableAndInsertData(
   // Build the CREATE TABLE query dynamically based on the data fields
   const columns = dataFields.map((field) => {
     let type = typeMapping[field.data_type] || "VARCHAR"; // Default to VARCHAR
-    if (field.data_type === "integer") {
-      const sampleValue = data.find((item) => item[field.name] !== undefined)?.[
-        field.name
-      ];
-      if (sampleValue > 2147483647) type = "BIGINT"; // Handle large integers
-    }
+    // if (field.data_type === "integer") {
+    //   const sampleValue = data.find((item) => item[field.name] !== undefined)?.[
+    //     field.name
+    //   ];
+    //   if (sampleValue > 2147483647) type = "BIGINT"; // Handle large integers
+    // }
     return `${field.name} ${type}`;
   });
 

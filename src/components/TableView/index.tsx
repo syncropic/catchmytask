@@ -21,6 +21,7 @@ import {
   Group,
   Tooltip,
   Text,
+  CheckIcon,
 } from "@mantine/core";
 import { useAppStore } from "src/store";
 import RecordActionsWrapper from "@components/RecordActions";
@@ -34,8 +35,11 @@ import { access } from "fs";
 import { render } from "react-dom";
 import { useContextMenu } from "mantine-contextmenu";
 import dynamic from "next/dynamic";
-// import { initializeLocalDB } from "src/local_db";
-
+import { format } from "date-fns";
+import { DatePicker } from "@mantine/dates";
+import "dayjs/locale/en"; // Adjust locale if needed
+import { formatInTimeZone } from "date-fns-tz"; // Use formatInTimeZone for time zone-aware formatting// import { initializeLocalDB } from "src/local_db";
+import { showNotification } from "@mantine/notifications";
 // Dynamically import Nivo components to support ESM
 const ResponsivePie = dynamic(
   () => import("@nivo/pie").then((mod) => mod.ResponsivePie),
@@ -126,6 +130,27 @@ export function TableView<T extends Record<string, any>>({
     []
   );
 
+  const timeZone = "America/New_York"; // Specify the desired time zone (e.g., Eastern Time)
+  // handle cell click
+  const handleCellClick = (
+    e: React.MouseEvent<HTMLDivElement>, // click event
+    record: any,
+    column: Column<T, unknown>,
+    field: any,
+    value: any
+  ) => {
+    e.stopPropagation(); // Stop the event from propagating
+    clipboard.copy(value); // Copy the value to clipboard
+    // Show notification
+    showNotification({
+      title: "Copied to clipboard",
+      message: `Value "${value}" copied to clipboard`,
+      // icon: <CheckIcon />, // Optional: You can display an icon
+      color: "green", // Optional: Set the color of the notification
+      autoClose: 2000, // Optional: Close the notification after 2 seconds
+    });
+  };
+
   // Effect to update columns whenever data_fields or sorting changes
   useEffect(() => {
     if (tableInstance) {
@@ -144,31 +169,59 @@ export function TableView<T extends Record<string, any>>({
               id: column.id,
               accessor: column.columnDef.header,
               ellipsis: true,
-              draggable: false,
+              // draggable: false,
+              // render: (record: T) => {
+              //   const value = record[column.columnDef.header as keyof T];
+              //   if (
+              //     typeof value === "string" &&
+              //     ["id", "related_id", "record_id", "name"].includes(
+              //       String(column.columnDef.header)
+              //     )
+              //   ) {
+              //     return (
+              //       <div className="flex">
+              //         <div>{value}</div>
+              //       </div>
+              //     );
+              //   } else if (typeof value === "string") {
+              //     return <div>{value}</div>;
+              //   } else if (typeof value === "object") {
+              //     return <div>{JSON.stringify(value)}</div>;
+              //   } else {
+              //     return <div>{String(value)}</div>;
+              //   }
+              // },
               render: (record: T) => {
                 const value = record[column.columnDef.header as keyof T];
-                if (
-                  typeof value === "string" &&
-                  ["id", "related_id", "record_id", "name"].includes(
-                    String(column.columnDef.header)
-                  )
-                ) {
-                  return (
-                    <div className="flex">
-                      <div>{value}</div>
-                    </div>
-                  );
-                } else if (typeof value === "string") {
-                  return <div>{value}</div>;
-                } else if (typeof value === "object") {
-                  return <div>{JSON.stringify(value)}</div>;
-                } else {
-                  return <div>{String(value)}</div>;
-                }
+                const dataType = field.data_type; // Get data_type from the field
+                // stop propagation to not expand row
+                return (
+                  <div
+                    onClick={(e) =>
+                      handleCellClick(e, record, column, field, value)
+                    }
+                  >
+                    {value}
+                  </div>
+                );
+
+                // Conditionally render based on data_type
+                // if (dataType === "string") {
+                //   return <div>{value}</div>;
+                // } else if (dataType === "datetime") {
+                //   return <div>{new Date(value).toUTCString()}</div>;
+                // } else if (dataType === "float" || dataType === "integer") {
+                //   return <div>{Number(value).toLocaleString()}</div>;
+                // } else if (dataType === "boolean") {
+                //   return <div>{value ? "Yes" : "No"}</div>;
+                // } else {
+                //   return <div>{JSON.stringify(value)}</div>;
+                // }
               },
               resizable: true,
+              width: 100,
               sortable: column.getCanSort(),
-              filter: <Filter column={column} />,
+              filter: <Filter column={column} field={field} />,
             } as DataTableColumn<T>;
           })
           .filter(Boolean), // Filter out any null values if a column is not found
@@ -556,63 +609,132 @@ interface ColumnMeta {
 //   );
 // }
 
-function Filter<TData>({ column }: { column: Column<TData, unknown> }) {
+// function Filter<TData>({ column }: { column: Column<TData, unknown> }) {
+//   const columnFilterValue = column.getFilterValue();
+//   // const { filter_variant } = (column.columnDef.meta as ColumnMeta) ?? {};
+//   return (
+//     <>
+//       {/* <div>{JSON.stringify(columnFilterValue)}</div> */}
+//       <DebouncedInput
+//         className="w-36 border shadow rounded"
+//         onChange={(value) => column.setFilterValue(value)}
+//         placeholder={`filter...`}
+//         type="text"
+//         value={(columnFilterValue ?? "") as string}
+//       />
+//     </>
+//   );
+
+//   // return filter_variant === "range" ? (
+//   //   <div>
+//   //     <div className="flex space-x-2">
+//   //       <DebouncedInput
+//   //         type="number"
+//   //         value={(columnFilterValue as [number, number])?.[0] ?? ""}
+//   //         onChange={(value) =>
+//   //           column.setFilterValue((old: [number, number]) => [value, old?.[1]])
+//   //         }
+//   //         placeholder={`Min`}
+//   //         className="w-24 border shadow rounded"
+//   //       />
+//   //       <DebouncedInput
+//   //         type="number"
+//   //         value={(columnFilterValue as [number, number])?.[1] ?? ""}
+//   //         onChange={(value) =>
+//   //           column.setFilterValue((old: [number, number]) => [old?.[0], value])
+//   //         }
+//   //         placeholder={`Max`}
+//   //         className="w-24 border shadow rounded"
+//   //       />
+//   //     </div>
+//   //     <div className="h-1" />
+//   //   </div>
+//   // ) : filter_variant === "select" ? (
+//   //   <select
+//   //     onChange={(e) => column.setFilterValue(e.target.value)}
+//   //     value={columnFilterValue?.toString()}
+//   //   >
+//   //     <option value="">All</option>
+//   //     <option value="complicated">complicated</option>
+//   //     <option value="relationship">relationship</option>
+//   //     <option value="single">single</option>
+//   //   </select>
+//   // ) : (
+//   //   <DebouncedInput
+//   //     className="w-36 border shadow rounded"
+//   //     onChange={(value) => column.setFilterValue(value)}
+//   //     placeholder={`Search...`}
+//   //     type="text"
+//   //     value={(columnFilterValue ?? "") as string}
+//   //   />
+//   // );
+// }
+
+// Updated Filter component
+function Filter<TData>({
+  column,
+  field,
+}: {
+  column: Column<TData, unknown>;
+  field: any;
+}) {
   const columnFilterValue = column.getFilterValue();
-  // const { filter_variant } = (column.columnDef.meta as ColumnMeta) ?? {};
-  return (
-    <>
-      {/* <div>{JSON.stringify(columnFilterValue)}</div> */}
+
+  // Conditionally render filters based on data_type
+  if (field.data_type === "datethime") {
+    return (
+      <DatePicker
+        placeholder="Pick date"
+        value={columnFilterValue ? new Date(columnFilterValue as string) : null}
+        onChange={(value) =>
+          column.setFilterValue(value?.toISOString() ?? null)
+        }
+        // className="w-36 border shadow rounded"
+      />
+    );
+  } else if (field.data_type === "string") {
+    return (
       <DebouncedInput
         className="w-36 border shadow rounded"
         onChange={(value) => column.setFilterValue(value)}
-        placeholder={`filter...`}
+        placeholder={`Search...`}
         type="text"
         value={(columnFilterValue ?? "") as string}
       />
-    </>
-  );
-
-  // return filter_variant === "range" ? (
-  //   <div>
-  //     <div className="flex space-x-2">
-  //       <DebouncedInput
-  //         type="number"
-  //         value={(columnFilterValue as [number, number])?.[0] ?? ""}
-  //         onChange={(value) =>
-  //           column.setFilterValue((old: [number, number]) => [value, old?.[1]])
-  //         }
-  //         placeholder={`Min`}
-  //         className="w-24 border shadow rounded"
-  //       />
-  //       <DebouncedInput
-  //         type="number"
-  //         value={(columnFilterValue as [number, number])?.[1] ?? ""}
-  //         onChange={(value) =>
-  //           column.setFilterValue((old: [number, number]) => [old?.[0], value])
-  //         }
-  //         placeholder={`Max`}
-  //         className="w-24 border shadow rounded"
-  //       />
-  //     </div>
-  //     <div className="h-1" />
-  //   </div>
-  // ) : filter_variant === "select" ? (
-  //   <select
-  //     onChange={(e) => column.setFilterValue(e.target.value)}
-  //     value={columnFilterValue?.toString()}
-  //   >
-  //     <option value="">All</option>
-  //     <option value="complicated">complicated</option>
-  //     <option value="relationship">relationship</option>
-  //     <option value="single">single</option>
-  //   </select>
-  // ) : (
-  //   <DebouncedInput
-  //     className="w-36 border shadow rounded"
-  //     onChange={(value) => column.setFilterValue(value)}
-  //     placeholder={`Search...`}
-  //     type="text"
-  //     value={(columnFilterValue ?? "") as string}
-  //   />
-  // );
+    );
+  } else if (field.data_type === "float" || field.data_type === "integer") {
+    return (
+      <div className="flex space-x-2">
+        <DebouncedInput
+          type="number"
+          value={(columnFilterValue as [number, number])?.[0] ?? ""}
+          onChange={(value) =>
+            column.setFilterValue((old: [number, number]) => [value, old?.[1]])
+          }
+          placeholder={`Min`}
+          className="w-24 border shadow rounded"
+        />
+        <DebouncedInput
+          type="number"
+          value={(columnFilterValue as [number, number])?.[1] ?? ""}
+          onChange={(value) =>
+            column.setFilterValue((old: [number, number]) => [old?.[0], value])
+          }
+          placeholder={`Max`}
+          className="w-24 border shadow rounded"
+        />
+      </div>
+    );
+  } else {
+    // Default filter (e.g., for complex types)
+    return (
+      <DebouncedInput
+        className="w-36 border shadow rounded"
+        onChange={(value) => column.setFilterValue(value)}
+        placeholder={`Search...`}
+        type="text"
+        value={(columnFilterValue ?? "") as string}
+      />
+    );
+  }
 }

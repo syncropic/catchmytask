@@ -106,6 +106,8 @@ export const useAppStore = create(
           inputMode: "display",
         },
       },
+      views: {},
+      setViews: (views) => set((state) => ({ views })),
       focused_entities: {},
       setFocusedEntities: (focused_entities) =>
         set((state) => ({ ...state, focused_entities: focused_entities })),
