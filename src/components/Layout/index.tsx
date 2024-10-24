@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import {
   Authenticated,
   useGo,
@@ -32,6 +32,12 @@ import { actionInputAccordionConfig } from "./actionInputAccordionConfig";
 import InitializeApplication from "@components/Utils/InitializeApplication";
 import { ComponentKey } from "@components/interfaces";
 import MonacoEditor from "@components/MonacoEditor";
+import { runActionAccordionConfig } from "./runActionAccordionConfig";
+import ActionStepsWrapper from "@components/ActionSteps";
+import BulkOperationsToolbar from "@components/BulkOperationsToolbar";
+import { viewAccordionConfig } from "./viewAccordionConfig";
+import { viewSearchActionAccordionConfig } from "./viewSearchActionAccordionConfig";
+import { UploadedWrapper } from "@components/Uploaded";
 
 // Handling redirect to task/session when authenticated
 interface RedirectToActiveTaskParams {
@@ -39,40 +45,99 @@ interface RedirectToActiveTaskParams {
   activeTask: any;
   activeSession: any;
   activeApplication: any;
-  go: any;
+  activeView: any;
+  // go: any;
 }
 
-function redirectToActiveTask({
+
+// Helper to construct the query string based on values
+const buildQueryParams = (params: Record<string, string | null>) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) query.set(key, value);
+  });
+  return query.toString();
+};
+
+// Helper to construct the target path based on active parameters
+const buildTargetPath = (
+  activeTaskId: string,
+  queryParams: string,
+  activeViewId?: string | null
+) => {
+  return activeViewId
+    ? `/tasks/show/${activeTaskId}?${queryParams}&ViewId=${activeViewId}`
+    : `/tasks/show/${activeTaskId}?${queryParams}`;
+};
+
+// Main function to handle redirection logic
+export function redirectToActiveTask({
   authenticatedData,
   activeTask,
   activeSession,
   activeApplication,
-  go,
+  activeView,
 }: RedirectToActiveTaskParams) {
+  const {pathname} = useParsed()
+  const go = useGo()
+  // const targetUrl = useMemo(() => {
+  //   if (activeTask?.id) {
+  //     const queryParams = buildQueryParams({
+  //       applicationId: activeApplication?.id,
+  //       sessionId: activeSession?.id,
+  //     });
+  //     return buildTargetPath(activeTask.id, queryParams, activeView?.id);
+  //   }
+  //   return null;
+  // }, [activeTask, activeSession, activeApplication, activeView]);
+
   useEffect(() => {
-    if (authenticatedData?.authenticated && activeTask?.id) {
-      const targetUrl = `/tasks/show/${activeTask.id}?applicationId=${activeApplication?.id}&sessionId=${activeSession?.id}`;
-      if (window.location.pathname + window.location.search !== targetUrl) {
-        go({
-          to: {
-            resource: "tasks",
-            action: "show",
-            id: activeTask.id,
-            meta: {
-              applicationId: activeApplication?.id || null,
-              sessionId: activeSession?.id || null,
-              taskId: activeTask.id,
-            },
+    // console.log("pathname", pathname);
+    if (authenticatedData?.authenticated && activeTask) {
+      go({
+        to: {
+          resource: "tasks",
+          action: "show",
+          id: activeTask?.id,
+          meta: {
+            applicationId: activeApplication?.id,
+            sessionId: activeSession?.id,
+            taskId: activeTask.id!,
+            ...(activeView?.id && { viewId: activeView?.id }),
           },
-          query: {
-            applicationId: activeApplication?.id || null,
-            sessionId: activeSession?.id || null,
-          },
-          type: "push",
-        });
-      }
+        },
+        query: {
+          applicationId: activeApplication?.id,
+          sessionId: activeSession?.id,
+          taskId: activeTask?.id,
+          ...(activeView?.id && { viewId: activeView?.id }),
+        },
+        type: "push",
+      });
+      // console.log("pathname", pathname);
+      // const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+      // if (currentUrl !== targetUrl) {
+      //   go({
+      //     to: {
+      //       resource: "tasks",
+      //       action: "show",
+      //       id: activeTask.id!,
+      //       meta: {
+      //         applicationId: activeApplication?.id,
+      //         sessionId: activeSession?.id,
+      //         taskId: activeTask.id!,
+      //       },
+      //     },
+      //     query: {
+      //       applicationId: activeApplication?.id,
+      //       sessionId: activeSession?.id,
+      //     },
+      //     type: "push",
+      //   });
+      // }
     }
-  }, [authenticatedData, activeTask, activeApplication, activeSession, go]);
+  }, [authenticatedData, activeTask]);
 }
 
 const Layout = ({
@@ -109,7 +174,9 @@ const Layout = ({
     activeSession,
     focused_entities,
     selectedRecords,
+    activeView,
     pinned_action_steps,
+    navigationHistory
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
 
@@ -124,13 +191,14 @@ const Layout = ({
   const parsed = useParsed(); // Parsed pathname from useParsed hook
 
   // Redirect handling for task and session
-  redirectToActiveTask({
-    authenticatedData,
-    activeTask,
-    activeSession,
-    activeApplication: domainRecord?.application,
-    go,
-  });
+  // redirectToActiveTask({
+  //   authenticatedData,
+  //   activeTask,
+  //   activeSession,
+  //   activeApplication: domainRecord?.application,
+  //   activeView,
+  //   // go,
+  // });
 
   let action = focused_entities[activeTask?.id]?.["action"];
 
@@ -172,6 +240,20 @@ const Layout = ({
   //     />
   //   );
   // }
+
+
+  const [hasRedirected, setHasRedirected] = useState(false);
+
+  useEffect(() => {
+    if (authenticatedData?.authenticated && navigationHistory && parsed?.pathname !== "/home" && !hasRedirected) {
+      setHasRedirected(true);
+      go({
+        to: navigationHistory?.pathname,
+        query: navigationHistory?.params,
+        type: "push",
+      });
+    }
+  }, [authenticatedData, navigationHistory, parsed?.pathname, hasRedirected, go]);
 
   // Redirect and render logic based on the user's authentication status and path
   if (isLoadingAuthenticatedData || isLoadingDomainData) {
@@ -250,7 +332,29 @@ const Layout = ({
     );
   }
 
+  
+  // if (authenticatedData?.authenticated && navigationHistory && parsed?.pathname !== "/home") {
+  //   go({
+  //     to: {
+  //       resource: "tasks",
+  //       action: "show",
+  //       id: activeTask?.id,
+  //       meta: navigationHistory?.params,
+  //     },
+  //     query: navigationHistory?.params,
+  //     type: "push",
+  //   });
+  // }
+
   // Return the authenticated layout with your existing logic
+  let select_or_create_to_continue_items = [activeSession, activeTask, activeView]
+  let select_or_create_to_continue_items_map = ["session", "task", "view"]
+
+  const nullIndex = select_or_create_to_continue_items.findIndex(item => item === null);
+  const item = nullIndex !== -1 ? select_or_create_to_continue_items_map[nullIndex] : null;
+
+  const message = item ? `Create or select a ${item} to continue` : null;
+
 
   return (
     <Authenticated key="home" redirectOnFail="/login">
@@ -312,7 +416,7 @@ const Layout = ({
                     <Breadcrumbs />
                     <p className="text-sm text-gray-600 text-center max-w-sm">
                       <Highlight color="lime" highlight="task">
-                        Create or select a task to continue.
+                        {JSON.stringify(message)}
                       </Highlight>
                     </p>
                   </div>
@@ -366,19 +470,37 @@ const Layout = ({
                     effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
                   }`}
                 >
+                  {activeView && activeTask && (
+                    <AccordionComponent
+                      sections={viewSearchActionAccordionConfig}
+                      activeView={activeView}
+                      activeTask={activeTask}
+                      defaultExpandedValues={["search"]}
+                      action={action}
+                    />
+                  )}
+
+                  {/* <div>{JSON.stringify(activeView)}</div> */}
                   {/* Left section content */}
-                  {action && pinned_main_action === "search" && (
+                  {/* {pinned_main_action === "search" && (
                     <AccordionComponent
                       sections={searchActionAccordionConfig}
                       defaultExpandedValues={["search"]}
                     />
-                  )}
-                  {action && pinned_main_action === "save" && (
+                  )} */}
+                  {/* {action && pinned_main_action === "save" && (
                     <AccordionComponent
                       sections={saveActionAccordionConfig}
                       defaultExpandedValues={["save"]}
                     />
-                  )}
+                  )} */}
+                  {/* {action && pinned_main_action === "run" && (
+                    <AccordionComponent
+                      activeTask={activeTask}
+                      sections={runActionAccordionConfig}
+                      defaultExpandedValues={["run"]}
+                    />
+                  )} */}
                 </div>
               </Panel>
             )}
@@ -392,9 +514,9 @@ const Layout = ({
                 <Panel defaultSize={60} minSize={30}>
                   <div className="">
                     {/* // to load in the page content */}
-                    {activeSession && activeTask && children}
+                    {!select_or_create_to_continue_items.some(item => item === null) && children}
                     {/* accordion components in the center section */}
-                    {activeTask && (
+                    {/* {activeTask && (
                       <AccordionComponent
                         sections={executionAccordionConfig}
                         activeTask={activeTask}
@@ -403,9 +525,83 @@ const Layout = ({
                         selectedRecords={selectedRecords}
                         defaultExpandedValues={["execution"]}
                       />
-                    )}
+                    )} */}
 
-                    {!activeSession && (
+                    <div className="w-full">
+                      <div className="flex justify-center w-full">
+                        <div className="w-1/5"></div>
+                        <div className="w-3/5 pb-2 pt-2 flex gap-2">
+                          {selectedRecords["issues"]?.length > 0 && (
+                            <>
+                              <BulkOperationsToolbar
+                                include_components={[
+                                  {
+                                    action: "view",
+                                    entity_type: "selected_records",
+                                    type: "action",
+                                    record: activeTask,
+                                    onClick: bulkActionSelect,
+                                  },
+                                  {
+                                    action: "bulk_update",
+                                    entity_type: "selected_records",
+                                    type: "action",
+                                    record: activeTask,
+                                    onClick: bulkActionSelect,
+                                  },
+                                  {
+                                    action: "close",
+                                    entity_type: "selected_records",
+                                    type: "action",
+                                    record: activeTask,
+                                    onClick: bulkActionSelect,
+                                  },
+                                  {
+                                    action: "assign",
+                                    entity_type: "selected_records",
+                                    type: "action",
+                                    record: activeTask,
+                                    onClick: bulkActionSelect,
+                                  },
+                                  {
+                                    action: "delete",
+                                    entity_type: "selected_records",
+                                    type: "action",
+                                    record: activeTask,
+                                    onClick: bulkActionSelect,
+                                  },
+                                  {
+                                    action: "custom_actions",
+                                    entity_type: "selected_records",
+                                    type: "action",
+                                    record: activeTask,
+                                    onClick: bulkActionSelect,
+                                  },
+                                ]}
+                              ></BulkOperationsToolbar>
+                            </>
+                          )}
+                        </div>
+                        <div className="w-1/5"></div>
+                      </div>
+
+                      {activeTask && action !== "upload" && (
+                        <div className="w-full">
+                          <ActionStepsWrapper
+                            entity_type="action_steps"
+                            record={activeTask}
+                            aggregate_action_steps={true}
+                          />
+                        </div>
+                      )}
+                      {activeTask && action === "upload" && (
+                        <div className="w-full">
+                          <UploadedWrapper />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* {!activeSession && (
                       <div
                         className="flex flex-col h-screen items-center justify-center p-4"
                         style={{
@@ -422,9 +618,9 @@ const Layout = ({
                           </Highlight>
                         </p>
                       </div>
-                    )}
+                    )} */}
 
-                    {!activeTask && activeSession && (
+                    {/* {!activeTask && activeSession && (
                       <div
                         className="flex flex-col h-screen items-center justify-center p-4"
                         style={{
@@ -439,6 +635,29 @@ const Layout = ({
                           <Highlight color="lime" highlight="task">
                             Create or select a task to continue.
                           </Highlight>
+                        </p>
+                      </div>
+                    )} */}
+                    {select_or_create_to_continue_items.some(item => item === null) && (
+                      <div
+                        className="flex flex-col h-screen items-center justify-center p-4"
+                        style={{
+                          height: "calc(100vh - 100px)",
+                          // paddingBottom: "60px",
+                        }}
+                      >
+                        {children}
+
+                        <Breadcrumbs />
+                        <p className="text-sm text-gray-600 text-center max-w-sm">
+                          <Highlight component="p" color="lime" highlight={select_or_create_to_continue_items_map[nullIndex] || ""}>
+                           {/* {JSON.stringify(`Create or select a ${select_or_create_to_continue_items_map[nullIndex]} to continue.`)} */}
+                          {message || ""}
+                          </Highlight>
+                          {/* {JSON.stringify(select_or_create_to_continue_items.map((item) => item?.id))}
+                          {nullIndex}
+                          {select_or_create_to_continue_items_map[nullIndex]} */}
+                          {/* {message} */}
                         </p>
                       </div>
                     )}
@@ -477,7 +696,7 @@ const Layout = ({
                     {/* pinned action step issues */}
                     {activeTask &&
                       action &&
-                      !["save", "search"]?.includes(action) && (
+                      !["save", "search", "upload"]?.includes(action) && (
                         <AccordionComponent
                           sections={actionInputAccordionConfig}
                           selectedRecords={selectedRecords}
@@ -487,30 +706,35 @@ const Layout = ({
                         />
                       )}
                     {/* pinned action step summary */}
-                    {activeTask &&
+                    {/* {activeTask &&
                       pinned_action_steps["summary"]?.is_displayed && (
                         <AccordionComponent
                           sections={summaryViewAccordionConfig}
                           selectedRecords={selectedRecords}
                           defaultExpandedValues={["summary"]}
                         />
-                      )}
+                      )} */}
                     {/* pinned action step issues */}
-                    {activeTask &&
+                    {/* {activeTask &&
                       pinned_action_steps["issues"]?.is_displayed && (
                         <AccordionComponent
                           sections={issuesViewAccordionConfig}
                           selectedRecords={selectedRecords}
                           defaultExpandedValues={["issues"]}
                         />
-                      )}
+                      )} */}
+                    {/* <AccordionComponent
+                      sections={viewAccordionConfig}
+                      // selectedRecords={selectedRecords}
+                      defaultExpandedValues={["view"]}
+                    /> */}
                     {/* plan accordion component */}
                     {activeTask && (
                       <AccordionComponent
                         sections={planViewAccordionConfig}
                         activeTask={activeTask}
                         activeSession={activeSession}
-                        defaultExpandedValues={["plan"]}
+                        defaultExpandedValues={[]}
                       />
                     )}
                   </div>

@@ -1,7 +1,7 @@
 import Editor, { useMonaco } from "@monaco-editor/react";
 import React, { useEffect, useRef, useState } from "react";
 import { Text } from "@mantine/core";
-import { isAllLocalDBSuccess } from "@components/Utils";
+import { isAllLocalDBSuccess, serializeBigInt } from "@components/Utils";
 import { useDuckDB } from "pages/_app";
 import { useAppStore } from "src/store";
 
@@ -177,12 +177,14 @@ const MonacoEditor: React.FC<IEditor> = ({
   }, [monaco, tablesRef.current]);
 
   const [code, setCode] = useState(() => {
-    return typeof value === "object" ? JSON.stringify(value, null, 2) : value;
+    return typeof value === "object"
+      ? JSON.stringify(serializeBigInt(value), null, 2)
+      : value;
   });
 
   useEffect(() => {
     if (typeof value === "object") {
-      setCode(JSON.stringify(value, null, 2));
+      setCode(JSON.stringify(serializeBigInt(value), null, 2));
     } else {
       setCode(value);
     }

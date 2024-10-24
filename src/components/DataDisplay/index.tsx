@@ -5,6 +5,7 @@ import {
   isAllLocalDBSuccess,
   mergeEdgeWithEntityValues,
   useFetchQueryDataByState,
+  useReadRecordByState,
   useTableColumns,
 } from "@components/Utils";
 import {
@@ -41,7 +42,7 @@ import {
   rankItem,
   compareItems,
 } from "@tanstack/match-sorter-utils";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useElementSize } from "@mantine/hooks";
 import { useAppStore } from "src/store";
 import Board from "@components/Board";
@@ -49,6 +50,7 @@ import Board from "@components/Board";
 import dynamic from "next/dynamic";
 // import { initializeLocalDB } from "src/local_db";
 import { useDuckDB } from "pages/_app";
+import DataGridView from "@components/DataGridView";
 
 declare module "@tanstack/react-table" {
   //add fuzzy filter to the filterFns
@@ -99,7 +101,26 @@ export function DataDisplay<T extends Record<string, any>>({
     sortedRecords,
     fields,
     setFields,
+    activeView,
   } = useAppStore();
+
+  let read_record_state = {
+    credential: "surrealdb catchmytask dev",
+    success_message_code: activeView?.id,
+    record: activeView,
+    read_record_mode: "remote",
+  };
+
+  const {
+    data: viewData,
+    isLoading: viewIsLoading,
+    error: viewError,
+  } = useReadRecordByState(read_record_state);
+
+
+  let viewRecord = viewData?.data?.find(
+    (item: any) => item?.message?.code === activeView?.id
+  )?.data[0]
 
   const { tableColumns } = useTableColumns({
     field_configurations: data_fields?.map((nested_field: any) =>
@@ -122,9 +143,13 @@ export function DataDisplay<T extends Record<string, any>>({
   // const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   // const [rowSelection, setRowSelection] = useState({});
 
+  // Memoize table data and columns to avoid unnecessary renders
+  const memoizedData = useMemo(() => data_items ?? [], [data_items]);
+  const memoizedColumns = useMemo(() => tableColumns ?? [], [tableColumns]);
+
   const table = useReactTable({
-    data: data_items ?? [],
-    columns: tableColumns ?? [],
+    data: memoizedData,
+    columns: memoizedColumns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -181,12 +206,48 @@ export function DataDisplay<T extends Record<string, any>>({
     }
   }, [data_fields, record?.id, fields, setFields]);
 
+  // const [tableKey, setTableKey] = useState(0);
+
+  // useEffect(() => {
+  //   setTable(createTable());
+  //   setTableKey(prev => prev + 1);  // Force re-render of table components
+  // }, [createTable, activeView]);
+
   // let selected_record_items_key = `${action}_action_input_${record?.id}`;
   const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
   let action_input_form_values_key = `${action}_${actionInputId}`;
   // return board for action steps by default
   if (display === "board") {
     return <Board data_fields={data_items}></Board>;
+  }
+  if (display === "datagridview") {
+    return (
+      <>
+        <DataGridView
+          data_fields={
+            sortedRecords[`${action_input_form_values_key}`]
+              ? sortedRecords[`${action_input_form_values_key}`].filter(
+                  (sortedRecord: any) =>
+                    selectedRecords[`${action_input_form_values_key}`]?.some(
+                      (selectedRecord: any) =>
+                        selectedRecord.name === sortedRecord.name
+                    )
+                )
+              : selectedRecords[`${action_input_form_values_key}`] ||
+                data_fields
+          }
+          // tableInstance={table}
+          // resource_group={
+          //   record?.success_message_code || record?.entity_type || entity_type
+          // }
+          data_items={data_items}
+          // setSorting={setSorting}
+          // sorting={sorting}
+          view_record={viewRecord}
+          // ui={ui || {}}
+        />
+      </>
+    );
   }
   // default return table view
   return (

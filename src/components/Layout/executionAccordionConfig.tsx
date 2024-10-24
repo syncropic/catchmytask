@@ -90,6 +90,7 @@ export const executionAccordionConfig: AccordionSection[] = [
             <ActionStepsWrapper
               entity_type="action_steps"
               record={activeTask}
+              aggregate_action_steps={true}
             />
           </div>
         )}

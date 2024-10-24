@@ -1,8 +1,10 @@
 // services/local_db.js
+import { Mutex } from "async-mutex";
 import * as duckdb from "@duckdb/duckdb-wasm";
 
 let localDBConnection = null; // Singleton to ensure only one connection
 let dbInstance = null; // DuckDB instance
+const mutex = new Mutex(); // Initialize the mutex to serialize access
 
 /**
  * Initializes the DuckDB instance if not already initialized.
@@ -114,35 +116,57 @@ const typeMapping = {
  * @param {string} tableName - The name of the table.
  * @param {Array} dataFields - The fields that define the structure of the table.
  */
+// export async function saveToLocalDB(data, tableName, dataFields, dbInstance) {
+//   try {
+//     console.log(`Starting transaction to save data to table: ${tableName}`);
+
+//     // Start the transaction
+//     await dbInstance.query("BEGIN TRANSACTION;");
+
+//     // Drop the table if it exists to avoid conflicts
+//     const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
+//     await dbInstance.query(dropQuery);
+
+//     // Create table and insert data
+//     await createTableAndInsertData(data, tableName, dataFields, dbInstance);
+
+//     // Commit the transaction on success
+//     await dbInstance.query("COMMIT;");
+//     console.log(`Transaction committed successfully for table: ${tableName}`);
+//   } catch (error) {
+//     console.error(`Error during transaction for table ${tableName}:`, error);
+
+//     // Rollback transaction in case of error
+//     try {
+//       await dbInstance.query("ROLLBACK;");
+//       console.log(`Transaction rolled back for table: ${tableName}`);
+//     } catch (rollbackError) {
+//       console.error("Error during rollback:", rollbackError);
+//     }
+//     throw error; // Re-throw the original error
+//   }
+// }
+
 export async function saveToLocalDB(data, tableName, dataFields, dbInstance) {
-  try {
-    console.log(`Starting transaction to save data to table: ${tableName}`);
-
-    // Start the transaction
-    await dbInstance.query("BEGIN TRANSACTION;");
-
-    // Drop the table if it exists to avoid conflicts
-    const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
-    await dbInstance.query(dropQuery);
-
-    // Create table and insert data
-    await createTableAndInsertData(data, tableName, dataFields, dbInstance);
-
-    // Commit the transaction on success
-    await dbInstance.query("COMMIT;");
-    console.log(`Transaction committed successfully for table: ${tableName}`);
-  } catch (error) {
-    console.error(`Error during transaction for table ${tableName}:`, error);
-
-    // Rollback transaction in case of error
+  // Use the mutex to ensure only one transaction runs at a time
+  return mutex.runExclusive(async () => {
     try {
+      console.log(`Starting transaction for table: ${tableName}`);
+      await dbInstance.query("BEGIN TRANSACTION;");
+
+      const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
+      await dbInstance.query(dropQuery);
+      await createTableAndInsertData(data, tableName, dataFields, dbInstance);
+
+      await dbInstance.query("COMMIT;");
+      console.log(`Transaction committed for table: ${tableName}`);
+    } catch (error) {
+      console.error(`Error during transaction for ${tableName}:`, error);
       await dbInstance.query("ROLLBACK;");
       console.log(`Transaction rolled back for table: ${tableName}`);
-    } catch (rollbackError) {
-      console.error("Error during rollback:", rollbackError);
+      throw error;
     }
-    throw error; // Re-throw the original error
-  }
+  });
 }
 
 async function createTableAndInsertData(

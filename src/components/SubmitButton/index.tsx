@@ -14,7 +14,7 @@ export const ExternalSubmitButton = ({
 }: ExternalSubmitButtonProps) => {
   const { forms, getFormSubmitHandler } = useTransientStore();
   // console.log("forms", forms["clone_action_steps:1u2jdt8lz28yc45drye0"]);
-  // const { entity_types, focused_entities } = useAppStore();
+  const { form_status } = useAppStore();
   // const formId = `${focused_entities[record?.id]?.[action]}_${record?.id}`;
   const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
 
@@ -32,7 +32,9 @@ export const ExternalSubmitButton = ({
   //   (state) => state.isSubmitting
   // );
   if (!formInstance) {
-    return <>form instance unavailable</>;
+    return <div className="flex flex-col items-center">
+      <div>form instance unavailable</div>
+      <div>{formId}</div></div>;
   }
 
   return (
@@ -51,7 +53,7 @@ export const ExternalSubmitButton = ({
           >
             <Button
               size="xs"
-              loading={isSubmitting}
+              loading={form_status[formId]?.is_submitting}
               onClick={() => {
                 if (formInstance?.handleSubmit) {
                   formInstance.handleSubmit(); // Trigger form submission
@@ -63,7 +65,10 @@ export const ExternalSubmitButton = ({
                   );
                 }
               }}
-              disabled={!canSubmit} // Disable button if the form cannot submit
+              color="green"
+              disabled={
+                !canSubmit || isSubmitting || form_status[formId]?.is_submitting
+              } // Disable button if the form cannot submit
             >
               {action}
             </Button>

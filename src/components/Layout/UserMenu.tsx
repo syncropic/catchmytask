@@ -4,6 +4,7 @@ import {
   useGo,
   useLogout,
   useNavigation,
+  useParsed,
 } from "@refinedev/core";
 import { IIdentity } from "@components/interfaces";
 import { Button, Group, Menu } from "@mantine/core";
@@ -35,10 +36,18 @@ export const UserMenu = () => {
   const { data: user } = useGetIdentity({
     v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
   });
-  const { setIsFloatingWindowOpen, setActiveFloatingWindow } = useAppStore();
+  const { setIsFloatingWindowOpen, setActiveFloatingWindow, setNavigationHistory } = useAppStore();
+  const { resource, action, id, pathname, params } = useParsed();
 
   // handle logout
   const handleLogout = () => {
+    // get the current full url
+    setNavigationHistory(
+      {
+        pathname: pathname,
+        params: params
+      }
+    )
     logout();
   };
   if (!user) {

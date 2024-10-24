@@ -1,8 +1,7 @@
 import { Title, Text } from "@mantine/core";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useAppStore } from "src/store";
-import { useParsed } from "@refinedev/core";
-import MonacoEditor from "@components/MonacoEditor";
+import { useParsed, useNavigation } from "@refinedev/core";
 import { useReadRecordByState } from "@components/Utils";
 import ErrorComponent from "@components/ErrorComponent";
 import Breadcrumbs from "@components/Breadcrumbs";
@@ -12,18 +11,24 @@ export const ShowPage: React.FC = () => {
     activeApplication,
     setActiveApplication,
     activeTask,
+    activeView,
     setActiveTask,
     activeSession,
     setActiveSession,
+    setActiveView,
   } = useAppStore();
 
   const { resource, action, id, pathname, params } = useParsed();
+  const { push } = useNavigation();
 
-  // Initialize loading and error state for tracking
+  // State for tracking loading and error
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Define the records based on params
+  // Use refs to avoid unnecessary re-renders
+  const previousTaskIdRef = useRef<string | null>(null);
+
+  // Define states for the records
   const applicationState = {
     record: { id: params?.applicationId },
     read_record_mode: "remote",
@@ -32,9 +37,16 @@ export const ShowPage: React.FC = () => {
     record: { id: params?.sessionId },
     read_record_mode: "remote",
   };
-  const taskState = { record: { id: params?.id }, read_record_mode: "remote" };
+  const viewState = {
+    record: { id: params?.viewId },
+    read_record_mode: "remote",
+  };
+  const taskState = {
+    record: { id: params?.id },
+    read_record_mode: "remote",
+  };
 
-  // Use hooks to read records, but we will conditionally manage their results
+  // Fetch records using state configurations
   const {
     data: appData,
     error: appError,
@@ -50,52 +62,63 @@ export const ShowPage: React.FC = () => {
     error: taskError,
     isLoading: taskLoading,
   } = useReadRecordByState(taskState);
+  const {
+    data: viewData,
+    error: viewError,
+    isLoading: viewLoading,
+  } = useReadRecordByState(viewState);
 
+  // Update application, session, view, and task only if necessary
   useEffect(() => {
-    // Check for application and set if necessary
-    if (!activeApplication || activeApplication?.id !== params?.applicationId) {
-      let application = appData?.data?.find(
+    const updateEntities = () => {
+      const newApplication = appData?.data?.find(
         (item: any) => item?.message?.code === "record_read"
       )?.data[0];
 
-      if (application) setActiveApplication(application);
-    }
-
-    // Check for session and set if necessary, if not explicitly cleared (set to false)
-    if (
-      activeSession !== false &&
-      (!activeSession || activeSession?.id !== params?.sessionId)
-    ) {
-      let session = sessionData?.data?.find(
-        (item: any) => item?.message?.code === "record_read"
-      )?.data[0];
-
-      if (session) setActiveSession(session);
-    }
-    // Only set activeTask if it wasn't explicitly cleared (set to false)
-    if (
-      activeTask !== false &&
-      (!activeTask || (activeTask?.id !== params?.id && params?.id))
-    ) {
-      if (taskData) {
-        let task = taskData?.data?.find(
-          (item: any) => item?.message?.code === "record_read"
-        )?.data[0];
-        if (task) setActiveTask(task);
+      if (newApplication && newApplication.id !== activeApplication?.id) {
+        setActiveApplication(newApplication);
       }
-    }
 
-    // If all data has been loaded, set loading to false
-    if (!appLoading && !sessionLoading && !taskLoading) {
+      const newSession = sessionData?.data?.find(
+        (item: any) => item?.message?.code === "record_read"
+      )?.data[0];
+
+      if (newSession && newSession.id !== activeSession?.id) {
+        setActiveSession(newSession);
+      }
+
+      const newTask = taskData?.data?.find(
+        (item: any) => item?.message?.code === "record_read"
+      )?.data[0];
+
+      if (newTask && newTask.id !== previousTaskIdRef.current) {
+        previousTaskIdRef.current = newTask.id;
+        setActiveTask(newTask);
+      }
+
+      const newView = viewData?.data?.find(
+        (item: any) => item?.message?.code === "record_read"
+      )?.data[0];
+
+      if (newView && newView.id !== activeView?.id) {
+        setActiveView(newView);
+      }
+    };
+
+    updateEntities();
+
+    // Set loading to false when all data is fetched
+    if (!appLoading && !sessionLoading && !taskLoading && !viewLoading) {
       setLoading(false);
     }
 
     // Handle errors
-    if (appError || sessionError || taskError) {
+    if (appError || sessionError || taskError || viewError) {
       setError(
         appError?.message ||
           sessionError?.message ||
           taskError?.message ||
+          viewError?.message ||
           "An error occurred"
       );
       setLoading(false);
@@ -104,45 +127,49 @@ export const ShowPage: React.FC = () => {
     appData,
     sessionData,
     taskData,
+    viewData,
     appLoading,
     sessionLoading,
     taskLoading,
     appError,
     sessionError,
     taskError,
-    activeApplication,
-    activeSession,
-    activeTask,
-    params,
+    viewError,
+    activeApplication?.id,
+    activeSession?.id,
+    activeView?.id,
+    setActiveApplication,
+    setActiveSession,
+    setActiveTask,
+    setActiveView,
   ]);
 
-  // Show loading state or error state
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // Redirect to /home if no active task is found
+  // useEffect(() => {
+  //   if (!activeTask && !taskLoading) {
+  //     push("/home");
+  //   }
+  // }, [activeTask, taskLoading, push]);
+
+  // Display loading or error state
+  if (loading) return <div>Loading...</div>;
 
   if (error) {
     return (
-      <ErrorComponent error={error} component={"error loading params data"} />
+      <ErrorComponent error={error} component={"Error loading params data"} />
     );
   }
 
-  // Render the Monaco editor once everything is loaded
+  console.log("Task ID:", activeTask?.id);
+  console.log("VIEW ID:", activeView?.id);
+
+  // Render the page content
   return (
     <>
-      {/* <MonacoEditor
-        value={{
-          resource,
-          action,
-          id,
-          pathname,
-          params,
-        }}
-        language="json"
-        height="25vh"
-      /> */}
-      {/* <div>task show page</div> */}
+    {!activeView && (<Title order={3}>Get Important Things Done.</Title>)}
       {/* <Breadcrumbs /> */}
+      {/* <Text>Task Show Page</Text>
+      <Title order={2}>{activeTask?.name || "No Task Name"}</Title> */}
     </>
   );
 };

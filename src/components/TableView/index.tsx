@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { getColumnIdWithoutResourceGroup } from "src/utils";
 import { Column } from "@tanstack/react-table";
 import React from "react";
-import { DebouncedInput } from "@components/Utils";
+import { DebouncedInput, serializeBigInt } from "@components/Utils";
 import {
   ActionIcon,
   Box,
@@ -26,33 +26,17 @@ import {
 import { useAppStore } from "src/store";
 import RecordActionsWrapper from "@components/RecordActions";
 import { sortBy } from "lodash";
-import ActionStepEditor from "@components/ActionStepEditor";
 import MonacoEditor from "@components/MonacoEditor";
 import { IconChevronRight, IconCopy, IconEye } from "@tabler/icons-react";
 import clsx from "clsx";
 import classes from "./NestedTablesExample.module.css";
-import { access } from "fs";
-import { render } from "react-dom";
 import { useContextMenu } from "mantine-contextmenu";
 import dynamic from "next/dynamic";
 import { format } from "date-fns";
 import { DatePicker } from "@mantine/dates";
 import "dayjs/locale/en"; // Adjust locale if needed
-import { formatInTimeZone } from "date-fns-tz"; // Use formatInTimeZone for time zone-aware formatting// import { initializeLocalDB } from "src/local_db";
 import { showNotification } from "@mantine/notifications";
-// Dynamically import Nivo components to support ESM
-const ResponsivePie = dynamic(
-  () => import("@nivo/pie").then((mod) => mod.ResponsivePie),
-  { ssr: false }
-);
-const ResponsiveLine = dynamic(
-  () => import("@nivo/line").then((mod) => mod.ResponsiveLine),
-  { ssr: false }
-);
-const ResponsiveBar = dynamic(
-  () => import("@nivo/bar").then((mod) => mod.ResponsiveBar),
-  { ssr: false }
-);
+import RecordSummaryView from "@components/RecordSummaryView";
 
 const PAGE_SIZES = [10, 15, 20];
 
@@ -66,6 +50,7 @@ export function TableView<T extends Record<string, any>>({
   invalidate_queries_on_submit_success,
   setSorting,
   sorting,
+  summary_view,
 }: ResultsComponentProps<T>) {
   // const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
   const {
@@ -368,7 +353,7 @@ export function TableView<T extends Record<string, any>>({
           //   return <div>hello world</div>;
           // }}
           onRowClick={({ record, index, event }) => {
-            setActiveRecord(record);
+            setActiveRecord(serializeBigInt(record));
             // if (resource_group === "action_steps") {
             //   setActiveAction(record);
             // }
@@ -513,41 +498,15 @@ export function TableView<T extends Record<string, any>>({
                       isMobile ? "w-[400px]" : "w-full"
                     } max-w-full max-h-screen overflow-y-auto p-4`}
                   >
-                    {/* <MonacoEditor
-                      value={record}
-                      language="json"
-                      height="25vh"
-                    /> */}
-                    {/* Bar Chart Section */}
-                    <Card shadow="sm" p="lg" className="bg-white mb-8">
-                      <Text className="font-bold mb-4">
-                        Issues by Resolution Status
-                      </Text>
-                      <div className="h-80">
-                        <ResponsiveBar
-                          data={[
-                            { category: "closed", issues: 10 },
-                            { category: "open", issues: 16 },
-                            { category: "pending", issues: 4 },
-                          ]}
-                          keys={["issues"]}
-                          indexBy="category"
-                          margin={{ top: 40, right: 50, bottom: 50, left: 60 }}
-                          colors={({ data }) => {
-                            if (data.category === "closed") return "#66BB6A"; // Pleasant green
-                            if (data.category === "open") return "#EF5350"; // Pleasant red
-                            if (data.category === "pending") return "#FFA726"; // Pleasant orange
-                            return "#888"; // Default color
-                          }}
-                          axisBottom={{
-                            legend: "Category",
-                            legendPosition: "middle",
-                            legendOffset: 32,
-                          }}
-                          axisLeft={{ legend: "Issues", legendOffset: -40 }}
-                        />
-                      </div>
-                    </Card>
+                    {summary_view ? (
+                      <RecordSummaryView record={record} />
+                    ) : (
+                      <MonacoEditor
+                        value={record}
+                        language="json"
+                        height="25vh"
+                      />
+                    )}
                   </div>
                 )}
               </>

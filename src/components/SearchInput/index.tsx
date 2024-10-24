@@ -22,12 +22,14 @@ function SearchInput<T extends Record<string, any>>({
   include_action_icons,
   schema,
   size,
-  navigateOnSelect = false,
+  navigateOnSelect,
+  navigateOnClear,
 }: SearchInputComponentProps<T>) {
   const [query, setQuery] = useState(value || "");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [autocompleteData, setAutocompleteData] = useState<any[]>([]);
   const abortController = useRef<AbortController>();
+  const [componentSelectedItem, setComponentSelectedItem] = useState<any>(null);
   const { searchFilters, activeTask, activeApplication, activeSession } =
     useAppStore();
   const navigate = useNavigation();
@@ -82,15 +84,19 @@ function SearchInput<T extends Record<string, any>>({
     }
   }, [data, success_message_code]);
 
-  const enhancedHandleOptionSubmit = (value: string | null) => {
+  const enhancedHandleOptionSubmit = (
+    value: string | null,
+    componentSelectedItem: any
+  ) => {
     // if value is null just run handleOptionSubmit
     if (value === "remove_from_state") {
       // setActiveTask(null);
       // alert("Task removed from state");
       // console.log("enhancedHandleOptionSubmit", value);
       setQuery("");
-      if (navigateOnSelect) navigate({ entity_type: "tasks" }); // this will trigger navigating to url specified when there is no record?.id i.e null for instance go to /home
-      // set to false to avoid triggering refetch and then after a while set back to null so it can be refetched when using links
+      // if (navigateOnSelect)
+      //   navigate({ entity_type: componentSelectedItem?.entity_type }); // this will trigger navigating to url specified when there is no record?.id i.e null for instance go to /home
+      // // set to false to avoid triggering refetch and then after a while set back to null so it can be refetched when using links
       // Set a timeout to set the task to null after a delay
       setTimeout(() => {
         // setActiveTask(null); // Now set it to null after navigating
@@ -99,18 +105,30 @@ function SearchInput<T extends Record<string, any>>({
       }, 3000); // Adjust the delay time (500ms) as necessary
       if (handleOptionSubmit) handleOptionSubmit(false);
       if (onChange) onChange(false);
+      setTimeout(() => {
+        if (navigateOnClear) {
+          navigate(navigateOnClear);
+        }
+      }, 0);
       return;
     } else {
       const selectedItem = autocompleteData.find(
         (item: any) => item.value === value
       );
-      // console.log("selectedItem", selectedItem);
+      console.log("selectedItem", selectedItem);
       if (selectedItem) {
+        setComponentSelectedItem(selectedItem);
         if (handleOptionSubmit) handleOptionSubmit(selectedItem);
         if (onChange) onChange(selectedItem?.value);
-        if (navigateOnSelect) {
-          navigate(selectedItem);
-        }
+        // if (navigateOnSelect) {
+        //   navigate(navigateOnSelect);
+        // }
+        // Navigate after a short delay to ensure state has updated
+        setTimeout(() => {
+          if (navigateOnSelect) {
+            navigate(navigateOnSelect);
+          }
+        }, 0);
       }
     }
   };
@@ -138,7 +156,9 @@ function SearchInput<T extends Record<string, any>>({
           // limit={10}
           size={size}
           maxDropdownHeight={300}
-          onOptionSubmit={enhancedHandleOptionSubmit}
+          onOptionSubmit={(item) =>
+            enhancedHandleOptionSubmit(item, componentSelectedItem)
+          }
           disabled={disabled}
         />
       </div>
@@ -153,7 +173,12 @@ function SearchInput<T extends Record<string, any>>({
             size="xs"
             variant="default"
             aria-label="Clear from state"
-            onClick={() => enhancedHandleOptionSubmit("remove_from_state")}
+            onClick={() =>
+              enhancedHandleOptionSubmit(
+                "remove_from_state",
+                componentSelectedItem
+              )
+            }
             // onClick={() => console.log("Clear from state")}
             style={{ visibility: disabled ? "hidden" : "visible" }}
             // disabled={true}

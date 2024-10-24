@@ -10,7 +10,9 @@ export function StateView() {
     setActiveSession,
     activeSession,
     activeTask,
+    activeView,
     setActiveTask,
+    setActiveView,
   } = useAppStore();
   // const navigateToSession = useSessionNavigation(); // Get the navigation function
   // const handleOptionSubmit = (value: string) => {
@@ -35,6 +37,7 @@ export function StateView() {
             is_selected: true,
           },
         ]}
+        navigateOnSelect={{ resource: "applications" }}
       />
       <SearchInput
         placeholder="Search for sessions"
@@ -54,6 +57,7 @@ export function StateView() {
             is_selected: true,
           },
         ]}
+        navigateOnSelect={{ resource: "sessions" }}
       />
       <SearchInput
         placeholder="Search for tasks"
@@ -65,7 +69,8 @@ export function StateView() {
           "add_new_item",
           "dublicate",
         ]}
-        navigateOnSelect={true}
+        navigateOnSelect={{ resource: "tasks" }}
+        navigateOnClear={{ resource: "home" }}
         activeFilters={[
           {
             id: 1,
@@ -76,22 +81,28 @@ export function StateView() {
           },
         ]}
       />
-      {/* <SearchInput
-        placeholder="Search for action steps"
-        description="action steps"
-        handleOptionSubmit={setActiveActionStep}
-        value={activeActionStep?.name || ""}
-        include_action_icons={["remove_from_state"]}
+      <SearchInput
+        placeholder="Search for views"
+        description="views"
+        handleOptionSubmit={setActiveView}
+        value={activeView?.name || ""}
+        include_action_icons={[
+          "remove_from_state",
+          "add_new_item",
+          "dublicate",
+        ]}
+        navigateOnSelect={{ resource: "views" }}
+        navigateOnClear={{ resource: "home" }}
         activeFilters={[
           {
             id: 1,
-            name: "action_steps",
-            description: "action steps",
-            entity_type: "action_steps",
+            name: "views",
+            description: "views",
+            entity_type: "views",
             is_selected: true,
           },
         ]}
-      /> */}
+      />
       {/* <SearchInput
         placeholder="Search for records"
         description="records"

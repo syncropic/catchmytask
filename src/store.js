@@ -119,7 +119,8 @@ export const useAppStore = create(
 
       activeRecord: null,
       setActiveRecord: (activeRecord) => set((state) => ({ activeRecord })),
-
+      navigationHistory: null,
+      setNavigationHistory: (navigationHistory) => set((state) => ({ navigationHistory })),
       activeMouseCoordinates: {
         x: 0,
         y: 0,
@@ -132,6 +133,8 @@ export const useAppStore = create(
         set((state) => ({ ...state, activeSession: session })),
       activeTask: null,
       setActiveTask: (task) => set((state) => ({ ...state, activeTask: task })),
+      activeView: null,
+      setActiveView: (view) => set((state) => ({ ...state, activeView: view })),
       activeActionStep: null,
       setActiveActionStep: (actionStep) =>
         set((state) => ({ ...state, activeActionStep: actionStep })),
@@ -159,10 +162,17 @@ export const useAppStore = create(
       display_mode: null,
       setDisplayMode: (mode) =>
         set((state) => ({ ...state, display_mode: mode })),
+      uploaded: {},
+      setUploaded: (uploaded) => set((state) => ({ ...state, uploaded })),
       action: null,
       setAction: (action) => set((state) => ({ ...state, action: action })),
       fields: {},
       setFields: (fields) => set((state) => ({ ...state, fields })),
+      dataFields: {},
+      setDataFields: (code, fields) =>
+        set((state) => ({
+          dataFields: { ...state.dataFields, [code]: fields },
+        })),
       activeApplication: null,
       setActiveApplication: (application) =>
         set((state) => ({ ...state, activeApplication: application })),
@@ -201,12 +211,15 @@ export const useAppStore = create(
       },
       setPinnedActionSteps: (actionSteps) =>
         set((state) => ({ ...state, pinned_action_steps: actionSteps })),
-      pinned_main_action: null,
+      pinned_main_action: "search",
       setPinnedMainAction: (action) =>
         set((state) => ({ ...state, pinned_main_action: action })),
       live_generate: {},
       setLiveGenerate: (liveGenerate) =>
         set((state) => ({ ...state, live_generate: liveGenerate })),
+      form_status: {},
+      setFormStatus: (formStatus) =>
+        set((state) => ({ ...state, form_status: formStatus })),
       local_db: {},
       setLocalDB: (local_db) => set((state) => ({ ...state, local_db })),
       // Function to update a specific part of the local_db

@@ -1,17 +1,23 @@
 import {
+  buildSQLQuery,
+  enrichFilters,
   extractDefaultValues,
   extractIdentifier,
   extractLabelsFromDefaults,
   getComponentByResourceType,
+  sanitizeFilters,
   useFetchActionDataByName,
   useFetchActionStepDataByState,
   useFetchActionStepsDataByState,
   useFetchDataModelByState,
   useFetchQueryDataByState,
   useReadRecordByState,
+  useSearchFilters,
 } from "@components/Utils";
 import { useAppStore, useTransientStore } from "src/store";
 import { Accordion, Button, Title } from "@mantine/core";
+import dayjs from 'dayjs';
+import { DateInputProps } from '@mantine/dates';
 // import { ActionControlFormWrapper } from "@components/ActionControlForm";
 import type { FieldApi } from "@tanstack/react-form";
 import { useForm } from "@tanstack/react-form";
@@ -42,6 +48,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { useDuckDB } from "pages/_app";
 import { showNotification } from "@mantine/notifications";
+import { saveToLocalDB } from "src/local_db";
 
 type ValidationError = string;
 
@@ -82,6 +89,122 @@ const calculateColumnWidth = (header: any) => {
   return Math.max(header.length + 8, 15); // Add padding and set a minimum width
 };
 
+async function excelToStandardizedJson(file: File, section?: string): Promise<any[]> {
+  const workbook = new ExcelJS.Workbook();
+  const arrayBuffer = await file.arrayBuffer();
+  await workbook.xlsx.load(arrayBuffer);
+
+  let worksheet;
+  if (section) {
+    worksheet = workbook.getWorksheet(section);
+    if (!worksheet) {
+      throw new Error(`Worksheet "${section}" not found in the Excel file.`);
+    }
+  } else {
+    worksheet = workbook.getWorksheet(1);
+  }
+
+  const jsonData: any[] = [];
+
+  // Get headers and standardize them
+  const headers = worksheet?.getRow(1).values as string[];
+  const standardizedHeaders = headers.map(header => 
+    header ? header.toString().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') : ''
+  ).filter(Boolean);
+
+  // Process each row
+  worksheet?.eachRow((row, rowNumber) => {
+    if (rowNumber > 1) { // Skip header row
+      const rowData: any = {};
+      row.eachCell((cell, colNumber) => {
+        const header = standardizedHeaders[colNumber - 1];
+        if (header) {
+          switch (cell.type) {
+            case ExcelJS.ValueType.Date:
+              rowData[header] = cell.value instanceof Date ? cell.value.toISOString() : null;
+              break;
+            // case ExcelJS.ValueType.Hyperlink:
+            //   rowData[header] = (cell.value as ExcelJS.CellHyperlink).text || null;
+            //   break;
+            case ExcelJS.ValueType.Number:
+              rowData[header] = Number(cell.value);
+              break;
+            case ExcelJS.ValueType.Boolean:
+              rowData[header] = Boolean(cell.value);
+              break;
+            case ExcelJS.ValueType.Null:
+              rowData[header] = null;
+              break;
+            default:
+              rowData[header] = cell.text || null;
+          }
+        }
+      });
+      jsonData.push(rowData);
+    }
+  });
+
+  return jsonData;
+}
+
+
+
+// Type mapping similar to the Python version
+const typeMapping: { [key: string]: string } = {
+  'number': 'float',
+  'bigint': 'integer',
+  'string': 'string',
+  'boolean': 'boolean',
+  'object': 'object',  // For nested objects or null
+  'undefined': 'unknown'
+};
+
+function inferDataTypes(jsonData: any[]): { name: string; data_type: string }[] {
+  if (jsonData.length === 0) {
+    return [];
+  }
+
+  const columns = Object.keys(jsonData[0]);
+  const inferredTypes: { name: string; data_type: string }[] = [];
+
+  columns.forEach(column => {
+    const nonNullValues = jsonData.filter(row => row[column] != null);
+    
+    if (nonNullValues.length === 0) {
+      inferredTypes.push({ name: column, data_type: 'unknown' });
+    } else {
+      const types = new Set(nonNullValues.map(row => typeof row[column]));
+      
+      let inferredType: string;
+      if (types.size === 1) {
+        const type = types.values().next().value;
+        inferredType = typeMapping[type] || 'unknown';
+      } else if (types.has('number')) {
+        // If mixed types but includes number, prefer number
+        inferredType = 'float';
+      } else {
+        // For mixed types, default to string
+        inferredType = 'string';
+      }
+
+      // Additional checks for more specific types
+      if (inferredType === 'float' && nonNullValues.every(row => Number.isInteger(row[column]))) {
+        inferredType = 'integer';
+      } else if (inferredType === 'string') {
+        // Check for date strings
+        const isAllDates = nonNullValues.every(row => !isNaN(Date.parse(row[column])));
+        if (isAllDates) {
+          inferredType = 'datetime';
+        }
+      }
+
+      inferredTypes.push({ name: column, data_type: inferredType });
+    }
+  });
+
+  return inferredTypes;
+}
+
 export const ActionInputForm: React.FC<DynamicFormProps> = ({
   data_model,
   record = {},
@@ -96,6 +219,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const { data: identity } = useGetIdentity<IIdentity>();
   const { setFormSubmitHandler, setFormInstance } = useTransientStore();
   const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
+  const {searchFilters} = useSearchFilters()
 
   // Generate the ID once and persist it across re-renders
   // const generatedIdRef = useRef(uuidv4());
@@ -151,6 +275,11 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     setGlobalQuery,
     views,
     setViews,
+    form_status,
+    setFormStatus,
+    activeView,
+    uploaded,
+    setUploaded,
   } = useAppStore();
 
   const identity_object = {
@@ -183,6 +312,17 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   // Create the key with the transformed data_model.name
   // const proceed_action_input_form_values_key = `proceed_execute_with_action_input_${standardized_data_model_name}_${actionInputId}`;
   // const proceed_action_input_form_values_key = "action_input";
+
+  let active_view_search_model_state = {
+    id: activeView?.id,
+    query_name: "data_model",
+    name: activeView?.["action_models"]?.["search"],
+    success_message_code:"action_input_data_model_schema",
+  };
+ 
+
+  const { data: active_view_search_model_data, isLoading: active_view_search_model_isLoading, error: active_view_search_model_error } = useFetchQueryDataByState(active_view_search_model_state);
+
 
   const formId = action_input_form_values_key; // Unique form identifier
 
@@ -229,18 +369,31 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       }
       setFocusedEntities(new_focused_entities);
 
-      const specialActions = ["save"]; // List of special actions
+      const specialActions = ["save", "upload"]; // List of special actions
       const action_url = specialActions.includes(action) ? "execute" : action; // Check if action is in the list and replace if necessary
 
       // if action is not special then perform the following otherwise alert the action name
       if (action === "save") {
+        console.log("searchFilters", searchFilters);  
         // alert(JSON.stringify(value));
         const fetchFromDuckDB = async () => {
           try {
             // const conn = await initializeLocalDB();
             // let downloadQuery = "SELECT * FROM issues";
             // console.log(`Form values for ${formId}:`, value);
-            let downloadQuery = value?.query;
+            // let downloadQuery = value?.query;
+            const search_action_input_form_values_key = `search_${activeView?.id}`;
+            const globalSearchQuery = action_input_form_values[`${search_action_input_form_values_key}`]?.query
+            let active_view_search_model_data_data_model_search_filters = active_view_search_model_data?.data?.find(
+              (item: any) => item?.message?.code === "action_input_data_model_schema"
+            )?.data[0]?.data_model?.schema?.search_filters
+            // console.log("active_view_search_model_data_data_model_search_filters", active_view_search_model_data_data_model_search_filters)
+
+            let enriched_search_filters = enrichFilters(active_view_search_model_data_data_model_search_filters, action_input_form_values[`${search_action_input_form_values_key}`])
+            console.log("save enriched_search_filters", enriched_search_filters)
+            let rendered_globalSearchQuery = buildSQLQuery(globalSearchQuery, sanitizeFilters(enriched_search_filters), { caseSensitive: false })?.query
+            console.log("save rendererendered_globalSearchQuery", rendered_globalSearchQuery)
+            let downloadQuery = rendered_globalSearchQuery || globalSearchQuery || value?.query;
             console.log("Executing dowloadQuery:", downloadQuery);
             const downloadResult = await dbInstance.query(downloadQuery);
 
@@ -325,67 +478,103 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             });
 
             // Step 4: Apply conditional formatting based on view.fields
-            let active_template_record_view_key = null;
+            // let active_template_record_view_key = null;
 
-            if (activeTemplateRecord) {
-              active_template_record_view_key =
-                activeTemplateRecord?.success_message_code
-                  ? activeTemplateRecord?.success_message_code
-                      .toLowerCase()
-                      .replace(/\s+/g, "_")
-                  : activeTemplateRecord?.name
-                      .toLowerCase()
-                      .replace(/\s+/g, "_");
-            }
+            // if (activeTemplateRecord) {
+            //   active_template_record_view_key =
+            //     activeTemplateRecord?.success_message_code
+            //       ? activeTemplateRecord?.success_message_code
+            //           .toLowerCase()
+            //           .replace(/\s+/g, "_")
+            //       : activeTemplateRecord?.name
+            //           .toLowerCase()
+            //           .replace(/\s+/g, "_");
+            // }
 
-            if (active_template_record_view_key) {
-              let active_view = views[active_template_record_view_key];
+            // if (active_template_record_view_key) {
+            //   let active_view = views[active_template_record_view_key];
+            console.log("activeView to use in save, the record will be the active view being read directly from react query", record)
 
-              active_view.fields.forEach((field: any) => {
-                if (field.conditional_formatting) {
-                  const targetColumnIndex =
-                    columnNames.indexOf(field.field_name) + 1; // Get the index of the field to apply formatting
-                  const comparisonColumnIndex =
-                    columnNames.indexOf(
-                      field.conditional_formatting.field_name
-                    ) + 1; // Get the index of the comparison field
+            //   active_view.fields.forEach((field: any) => {
+            //   //   if (field.conditional_formatting) {
+            //   //     const targetColumnIndex =
+            //   //       columnNames.indexOf(field.field_name) + 1; // Get the index of the field to apply formatting
+            //   //     const comparisonColumnIndex =
+            //   //       columnNames.indexOf(
+            //   //         field.conditional_formatting.field_name
+            //   //       ) + 1; // Get the index of the comparison field
 
-                  if (targetColumnIndex > 0 && comparisonColumnIndex > 0) {
-                    worksheet.eachRow((row, rowNumber) => {
-                      if (rowNumber === 1) return; // Skip header row
+            //   //     if (targetColumnIndex > 0 && comparisonColumnIndex > 0) {
+            //   //       worksheet.eachRow((row, rowNumber) => {
+            //   //         if (rowNumber === 1) return; // Skip header row
 
-                      const targetCell = row.getCell(targetColumnIndex); // Cell where formatting will be applied
-                      const comparisonCell = row.getCell(comparisonColumnIndex); // Cell used for comparison
-                      const comparisonCellValue = String(comparisonCell.value)
-                        .toLowerCase()
-                        .trim(); // Normalize comparison value
+            //   //         const targetCell = row.getCell(targetColumnIndex); // Cell where formatting will be applied
+            //   //         const comparisonCell = row.getCell(comparisonColumnIndex); // Cell used for comparison
+            //   //         const comparisonCellValue = String(comparisonCell.value)
+            //   //           .toLowerCase()
+            //   //           .trim(); // Normalize comparison value
 
-                      // Find the matching rule for conditional formatting
-                      const matchingRule =
-                        field.conditional_formatting.rules.find(
-                          (rule: any) =>
-                            String(rule.value).toLowerCase().trim() ===
-                            comparisonCellValue
-                        );
+            //   //         // Find the matching rule for conditional formatting
+            //   //         const matchingRule =
+            //   //           field.conditional_formatting.rules.find(
+            //   //             (rule: any) =>
+            //   //               String(rule.value).toLowerCase().trim() ===
+            //   //               comparisonCellValue
+            //   //           );
 
-                      if (matchingRule) {
-                        const style = getExcelJSStyleFromClass(
-                          matchingRule.class
-                        );
-                        if (style) {
-                          targetCell.fill = {
-                            type: "pattern",
-                            pattern: "solid",
-                            ...style,
-                          };
-                          targetCell.font = { color: { argb: "FFFFFFFF" } }; // White text color
-                        }
+            //   //         if (matchingRule) {
+            //   //           const style = getExcelJSStyleFromClass(
+            //   //             matchingRule.class
+            //   //           );
+            //   //           if (style) {
+            //   //             targetCell.fill = {
+            //   //               type: "pattern",
+            //   //               pattern: "solid",
+            //   //               ...style,
+            //   //             };
+            //   //             targetCell.font = { color: { argb: "FFFFFFFF" } }; // White text color
+            //   //           }
+            //   //         }
+            //   //       });
+            //   //     }
+            //   //   }
+            //   // });
+            // }
+
+            record.fields.forEach((field: any) => {
+              if (field.conditional_formatting) {
+                const targetColumnIndex = columnNames.indexOf(field.field_name) + 1; // Get the index of the field to apply formatting
+                const comparisonColumnIndex = columnNames.indexOf(field.conditional_formatting.field_name) + 1; // Get the index of the comparison field
+            
+                if (targetColumnIndex > 0 && comparisonColumnIndex > 0) {
+                  worksheet.eachRow((row, rowNumber) => {
+                    if (rowNumber === 1) return; // Skip header row
+            
+                    const targetCell = row.getCell(targetColumnIndex); // Cell where formatting will be applied
+                    const comparisonCell = row.getCell(comparisonColumnIndex); // Cell used for comparison
+                    const comparisonCellValue = String(comparisonCell.value).toLowerCase().trim(); // Normalize comparison value
+            
+                    // Find the matching rule for conditional formatting
+                    const matchingRule = field.conditional_formatting.rules.find(
+                      (rule: any) =>
+                        String(rule.value).toLowerCase().trim() === comparisonCellValue
+                    );
+            
+                    if (matchingRule) {
+                      const style = getExcelJSStyleFromClass(matchingRule.class);
+                      if (style) {
+                        targetCell.fill = {
+                          type: "pattern",
+                          pattern: "solid",
+                          ...style,
+                        };
+                        targetCell.font = { color: { argb: "FFFFFFFF" } }; // White text color
                       }
-                    });
-                  }
+                    }
+                  });
                 }
-              });
-            }
+              }
+            });
 
             // Freeze the first row (header) and the first 3 columns by default
             worksheet.views = [
@@ -467,17 +656,96 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         };
         // alert(JSON.stringify(value));
         fetchFromDuckDB();
+      } else if (action === "upload") {
+        console.log("upload action");
+        let spreadsheet_type = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+        let file = value?.file;
+        let file_type = file?.type;
+        if (spreadsheet_type.includes(file_type)) {
+          try {
+            const jsonData = await excelToStandardizedJson(file, value?.section);
+            console.log("Standardized JSON data:", jsonData);
+            
+            if (jsonData.length === 0) {
+              throw new Error("No data found in the Excel file");
+            }
+
+            let init_new_uploaded = { 
+              ...uploaded,
+              data: null
+             };
+            setUploaded(init_new_uploaded);
+
+            // Infer data types
+            const dataFields = inferDataTypes(jsonData);
+            // console.log("Inferred data fields:", dataFields);
+            // set inferred data fields in the store
+             // Set the updated state after a delay
+            setTimeout(() => {
+              let new_uploaded = { 
+                ...uploaded,
+                data_fields: dataFields,
+                data: jsonData.length > 0 ? jsonData.length : null
+              };
+              setUploaded(new_uploaded);
+            }, 1000); // 500ms delay, adjust as needed
+
+            // Insert the JSON data into a DuckDB table
+            const tableName = 'uploaded_data'; // Use the provided name or a default
+            // await insertJsonIntoDuckDB(dbInstance, jsonData, tableName);
+            await saveToLocalDB(jsonData, tableName, dataFields, dbInstance);
+
+            // Optionally, you can query the data to verify it was inserted correctly
+            // const result = await dbInstance.query(`SELECT * FROM "${tableName}" LIMIT 5`);
+            // console.log("Sample data from DuckDB table:", result);
+
+            // Show success notification
+            showNotification({
+              title: "Upload successful",
+              message: `Data from ${file.name} has been uploaded and inserted into table: ${tableName}`,
+              color: "green",
+              autoClose: 5000,
+            });
+
+          } catch (error) {
+            console.error("Error processing Excel file or inserting into DuckDB:", error);
+            showNotification({
+              title: "Upload failed",
+              message: `Error: ${JSON.stringify(error)}`,
+              color: "red",
+              autoClose: 5000,
+            });
+          }
+        } else {
+          showNotification({
+            title: "Invalid file type",
+            message: "Please upload an Excel file (.xlsx)",
+            color: "red",
+            autoClose: 5000,
+          });
+        }
+        // console.log("value", value);  
       } else {
         return new Promise((resolve, reject) => {
           let include_execution_orders = [];
           // if action is save then include the execution_order value for the record
           if (action === "save") {
-            include_execution_orders = [record?.execution_order || 1];
+            // include_execution_orders = [record?.execution_order || 1];
+            console.log("implement save action");
           } else {
             include_execution_orders = selectedRecords[
               `${action_input_form_values_key}`
             ]?.map((item: any) => item?.index) || [1];
           }
+          // set form status
+          let new_form_status = { ...form_status };
+          // if form status for action_input_form_values_key is not set then set it
+          if (!new_form_status[action_input_form_values_key]) {
+            new_form_status[action_input_form_values_key] = {};
+          }
+          // set is_submitting value to true
+          new_form_status[action_input_form_values_key].is_submitting = true;
+          setFormStatus(new_form_status);
           mutate(
             {
               // url: `${config.API_URL}/catch-${
@@ -501,7 +769,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 input_values: {
                   ...value,
                   action_input_form_values:
-                    action_input_form_values["action_input"] || {},
+                    action_input_form_values[action_input_form_values_key] ||
+                    {},
                 },
                 // credential: value?.credential || "surrealdb catchmytask dev",
                 // data_model: data_model,
@@ -522,124 +791,133 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 //   ...global_variables,
                 // },
                 // include_execution_orders: [record?.execution_order || 1],
-                include_execution_orders: include_execution_orders,
-                action_steps: records || [
-                  {
-                    ...value,
-                    execution_order: value?.execution_order || 1,
-                    description: value?.description || "generic description",
-                    name: value?.name || "generic name",
-                    job: value?.description || "generic job",
-                    method: value?.method || "select",
-                    type: value?.type || "action_steps",
-                    credential:
-                      value?.credential || "surrealdb catchmytask dev",
-                    implement: value?.implement,
-                    success_message_code: success_message_code_selected,
-                  },
-                ],
+                // include_execution_orders: include_execution_orders,
+                // action_steps: records || [
+                //   {
+                //     ...value,
+                //     execution_order: value?.execution_order || 1,
+                //     description: value?.description || "generic description",
+                //     name: value?.name || "generic name",
+                //     job: value?.description || "generic job",
+                //     method: value?.method || "select",
+                //     type: value?.type || "action_steps",
+                //     credential:
+                //       value?.credential || "surrealdb catchmytask dev",
+                //     implement: value?.implement,
+                //     success_message_code: success_message_code_selected,
+                //   },
+                // ],
               },
             },
             {
               onError: (error, variables, context) => {
                 // console.log("onError", error);
                 reject(error);
+                // set is_submitting value to false
+                new_form_status[action_input_form_values_key].is_submitting =
+                  false;
+                setFormStatus(new_form_status);
               },
               onSuccess: (data, variables, context) => {
-                const extendedData = data as CustomMutationResponse<any>;
-                // Extract the headers and content data
-                const contentDisposition =
-                  extendedData?.headers?.["content-disposition"];
-                // console.log("Content Disposition:", contentDisposition);
-                const contentType = extendedData?.headers?.["content-type"];
+                // const extendedData = data as CustomMutationResponse<any>;
+                // // Extract the headers and content data
+                // const contentDisposition =
+                //   extendedData?.headers?.["content-disposition"];
+                // // console.log("Content Disposition:", contentDisposition);
+                // const contentType = extendedData?.headers?.["content-type"];
 
-                // console.log("Content Type:", contentType);
-                // console.log("Extended Headers:", extendedData?.headers);
-                // Check if the response is for a file download
-                if (
-                  contentDisposition &&
-                  contentDisposition.includes("attachment")
-                ) {
-                  // Create a JSON blob and trigger download
-                  // const jsonBlob = new Blob([JSON.stringify(extendedData.data)], {
-                  //   type: contentType,
-                  // });
-                  const blob = new Blob([extendedData.data], {
-                    type: contentType,
-                  });
-                  const link = document.createElement("a");
-                  link.href = window.URL.createObjectURL(blob);
+                // // console.log("Content Type:", contentType);
+                // // console.log("Extended Headers:", extendedData?.headers);
+                // // Check if the response is for a file download
+                // if (
+                //   contentDisposition &&
+                //   contentDisposition.includes("attachment")
+                // ) {
+                //   // Create a JSON blob and trigger download
+                //   // const jsonBlob = new Blob([JSON.stringify(extendedData.data)], {
+                //   //   type: contentType,
+                //   // });
+                //   const blob = new Blob([extendedData.data], {
+                //     type: contentType,
+                //   });
+                //   const link = document.createElement("a");
+                //   link.href = window.URL.createObjectURL(blob);
 
-                  // Extract the filename from the content-disposition header
-                  const filename = contentDisposition
-                    ? contentDisposition
-                        .split("filename=")[1]
-                        .replace(/"/g, "")
-                        .trim()
-                    : "downloaded_file.json";
+                //   // Extract the filename from the content-disposition header
+                //   const filename = contentDisposition
+                //     ? contentDisposition
+                //         .split("filename=")[1]
+                //         .replace(/"/g, "")
+                //         .trim()
+                //     : "downloaded_file.json";
 
-                  link.download = filename;
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
+                //   link.download = filename;
+                //   document.body.appendChild(link);
+                //   link.click();
+                //   document.body.removeChild(link);
 
-                  // Create a JSON object with information about the file
-                  const file = {
-                    filename: filename,
-                    type: contentType,
-                    size: blob.size,
-                  };
-                  console.log("File:", file);
+                //   // Create a JSON object with information about the file
+                //   const file = {
+                //     filename: filename,
+                //     type: contentType,
+                //     size: blob.size,
+                //   };
+                //   console.log("File:", file);
 
-                  resolve(file);
-                } else {
-                  // if there execute_mode it means user is being prompted to provide required values
-                  let execute_mode_item = Array.isArray(data?.data)
-                    ? data.data.find(
-                        (item: any) => item?.message?.code === "execute_mode"
-                      )
-                    : null;
+                //   resolve(file);
+                // } else {
+                //   // if there execute_mode it means user is being prompted to provide required values
+                //   let execute_mode_item = Array.isArray(data?.data)
+                //     ? data.data.find(
+                //         (item: any) => item?.message?.code === "execute_mode"
+                //       )
+                //     : null;
 
-                  if (execute_mode_item) {
-                    // we need to open and display the form for the user to provide the required values
-                    // console.log("open action input");
-                    openDisplay("rightSection");
-                    // let new_focused_entities = { ...focused_entities };
-                    // new_focused_entities["action_input"] = {
-                    //   ...new_focused_entities["action_input"],
-                    //   execute_mode: execute_mode_item["data"],
-                    //   action: `proceed_${action}`,
-                    // };
-                    // new_focused_entities[record?.id] = {
-                    //   ...new_focused_entities[record?.id],
-                    //   action: `proceed_${action}`,
-                    // };
-                    // setFocusedEntities(new_focused_entities);
-                  }
+                //   if (execute_mode_item) {
+                //     // we need to open and display the form for the user to provide the required values
+                //     // console.log("open action input");
+                //     openDisplay("rightSection");
+                //     // let new_focused_entities = { ...focused_entities };
+                //     // new_focused_entities["action_input"] = {
+                //     //   ...new_focused_entities["action_input"],
+                //     //   execute_mode: execute_mode_item["data"],
+                //     //   action: `proceed_${action}`,
+                //     // };
+                //     // new_focused_entities[record?.id] = {
+                //     //   ...new_focused_entities[record?.id],
+                //     //   action: `proceed_${action}`,
+                //     // };
+                //     // setFocusedEntities(new_focused_entities);
+                //   }
 
-                  // let action_step_items = Array.isArray(data?.data)
-                  //   ? data.data.filter(
-                  //       (item: any) =>
-                  //         item?.action_step?.id && item?.exit_code === 0
-                  //     )
-                  //   : [];
-                  // let query_state = action_step_items.map((item: any) => ({
-                  //   id: item?.action_step?.id,
-                  //   success_message_code: item?.message?.code,
-                  // }));
+                //   // let action_step_items = Array.isArray(data?.data)
+                //   //   ? data.data.filter(
+                //   //       (item: any) =>
+                //   //         item?.action_step?.id && item?.exit_code === 0
+                //   //     )
+                //   //   : [];
+                //   // let query_state = action_step_items.map((item: any) => ({
+                //   //   id: item?.action_step?.id,
+                //   //   success_message_code: item?.message?.code,
+                //   // }));
 
-                  // query_state.forEach((state) => {
-                  //   queryClient.invalidateQueries({
-                  //     queryKey: [
-                  //       `readByState_${JSON.stringify({
-                  //         success_message_code: state?.success_message_code,
-                  //       })}`,
-                  //     ],
-                  //   });
-                  // });
+                //   // query_state.forEach((state) => {
+                //   //   queryClient.invalidateQueries({
+                //   //     queryKey: [
+                //   //       `readByState_${JSON.stringify({
+                //   //         success_message_code: state?.success_message_code,
+                //   //       })}`,
+                //   //     ],
+                //   //   });
+                //   // });
 
-                  resolve(data);
-                }
+                //   resolve(data);
+                // }
+                resolve(data);
+                // set is_submitting value to false
+                new_form_status[action_input_form_values_key].is_submitting =
+                  false;
+                setFormStatus(new_form_status);
               },
             }
           );
@@ -808,6 +1086,15 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           setViews(new_views);
           // also set active template
           setActiveTemplateRecord(templateRecord);
+          // set activeaction to actually trigger global query change
+          let new_action_input_form_values = {
+            ...action_input_form_values,
+            [action_input_form_values_key]: {
+              ...action_input_form_values[action_input_form_values_key],
+              ...templateRecord,
+            },
+          };
+          setActionInputFormValues(new_action_input_form_values);
         }
       } else if (templateError) {
         console.error("Error fetching template data:", templateError);
@@ -849,13 +1136,26 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   // if data_model use the data_model.schema.required as the default include_items
   include_items = schema?.required || [];
 
+  // const dateParser: DateInputProps["dateParser"] = (input: string) => {
+  //   // make sure to set time to 00:00:00
+  //   return new Date(`${input}T00:00:00`); // Handles ISO string
+  // };
+
+  const dateParser: DateInputProps['dateParser'] = (input) => {
+    if (input === 'WW2') {
+      return new Date(1939, 8, 1);
+    }
+  
+    return dayjs(input, 'DD/MM/YYYY').toDate();
+  };
+
   return (
     <>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          form.handleSubmit();
+          // form.handleSubmit();
         }}
       >
         {/* Include templateUpdate to force re-render */}
@@ -868,16 +1168,14 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             include_items: include_items,
           }}
           language="json"
-          height="50vh"
+          height="25vh"
         /> */}
         {/* <MonacoEditor
           value={{
-            // record: record,
-            // data_model: data_model,
-            // default_values: extractDefaultValues(data_model)
+            data_model: data_model,
           }}
           language="json"
-          height="50vh"
+          height="25vh"
         /> */}
         {/* <div>{JSON.stringify(focused_item)}</div> */}
         {/* <div>{JSON.stringify(include_items)}</div> */}
@@ -950,8 +1248,13 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                                   schema.properties[key]?.label ||
                                   schema.properties[key]?.title
                                 }
-                                searchable={true}
-                                value={field.state.value}
+                                value={
+                                  schema.properties[key]?.component ===
+                                    "DateInput" &&
+                                  typeof field.state.value === "string"
+                                    ? new Date(field.state.value) // Convert ISO string to Date
+                                    : field.state.value
+                                }
                                 onBlur={field.handleBlur}
                                 action_input_form_values_key={
                                   action_input_form_values_key
@@ -964,6 +1267,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                                     "MonacoEditorFormInput",
                                     "NaturalLanguageEditorFormInput",
                                     "SearchInput",
+                                    "DateInput",
+                                    "MultiSelect",
+                                    "Select",
+                                    "FileInput",
                                   ].includes(schema.properties[key]?.component)
                                     ? field.handleChange
                                     : (e: any) =>
@@ -971,6 +1278,12 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                                 }
                                 form={form}
                                 isLoading={mutationIsLoading}
+                                // Spread additional props dynamically based on the component type
+                                {...(schema.properties[key]?.props || {})}
+                                {...(schema.properties[key]?.component ===
+                                "DateInput"
+                                  ? { dateParser }
+                                  : {})}
                               />
                               {fieldName === "query" && (
                                 <FieldInfo field={field} />
@@ -1002,7 +1315,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         <MonacoEditor value={mutationData} language="json" height="50vh" />
       )} */}
       {typeof mutationData?.data === "object" &&
-      !Array.isArray(mutationData?.data)
+      Array.isArray(mutationData?.data)
         ? mutationData?.data?.find((item: any) => item?.exit_code === 1) && (
             <MonacoEditor
               value={JSON.stringify(mutationData, null, 2)}
@@ -1011,9 +1324,27 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             />
           )
         : null}
+
       {mutationError && (
-        <MonacoEditor value={mutationError} language="json" height="50vh" />
+        <MonacoEditor
+          value={{
+            data: mutationError?.response?.data,
+            status: mutationError?.response?.status,
+            code: mutationError?.code,
+            headers: mutationError?.response?.headers,
+            statusText: mutationError?.response?.statusText,
+            config: {
+              headers: mutationError?.config?.headers,
+              method: mutationError?.config?.method,
+              data: mutationError?.config?.data,
+              url: mutationError?.config?.url,
+            },
+          }}
+          language="json"
+          height="25vh"
+        />
       )}
+
       {/* <div
         className="flex justify-end w-full p-3"
         onClick={(e) => e.stopPropagation()}

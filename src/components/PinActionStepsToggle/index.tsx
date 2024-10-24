@@ -35,7 +35,7 @@ export const PinActionStepsToggle: React.FC<ColorSchemeProps> = ({}) => {
   const action_steps = [
     { name: "summary" },
     // { name: "activity" },
-    { name: "issues" },
+    // { name: "issues" },
   ];
 
   return (

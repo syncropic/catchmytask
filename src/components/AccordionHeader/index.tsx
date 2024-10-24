@@ -6,20 +6,21 @@ import { useUpdateComponentAction } from "@components/Utils";
 import { Text } from "@mantine/core";
 import { useAppStore } from "src/store";
 
-interface AccordionTitleProps {
+interface AccordionHeaderProps {
   name?: string; // Adjust the type as needed
+  entity_type?: string;
 }
 
-const AccordionTitle: React.FC<AccordionTitleProps> = ({ name }) => {
+const AccordionHeader: React.FC<AccordionHeaderProps> = ({ name, entity_type }) => {
   const { activeTask, selectedRecords, focused_entities } = useAppStore();
   let action = focused_entities[activeTask?.id]?.["action"];
   const { updateComponentAction } = useUpdateComponentAction();
 
   return (
     <div className="flex justify-between items-center">
-      <div>Execution</div>
+      <div>{name}</div>
 
-      <div className="p-3" onClick={(e) => e.stopPropagation()}>
+      {/* <div className="p-3" onClick={(e) => e.stopPropagation()}>
         {activeTask && (
           <div className="flex items-center gap-2">
             {selectedRecords["issues"]?.length > 0 && (
@@ -50,32 +51,39 @@ const AccordionTitle: React.FC<AccordionTitleProps> = ({ name }) => {
             )}
           </div>
         )}
-      </div>
+      </div> */}
 
       <div className="pr-3">
         <ComponentsToolbar
           include_components={[
-            {
-              action: "search",
-              entity_type: "action_steps",
-              type: "action",
-              record: activeTask,
-              onClick: updateComponentAction,
-            },
+            // {
+            //   action: "search",
+            //   entity_type: "action_steps",
+            //   type: "action",
+            //   record: activeTask,
+            //   onClick: updateComponentAction,
+            // },
             {
               action: "save",
-              entity_type: "action_steps",
+              entity_type: entity_type || "action_steps",
               type: "action",
               record: activeTask,
               onClick: updateComponentAction,
             },
             {
-              action: "execute",
-              entity_type: "action_steps",
+              action: "upload",
+              entity_type: entity_type || "action_steps",
               type: "action",
               record: activeTask,
               onClick: updateComponentAction,
             },
+            // {
+            //   action: "execute",
+            //   entity_type: "action_steps",
+            //   type: "action",
+            //   record: activeTask,
+            //   onClick: updateComponentAction,
+            // },
           ]}
         />
       </div>
@@ -83,4 +91,4 @@ const AccordionTitle: React.FC<AccordionTitleProps> = ({ name }) => {
   );
 };
 
-export default AccordionTitle;
+export default AccordionHeader;

@@ -393,7 +393,16 @@ export const ListEditorFormInput = ({ ...props }: any) => {
   return (
     <>
       <div className="p-1">
-        <Button size="compact-xs" onClick={handleClearFields}>
+        <Button
+          size="compact-xs"
+          onClick={handleClearFields}
+          disabled={
+            selectedRecords[`${props?.action_input_form_values_key}`]?.length >
+            0
+              ? false
+              : true
+          }
+        >
           clear
         </Button>
       </div>

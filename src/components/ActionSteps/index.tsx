@@ -10,6 +10,7 @@ import DataDisplay from "@components/DataDisplay";
 import { useAppStore } from "src/store";
 import _, { filter } from "lodash";
 import MonacoEditor from "@components/MonacoEditor";
+import { AggregateActionStepResultsWrapper } from "@components/AggregateActionStepResults";
 
 interface ActionStepsProps {
   entity_type: string;
@@ -23,19 +24,14 @@ interface ActionStepsProps {
   success_message_code?: string;
   invalidate_queries_on_submit_success?: string[];
   record?: any;
+  aggregate_action_steps?: boolean;
 }
 
 export const ActionStepsWrapper = ({
   entity_type = "action_steps",
-  // types,
-  // read_write_mode = "read",
-  // ui = {},
+  aggregate_action_steps,
   record,
-}: // nested_item = false,
-// exclude_components,
-// success_message_code = "query_success_results",
-// invalidate_queries_on_submit_success,
-// types,
+}: 
 ActionStepsProps) => {
   const { activeTask, selectedRecords } = useAppStore();
 
@@ -55,23 +51,6 @@ ActionStepsProps) => {
     error: actionPlanError,
   } = useFetchQueryDataByState(action_plan_state);
 
-  let data_fields = [
-    {
-      name: "description",
-    },
-    {
-      name: "execution_order",
-    },
-    {
-      name: "dependencies",
-    },
-    {
-      name: "confidence",
-    },
-    {
-      name: "execution_runs",
-    },
-  ];
   if (actionPlanError)
     return (
       <MonacoEditor
@@ -89,42 +68,75 @@ ActionStepsProps) => {
     actionPlanData?.data?.find(
       (item: any) => item?.message?.code === "action_plan"
     )?.data || [];
-  let filtered_action_steps = all_action_steps?.filter(
-    (item: { name: string }) =>
-      item &&
-      selectedRecords[`${plan_action_input_form_values_key}`]?.some(
-        (record: { name: string }) => record.name === item?.name
-      )
-  );
+  // let filtered_action_steps = all_action_steps?.filter(
+  //   (item: { name: string }) =>
+  //     item &&
+  //     selectedRecords[`${plan_action_input_form_values_key}`]?.some(
+  //       (record: { name: string }) => record.name === item?.name
+  //     )
+  // );
+
+  // const stepsToRender =
+  //   filtered_action_steps.length.length > 0
+  //     ? filtered_action_steps.length
+  //     : all_action_steps?.filter(
+  //         (item: { name: string }) =>
+  //           item &&
+  //           activeTask?.initial_state?.action_steps?.some(
+  //             (record: { name: string }) => record.name === item?.name
+  //           )
+  //       );
+  // action steps where initial_state?.read is true
+  let initial_state_read = all_action_steps?.filter((step: any) => {
+    return step?.initial_state?.read === true;
+  });
 
   return (
     <>
+      {/* <div>{JSON.stringify(stepsToRender)}</div> */}
       {/* <div>action plan execution</div> */}
       {/* <MonacoEditor
         value={{
           // actionPlanData: actionPlanData,
-          filteredData: filtered_action_steps,
+          initial_state_read: initial_state_read
+          // filteredData: filtered_action_steps,
+          // stepsToRender: stepsToRender
         }}
         language="json"
         height="25vh"
       /> */}
-      {filtered_action_steps && filtered_action_steps.length > 0 ? (
-        <DataDisplay
-          data_items={filtered_action_steps}
-          record={record || {}}
-          data_fields={data_fields}
-          entity_type={entity_type}
-          display="board"
-          ui={{}}
-          action="execute"
-        ></DataDisplay>
-      ) : (
+      {/* {filtered_action_steps &&
+        filtered_action_steps.length > 0 &&
+        !aggregate_action_steps && (
+          <DataDisplay
+            data_items={filtered_action_steps}
+            record={record || {}}
+            data_fields={data_fields}
+            entity_type={entity_type}
+            display="datagridview"
+            ui={{}}
+            action="execute"
+          ></DataDisplay>
+        )} */}
+
+      {/* {stepsToRender && stepsToRender.length > 0 && aggregate_action_steps && (
+        <AggregateActionStepResultsWrapper
+          filtered_action_steps={stepsToRender}
+        />
+      )} */}
+        {initial_state_read && initial_state_read.length > 0 && aggregate_action_steps && (
+        <AggregateActionStepResultsWrapper
+          filtered_action_steps={initial_state_read}
+        />
+      )}
+
+      {/* (
         <div className="flex items-center justify-center p-4">
           <p className="text-sm text-gray-600 text-center">
             Selected action step executions appear here.
           </p>
         </div>
-      )}
+      ) */}
     </>
   );
 };

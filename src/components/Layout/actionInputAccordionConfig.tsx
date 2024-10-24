@@ -7,6 +7,7 @@ import React from "react";
 import PlanWrapper from "@components/Plan";
 import PinnedActionStepResults from "@components/PinnedActionStepResults";
 import ActionInputWrapper from "@components/ActionInput";
+import MonacoEditor from "@components/MonacoEditor";
 
 export const actionInputAccordionConfig: AccordionSection[] = [
   {
@@ -18,8 +19,16 @@ export const actionInputAccordionConfig: AccordionSection[] = [
     Component: ({ activeTask, selectedRecords, action }) => (
       <div>
         <div className="w-full">
+          {/* <MonacoEditor
+            value={{
+              activeTask: activeTask,
+              action: action,
+            }}
+            language="json"
+            height="75vh"
+          /> */}
           <ActionInputWrapper
-            name={action}
+            name={activeTask?.action_models?.[action]}
             query_name="data_model"
             record={activeTask}
             action={action}

@@ -83,6 +83,11 @@ export type ComponentKey =
   | "SearchInput"
   | "ListEditorFormInput";
 
+export type CellTemplateKey =
+  | "detail"
+  | "conditionallyformatted"
+  | "text"
+
 // export type IView = {
 //   resource_type: ComponentKey;
 //   name: string;
@@ -283,6 +288,7 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   invalidate_queries_on_submit_success?: string[];
   setSorting?: any;
   sorting?: any;
+  summary_view?: any;
   // session?: ISession;
   // // initialStateColumnPinningLeft: string[];
   // customTableConfig?: any;
@@ -1013,6 +1019,14 @@ export interface FilterItem {
   is_selected: boolean;
 }
 
+// Add these new types to your existing interfaces file
+export type ResourceType = 'tasks' | 'views' | 'sessions' | 'applications' | 'home';
+
+export interface NavigateOnSelect {
+  resource: ResourceType;
+  // Add any other properties that might be in navigateOnSelect
+}
+
 export interface SearchInputComponentProps<T extends Record<string, any>> {
   success_message_code?: string;
   activeFilters?: FilterItem[];
@@ -1026,7 +1040,8 @@ export interface SearchInputComponentProps<T extends Record<string, any>> {
   include_action_icons?: string[];
   schema?: any;
   size?: string;
-  navigateOnSelect?: boolean;
+  navigateOnSelect?: NavigateOnSelect;
+  navigateOnClear?: NavigateOnSelect;
 }
 
 export interface GlobalSearchInputComponentProps<
@@ -1080,7 +1095,8 @@ export interface DataModel {
 }
 
 export interface DynamicFormProps {
-  data_model: DataModel["data_model"] | null;
+  // data_model: DataModel["data_model"] | null;
+  data_model?: any,
   record?: any;
   action_steps?: any;
   execlude_components?: string[];
@@ -1103,10 +1119,30 @@ export interface DynamicFormProps {
 // This file will define the structure and configuration of accordion sections.
 
 export interface AccordionSection {
-  key: string;
-  title: React.ReactNode; // Accepts string or React component
+  key?: string;
+  title?: React.ReactNode; // Accepts string or React component
   Component: React.FC<any>; // The React component to render
-  icon: React.ReactNode; // The icon for the section
+  icon?: React.ReactNode; // The icon for the section
   isVisible?: boolean; // Optional visibility flag
   [key: string]: any; // Any extra dynamic properties for future extensions
+}
+
+
+export type SQLValueType = 'string' | 'number' | 'boolean' | 'date';
+
+export interface SQLFilter {
+  name: string;
+  operation: string;
+  value: any;
+  type?: SQLValueType;
+}
+
+export interface SQLTemplateOptions {
+  dateFormat?: string;
+  caseSensitive?: boolean;
+}
+
+export interface QueryResult {
+  query: string;
+  error?: string;
 }

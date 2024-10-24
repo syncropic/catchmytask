@@ -9,7 +9,9 @@ import ViewPayment from "@components/ViewPayment";
 import ViewTask from "@components/ViewTask";
 import ViewTestRun from "@components/ViewTestRun";
 import ViewTrip from "@components/ViewTrip";
-import { ComponentKey } from "@components/interfaces";
+import { ComponentKey, NavigateOnSelect, QueryResult, SQLFilter, SQLTemplateOptions, SQLValueType } from "@components/interfaces";
+import { CellStyle } from "@silevis/reactgrid";
+import { useNavigation as useNavigationRefine } from "@refinedev/core";
 // import config from "src/config";
 import {
   Column,
@@ -47,7 +49,7 @@ import {
   useOne,
 } from "@refinedev/core";
 import { MRT_ColumnDef } from "mantine-react-table";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DateTime from "src/components/DateTime";
 import { useAppStore } from "src/store";
 // import { dropTableIfExists, saveToLocalDB } from "src/local_db";
@@ -82,6 +84,8 @@ import {
   IconCopyCheck,
   IconEye,
   IconUserPlus,
+  IconListCheck,
+  IconUpload,
 } from "@tabler/icons-react";
 import { localDb } from "src/localDb";
 import { useQueryClient } from "@tanstack/react-query";
@@ -607,6 +611,21 @@ export function useActivateSection() {
   return { activateSection };
 }
 
+export function useSearchFilters() {
+  const { activeView, activeTask, action_input_form_values } = useAppStore();
+  const search_action_input_form_values_key = `search_${activeView?.id}`;
+  const search_action_input_form_values = action_input_form_values[`${search_action_input_form_values_key}`]
+  let searchFilters = search_action_input_form_values
+  // const activateSection = (section: string) => {
+  //   if (activeLayout) {
+  //     const newLayout = { ...activeLayout };
+  //     newLayout[section].isDisplayed = true;
+  //     setActiveLayout(newLayout);
+  //   }
+  // };
+  return { searchFilters };
+}
+
 export function useSubscriptions() {
   const { data: identity } = useGetIdentity<IIdentity>();
 
@@ -1127,6 +1146,7 @@ export function useReadByState(state: any) {
     local_db,
     setLocalDB,
     updateLocalDB,
+    setDataFields,
   } = useAppStore();
 
   const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
@@ -1161,10 +1181,12 @@ export function useReadByState(state: any) {
         const data_items = dataRecord?.data || [];
         const data_fields = (dataRecord?.data_fields || []).map(
           (field: any) => ({
-            name: field?.name,
-            data_type: field?.data_type,
+            ...field,
           })
         );
+
+        // Save the data fields to the Zustand store
+        setDataFields(tableName, data_fields);
 
         // Save to DuckDB local_db
         if (data_items.length > 0 && data_fields.length > 0) {
@@ -2541,63 +2563,192 @@ export function useSessionNavigation() {
 //   return navigate;
 // }
 
+// export function useNavigation() {
+//   const { activeApplication, activeSession, activeTask } = useAppStore();
+//   const go = useGo();
+
+//   const navigate = (record: any) => {
+//     if (record?.entity_type === "tasks") {
+//       // Construct the target URL given the passed record
+//       const targetUrl = record?.id
+//         ? `/tasks/show/${record.id}?applicationId=${activeApplication?.id}&sessionId=${activeSession?.id}`
+//         : "/home";
+
+//       // Check if the current URL is the same as the target URL
+//       if (
+//         window.location.pathname + window.location.search !== targetUrl &&
+//         record?.id
+//       ) {
+//         go({
+//           to: {
+//             resource: "tasks",
+//             action: "show",
+//             id: record.id,
+//             meta: {
+//               applicationId: activeApplication?.id,
+//               sessionId: activeSession?.id,
+//               taskId: record.id,
+//             },
+//           },
+//           query: {
+//             applicationId: activeApplication?.id,
+//             sessionId: activeSession?.id,
+//           },
+//         });
+//       } else if (
+//         window.location.pathname + window.location.search !== targetUrl &&
+//         !record?.id
+//       ) {
+//         go({
+//           to: {
+//             resource: "home",
+//             action: "list",
+//             // id: record.id,
+//             // meta: {
+//             //   applicationId: activeApplication?.id,
+//             //   sessionId: activeSession?.id,
+//             //   taskId: record.id,
+//             // },
+//           },
+//           // query: {
+//           //   applicationId: activeApplication?.id,
+//           //   sessionId: activeSession?.id,
+//           // },
+//         });
+//       } else {
+//         console.log("You are already on this page");
+//       }
+//     }
+//   };
+
+//   return navigate;
+// }
+
+// export function useNavigation() {
+//   const { activeApplication, activeSession, activeTask } = useAppStore();
+//   const go = useGo();
+//   const { push } = useNavigationRefine();
+
+//   const navigate = (record: any) => {
+//     let targetUrl = record?.id
+//       ? `/tasks/show/${record.id}?applicationId=${activeApplication?.id}&sessionId=${activeSession?.id}`
+//       : "/home";
+
+//     if (
+//       window.location.pathname + window.location.search !== targetUrl &&
+//       !record?.id
+//     ) {
+//       go({
+//         to: {
+//           resource: "home",
+//           action: "list",
+//         },
+//       });
+//     } else if (
+//       window.location.pathname + window.location.search !== targetUrl &&
+//       record?.id &&
+//       record?.entity_type === "tasks"
+//     ) {
+//       go({
+//         to: {
+//           resource: "tasks",
+//           action: "show",
+//           id: record.id,
+//           meta: {
+//             applicationId: activeApplication?.id,
+//             sessionId: activeSession?.id,
+//             taskId: record.id,
+//           },
+//         },
+//         query: {
+//           applicationId: activeApplication?.id,
+//           sessionId: activeSession?.id,
+//         },
+//       });
+//     } else if (record?.entity_type === "views") {
+//       // get the current path and append path query viewId to it
+//       // let currentPath = window.location.pathname;
+//       // let currentSearch = window.location.search;
+//       // let currentHash = window.location.hash;
+//       // let currentUrl = `${currentPath}${currentSearch}${currentHash}`;
+//       // let newUrl = `${currentUrl}?viewId=${record.id}`;
+//       // console.log("currentUrl", currentUrl);
+//       // Retrieve the current search parameters
+//       const searchParams = new URLSearchParams(location.search);
+
+//       // Add or update the 'patch' parameter
+//       searchParams.set("viewId", record?.id);
+
+//       // Construct the new URL with the patch parameter
+//       // const newUrl = `${location.pathname}?${searchParams}`;
+//       // console.log("newUrl", newUrl);
+
+//       // Use push to update the browser's URL
+//       // push("/home");
+//     } else {
+//       console.log("You are already on this page");
+//     }
+//   };
+
+//   return navigate;
+// }
+
 export function useNavigation() {
-  const { activeApplication, activeSession, activeTask } = useAppStore();
   const go = useGo();
+  const { push } = useNavigationRefine();
+  
+  // Use selectors to get the latest state
+  // const activeApplication = useAppStore(state => state.activeApplication);
+  // const activeSession = useAppStore(state => state.activeSession);
+  // const activeTask = useAppStore(state => state.activeTask);
+  // const activeView = useAppStore(state => state.activeView);
 
-  const navigate = (record: any) => {
-    if (record?.entity_type === "tasks") {
-      // Construct the target URL given the passed record
-      const targetUrl = record?.id
-        ? `/tasks/show/${record.id}?applicationId=${activeApplication?.id}&sessionId=${activeSession?.id}`
-        : "/home";
+  const navigate = useCallback((navigateOnSelect: NavigateOnSelect) => {
+    // Get the current state at the time of navigation
+    const state = useAppStore.getState();
+    const { activeApplication, activeSession, activeTask, activeView } = state;
 
-      // Check if the current URL is the same as the target URL
-      if (
-        window.location.pathname + window.location.search !== targetUrl &&
-        record?.id
-      ) {
-        go({
-          to: {
-            resource: "tasks",
-            action: "show",
-            id: record.id,
-            meta: {
-              applicationId: activeApplication?.id,
-              sessionId: activeSession?.id,
-              taskId: record.id,
-            },
-          },
-          query: {
+    // These will always have the latest values
+    const resourceRecordMap = {
+      tasks: activeTask,
+      views: activeView,
+      sessions: activeSession,
+      applications: activeApplication,
+      home: activeApplication,
+    };
+
+    console.log("navigateOnSelect", navigateOnSelect);
+    let resourceRecord = resourceRecordMap[navigateOnSelect?.resource];
+    console.log("resourceRecord", resourceRecord);
+    if (activeTask) {
+      go({
+        to: {
+          resource: navigateOnSelect?.resource,
+          action: "show",
+          id: activeTask?.id,
+          meta: {
             applicationId: activeApplication?.id,
             sessionId: activeSession?.id,
+            taskId: activeTask?.id,
+            ...(activeView && { viewId: activeView?.id }),
           },
-        });
-      } else if (
-        window.location.pathname + window.location.search !== targetUrl &&
-        !record?.id
-      ) {
-        go({
-          to: {
-            resource: "home",
-            action: "list",
-            // id: record.id,
-            // meta: {
-            //   applicationId: activeApplication?.id,
-            //   sessionId: activeSession?.id,
-            //   taskId: record.id,
-            // },
-          },
-          // query: {
-          //   applicationId: activeApplication?.id,
-          //   sessionId: activeSession?.id,
-          // },
-        });
-      } else {
-        console.log("You are already on this page");
-      }
+        },
+        query: {
+          applicationId: activeApplication?.id,
+          sessionId: activeSession?.id,
+          ...(activeView && { viewId: activeView?.id }),
+        },
+      });
+    } else {
+      go({
+        to: {
+          resource: "home",
+          action: "list",
+        },
+      });
     }
-  };
+   
+  }, [go]);
 
   return navigate;
 }
@@ -2613,7 +2764,7 @@ export const truncateText = (text: string, wordLimit: number): string => {
 
 export function extractDefaultValues(model: any) {
   const defaultValues: { [key: string]: any } = {};
-  const properties = model.schema.properties;
+  const properties = model?.schema?.properties;
 
   for (const key in properties) {
     if (
@@ -2677,11 +2828,13 @@ export const iconMap: Record<string, React.ElementType> = {
   issues: IconSquare,
   state: IconStackBack,
   execution: IconListDetails,
+  run: IconListCheck,
   delete: IconTrash,
   close: IconCopyCheck,
   bulk_update: IconForms,
   assign: IconUserPlus,
   view: IconEye,
+  upload: IconUpload
 };
 
 export const useDuckDBSchema = () => {
@@ -2867,4 +3020,456 @@ export const useBulkActionSelect = () => {
   };
 
   return { bulkActionSelect };
+};
+
+export const serializeBigInt = (obj: any) => {
+  return JSON.parse(
+    JSON.stringify(obj, (key, value) =>
+      typeof value === "bigint" ? value.toString() : value
+    )
+  );
+};
+
+// Type mapping between field types and DuckDB-compatible types
+export const cellTemplateMap = {
+  integer: "number",
+  unsigned_integer: "text",
+  float: "number",
+  complex: "text",
+  string: "text",
+  boolean: "text",
+  datetime: "date",
+  timedelta: "text",
+  category: "text",
+  sparse: "text",
+  period: "text",
+  interval: "text",
+  mixed: "text",
+  unknown: "text",
+};
+
+// create a type for cellTemplateKeys
+
+export function getExcelJSStyleFromClass(className: string) {
+  switch (className) {
+    case "bg-green-500":
+      return { backgroundColor: "#4CAF50", color: "#FFFFFF" };
+    case "bg-red-500":
+      return { backgroundColor: "#FF0000", color: "#FFFFFF" };
+    case "bg-gray-500":
+      return { backgroundColor: "#9E9E9E", color: "#FFFFFF" };
+    case "bg-orange-500":
+      return { backgroundColor: "#FFA500", color: "#000000" };
+    default:
+      return { backgroundColor: "#FFFFFF", color: "#000000" };
+  }
+}
+
+/**
+ * Converts CSS properties into the format ReactGrid expects for CellStyle.
+ * @param className - CSS class name to map to CellStyle.
+ * @returns A CellStyle object.
+ */
+export function getReactGridCellStyle(className: string): CellStyle {
+  switch (className) {
+    case "bg-green-500":
+      return {
+        background: "#4CAF50",
+        color: "#FFFFFF",
+      };
+    case "bg-red-500":
+      return {
+        background: "#FF0000",
+        color: "#FFFFFF",
+      };
+    case "bg-gray-500":
+      return {
+        background: "#9E9E9E",
+        color: "#FFFFFF",
+      };
+    case "bg-orange-500":
+      return {
+        background: "#FFA500",
+        color: "#000000",
+      };
+    default:
+      return {
+        background: "#FFFFFF",
+        color: "#000000",
+      };
+  }
+}
+
+export function useActionStepsData(action_steps: any[]) {
+  const { activeTask, activeApplication, activeSession } = useAppStore();
+  const dbInstance = useDuckDB(); // Get DuckDB instance from context
+
+  const [dataItems, setDataItems] = useState<[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (action_steps?.length > 0) {
+      fetchAndJoinActionSteps();
+    }
+
+    async function fetchAndJoinActionSteps() {
+      try {
+        await Promise.all(
+          action_steps.map(async (step) => {
+            const state = {
+              success_message_code: step.success_message_code,
+              id: step.id,
+              action_steps: [step],
+              application: {
+                id: activeApplication?.id,
+                name: activeApplication?.name,
+              },
+              session: {
+                id: activeSession?.id,
+                name: activeSession?.name,
+              },
+              task: { id: activeTask?.id, name: activeTask?.name },
+              input_values: {},
+              include_action_steps: [step.execution_order || 0],
+            };
+
+            const { isLocalDBSuccess } = useReadByState(state);
+            if (!isLocalDBSuccess) {
+              throw new Error(`Failed to load data for step ${step.id}`);
+            }
+          })
+        );
+
+        // Execute the dynamic join once all steps are processed
+        await executeDynamicOuterJoin();
+      } catch (error) {
+        console.error("Error fetching and joining action steps:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    async function executeDynamicOuterJoin() {
+      try {
+        const joinClauses = action_steps
+          .map((step) => `step_${step.id}`)
+          .join(" FULL OUTER JOIN ");
+
+        const query = `
+          SELECT *
+          FROM ${joinClauses} USING (issue_id);
+        `;
+
+        console.log("Executing dynamic outer join query:", query);
+        const result = await dbInstance.query(query);
+        setDataItems(result.toArray());
+      } catch (error) {
+        console.error("Error executing dynamic join query:", error);
+      }
+    }
+  }, [action_steps, dbInstance, activeTask, activeApplication, activeSession]);
+
+  return { dataItems, isLoading };
+}
+
+// export function generateTableAlias(tableName: string): string {
+//   const parts = tableName.split("_");
+//   if (parts.length === 1) {
+//     return tableName.slice(0, 2); // First two letters if it's a single word
+//   }
+//   return parts.map((part) => part[0]).join(""); // First letter of each word
+// }
+
+export function generateTableAlias(tableName: string): string {
+  const parts = tableName.split("_");
+
+  // If the table name is one word, use it as the alias directly
+  if (parts.length === 1) {
+    return tableName;
+  }
+
+  // If the table name contains underscores, use the first letter of each word
+  return parts.map((part) => part[0]).join("");
+}
+
+export function aliasDataFields(
+  fields: any[],
+  alias: string
+): { name: string; data_type: string }[] {
+  return fields.map((field) => ({
+    name: `${alias}_${field.name}`, // Add alias prefix to the field name
+    data_type: field.data_type,
+  }));
+}
+
+/**
+ * Returns the preferred column from the fields: title > name > id.
+ */
+export const getPreferredColumn = (fields: any[]) => {
+  const preferredOrder = ["title", "name", "id"];
+  for (const column of preferredOrder) {
+    if (fields.some((field: any) => field.name === column)) {
+      return column;
+    }
+  }
+  // Fallback to 'id' if none of the preferred columns exist
+  return "id";
+};
+
+export interface FieldMetadata {
+  originalField: string;
+  alias: string;
+  successMessageCode: string;
+  relationType: string;
+}
+
+export function getQueryFieldMetadata(
+  action_steps: any[],
+  dataFields: any
+): FieldMetadata[] {
+  return action_steps.flatMap((step) => {
+    const alias = generateTableAlias(step.success_message_code);
+    const fields = dataFields[step.success_message_code] || [];
+
+    const relationType =
+      step.primary_step_relation?.cardinality || "one-to-one";
+
+    if (relationType === "one-to-many") {
+      const preferredColumn = getPreferredColumn(fields);
+
+      // Annotate one-to-many fields with count and preferred column
+      return [
+        {
+          originalField: "id",
+          alias: `${alias}_${step.success_message_code}_count`,
+          successMessageCode: step.success_message_code,
+          relationType: "one-to-many",
+        },
+        {
+          originalField: preferredColumn,
+          alias: `${alias}_${preferredColumn}`,
+          successMessageCode: step.success_message_code,
+          relationType: "one-to-many",
+        },
+      ];
+    } else {
+      // Annotate one-to-one fields
+      return fields.map((field: any) => ({
+        originalField: field.name,
+        alias: `${alias}_${field.name}`,
+        successMessageCode: step.success_message_code,
+        relationType: "one-to-one",
+      }));
+    }
+  });
+}
+
+export function filterDataFieldsForDisplay(
+  action_steps: any[],
+  dataFields: any,
+  fieldMetadataList: FieldMetadata[]
+) {
+  const validAliases = new Set(fieldMetadataList.map((meta) => meta.alias));
+
+  return action_steps.flatMap((step) => {
+    const stepFields = dataFields[step.success_message_code] || [];
+    const alias = generateTableAlias(step.success_message_code);
+
+    return stepFields.filter((field: any) =>
+      validAliases.has(`${alias}_${field.name}`)
+    );
+  });
+}
+
+export const concatenateAliasedDataFields = (
+  fieldMetadataList: FieldMetadata[],
+  action_steps: any[],
+  dataFields: Record<string, any[]>
+) => {
+  const validAliases = new Set(fieldMetadataList.map((meta) => meta.alias));
+
+  return action_steps.flatMap((step) => {
+    const alias = generateTableAlias(step.success_message_code);
+    const fields = dataFields[step.success_message_code] || [];
+
+    return fields
+      .filter((field: any) => validAliases.has(`${alias}_${field.name}`))
+      .map((field: any) => ({
+        ...field,
+        alias: `${alias}_${field.name}`,
+        original: field?.name,
+        name: `${alias}_${field.name}`,
+        step: step.success_message_code,
+      }));
+  });
+};
+
+
+export function enrichFilters(filters: any[], dataObject: any) {
+  return filters?.map((filter: any) => {
+      // Deep clone the filter to avoid modifying the original
+      const enrichedFilter = { ...filter };
+      
+      // Get value from data object for the specified name
+      const value = dataObject?.[filter.name];
+      
+      // Add the value to the filter
+      enrichedFilter.value = value;
+      
+      return enrichedFilter;
+  });
+}
+
+
+
+export const isEmptyOrNull = (value: any): boolean => {
+  if (value === null || value === undefined) {
+    return true;
+  }
+  
+  if (typeof value === 'string' && value.trim() === '') {
+    return true;
+  }
+  
+  return false;
+};
+
+export const formatSQLIdentifier = (str: string): string => {
+  if (!str) return '""';
+  return `"${str.replace(/"/g, '""')}"`;
+};
+
+export const formatDateValue = (value: any): string => {
+  try {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) {
+      throw new Error('Invalid date');
+    }
+    return `DATE '${date.toISOString().split('T')[0]}'`;
+  } catch (error) {
+    throw new Error(`Invalid date value: ${value}`);
+  }
+};
+
+export const formatNumberValue = (value: any): string => {
+  const num = Number(value);
+  if (isNaN(num)) {
+    throw new Error(`Invalid number value: ${value}`);
+  }
+  return num.toString();
+};
+
+export const formatBooleanValue = (value: any): string => {
+  return Boolean(value) ? 'TRUE' : 'FALSE';
+};
+
+export const formatStringValue = (value: string): string => {
+  return `'${value.toString().replace(/'/g, "''")}'`;
+};
+
+export const guessValueType = (value: any): SQLValueType => {
+  if (value === null || value === undefined) return 'string';
+  if (value instanceof Date) return 'date';
+  if (typeof value === 'number') return 'number';
+  if (typeof value === 'boolean') return 'boolean';
+  
+  const dateStr = String(value);
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    try {
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) return 'date';
+    } catch (e) {}
+  }
+  
+  return 'string';
+};
+
+export const sanitizeFilters = (filters: any[]): SQLFilter[] => {
+  return filters
+    ?.filter(filter => filter && typeof filter.name === 'string' && filter.operation)
+    ?.map(filter => ({
+      name: filter.name.trim(),
+      operation: filter.operation.trim(),
+      value: filter.value,
+      type: filter.type || guessValueType(filter.value)
+    }));
+};
+
+const formatSQLValue = (value: any, type?: string): string => {
+  switch (type?.toLowerCase()) {
+    case 'date':
+      return formatDateValue(value);
+    case 'number':
+      return formatNumberValue(value);
+    case 'boolean':
+      return formatBooleanValue(value);
+    default:
+      return formatStringValue(value);
+  }
+};
+
+const buildComparisonClause = (
+  filter: SQLFilter,
+  options: SQLTemplateOptions
+): string | null => {
+  if (isEmptyOrNull(filter.value)) {
+    return null;
+  }
+
+  const column = formatSQLIdentifier(filter.name);
+  
+  if (filter.operation.toUpperCase() === 'LIKE') {
+    const value = formatSQLValue(filter.value, 'string');
+    return options.caseSensitive
+      ? `${column} LIKE ${value}`
+      : `LOWER(${column}) LIKE LOWER(${value})`;
+  }
+
+  const value = formatSQLValue(filter.value, filter.type);
+  return `${column} ${filter.operation} ${value}`;
+};
+
+const buildWhereClause = (
+  filters: SQLFilter[],
+  options: SQLTemplateOptions
+): string => {
+  if (!filters || filters.length === 0) {
+    return '';
+  }
+
+  const conditions = filters
+    .filter(filter => filter.name && filter.operation)
+    .map(filter => {
+      try {
+        return buildComparisonClause(filter, options);
+      } catch (error) {
+        console.warn(`Skipping invalid filter: ${JSON.stringify(error)}`);
+        return null;
+      }
+    })
+    .filter((condition): condition is string => condition !== null)
+    .join(' AND ');
+
+  return conditions ? `WHERE ${conditions}` : '';
+};
+
+export const buildSQLQuery = (
+  sqlTemplate: string,
+  filters: SQLFilter[],
+  options: SQLTemplateOptions = { caseSensitive: true }
+): QueryResult => {
+  try {
+    const whereClause = buildWhereClause(filters, options);
+    
+    const query = sqlTemplate.toLowerCase().includes('where')
+      ? sqlTemplate.replace('{{filters}}', whereClause.replace('WHERE', 'AND'))
+      : sqlTemplate.replace('{{filters}}', whereClause);
+
+    return { query };
+  } catch (error) {
+    return {
+      query: sqlTemplate,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
 };

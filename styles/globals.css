@@ -185,3 +185,8 @@ h1 {
 .dropdown-menu-button-is-selected {
   background-color: var(--gray-2);
 }
+
+.reactgrid-wrapper {
+  height: 100px;
+  overflow: scroll;
+}

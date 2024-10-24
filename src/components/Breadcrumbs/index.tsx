@@ -9,7 +9,7 @@ import {
 import { useAppStore } from "src/store";
 
 function Breadcrumbs() {
-  const { activeApplication, activeSession, activeTask } = useAppStore();
+  const { activeApplication, activeSession, activeTask, activeView } = useAppStore();
 
   // Build the breadcrumb items dynamically with tooltips
   const items = [];
@@ -35,6 +35,14 @@ function Breadcrumbs() {
       ...activeTask,
       title: activeTask.name,
       type: "Task",
+    });
+  }
+
+  if (activeView) {
+    items.push({
+      ...activeView,
+      title: activeView.name,
+      type: "View",
     });
   }
 

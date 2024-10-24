@@ -6,6 +6,7 @@ import {
   getLabel,
   getTooltipLabel,
   useFetchDomainDataByDomain,
+  useUpdateComponentAction,
 } from "@components/Utils";
 import { useGo } from "@refinedev/core";
 import { useAppStore } from "src/store";
@@ -25,6 +26,8 @@ import Reveal from "@components/Reveal";
 import MonacoEditor from "@components/MonacoEditor";
 import PinActionStepsToggle from "@components/PinActionStepsToggle";
 import CustomTooltipComponent from "@components/CustomTooltipComponent";
+import ComponentsToolbar from "@components/ComponentsToolbar";
+import ExternalSubmitButton from "@components/SubmitButton";
 
 interface HeaderComponentProps {
   authenticatedData?: any;
@@ -45,7 +48,11 @@ const LargeScreenHeader = ({
     activeLayout,
     setActiveLayout,
     activeTask,
+    activeView,
+    focused_entities
   } = useAppStore();
+  const { updateComponentAction } = useUpdateComponentAction();
+  let action = focused_entities[activeTask?.id]?.["action"];
 
   // handle toggleDisplay
   const toggleDisplay = (section: string) => {
@@ -140,10 +147,39 @@ const LargeScreenHeader = ({
           <SearchInput include_action_icons={[]} />
         </div>
       )} */}
+      {/* {authenticatedData?.authenticated && activeTask && (
+        <div className="pr-3">
+          <ComponentsToolbar
+            include_components={[
+              {
+                action: "save",
+                entity_type: "action_steps",
+                type: "action",
+                record: activeTask,
+                onClick: () => console.log("save"),
+              },
+              {
+                action: "execute",
+                entity_type: "action_steps",
+                type: "action",
+                record: activeTask,
+                onClick: updateComponentAction,
+              },
+            ]}
+          />
+        </div>
+      )} */}
+       {authenticatedData?.authenticated &&activeTask && activeView && action && (
+              <ExternalSubmitButton
+                record={activeView}
+                entity_type="tasks"
+                action={action}
+              />
+            )}
 
-      {authenticatedData?.authenticated && activeTask && <AutomationsToggle />}
+      {/* {authenticatedData?.authenticated && activeTask && <AutomationsToggle />} */}
 
-      {authenticatedData?.authenticated && activeTask && (
+      {authenticatedData?.authenticated && activeTask && activeView && (
         <Reveal
           trigger="click"
           target={
@@ -155,16 +191,16 @@ const LargeScreenHeader = ({
               label={getTooltipLabel(activeTask)}
             >
               <Text size="sm" className="text-blue-500 whitespace-normal">
-                {getLabel(activeTask)}
+                {getLabel(activeView)}
               </Text>
             </Tooltip>
           }
         >
-          <MonacoEditor value={activeTask} language="json" height="50vh" />
+          <MonacoEditor value={activeView} language="json" height="50vh" />
         </Reveal>
       )}
 
-      {authenticatedData?.authenticated && activeTask && (
+      {authenticatedData?.authenticated && activeTask && activeView && (
         <PinActionStepsToggle />
       )}
 

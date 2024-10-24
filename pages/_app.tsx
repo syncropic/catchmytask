@@ -38,6 +38,7 @@ import "mantine-contextmenu/styles.layer.css";
 // import '@mantine/code-highlight/styles.css';
 // import "@mantine/core/styles.layer.css";
 // import "mantine-datatable/styles.layer.css";
+import "@silevis/reactgrid/styles.css";
 import "../styles/globals.css";
 // import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -280,6 +281,7 @@ const App = (props: React.PropsWithChildren) => {
                 {
                   name: "home",
                   list: "/home",
+                  show: "/home",
                 },
                 {
                   name: "profile",
@@ -302,6 +304,11 @@ const App = (props: React.PropsWithChildren) => {
                 },
                 {
                   name: "tasks",
+                  list: "/tasks",
+                  show: "/tasks/show/:id",
+                },
+                {
+                  name: "views",
                   list: "/tasks",
                   show: "/tasks/show/:id",
                 },
