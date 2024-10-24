@@ -166,7 +166,7 @@ export const ShowPage: React.FC = () => {
   // Render the page content
   return (
     <>
-    {!activeView && (<Title order={3}>Get Important Things Done.</Title>)}
+    {/* {!activeView && (<Title order={3}>Get Important Things Done.</Title>)} */}
       {/* <Breadcrumbs /> */}
       {/* <Text>Task Show Page</Text>
       <Title order={2}>{activeTask?.name || "No Task Name"}</Title> */}

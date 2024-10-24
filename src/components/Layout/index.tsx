@@ -39,106 +39,6 @@ import { viewAccordionConfig } from "./viewAccordionConfig";
 import { viewSearchActionAccordionConfig } from "./viewSearchActionAccordionConfig";
 import { UploadedWrapper } from "@components/Uploaded";
 
-// Handling redirect to task/session when authenticated
-interface RedirectToActiveTaskParams {
-  authenticatedData: any;
-  activeTask: any;
-  activeSession: any;
-  activeApplication: any;
-  activeView: any;
-  // go: any;
-}
-
-
-// Helper to construct the query string based on values
-const buildQueryParams = (params: Record<string, string | null>) => {
-  const query = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value) query.set(key, value);
-  });
-  return query.toString();
-};
-
-// Helper to construct the target path based on active parameters
-const buildTargetPath = (
-  activeTaskId: string,
-  queryParams: string,
-  activeViewId?: string | null
-) => {
-  return activeViewId
-    ? `/tasks/show/${activeTaskId}?${queryParams}&ViewId=${activeViewId}`
-    : `/tasks/show/${activeTaskId}?${queryParams}`;
-};
-
-// Main function to handle redirection logic
-export function redirectToActiveTask({
-  authenticatedData,
-  activeTask,
-  activeSession,
-  activeApplication,
-  activeView,
-}: RedirectToActiveTaskParams) {
-  const {pathname} = useParsed()
-  const go = useGo()
-  // const targetUrl = useMemo(() => {
-  //   if (activeTask?.id) {
-  //     const queryParams = buildQueryParams({
-  //       applicationId: activeApplication?.id,
-  //       sessionId: activeSession?.id,
-  //     });
-  //     return buildTargetPath(activeTask.id, queryParams, activeView?.id);
-  //   }
-  //   return null;
-  // }, [activeTask, activeSession, activeApplication, activeView]);
-
-  useEffect(() => {
-    // console.log("pathname", pathname);
-    if (authenticatedData?.authenticated && activeTask) {
-      go({
-        to: {
-          resource: "tasks",
-          action: "show",
-          id: activeTask?.id,
-          meta: {
-            applicationId: activeApplication?.id,
-            sessionId: activeSession?.id,
-            taskId: activeTask.id!,
-            ...(activeView?.id && { viewId: activeView?.id }),
-          },
-        },
-        query: {
-          applicationId: activeApplication?.id,
-          sessionId: activeSession?.id,
-          taskId: activeTask?.id,
-          ...(activeView?.id && { viewId: activeView?.id }),
-        },
-        type: "push",
-      });
-      // console.log("pathname", pathname);
-      // const currentUrl = `${window.location.pathname}${window.location.search}`;
-
-      // if (currentUrl !== targetUrl) {
-      //   go({
-      //     to: {
-      //       resource: "tasks",
-      //       action: "show",
-      //       id: activeTask.id!,
-      //       meta: {
-      //         applicationId: activeApplication?.id,
-      //         sessionId: activeSession?.id,
-      //         taskId: activeTask.id!,
-      //       },
-      //     },
-      //     query: {
-      //       applicationId: activeApplication?.id,
-      //       sessionId: activeSession?.id,
-      //     },
-      //     type: "push",
-      //   });
-      // }
-    }
-  }, [authenticatedData, activeTask]);
-}
 
 const Layout = ({
   children,
@@ -147,12 +47,7 @@ const Layout = ({
   children: React.ReactNode;
   noAuth?: boolean;
 }) => {
-  // const {
-  //   domainData,
-  //   isLoading: isLoadingDomainData,
-  //   error: errorDomainData,
-  //   domainRecord,
-  // } = useDomainData();
+
   const {
     domainData,
     isLoading: isLoadingDomainData,
@@ -242,18 +137,18 @@ const Layout = ({
   // }
 
 
-  const [hasRedirected, setHasRedirected] = useState(false);
+  // const [hasRedirected, setHasRedirected] = useState(false);
 
-  useEffect(() => {
-    if (authenticatedData?.authenticated && navigationHistory && parsed?.pathname !== "/home" && !hasRedirected) {
-      setHasRedirected(true);
-      go({
-        to: navigationHistory?.pathname,
-        query: navigationHistory?.params,
-        type: "push",
-      });
-    }
-  }, [authenticatedData, navigationHistory, parsed?.pathname, hasRedirected, go]);
+  // useEffect(() => {
+  //   if (authenticatedData?.authenticated && navigationHistory && parsed?.pathname !== "/home" && !hasRedirected) {
+  //     setHasRedirected(true);
+  //     go({
+  //       to: navigationHistory?.pathname,
+  //       query: navigationHistory?.params,
+  //       type: "push",
+  //     });
+  //   }
+  // }, [authenticatedData, navigationHistory, parsed?.pathname, hasRedirected, go]);
 
   // Redirect and render logic based on the user's authentication status and path
   if (isLoadingAuthenticatedData || isLoadingDomainData) {
