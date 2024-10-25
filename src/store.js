@@ -98,6 +98,9 @@ export const useAppStore = create(
         action_plan: {
           isPinned: false,
         },
+        summary: {
+          isDisplayed: true,
+        },
       },
       setActiveSections: (activeSections) =>
         set((state) => ({ activeSections })),
@@ -120,7 +123,8 @@ export const useAppStore = create(
       activeRecord: null,
       setActiveRecord: (activeRecord) => set((state) => ({ activeRecord })),
       navigationHistory: null,
-      setNavigationHistory: (navigationHistory) => set((state) => ({ navigationHistory })),
+      setNavigationHistory: (navigationHistory) =>
+        set((state) => ({ navigationHistory })),
       activeMouseCoordinates: {
         x: 0,
         y: 0,

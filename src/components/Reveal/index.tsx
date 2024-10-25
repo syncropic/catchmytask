@@ -1,4 +1,5 @@
 import { Group, HoverCard, Popover, Text } from "@mantine/core";
+import { useViewportSize } from "@mantine/hooks";
 import { ReactNode } from "react";
 
 interface RevealProps {
@@ -9,17 +10,14 @@ interface RevealProps {
 
 function Reveal({ target, children, trigger }: RevealProps) {
   const TriggerComponent = trigger === "hover" ? HoverCard : Popover;
+  const { width } = useViewportSize();
+
+  // Use 992px as the breakpoint for large screens (Mantine's 'lg' breakpoint)
+  const popoverWidth = width < 992 ? 350 : 500;
 
   return (
     <div>
-      <TriggerComponent
-        classNames={{
-          dropdown:
-            "w-full max-w-full sm:min-w-[300px] sm:max-w-[400px] md:min-w-[400px] md:max-w-[500px] lg:min-w-[500px] lg:max-w-[600px]",
-        }}
-        shadow="md"
-        withinPortal={true}
-      >
+      <TriggerComponent width={popoverWidth} shadow="md" withinPortal={true}>
         <TriggerComponent.Target>{target}</TriggerComponent.Target>
         <TriggerComponent.Dropdown>{children}</TriggerComponent.Dropdown>
       </TriggerComponent>

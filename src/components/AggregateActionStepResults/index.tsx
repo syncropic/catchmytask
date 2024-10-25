@@ -22,7 +22,8 @@ import { Text } from "@mantine/core";
 import { useEffect, useRef, useState } from "react";
 import { useDuckDB } from "pages/_app"; // Import the useDuckDB hook
 import { set } from "lodash";
-import nunjucks from 'nunjucks';
+import nunjucks from "nunjucks";
+import SummariesDisplay from "@components/SummariesDisplay";
 
 interface AggregateActionStepResultsProps {
   action_steps?: any[];
@@ -32,14 +33,7 @@ export function AggregateActionStepResults({
   action_steps = [],
 }: AggregateActionStepResultsProps) {
   const dbInstance = useDuckDB(); // Get DuckDB instance
-  const {
-    dataFields,
-    activeTask,
-    action_input_form_values,
-    setActionInputFormValues,
-    views,
-    activeView
-  } = useAppStore(); // Zustand store access
+  const { activeSections, activeView } = useAppStore(); // Zustand store access
 
   const [fetchedSteps, setFetchedSteps] = useState<Record<string, boolean>>({});
   const [dataItems, setDataItems] = useState<[]>([]);
@@ -56,23 +50,29 @@ export function AggregateActionStepResults({
   );
 
   const search_action_input_form_values = useAppStore(
-    (state) => state.action_input_form_values[search_action_input_form_values_key]
+    (state) =>
+      state.action_input_form_values[search_action_input_form_values_key]
   );
 
+  const view_modes_action_input_form_values_key = `view_modes_${activeView?.id}`;
 
+  const view_modes_action_input_form_values = useAppStore(
+    (state) =>
+      state.action_input_form_values[view_modes_action_input_form_values_key]
+  );
 
   let active_view_search_model_state = {
     id: activeView?.id,
     query_name: "data_model",
     name: activeView?.["action_models"]?.["search"],
-    success_message_code:"action_input_data_model_schema",
+    success_message_code: "action_input_data_model_schema",
   };
- 
 
-  const { data: active_view_search_model_data, isLoading: active_view_search_model_isLoading, error: active_view_search_model_error } = useFetchQueryDataByState(active_view_search_model_state);
-
-
-  
+  const {
+    data: active_view_search_model_data,
+    isLoading: active_view_search_model_isLoading,
+    error: active_view_search_model_error,
+  } = useFetchQueryDataByState(active_view_search_model_state);
 
   const handleStepFetched = (stepId: string) => {
     setFetchedSteps((prev) => ({ ...prev, [stepId]: true }));
@@ -180,10 +180,9 @@ export function AggregateActionStepResults({
     error: viewError,
   } = useReadRecordByState(read_record_state);
 
-
   let view_record = viewData?.data?.find(
     (item: any) => item?.message?.code === activeView?.id
-  )?.data[0]
+  )?.data[0];
 
   // const fieldMetadataList = getQueryFieldMetadata(action_steps, dataFields);
   // const filteredDataFields = concatenateAliasedDataFields(
@@ -192,10 +191,14 @@ export function AggregateActionStepResults({
   //   dataFields
   // );
 
-  let active_view_search_model_data_data_model_search_filters = active_view_search_model_data?.data?.find(
-    (item: any) => item?.message?.code === "action_input_data_model_schema"
-  )?.data[0]?.data_model?.schema?.search_filters
-  let enriched_search_filters = enrichFilters(active_view_search_model_data_data_model_search_filters, search_action_input_form_values)
+  let active_view_search_model_data_data_model_search_filters =
+    active_view_search_model_data?.data?.find(
+      (item: any) => item?.message?.code === "action_input_data_model_schema"
+    )?.data[0]?.data_model?.schema?.search_filters;
+  let enriched_search_filters = enrichFilters(
+    active_view_search_model_data_data_model_search_filters,
+    search_action_input_form_values
+  );
 
   useEffect(() => {
     const allFetched = action_steps.every(
@@ -217,15 +220,26 @@ export function AggregateActionStepResults({
     //   // executeQuery(globalSearchQuery);
     //   executeQuery(rendered_globalSearchQuery);
     // }
-    if(allFetched && globalSearchQuery){
-      let rendered_globalSearchQuery = buildSQLQuery(globalSearchQuery, sanitizeFilters(enriched_search_filters), { caseSensitive: false })?.query
-      console.log("rendered_globalSearchQuery", rendered_globalSearchQuery)
+    if (allFetched && globalSearchQuery) {
+      let rendered_globalSearchQuery = buildSQLQuery(
+        globalSearchQuery,
+        sanitizeFilters(enriched_search_filters),
+        { caseSensitive: false }
+      )?.query;
+      console.log("rendered_globalSearchQuery", rendered_globalSearchQuery);
       // executeQuery(globalSearchQuery);
       executeQuery(rendered_globalSearchQuery);
     }
-    if(allFetched && view_record && !globalSearchQuery){
-      let rendered_globalSearchQuery = buildSQLQuery(view_record?.query, sanitizeFilters(enriched_search_filters), { caseSensitive: false })?.query
-      console.log("rendered_globalSearchQuery view_record", rendered_globalSearchQuery)
+    if (allFetched && view_record && !globalSearchQuery) {
+      let rendered_globalSearchQuery = buildSQLQuery(
+        view_record?.query,
+        sanitizeFilters(enriched_search_filters),
+        { caseSensitive: false }
+      )?.query;
+      console.log(
+        "rendered_globalSearchQuery view_record",
+        rendered_globalSearchQuery
+      );
       // executeQuery(globalSearchQuery);
       executeQuery(rendered_globalSearchQuery);
     }
@@ -240,8 +254,10 @@ export function AggregateActionStepResults({
       {/* <div>{JSON.stringify(action_steps)}</div> */}
       {/* <MonacoEditor
         value={{
-          globalSearchQuery: globalSearchQuery,
-          view_record_query: view_record?.query
+          view_modes_action_input_form_values:
+            view_modes_action_input_form_values,
+          // globalSearchQuery: globalSearchQuery,
+          // view_record_query: view_record?.query
           // action_steps: action_steps
           // viewRecord: viewRecord,
           // data_fields: dataFields
@@ -271,13 +287,25 @@ export function AggregateActionStepResults({
       ))}
       {/* <div>{JSON.stringify(fetchedSteps)}</div> */}
 
-      {isLoading && (<div>Loading...</div>)}
-      {!isLoading && view_record?.fields && dataItems && ( <DataDisplay
+      {isLoading && <div>Loading...</div>}
+      {!isLoading &&
+        view_record?.fields &&
+        dataItems &&
+        activeSections["summary"]?.isDisplayed && (
+          <SummariesDisplay
+            data_items={dataItems}
+            entity_type="action_step_results"
+            data_fields={view_record?.fields}
+          />
+        )}
+      {!isLoading && view_record?.fields && dataItems && (
+        <DataDisplay
           data_items={dataItems}
           entity_type="action_step_results"
-          display="datagridview"
+          view_mode={view_modes_action_input_form_values?.main || "datagrid"}
           data_fields={view_record?.fields}
-        />)}
+        />
+      )}
 
       {/* {isLoading ? (
         <div>Loading...</div>
@@ -349,7 +377,7 @@ interface AggregateActionStepResultsProps {
 export const AggregateActionStepResultsWrapper = ({
   filtered_action_steps,
 }: AggregateActionStepResultsProps) => {
-  const {activeView} = useAppStore()
+  const { activeView } = useAppStore();
   return (
     <>
       {/* <div>action step results wrapper</div> */}
@@ -360,9 +388,9 @@ export const AggregateActionStepResultsWrapper = ({
         language="json"
         height="75vh"
       /> */}
-      {activeView && (<AggregateActionStepResults action_steps={filtered_action_steps} />)}
-     
+      {activeView && (
+        <AggregateActionStepResults action_steps={filtered_action_steps} />
+      )}
     </>
   );
 };
-

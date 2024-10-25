@@ -38,7 +38,7 @@ import BulkOperationsToolbar from "@components/BulkOperationsToolbar";
 import { viewAccordionConfig } from "./viewAccordionConfig";
 import { viewSearchActionAccordionConfig } from "./viewSearchActionAccordionConfig";
 import { UploadedWrapper } from "@components/Uploaded";
-
+import { actionAccordionConfig } from "./actionAccordionConfig";
 
 const Layout = ({
   children,
@@ -47,7 +47,6 @@ const Layout = ({
   children: React.ReactNode;
   noAuth?: boolean;
 }) => {
-
   const {
     domainData,
     isLoading: isLoadingDomainData,
@@ -71,7 +70,7 @@ const Layout = ({
     selectedRecords,
     activeView,
     pinned_action_steps,
-    navigationHistory
+    navigationHistory,
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
 
@@ -135,7 +134,6 @@ const Layout = ({
   //     />
   //   );
   // }
-
 
   // const [hasRedirected, setHasRedirected] = useState(false);
 
@@ -227,7 +225,6 @@ const Layout = ({
     );
   }
 
-  
   // if (authenticatedData?.authenticated && navigationHistory && parsed?.pathname !== "/home") {
   //   go({
   //     to: {
@@ -242,14 +239,20 @@ const Layout = ({
   // }
 
   // Return the authenticated layout with your existing logic
-  let select_or_create_to_continue_items = [activeSession, activeTask, activeView]
-  let select_or_create_to_continue_items_map = ["session", "task", "view"]
+  let select_or_create_to_continue_items = [
+    activeSession,
+    activeTask,
+    activeView,
+  ];
+  let select_or_create_to_continue_items_map = ["session", "task", "view"];
 
-  const nullIndex = select_or_create_to_continue_items.findIndex(item => item === null);
-  const item = nullIndex !== -1 ? select_or_create_to_continue_items_map[nullIndex] : null;
+  const nullIndex = select_or_create_to_continue_items.findIndex(
+    (item) => item === null
+  );
+  const item =
+    nullIndex !== -1 ? select_or_create_to_continue_items_map[nullIndex] : null;
 
   const message = item ? `Create or select a ${item} to continue` : null;
-
 
   return (
     <Authenticated key="home" redirectOnFail="/login">
@@ -263,11 +266,13 @@ const Layout = ({
               style={{ display: leftSection.isDisplayed ? "block" : "none" }}
             >
               {/* Left section content */}
-              {action && pinned_main_action === action && (
+              {activeView && activeTask && (
                 <AccordionComponent
-                  sections={searchActionAccordionConfig}
+                  sections={viewSearchActionAccordionConfig}
+                  activeView={activeView}
                   activeTask={activeTask}
-                  activeSession={activeSession}
+                  defaultExpandedValues={["search"]}
+                  action={action}
                 />
               )}
 
@@ -282,25 +287,137 @@ const Layout = ({
               style={{ display: centerSection.isDisplayed ? "block" : "none" }}
             >
               {/* Center section content */}
-              <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-                {!activeSession && (
-                  <div
-                    className="flex flex-col h-screen items-center justify-center p-4"
-                    style={{
-                      height: "calc(100vh - 100px)",
-                      // paddingBottom: "60px",
-                    }}
-                  >
-                    <Breadcrumbs />
-                    <p className="text-sm text-gray-600 text-center max-w-sm">
-                      <Highlight color="violet" highlight="session">
-                        Create or select a session to continue.
-                      </Highlight>
-                    </p>
-                  </div>
-                )}
+              <div className="">
+                {/* // to load in the page content */}
+                {!select_or_create_to_continue_items.some(
+                  (item) => item === null
+                ) && children}
+                {/* accordion components in the center section */}
+                {/* {activeTask && (
+                      <AccordionComponent
+                        sections={executionAccordionConfig}
+                        activeTask={activeTask}
+                        activeSession={activeSession}
+                        bulkActionSelect={bulkActionSelect}
+                        selectedRecords={selectedRecords}
+                        defaultExpandedValues={["execution"]}
+                      />
+                    )} */}
 
-                {!activeTask && activeSession && (
+                <div className="w-full">
+                  <div className="flex justify-center w-full">
+                    <div className="w-1/5"></div>
+                    <div className="w-3/5 pb-2 pt-2 flex gap-2">
+                      {selectedRecords["issues"]?.length > 0 && (
+                        <>
+                          <BulkOperationsToolbar
+                            include_components={[
+                              {
+                                action: "view",
+                                entity_type: "selected_records",
+                                type: "action",
+                                record: activeTask,
+                                onClick: bulkActionSelect,
+                              },
+                              {
+                                action: "bulk_update",
+                                entity_type: "selected_records",
+                                type: "action",
+                                record: activeTask,
+                                onClick: bulkActionSelect,
+                              },
+                              {
+                                action: "close",
+                                entity_type: "selected_records",
+                                type: "action",
+                                record: activeTask,
+                                onClick: bulkActionSelect,
+                              },
+                              {
+                                action: "assign",
+                                entity_type: "selected_records",
+                                type: "action",
+                                record: activeTask,
+                                onClick: bulkActionSelect,
+                              },
+                              {
+                                action: "delete",
+                                entity_type: "selected_records",
+                                type: "action",
+                                record: activeTask,
+                                onClick: bulkActionSelect,
+                              },
+                              {
+                                action: "custom_actions",
+                                entity_type: "selected_records",
+                                type: "action",
+                                record: activeTask,
+                                onClick: bulkActionSelect,
+                              },
+                            ]}
+                          ></BulkOperationsToolbar>
+                        </>
+                      )}
+                    </div>
+                    <div className="w-1/5"></div>
+                  </div>
+
+                  {activeTask && action !== "upload" && (
+                    <div className="w-full">
+                      <ActionStepsWrapper
+                        entity_type="action_steps"
+                        record={activeTask}
+                        aggregate_action_steps={true}
+                      />
+                    </div>
+                  )}
+                  {activeTask && action === "upload" && (
+                    <div className="w-full">
+                      <UploadedWrapper />
+                    </div>
+                  )}
+                </div>
+
+                {/* {!activeSession && (
+                      <div
+                        className="flex flex-col h-screen items-center justify-center p-4"
+                        style={{
+                          height: "calc(100vh - 100px)",
+                          // paddingBottom: "60px",
+                        }}
+                      >
+                        {children}
+
+                        <Breadcrumbs />
+                        <p className="text-sm text-gray-600 text-center max-w-sm">
+                          <Highlight color="violet" highlight="session">
+                            Create or select a session to continue.
+                          </Highlight>
+                        </p>
+                      </div>
+                    )} */}
+
+                {/* {!activeTask && activeSession && (
+                      <div
+                        className="flex flex-col h-screen items-center justify-center p-4"
+                        style={{
+                          height: "calc(100vh - 100px)",
+                          // paddingBottom: "60px",
+                        }}
+                      >
+                        {children}
+
+                        <Breadcrumbs />
+                        <p className="text-sm text-gray-600 text-center max-w-sm">
+                          <Highlight color="lime" highlight="task">
+                            Create or select a task to continue.
+                          </Highlight>
+                        </p>
+                      </div>
+                    )} */}
+                {select_or_create_to_continue_items.some(
+                  (item) => item === null
+                ) && (
                   <div
                     className="flex flex-col h-screen items-center justify-center p-4"
                     style={{
@@ -308,14 +425,29 @@ const Layout = ({
                       // paddingBottom: "60px",
                     }}
                   >
+                    {children}
+
                     <Breadcrumbs />
                     <p className="text-sm text-gray-600 text-center max-w-sm">
-                      <Highlight color="lime" highlight="task">
-                        {JSON.stringify(message)}
+                      <Highlight
+                        component="p"
+                        color="lime"
+                        highlight={
+                          select_or_create_to_continue_items_map[nullIndex] ||
+                          ""
+                        }
+                      >
+                        {/* {JSON.stringify(`Create or select a ${select_or_create_to_continue_items_map[nullIndex]} to continue.`)} */}
+                        {message || ""}
                       </Highlight>
+                      {/* {JSON.stringify(select_or_create_to_continue_items.map((item) => item?.id))}
+                          {nullIndex}
+                          {select_or_create_to_continue_items_map[nullIndex]} */}
+                      {/* {message} */}
                     </p>
                   </div>
                 )}
+                {/* {children} */}
               </div>
             </div>
 
@@ -326,11 +458,44 @@ const Layout = ({
               style={{ display: rightSection.isDisplayed ? "block" : "none" }}
             >
               {/* Right section content */}
+              {/* state view */}
               <AccordionComponent
                 sections={stateViewAccordionConfig}
                 activeTask={activeTask}
                 activeSession={activeSession}
               />
+              {/* pinned action step issues */}
+              {activeTask &&
+                action &&
+                !["save", "search", "upload"]?.includes(action) && (
+                  <AccordionComponent
+                    sections={actionInputAccordionConfig}
+                    selectedRecords={selectedRecords}
+                    action={action}
+                    activeTask={activeTask}
+                    defaultExpandedValues={["action_input"]}
+                  />
+                )}
+
+              {/* plan accordion component */}
+              {/* {activeTask && (
+                <AccordionComponent
+                  sections={planViewAccordionConfig}
+                  activeTask={activeTask}
+                  activeSession={activeSession}
+                  defaultExpandedValues={[]}
+                />
+              )} */}
+              {activeTask && (
+                <AccordionComponent
+                  sections={actionAccordionConfig}
+                  activeTask={activeTask}
+                  activeSession={activeSession}
+                  record={activeView}
+                  defaultExpandedValues={[]}
+                  action="view_modes"
+                />
+              )}
               {/* Right Scroll Gradient */}
 
               <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-200 opacity-75 pointer-events-none" />
@@ -409,7 +574,9 @@ const Layout = ({
                 <Panel defaultSize={60} minSize={30}>
                   <div className="">
                     {/* // to load in the page content */}
-                    {!select_or_create_to_continue_items.some(item => item === null) && children}
+                    {!select_or_create_to_continue_items.some(
+                      (item) => item === null
+                    ) && children}
                     {/* accordion components in the center section */}
                     {/* {activeTask && (
                       <AccordionComponent
@@ -533,7 +700,9 @@ const Layout = ({
                         </p>
                       </div>
                     )} */}
-                    {select_or_create_to_continue_items.some(item => item === null) && (
+                    {select_or_create_to_continue_items.some(
+                      (item) => item === null
+                    ) && (
                       <div
                         className="flex flex-col h-screen items-center justify-center p-4"
                         style={{
@@ -545,9 +714,17 @@ const Layout = ({
 
                         <Breadcrumbs />
                         <p className="text-sm text-gray-600 text-center max-w-sm">
-                          <Highlight component="p" color="lime" highlight={select_or_create_to_continue_items_map[nullIndex] || ""}>
-                           {/* {JSON.stringify(`Create or select a ${select_or_create_to_continue_items_map[nullIndex]} to continue.`)} */}
-                          {message || ""}
+                          <Highlight
+                            component="p"
+                            color="lime"
+                            highlight={
+                              select_or_create_to_continue_items_map[
+                                nullIndex
+                              ] || ""
+                            }
+                          >
+                            {/* {JSON.stringify(`Create or select a ${select_or_create_to_continue_items_map[nullIndex]} to continue.`)} */}
+                            {message || ""}
                           </Highlight>
                           {/* {JSON.stringify(select_or_create_to_continue_items.map((item) => item?.id))}
                           {nullIndex}
@@ -624,12 +801,22 @@ const Layout = ({
                       defaultExpandedValues={["view"]}
                     /> */}
                     {/* plan accordion component */}
-                    {activeTask && (
+                    {/* {activeTask && (
                       <AccordionComponent
                         sections={planViewAccordionConfig}
                         activeTask={activeTask}
                         activeSession={activeSession}
                         defaultExpandedValues={[]}
+                      />
+                    )} */}
+                    {activeTask && activeView && activeSession && (
+                      <AccordionComponent
+                        sections={actionAccordionConfig}
+                        activeTask={activeTask}
+                        activeSession={activeSession}
+                        record={activeView}
+                        defaultExpandedValues={["view_modes"]}
+                        action="view_modes"
                       />
                     )}
                   </div>

@@ -9,7 +9,8 @@ import {
 import { useAppStore } from "src/store";
 
 function Breadcrumbs() {
-  const { activeApplication, activeSession, activeTask, activeView } = useAppStore();
+  const { activeApplication, activeSession, activeTask, activeView } =
+    useAppStore();
 
   // Build the breadcrumb items dynamically with tooltips
   const items = [];
@@ -80,7 +81,7 @@ function Breadcrumbs() {
           mt="xs"
           className="flex flex-wrap"
         >
-          State {breadcrumbItems}
+          state {breadcrumbItems}
         </MantineBreadcrumbs>
       </div>
     </div>

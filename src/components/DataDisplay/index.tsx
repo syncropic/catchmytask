@@ -91,6 +91,7 @@ export function DataDisplay<T extends Record<string, any>>({
   ui,
   action = "set_fields",
   display,
+  view_mode,
 }: DataDisplayComponentProps<T>) {
   // const { ref, width } = useElementSize();
   // const [isLarge, setIsLarge] = useState(true);
@@ -117,10 +118,9 @@ export function DataDisplay<T extends Record<string, any>>({
     error: viewError,
   } = useReadRecordByState(read_record_state);
 
-
   let viewRecord = viewData?.data?.find(
     (item: any) => item?.message?.code === activeView?.id
-  )?.data[0]
+  )?.data[0];
 
   const { tableColumns } = useTableColumns({
     field_configurations: data_fields?.map((nested_field: any) =>
@@ -217,10 +217,21 @@ export function DataDisplay<T extends Record<string, any>>({
   const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
   let action_input_form_values_key = `${action}_${actionInputId}`;
   // return board for action steps by default
-  if (display === "board") {
+  if (view_mode === "board") {
     return <Board data_fields={data_items}></Board>;
   }
-  if (display === "datagridview") {
+  if (view_mode === "json") {
+    return (
+      <MonacoEditor
+        value={{
+          data_items: data_items,
+        }}
+        language="json"
+        height="75vh"
+      />
+    );
+  }
+  if (view_mode === "datagrid") {
     return (
       <>
         <DataGridView
@@ -269,7 +280,14 @@ export function DataDisplay<T extends Record<string, any>>({
         language="json"
         height="75vh"
       /> */}
-      <TableView
+      <MonacoEditor
+        value={{
+          data_items: data_items,
+        }}
+        language="json"
+        height="75vh"
+      />
+      {/* <TableView
         isLoadingDataItems={isLoadingDataItems ?? false}
         data_fields={
           sortedRecords[`${action_input_form_values_key}`]
@@ -289,7 +307,7 @@ export function DataDisplay<T extends Record<string, any>>({
         setSorting={setSorting}
         sorting={sorting}
         ui={ui || {}}
-      />
+      /> */}
     </>
   );
 }

@@ -9,7 +9,14 @@ import ViewPayment from "@components/ViewPayment";
 import ViewTask from "@components/ViewTask";
 import ViewTestRun from "@components/ViewTestRun";
 import ViewTrip from "@components/ViewTrip";
-import { ComponentKey, NavigateOnSelect, QueryResult, SQLFilter, SQLTemplateOptions, SQLValueType } from "@components/interfaces";
+import {
+  ComponentKey,
+  NavigateOnSelect,
+  QueryResult,
+  SQLFilter,
+  SQLTemplateOptions,
+  SQLValueType,
+} from "@components/interfaces";
 import { CellStyle } from "@silevis/reactgrid";
 import { useNavigation as useNavigationRefine } from "@refinedev/core";
 // import config from "src/config";
@@ -614,8 +621,9 @@ export function useActivateSection() {
 export function useSearchFilters() {
   const { activeView, activeTask, action_input_form_values } = useAppStore();
   const search_action_input_form_values_key = `search_${activeView?.id}`;
-  const search_action_input_form_values = action_input_form_values[`${search_action_input_form_values_key}`]
-  let searchFilters = search_action_input_form_values
+  const search_action_input_form_values =
+    action_input_form_values[`${search_action_input_form_values_key}`];
+  let searchFilters = search_action_input_form_values;
   // const activateSection = (section: string) => {
   //   if (activeLayout) {
   //     const newLayout = { ...activeLayout };
@@ -2696,59 +2704,62 @@ export function useSessionNavigation() {
 export function useNavigation() {
   const go = useGo();
   const { push } = useNavigationRefine();
-  
+
   // Use selectors to get the latest state
   // const activeApplication = useAppStore(state => state.activeApplication);
   // const activeSession = useAppStore(state => state.activeSession);
   // const activeTask = useAppStore(state => state.activeTask);
   // const activeView = useAppStore(state => state.activeView);
 
-  const navigate = useCallback((navigateOnSelect: NavigateOnSelect) => {
-    // Get the current state at the time of navigation
-    const state = useAppStore.getState();
-    const { activeApplication, activeSession, activeTask, activeView } = state;
+  const navigate = useCallback(
+    (navigateOnSelect: NavigateOnSelect) => {
+      // Get the current state at the time of navigation
+      const state = useAppStore.getState();
+      const { activeApplication, activeSession, activeTask, activeView } =
+        state;
 
-    // These will always have the latest values
-    const resourceRecordMap = {
-      tasks: activeTask,
-      views: activeView,
-      sessions: activeSession,
-      applications: activeApplication,
-      home: activeApplication,
-    };
+      // These will always have the latest values
+      const resourceRecordMap = {
+        tasks: activeTask,
+        views: activeView,
+        sessions: activeSession,
+        applications: activeApplication,
+        home: activeApplication,
+      };
 
-    console.log("navigateOnSelect", navigateOnSelect);
-    let resourceRecord = resourceRecordMap[navigateOnSelect?.resource];
-    console.log("resourceRecord", resourceRecord);
-    if (activeTask) {
-      go({
-        to: {
-          resource: navigateOnSelect?.resource,
-          action: "show",
-          id: activeTask?.id,
-          meta: {
+      console.log("navigateOnSelect", navigateOnSelect);
+      let resourceRecord = resourceRecordMap[navigateOnSelect?.resource];
+      console.log("resourceRecord", resourceRecord);
+      if (activeTask) {
+        go({
+          to: {
+            resource: navigateOnSelect?.resource,
+            action: "show",
+            id: activeTask?.id,
+            meta: {
+              applicationId: activeApplication?.id,
+              sessionId: activeSession?.id,
+              taskId: activeTask?.id,
+              ...(activeView && { viewId: activeView?.id }),
+            },
+          },
+          query: {
             applicationId: activeApplication?.id,
             sessionId: activeSession?.id,
-            taskId: activeTask?.id,
             ...(activeView && { viewId: activeView?.id }),
           },
-        },
-        query: {
-          applicationId: activeApplication?.id,
-          sessionId: activeSession?.id,
-          ...(activeView && { viewId: activeView?.id }),
-        },
-      });
-    } else {
-      go({
-        to: {
-          resource: "home",
-          action: "list",
-        },
-      });
-    }
-   
-  }, [go]);
+        });
+      } else {
+        go({
+          to: {
+            resource: "home",
+            action: "list",
+          },
+        });
+      }
+    },
+    [go]
+  );
 
   return navigate;
 }
@@ -2834,7 +2845,8 @@ export const iconMap: Record<string, React.ElementType> = {
   bulk_update: IconForms,
   assign: IconUserPlus,
   view: IconEye,
-  upload: IconUpload
+  upload: IconUpload,
+  view_modes: IconEye,
 };
 
 export const useDuckDBSchema = () => {
@@ -3304,33 +3316,30 @@ export const concatenateAliasedDataFields = (
   });
 };
 
-
 export function enrichFilters(filters: any[], dataObject: any) {
   return filters?.map((filter: any) => {
-      // Deep clone the filter to avoid modifying the original
-      const enrichedFilter = { ...filter };
-      
-      // Get value from data object for the specified name
-      const value = dataObject?.[filter.name];
-      
-      // Add the value to the filter
-      enrichedFilter.value = value;
-      
-      return enrichedFilter;
+    // Deep clone the filter to avoid modifying the original
+    const enrichedFilter = { ...filter };
+
+    // Get value from data object for the specified name
+    const value = dataObject?.[filter.name];
+
+    // Add the value to the filter
+    enrichedFilter.value = value;
+
+    return enrichedFilter;
   });
 }
-
-
 
 export const isEmptyOrNull = (value: any): boolean => {
   if (value === null || value === undefined) {
     return true;
   }
-  
-  if (typeof value === 'string' && value.trim() === '') {
+
+  if (typeof value === "string" && value.trim() === "") {
     return true;
   }
-  
+
   return false;
 };
 
@@ -3343,9 +3352,9 @@ export const formatDateValue = (value: any): string => {
   try {
     const date = new Date(value);
     if (isNaN(date.getTime())) {
-      throw new Error('Invalid date');
+      throw new Error("Invalid date");
     }
-    return `DATE '${date.toISOString().split('T')[0]}'`;
+    return `DATE '${date.toISOString().split("T")[0]}'`;
   } catch (error) {
     throw new Error(`Invalid date value: ${value}`);
   }
@@ -3360,7 +3369,7 @@ export const formatNumberValue = (value: any): string => {
 };
 
 export const formatBooleanValue = (value: any): string => {
-  return Boolean(value) ? 'TRUE' : 'FALSE';
+  return Boolean(value) ? "TRUE" : "FALSE";
 };
 
 export const formatStringValue = (value: string): string => {
@@ -3368,40 +3377,42 @@ export const formatStringValue = (value: string): string => {
 };
 
 export const guessValueType = (value: any): SQLValueType => {
-  if (value === null || value === undefined) return 'string';
-  if (value instanceof Date) return 'date';
-  if (typeof value === 'number') return 'number';
-  if (typeof value === 'boolean') return 'boolean';
-  
+  if (value === null || value === undefined) return "string";
+  if (value instanceof Date) return "date";
+  if (typeof value === "number") return "number";
+  if (typeof value === "boolean") return "boolean";
+
   const dateStr = String(value);
   if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
     try {
       const date = new Date(dateStr);
-      if (!isNaN(date.getTime())) return 'date';
+      if (!isNaN(date.getTime())) return "date";
     } catch (e) {}
   }
-  
-  return 'string';
+
+  return "string";
 };
 
 export const sanitizeFilters = (filters: any[]): SQLFilter[] => {
   return filters
-    ?.filter(filter => filter && typeof filter.name === 'string' && filter.operation)
-    ?.map(filter => ({
+    ?.filter(
+      (filter) => filter && typeof filter.name === "string" && filter.operation
+    )
+    ?.map((filter) => ({
       name: filter.name.trim(),
       operation: filter.operation.trim(),
       value: filter.value,
-      type: filter.type || guessValueType(filter.value)
+      type: filter.type || guessValueType(filter.value),
     }));
 };
 
 const formatSQLValue = (value: any, type?: string): string => {
   switch (type?.toLowerCase()) {
-    case 'date':
+    case "date":
       return formatDateValue(value);
-    case 'number':
+    case "number":
       return formatNumberValue(value);
-    case 'boolean':
+    case "boolean":
       return formatBooleanValue(value);
     default:
       return formatStringValue(value);
@@ -3417,9 +3428,9 @@ const buildComparisonClause = (
   }
 
   const column = formatSQLIdentifier(filter.name);
-  
-  if (filter.operation.toUpperCase() === 'LIKE') {
-    const value = formatSQLValue(filter.value, 'string');
+
+  if (filter.operation.toUpperCase() === "LIKE") {
+    const value = formatSQLValue(filter.value, "string");
     return options.caseSensitive
       ? `${column} LIKE ${value}`
       : `LOWER(${column}) LIKE LOWER(${value})`;
@@ -3434,12 +3445,12 @@ const buildWhereClause = (
   options: SQLTemplateOptions
 ): string => {
   if (!filters || filters.length === 0) {
-    return '';
+    return "";
   }
 
   const conditions = filters
-    .filter(filter => filter.name && filter.operation)
-    .map(filter => {
+    .filter((filter) => filter.name && filter.operation)
+    .map((filter) => {
       try {
         return buildComparisonClause(filter, options);
       } catch (error) {
@@ -3448,9 +3459,9 @@ const buildWhereClause = (
       }
     })
     .filter((condition): condition is string => condition !== null)
-    .join(' AND ');
+    .join(" AND ");
 
-  return conditions ? `WHERE ${conditions}` : '';
+  return conditions ? `WHERE ${conditions}` : "";
 };
 
 export const buildSQLQuery = (
@@ -3460,16 +3471,1054 @@ export const buildSQLQuery = (
 ): QueryResult => {
   try {
     const whereClause = buildWhereClause(filters, options);
-    
-    const query = sqlTemplate.toLowerCase().includes('where')
-      ? sqlTemplate.replace('{{filters}}', whereClause.replace('WHERE', 'AND'))
-      : sqlTemplate.replace('{{filters}}', whereClause);
+
+    const query = sqlTemplate.toLowerCase().includes("where")
+      ? sqlTemplate.replace("{{filters}}", whereClause.replace("WHERE", "AND"))
+      : sqlTemplate.replace("{{filters}}", whereClause);
 
     return { query };
   } catch (error) {
     return {
       query: sqlTemplate,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
+      error: error instanceof Error ? error.message : "Unknown error occurred",
     };
   }
 };
+
+export const formatRatio = (num: any, total: any) => `${num}/${total}`;
+
+export const formatPercentage = (num: any, total: any) =>
+  `${((num / total) * 100).toFixed(1)}%`;
+
+// types/reconciliation.ts
+
+// Base Types
+export interface BaseStats {
+  total: number;
+  matches: number;
+  mismatches: number;
+  missing: number;
+}
+
+export interface BaseBreakdown {
+  match: number;
+}
+
+// Breakdown Types
+// export interface StandardBreakdown extends BaseBreakdown {
+//   mismatch: number;
+//   missing: number;
+// }
+
+// First, let's update our types to include the cancelled_succeeded status
+interface StandardBreakdown {
+  match: number;
+  mismatch: number;
+  missing: number;
+  cancelled_succeeded?: number; // Add this to handle cancelled but succeeded payments
+}
+
+export interface PaymentBreakdown extends BaseBreakdown {
+  high_negative_difference: number;
+  low_negative_difference: number;
+  low_positive_difference: number;
+  high_positive_difference: number;
+}
+
+// Stats Types
+export interface BaseStatsWithBreakdown<T extends BaseBreakdown>
+  extends BaseStats {
+  breakdown: T;
+}
+
+export interface PaymentStats extends BaseStatsWithBreakdown<PaymentBreakdown> {
+  totalExpectedAmount: number;
+  totalCapturedAmount: number;
+}
+
+export interface StandardStats
+  extends BaseStatsWithBreakdown<StandardBreakdown> {}
+
+// Supplier Entry Types
+export interface BaseSupplierEntry {
+  name: string;
+  matches: number;
+  total: number;
+  missing: number;
+}
+
+export interface SupplierEntryWithBreakdown<T extends BaseBreakdown>
+  extends BaseSupplierEntry {
+  breakdown: T;
+}
+
+export interface PaymentSupplierEntry
+  extends SupplierEntryWithBreakdown<PaymentBreakdown> {
+  totalExpectedAmount: number;
+  totalCapturedAmount: number;
+}
+
+// Matrix Types
+export interface BaseTotals {
+  matches: number;
+  total: number;
+  missing: number;
+}
+
+export interface TotalsWithBreakdown<T extends BaseBreakdown>
+  extends BaseTotals {
+  breakdown: T;
+}
+
+export interface BaseMatrix<S extends BaseSupplierEntry, T extends BaseTotals> {
+  suppliers: S[];
+  totals: T;
+}
+
+export interface StandardMatrix
+  extends BaseMatrix<
+    SupplierEntryWithBreakdown<StandardBreakdown>,
+    TotalsWithBreakdown<StandardBreakdown>
+  > {}
+
+export interface PaymentMatrix
+  extends BaseMatrix<
+    PaymentSupplierEntry,
+    TotalsWithBreakdown<PaymentBreakdown>
+  > {}
+
+// Supplier Stats Types
+export interface PaymentSupplierStats {
+  payment: PaymentStats;
+  status: StandardStats;
+  individualCosts: BaseStatsWithBreakdown<PaymentBreakdown>;
+}
+
+export interface StandardSupplierStats {
+  cost: StandardStats;
+  status: StandardStats;
+}
+
+// Result Types
+export interface PaymentReconciliationResult {
+  paymentMatrix: PaymentMatrix;
+  statusMatrix: StandardMatrix;
+  individualCostsMatrix: BaseMatrix<
+    SupplierEntryWithBreakdown<PaymentBreakdown>,
+    TotalsWithBreakdown<PaymentBreakdown>
+  >;
+}
+
+export interface StandardReconciliationResult {
+  costMatrix: StandardMatrix;
+  statusMatrix: StandardMatrix;
+}
+
+// Input Types
+export interface BaseBookingData {
+  sst_supplier_name: string;
+  [key: string]: any;
+}
+
+export interface StandardBookingData extends BaseBookingData {
+  supplier_cost_comparison: string | null;
+  supplier_status_comparison: string | null;
+}
+
+export interface PaymentBookingData extends BaseBookingData {
+  payment_amount_usd_comparison: string | null;
+  payment_status_comparison: string | null;
+  individual_costs_and_final_usd_comparison: string | null;
+  sst_final_selling_price_usd?: number;
+  payment_amount_captured_usd_total?: number;
+}
+
+// Processing Function Types
+export type ProcessReconciliationData = (
+  bookings: any[]
+) => StandardReconciliationResult;
+export type ProcessPaymentReconciliationData = (
+  bookings: any[]
+) => PaymentReconciliationResult;
+
+// Component Props Types
+export interface BaseReconciliationProps {
+  type: "supplier" | "payment";
+}
+
+export interface StandardReconciliationProps extends BaseReconciliationProps {
+  type: "supplier";
+  costData: StandardMatrix;
+  statusData: StandardMatrix;
+}
+
+export interface PaymentReconciliationProps extends BaseReconciliationProps {
+  type: "payment";
+  costData: PaymentMatrix;
+  statusData: StandardMatrix;
+  individualCostsData: PaymentMatrix;
+}
+
+export type ReconciliationProps =
+  | StandardReconciliationProps
+  | PaymentReconciliationProps;
+
+// First, let's ensure our type guard is more specific
+interface HasPaymentAmounts {
+  totalExpectedAmount: number;
+  totalCapturedAmount: number;
+}
+
+// Update PaymentSupplierEntry to implement HasPaymentAmounts
+export interface PaymentSupplierEntry
+  extends SupplierEntryWithBreakdown<PaymentBreakdown>,
+    HasPaymentAmounts {}
+
+// Create type guard helpers
+// const hasPaymentAmounts = (obj: any): obj is HasPaymentAmounts => {
+//   return "totalExpectedAmount" in obj && "totalCapturedAmount" in obj;
+// };
+
+// const isPaymentSupplierEntry = (
+//   supplier: SupplierEntryWithBreakdown<StandardBreakdown> | PaymentSupplierEntry
+// ): supplier is PaymentSupplierEntry => {
+//   return hasPaymentAmounts(supplier);
+// };
+
+// Update the matrix type guard
+// const isPaymentMatrix = (
+//   matrix: StandardMatrix | PaymentMatrix,
+//   type: "payment" | "status"
+// ): matrix is PaymentMatrix => {
+//   if (type !== "payment") return false;
+
+//   // Check if all suppliers have payment amounts
+//   return matrix.suppliers.every(isPaymentSupplierEntry);
+// };
+
+// const processReconciliationData = (bookings: any[]): ReconciliationResult => {
+//   // Initialize the data structure
+//   const supplierStats: { [key: string]: SupplierStats } = {};
+//   let totalStats = {
+//     cost: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     status: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//   };
+
+//   // Process each booking
+//   bookings.forEach((booking: BookingData) => {
+//     const supplierName = booking.sst_supplier_name;
+
+//     // Initialize supplier if not exists
+//     if (!supplierStats[supplierName]) {
+//       supplierStats[supplierName] = {
+//         cost: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//         status: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//       };
+//     }
+
+//     // Process Cost Comparison
+//     supplierStats[supplierName].cost.total++;
+//     totalStats.cost.total++;
+
+//     if (booking.supplier_cost_comparison === null) {
+//       supplierStats[supplierName].cost.missing++;
+//       supplierStats[supplierName].cost.breakdown.missing++;
+//       totalStats.cost.missing++;
+//     } else if (booking.supplier_cost_comparison === "match") {
+//       supplierStats[supplierName].cost.matches++;
+//       supplierStats[supplierName].cost.breakdown.match++;
+//       totalStats.cost.matches++;
+//     } else {
+//       supplierStats[supplierName].cost.mismatches++;
+//       supplierStats[supplierName].cost.breakdown.mismatch++;
+//       totalStats.cost.mismatches++;
+//     }
+
+//     // Process Status Comparison
+//     supplierStats[supplierName].status.total++;
+//     totalStats.status.total++;
+
+//     if (booking.supplier_status_comparison === null) {
+//       supplierStats[supplierName].status.missing++;
+//       supplierStats[supplierName].status.breakdown.missing++;
+//       totalStats.status.missing++;
+//     } else if (booking.supplier_status_comparison === "match") {
+//       supplierStats[supplierName].status.matches++;
+//       supplierStats[supplierName].status.breakdown.match++;
+//       totalStats.status.matches++;
+//     } else {
+//       supplierStats[supplierName].status.mismatches++;
+//       supplierStats[supplierName].status.breakdown.mismatch++;
+//       totalStats.status.mismatches++;
+//     }
+//   });
+
+//   // Transform into final format
+//   const result: ReconciliationResult = {
+//     costMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.cost.matches,
+//         total: stats.cost.total,
+//         missing: stats.cost.missing,
+//         breakdown: stats.cost.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.cost.matches,
+//         total: totalStats.cost.total,
+//         missing: totalStats.cost.missing,
+//         breakdown: {
+//           match: totalStats.cost.matches,
+//           mismatch: totalStats.cost.mismatches,
+//           missing: totalStats.cost.missing,
+//         },
+//       },
+//     },
+//     statusMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.status.matches,
+//         total: stats.status.total,
+//         missing: stats.status.missing,
+//         breakdown: stats.status.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.status.matches,
+//         total: totalStats.status.total,
+//         missing: totalStats.status.missing,
+//         breakdown: {
+//           match: totalStats.status.matches,
+//           mismatch: totalStats.status.mismatches,
+//           missing: totalStats.status.missing,
+//         },
+//       },
+//     },
+//   };
+
+//   return result;
+// };
+
+// export default processReconciliationData;
+
+// // Minimal booking interface for type checking
+// // interface BookingData {
+// //   // sst_supplier_name: string;
+// //   // payment_amount_usd_comparison: string | null;
+// //   // payment_status_comparison: string | null;
+// //   // individual_costs_and_final_usd_comparison: string | null;
+// //   // sst_final_selling_price_usd?: number;
+// //   // payment_amount_captured_usd_total?: number;
+// //   [key: string]: any; // Allow any additional properties
+// // }
+
+// export const processPaymentReconciliationData = (
+//   bookings: any[]
+// ): ReconciliationResult => {
+//   // Initialize the data structure
+//   const supplierStats: { [key: string]: SupplierStats } = {};
+//   let totalStats = {
+//     payment: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     status: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     individualCosts: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//   };
+
+//   // Process each booking
+//   bookings.forEach((booking: any) => {
+//     const supplierName = booking.sst_supplier_name;
+
+//     // Initialize supplier if not exists
+//     if (!supplierStats[supplierName]) {
+//       supplierStats[supplierName] = {
+//         payment: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: {
+//             match: 0,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//           totalExpectedAmount: 0,
+//           totalCapturedAmount: 0,
+//         },
+//         status: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//         individualCosts: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: {
+//             match: 0,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//         },
+//       };
+//     }
+
+//     // Process Payment Amount Comparison
+//     supplierStats[supplierName].payment.total++;
+//     totalStats.payment.total++;
+//     supplierStats[supplierName].payment.totalExpectedAmount +=
+//       booking.sst_final_selling_price_usd || 0;
+//     supplierStats[supplierName].payment.totalCapturedAmount +=
+//       booking.payment_amount_captured_usd_total || 0;
+
+//     if (!booking.payment_amount_usd_comparison) {
+//       supplierStats[supplierName].payment.missing++;
+//       totalStats.payment.missing++;
+//     } else if (booking.payment_amount_usd_comparison === "match") {
+//       supplierStats[supplierName].payment.matches++;
+//       supplierStats[supplierName].payment.breakdown.match++;
+//       totalStats.payment.matches++;
+//     } else {
+//       supplierStats[supplierName].payment.mismatches++;
+//       supplierStats[supplierName].payment.breakdown[
+//         booking.payment_amount_usd_comparison as keyof PaymentBreakdown
+//       ]++;
+//       totalStats.payment.mismatches++;
+//     }
+
+//     // Process Payment Status Comparison
+//     supplierStats[supplierName].status.total++;
+//     totalStats.status.total++;
+
+//     if (!booking.payment_status_comparison) {
+//       supplierStats[supplierName].status.missing++;
+//       supplierStats[supplierName].status.breakdown.missing++;
+//       totalStats.status.missing++;
+//     } else if (booking.payment_status_comparison === "match") {
+//       supplierStats[supplierName].status.matches++;
+//       supplierStats[supplierName].status.breakdown.match++;
+//       totalStats.status.matches++;
+//     } else {
+//       supplierStats[supplierName].status.mismatches++;
+//       supplierStats[supplierName].status.breakdown.mismatch++;
+//       totalStats.status.mismatches++;
+//     }
+
+//     // Process Individual Costs Comparison
+//     supplierStats[supplierName].individualCosts.total++;
+//     totalStats.individualCosts.total++;
+
+//     if (!booking.individual_costs_and_final_usd_comparison) {
+//       supplierStats[supplierName].individualCosts.missing++;
+//       totalStats.individualCosts.missing++;
+//     } else if (booking.individual_costs_and_final_usd_comparison === "match") {
+//       supplierStats[supplierName].individualCosts.matches++;
+//       supplierStats[supplierName].individualCosts.breakdown.match++;
+//       totalStats.individualCosts.matches++;
+//     } else {
+//       supplierStats[supplierName].individualCosts.mismatches++;
+//       supplierStats[supplierName].individualCosts.breakdown[
+//         booking.individual_costs_and_final_usd_comparison as keyof PaymentBreakdown
+//       ]++;
+//       totalStats.individualCosts.mismatches++;
+//     }
+//   });
+
+//   // Transform into final format
+//   const result: ReconciliationResult = {
+//     paymentMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.payment.matches,
+//         total: stats.payment.total,
+//         missing: stats.payment.missing,
+//         breakdown: stats.payment.breakdown,
+//         totalExpectedAmount: stats.payment.totalExpectedAmount,
+//         totalCapturedAmount: stats.payment.totalCapturedAmount,
+//       })),
+//       totals: {
+//         matches: totalStats.payment.matches,
+//         total: totalStats.payment.total,
+//         missing: totalStats.payment.missing,
+//         breakdown: {
+//           match: totalStats.payment.matches,
+//           high_negative_difference: 0,
+//           low_negative_difference: 0,
+//           low_positive_difference: 0,
+//           high_positive_difference: 0,
+//         },
+//       },
+//     },
+//     statusMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.status.matches,
+//         total: stats.status.total,
+//         missing: stats.status.missing,
+//         breakdown: stats.status.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.status.matches,
+//         total: totalStats.status.total,
+//         missing: totalStats.status.missing,
+//         breakdown: {
+//           match: totalStats.status.matches,
+//           mismatch: totalStats.status.mismatches,
+//           missing: totalStats.status.missing,
+//         },
+//       },
+//     },
+//     individualCostsMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.individualCosts.matches,
+//         total: stats.individualCosts.total,
+//         missing: stats.individualCosts.missing,
+//         breakdown: stats.individualCosts.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.individualCosts.matches,
+//         total: totalStats.individualCosts.total,
+//         missing: totalStats.individualCosts.missing,
+//         breakdown: {
+//           match: totalStats.individualCosts.matches,
+//           high_negative_difference: 0,
+//           low_negative_difference: 0,
+//           low_positive_difference: 0,
+//           high_positive_difference: 0,
+//         },
+//       },
+//     },
+//   };
+
+//   return result;
+// };
+
+export const processReconciliationData: ProcessReconciliationData = (
+  bookings: any[]
+): StandardReconciliationResult => {
+  // Initialize the data structure
+  const supplierStats: Record<string, StandardSupplierStats> = {};
+  const totalStats = {
+    cost: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+    status: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+  };
+
+  // Process each booking
+  bookings.forEach((booking) => {
+    const supplierName = booking.sst_supplier_name;
+
+    // Initialize supplier if not exists
+    if (!supplierStats[supplierName]) {
+      supplierStats[supplierName] = {
+        cost: {
+          total: 0,
+          matches: 0,
+          mismatches: 0,
+          missing: 0,
+          breakdown: { match: 0, mismatch: 0, missing: 0 },
+        },
+        status: {
+          total: 0,
+          matches: 0,
+          mismatches: 0,
+          missing: 0,
+          breakdown: { match: 0, mismatch: 0, missing: 0 },
+        },
+      };
+    }
+
+    // Process Cost Comparison
+    supplierStats[supplierName].cost.total++;
+    totalStats.cost.total++;
+
+    if (booking.supplier_cost_comparison === null) {
+      supplierStats[supplierName].cost.missing++;
+      supplierStats[supplierName].cost.breakdown.missing++;
+      totalStats.cost.missing++;
+    } else if (booking.supplier_cost_comparison === "match") {
+      supplierStats[supplierName].cost.matches++;
+      supplierStats[supplierName].cost.breakdown.match++;
+      totalStats.cost.matches++;
+    } else {
+      supplierStats[supplierName].cost.mismatches++;
+      supplierStats[supplierName].cost.breakdown.mismatch++;
+      totalStats.cost.mismatches++;
+    }
+
+    // Process Status Comparison
+    supplierStats[supplierName].status.total++;
+    totalStats.status.total++;
+
+    if (booking.supplier_status_comparison === null) {
+      supplierStats[supplierName].status.missing++;
+      supplierStats[supplierName].status.breakdown.missing++;
+      totalStats.status.missing++;
+    } else if (booking.supplier_status_comparison === "match") {
+      supplierStats[supplierName].status.matches++;
+      supplierStats[supplierName].status.breakdown.match++;
+      totalStats.status.matches++;
+    } else {
+      supplierStats[supplierName].status.mismatches++;
+      supplierStats[supplierName].status.breakdown.mismatch++;
+      totalStats.status.mismatches++;
+    }
+  });
+
+  return {
+    costMatrix: {
+      suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+        name,
+        matches: stats.cost.matches,
+        total: stats.cost.total,
+        missing: stats.cost.missing,
+        breakdown: stats.cost.breakdown,
+      })),
+      totals: {
+        matches: totalStats.cost.matches,
+        total: totalStats.cost.total,
+        missing: totalStats.cost.missing,
+        breakdown: {
+          match: totalStats.cost.matches,
+          mismatch: totalStats.cost.mismatches,
+          missing: totalStats.cost.missing,
+        },
+      },
+    },
+    statusMatrix: {
+      suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+        name,
+        matches: stats.status.matches,
+        total: stats.status.total,
+        missing: stats.status.missing,
+        breakdown: stats.status.breakdown,
+      })),
+      totals: {
+        matches: totalStats.status.matches,
+        total: totalStats.status.total,
+        missing: totalStats.status.missing,
+        breakdown: {
+          match: totalStats.status.matches,
+          mismatch: totalStats.status.mismatches,
+          missing: totalStats.status.missing,
+        },
+      },
+    },
+  };
+};
+
+// export const processPaymentReconciliationData: ProcessPaymentReconciliationData =
+//   (bookings: any[]): PaymentReconciliationResult => {
+//     // Initialize the data structure
+//     const supplierStats: Record<string, PaymentSupplierStats> = {};
+//     const totalStats = {
+//       payment: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//       status: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//       individualCosts: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     };
+
+//     // Process each booking
+//     bookings.forEach((booking) => {
+//       const supplierName = booking.sst_supplier_name;
+
+//       // Initialize supplier if not exists
+//       if (!supplierStats[supplierName]) {
+//         supplierStats[supplierName] = {
+//           payment: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: {
+//               match: 0,
+//               high_negative_difference: 0,
+//               low_negative_difference: 0,
+//               low_positive_difference: 0,
+//               high_positive_difference: 0,
+//             },
+//             totalExpectedAmount: 0,
+//             totalCapturedAmount: 0,
+//           },
+//           status: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: { match: 0, mismatch: 0, missing: 0 },
+//           },
+//           individualCosts: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: {
+//               match: 0,
+//               high_negative_difference: 0,
+//               low_negative_difference: 0,
+//               low_positive_difference: 0,
+//               high_positive_difference: 0,
+//             },
+//           },
+//         };
+//       }
+
+//       // Process Payment Amount Comparison
+//       const payment = supplierStats[supplierName].payment;
+//       payment.total++;
+//       totalStats.payment.total++;
+//       payment.totalExpectedAmount += booking.sst_final_selling_price_usd || 0;
+//       payment.totalCapturedAmount +=
+//         booking.payment_amount_captured_usd_total || 0;
+
+//       if (!booking.payment_amount_usd_comparison) {
+//         payment.missing++;
+//         totalStats.payment.missing++;
+//       } else if (booking.payment_amount_usd_comparison === "match") {
+//         payment.matches++;
+//         payment.breakdown.match++;
+//         totalStats.payment.matches++;
+//       } else {
+//         payment.mismatches++;
+//         payment.breakdown[
+//           booking.payment_amount_usd_comparison as keyof PaymentBreakdown
+//         ]++;
+//         totalStats.payment.mismatches++;
+//       }
+
+//       // Process Payment Status Comparison
+//       const status = supplierStats[supplierName].status;
+//       status.total++;
+//       totalStats.status.total++;
+
+//       if (!booking.payment_status_comparison) {
+//         status.missing++;
+//         status.breakdown.missing++;
+//         totalStats.status.missing++;
+//       } else if (booking.payment_status_comparison === "match") {
+//         status.matches++;
+//         status.breakdown.match++;
+//         totalStats.status.matches++;
+//       } else {
+//         status.mismatches++;
+//         status.breakdown.mismatch++;
+//         totalStats.status.mismatches++;
+//       }
+
+//       // Process Individual Costs Comparison
+//       const costs = supplierStats[supplierName].individualCosts;
+//       costs.total++;
+//       totalStats.individualCosts.total++;
+
+//       if (!booking.individual_costs_and_final_usd_comparison) {
+//         costs.missing++;
+//         totalStats.individualCosts.missing++;
+//       } else if (
+//         booking.individual_costs_and_final_usd_comparison === "match"
+//       ) {
+//         costs.matches++;
+//         costs.breakdown.match++;
+//         totalStats.individualCosts.matches++;
+//       } else {
+//         costs.mismatches++;
+//         costs.breakdown[
+//           booking.individual_costs_and_final_usd_comparison as keyof PaymentBreakdown
+//         ]++;
+//         totalStats.individualCosts.mismatches++;
+//       }
+//     });
+
+//     return {
+//       paymentMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.payment.matches,
+//           total: stats.payment.total,
+//           missing: stats.payment.missing,
+//           breakdown: stats.payment.breakdown,
+//           totalExpectedAmount: stats.payment.totalExpectedAmount,
+//           totalCapturedAmount: stats.payment.totalCapturedAmount,
+//         })),
+//         totals: {
+//           matches: totalStats.payment.matches,
+//           total: totalStats.payment.total,
+//           missing: totalStats.payment.missing,
+//           breakdown: {
+//             match: totalStats.payment.matches,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//         },
+//       },
+//       statusMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.status.matches,
+//           total: stats.status.total,
+//           missing: stats.status.missing,
+//           breakdown: stats.status.breakdown,
+//         })),
+//         totals: {
+//           matches: totalStats.status.matches,
+//           total: totalStats.status.total,
+//           missing: totalStats.status.missing,
+//           breakdown: {
+//             match: totalStats.status.matches,
+//             mismatch: totalStats.status.mismatches,
+//             missing: totalStats.status.missing,
+//           },
+//         },
+//       },
+//       individualCostsMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.individualCosts.matches,
+//           total: stats.individualCosts.total,
+//           missing: stats.individualCosts.missing,
+//           breakdown: stats.individualCosts.breakdown,
+//         })),
+//         totals: {
+//           matches: totalStats.individualCosts.matches,
+//           total: totalStats.individualCosts.total,
+//           missing: totalStats.individualCosts.missing,
+//           breakdown: {
+//             match: totalStats.individualCosts.matches,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//         },
+//       },
+//     };
+//   };
+
+export const processPaymentReconciliationData: ProcessPaymentReconciliationData =
+  (bookings: any[]): PaymentReconciliationResult => {
+    const supplierStats: Record<string, PaymentSupplierStats> = {};
+    const totalStats = {
+      payment: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+      status: {
+        total: 0,
+        matches: 0,
+        mismatches: 0,
+        missing: 0,
+        cancelled_succeeded: 0,
+      },
+      individualCosts: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+    };
+
+    bookings.forEach((booking) => {
+      const supplierName = booking.sst_supplier_name;
+
+      // Initialize supplier if not exists
+      if (!supplierStats[supplierName]) {
+        supplierStats[supplierName] = {
+          payment: {
+            total: 0,
+            matches: 0,
+            mismatches: 0,
+            missing: 0,
+            breakdown: {
+              match: 0,
+              high_negative_difference: 0,
+              low_negative_difference: 0,
+              low_positive_difference: 0,
+              high_positive_difference: 0,
+            },
+            totalExpectedAmount: 0,
+            totalCapturedAmount: 0,
+          },
+          status: {
+            total: 0,
+            matches: 0,
+            mismatches: 0,
+            missing: 0,
+            breakdown: {
+              match: 0,
+              mismatch: 0,
+              missing: 0,
+              cancelled_succeeded: 0, // Add the new status type
+            },
+          },
+          individualCosts: {
+            total: 0,
+            matches: 0,
+            mismatches: 0,
+            missing: 0,
+            breakdown: {
+              match: 0,
+              high_negative_difference: 0,
+              low_negative_difference: 0,
+              low_positive_difference: 0,
+              high_positive_difference: 0,
+            },
+          },
+        };
+      }
+
+      // Process Payment Amount Comparison (unchanged)
+      const payment = supplierStats[supplierName].payment;
+      payment.total++;
+      totalStats.payment.total++;
+      payment.totalExpectedAmount += booking.sst_final_selling_price_usd || 0;
+      payment.totalCapturedAmount +=
+        booking.payment_amount_captured_usd_total || 0;
+
+      if (!booking.payment_amount_usd_comparison) {
+        payment.missing++;
+        totalStats.payment.missing++;
+      } else if (booking.payment_amount_usd_comparison === "match") {
+        payment.matches++;
+        payment.breakdown.match++;
+        totalStats.payment.matches++;
+      } else {
+        payment.mismatches++;
+        payment.breakdown[
+          booking.payment_amount_usd_comparison as keyof PaymentBreakdown
+        ]++;
+        totalStats.payment.mismatches++;
+      }
+
+      // Enhanced Payment Status Comparison
+      const status = supplierStats[supplierName].status;
+      status.total++;
+      totalStats.status.total++;
+
+      if (!booking.payment_status_comparison) {
+        status.missing++;
+        status.breakdown.missing++;
+        totalStats.status.missing++;
+      } else if (booking.payment_status_comparison === "match") {
+        status.matches++;
+        status.breakdown.match++;
+        totalStats.status.matches++;
+      } else if (booking.payment_status_comparison === "cancelled_succeeded") {
+        // Special handling for cancelled_succeeded status
+        status.breakdown.cancelled_succeeded =
+          (status.breakdown.cancelled_succeeded || 0) + 1;
+        totalStats.status.cancelled_succeeded++;
+        // We still count this as a mismatch for total counts
+        status.mismatches++;
+        totalStats.status.mismatches++;
+      } else {
+        status.mismatches++;
+        status.breakdown.mismatch++;
+        totalStats.status.mismatches++;
+      }
+
+      // Process Individual Costs Comparison (unchanged)
+      const costs = supplierStats[supplierName].individualCosts;
+      costs.total++;
+      totalStats.individualCosts.total++;
+
+      if (!booking.individual_costs_and_final_usd_comparison) {
+        costs.missing++;
+        totalStats.individualCosts.missing++;
+      } else if (
+        booking.individual_costs_and_final_usd_comparison === "match"
+      ) {
+        costs.matches++;
+        costs.breakdown.match++;
+        totalStats.individualCosts.matches++;
+      } else {
+        costs.mismatches++;
+        costs.breakdown[
+          booking.individual_costs_and_final_usd_comparison as keyof PaymentBreakdown
+        ]++;
+        totalStats.individualCosts.mismatches++;
+      }
+    });
+
+    return {
+      paymentMatrix: {
+        suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+          name,
+          matches: stats.payment.matches,
+          total: stats.payment.total,
+          missing: stats.payment.missing,
+          breakdown: stats.payment.breakdown,
+          totalExpectedAmount: stats.payment.totalExpectedAmount,
+          totalCapturedAmount: stats.payment.totalCapturedAmount,
+        })),
+        totals: {
+          matches: totalStats.payment.matches,
+          total: totalStats.payment.total,
+          missing: totalStats.payment.missing,
+          breakdown: {
+            match: totalStats.payment.matches,
+            high_negative_difference: 0,
+            low_negative_difference: 0,
+            low_positive_difference: 0,
+            high_positive_difference: 0,
+          },
+        },
+      },
+      statusMatrix: {
+        suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+          name,
+          matches: stats.status.matches,
+          total: stats.status.total,
+          missing: stats.status.missing,
+          breakdown: {
+            match: stats.status.breakdown.match,
+            mismatch: stats.status.breakdown.mismatch,
+            missing: stats.status.breakdown.missing,
+            cancelled_succeeded:
+              stats.status.breakdown.cancelled_succeeded || 0,
+          },
+        })),
+        totals: {
+          matches: totalStats.status.matches,
+          total: totalStats.status.total,
+          missing: totalStats.status.missing,
+          breakdown: {
+            match: totalStats.status.matches,
+            mismatch:
+              totalStats.status.mismatches -
+              totalStats.status.cancelled_succeeded,
+            missing: totalStats.status.missing,
+            cancelled_succeeded: totalStats.status.cancelled_succeeded,
+          },
+        },
+      },
+      individualCostsMatrix: {
+        suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+          name,
+          matches: stats.individualCosts.matches,
+          total: stats.individualCosts.total,
+          missing: stats.individualCosts.missing,
+          breakdown: stats.individualCosts.breakdown,
+        })),
+        totals: {
+          matches: totalStats.individualCosts.matches,
+          total: totalStats.individualCosts.total,
+          missing: totalStats.individualCosts.missing,
+          breakdown: {
+            match: totalStats.individualCosts.matches,
+            high_negative_difference: 0,
+            low_negative_difference: 0,
+            low_positive_difference: 0,
+            high_positive_difference: 0,
+          },
+        },
+      },
+    };
+  };

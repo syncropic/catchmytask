@@ -28,6 +28,8 @@ import PinActionStepsToggle from "@components/PinActionStepsToggle";
 import CustomTooltipComponent from "@components/CustomTooltipComponent";
 import ComponentsToolbar from "@components/ComponentsToolbar";
 import ExternalSubmitButton from "@components/SubmitButton";
+import { useViewportSize } from "@mantine/hooks";
+import SectionsToggle from "@components/SectionsToggle";
 
 interface HeaderComponentProps {
   authenticatedData?: any;
@@ -49,10 +51,11 @@ const LargeScreenHeader = ({
     setActiveLayout,
     activeTask,
     activeView,
-    focused_entities
+    focused_entities,
   } = useAppStore();
   const { updateComponentAction } = useUpdateComponentAction();
   let action = focused_entities[activeTask?.id]?.["action"];
+  const { width } = useViewportSize();
 
   // handle toggleDisplay
   const toggleDisplay = (section: string) => {
@@ -169,13 +172,16 @@ const LargeScreenHeader = ({
           />
         </div>
       )} */}
-       {authenticatedData?.authenticated &&activeTask && activeView && action && (
-              <ExternalSubmitButton
-                record={activeView}
-                entity_type="tasks"
-                action={action}
-              />
-            )}
+      {authenticatedData?.authenticated &&
+        activeTask &&
+        activeView &&
+        action && (
+          <ExternalSubmitButton
+            record={activeView}
+            entity_type="tasks"
+            action={action}
+          />
+        )}
 
       {/* {authenticatedData?.authenticated && activeTask && <AutomationsToggle />} */}
 
@@ -190,7 +196,11 @@ const LargeScreenHeader = ({
               transitionProps={{ duration: 200 }}
               label={getTooltipLabel(activeTask)}
             >
-              <Text size="sm" className="text-blue-500 whitespace-normal">
+              <Text
+                size="sm"
+                className="text-blue-500 truncate overflow-hidden whitespace-nowrap px-3"
+                style={{ maxWidth: width < 500 ? 100 : 500 }}
+              >
                 {getLabel(activeView)}
               </Text>
             </Tooltip>
@@ -201,7 +211,7 @@ const LargeScreenHeader = ({
       )}
 
       {authenticatedData?.authenticated && activeTask && activeView && (
-        <PinActionStepsToggle />
+        <SectionsToggle />
       )}
 
       {<UserMenu />}

@@ -83,10 +83,7 @@ export type ComponentKey =
   | "SearchInput"
   | "ListEditorFormInput";
 
-export type CellTemplateKey =
-  | "detail"
-  | "conditionallyformatted"
-  | "text"
+export type CellTemplateKey = "detail" | "conditionallyformatted" | "text";
 
 // export type IView = {
 //   resource_type: ComponentKey;
@@ -304,6 +301,7 @@ export interface DataDisplayComponentProps<T extends Record<string, any>> {
   // resource: string;
   // results?: any;
   display_mode?: any;
+  view_mode?: string;
   record?: any;
   entity_type?: string;
   // data_columns?: ColumnDef<RowData>[];
@@ -331,6 +329,48 @@ export interface DataDisplayComponentProps<T extends Record<string, any>> {
   //   tableInstance: MRT_TableInstance<T>,
   //   columnsConfig: ColumnConfig[] | null
   // ) => void;
+}
+
+export interface ChartDisplayComponentProps<T extends Record<string, any>> {
+  display_mode?: any;
+  view_mode?: string;
+  record?: any;
+  entity_type?: string;
+  isLoadingDataItems?: boolean;
+  ui?: Record<string, any>;
+  display?: string;
+  data_items: any[];
+  data_fields: T[];
+  action?: any;
+  resource_group?: string;
+}
+
+export interface SummariesDisplayComponentProps<T extends Record<string, any>> {
+  display_mode?: any;
+  view_mode?: string;
+  record?: any;
+  entity_type?: string;
+  isLoadingDataItems?: boolean;
+  ui?: Record<string, any>;
+  display?: string;
+  data_items: any[];
+  data_fields: T[];
+  action?: any;
+  resource_group?: string;
+}
+
+export interface CustomDisplayComponentProps<T extends Record<string, any>> {
+  display_mode?: any;
+  view_mode?: string;
+  record?: any;
+  entity_type?: string;
+  isLoadingDataItems?: boolean;
+  ui?: Record<string, any>;
+  display?: string;
+  data_items: any[];
+  data_fields: T[];
+  action?: any;
+  resource_group?: string;
 }
 
 export interface WebBrowserViewComponentProps<T extends Record<string, any>> {
@@ -1020,7 +1060,12 @@ export interface FilterItem {
 }
 
 // Add these new types to your existing interfaces file
-export type ResourceType = 'tasks' | 'views' | 'sessions' | 'applications' | 'home';
+export type ResourceType =
+  | "tasks"
+  | "views"
+  | "sessions"
+  | "applications"
+  | "home";
 
 export interface NavigateOnSelect {
   resource: ResourceType;
@@ -1096,7 +1141,7 @@ export interface DataModel {
 
 export interface DynamicFormProps {
   // data_model: DataModel["data_model"] | null;
-  data_model?: any,
+  data_model?: any;
   record?: any;
   action_steps?: any;
   execlude_components?: string[];
@@ -1127,8 +1172,7 @@ export interface AccordionSection {
   [key: string]: any; // Any extra dynamic properties for future extensions
 }
 
-
-export type SQLValueType = 'string' | 'number' | 'boolean' | 'date';
+export type SQLValueType = "string" | "number" | "boolean" | "date";
 
 export interface SQLFilter {
   name: string;
