@@ -33,7 +33,12 @@ export function AggregateActionStepResults({
   action_steps = [],
 }: AggregateActionStepResultsProps) {
   const dbInstance = useDuckDB(); // Get DuckDB instance
-  const { activeSections, activeView } = useAppStore(); // Zustand store access
+  const {
+    activeSections,
+    activeView,
+    activeMainCustomComponent,
+    activeSummaryCustomComponents,
+  } = useAppStore(); // Zustand store access
 
   const [fetchedSteps, setFetchedSteps] = useState<Record<string, boolean>>({});
   const [dataItems, setDataItems] = useState<[]>([]);
@@ -41,7 +46,7 @@ export function AggregateActionStepResults({
   const [isJoinInProgress, setIsJoinInProgress] = useState(false);
   const previousActionSteps = useRef(action_steps);
 
-  const search_action_input_form_values_key = `search_${activeView?.id}`;
+  const search_action_input_form_values_key = `query_${activeView?.id}`;
 
   const globalSearchQuery = useAppStore(
     (state) =>
@@ -294,15 +299,22 @@ export function AggregateActionStepResults({
         activeSections["summary"]?.isDisplayed && (
           <SummariesDisplay
             data_items={dataItems}
-            entity_type="action_step_results"
-            data_fields={view_record?.fields}
+            // data_fields={view_record?.fields}
           />
         )}
+      {/* {!isLoading &&
+        view_record?.fields &&
+        dataItems &&
+        activeSummaryCustomComponents?.[activeView?.id]?.map(
+          (item: any, index: any) => {
+            return <div key={index}>hello</div>;
+          }
+        )} */}
       {!isLoading && view_record?.fields && dataItems && (
         <DataDisplay
           data_items={dataItems}
           entity_type="action_step_results"
-          view_mode={view_modes_action_input_form_values?.main || "datagrid"}
+          view_mode={activeMainCustomComponent?.name || "datagrid"}
           data_fields={view_record?.fields}
         />
       )}

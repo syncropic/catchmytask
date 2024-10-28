@@ -5,6 +5,7 @@ import {
   extractIdentifier,
   extractLabelsFromDefaults,
   getComponentByResourceType,
+  inferDataTypes,
   sanitizeFilters,
   useFetchActionDataByName,
   useFetchActionStepDataByState,
@@ -160,69 +161,6 @@ async function excelToStandardizedJson(
   return jsonData;
 }
 
-// Type mapping similar to the Python version
-const typeMapping: { [key: string]: string } = {
-  number: "float",
-  bigint: "integer",
-  string: "string",
-  boolean: "boolean",
-  object: "object", // For nested objects or null
-  undefined: "unknown",
-};
-
-function inferDataTypes(
-  jsonData: any[]
-): { name: string; data_type: string }[] {
-  if (jsonData.length === 0) {
-    return [];
-  }
-
-  const columns = Object.keys(jsonData[0]);
-  const inferredTypes: { name: string; data_type: string }[] = [];
-
-  columns.forEach((column) => {
-    const nonNullValues = jsonData.filter((row) => row[column] != null);
-
-    if (nonNullValues.length === 0) {
-      inferredTypes.push({ name: column, data_type: "unknown" });
-    } else {
-      const types = new Set(nonNullValues.map((row) => typeof row[column]));
-
-      let inferredType: string;
-      if (types.size === 1) {
-        const type = types.values().next().value;
-        inferredType = typeMapping[type] || "unknown";
-      } else if (types.has("number")) {
-        // If mixed types but includes number, prefer number
-        inferredType = "float";
-      } else {
-        // For mixed types, default to string
-        inferredType = "string";
-      }
-
-      // Additional checks for more specific types
-      if (
-        inferredType === "float" &&
-        nonNullValues.every((row) => Number.isInteger(row[column]))
-      ) {
-        inferredType = "integer";
-      } else if (inferredType === "string") {
-        // Check for date strings
-        const isAllDates = nonNullValues.every(
-          (row) => !isNaN(Date.parse(row[column]))
-        );
-        if (isAllDates) {
-          inferredType = "datetime";
-        }
-      }
-
-      inferredTypes.push({ name: column, data_type: inferredType });
-    }
-  });
-
-  return inferredTypes;
-}
-
 export const ActionInputForm: React.FC<DynamicFormProps> = ({
   data_model,
   record = {},
@@ -298,6 +236,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     activeView,
     uploaded,
     setUploaded,
+    action_mode,
+    action_modes,
+    activeAgent,
+    activeSections,
   } = useAppStore();
 
   const identity_object = {
@@ -389,8 +331,13 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       }
       setFocusedEntities(new_focused_entities);
 
-      const specialActions = ["save", "upload"]; // List of special actions
-      const action_url = specialActions.includes(action) ? "execute" : action; // Check if action is in the list and replace if necessary
+      // const specialActions = ["save", "upload"]; // List of special actions
+      // const action_url = specialActions.includes(action) ? "execute" : action; // Check if action is in the list and replace if necessary
+      let action_url = action;
+      let agent_actions = ["search"];
+      if (agent_actions.includes(action)) {
+        action_url = "agent";
+      }
 
       // if action is not special then perform the following otherwise alert the action name
       if (action === "save") {
@@ -539,10 +486,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             //   active_view.fields.forEach((field: any) => {
             //   //   if (field.conditional_formatting) {
             //   //     const targetColumnIndex =
-            //   //       columnNames.indexOf(field.field_name) + 1; // Get the index of the field to apply formatting
+            //   //       columnNames.indexOf(field.name) + 1; // Get the index of the field to apply formatting
             //   //     const comparisonColumnIndex =
             //   //       columnNames.indexOf(
-            //   //         field.conditional_formatting.field_name
+            //   //         field.conditional_formatting.name
             //   //       ) + 1; // Get the index of the comparison field
 
             //   //     if (targetColumnIndex > 0 && comparisonColumnIndex > 0) {
@@ -584,11 +531,9 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
             record.fields.forEach((field: any) => {
               if (field.conditional_formatting) {
-                const targetColumnIndex =
-                  columnNames.indexOf(field.field_name) + 1; // Get the index of the field to apply formatting
+                const targetColumnIndex = columnNames.indexOf(field.name) + 1; // Get the index of the field to apply formatting
                 const comparisonColumnIndex =
-                  columnNames.indexOf(field.conditional_formatting.field_name) +
-                  1; // Get the index of the comparison field
+                  columnNames.indexOf(field.conditional_formatting.name) + 1; // Get the index of the comparison field
 
                 if (targetColumnIndex > 0 && comparisonColumnIndex > 0) {
                   worksheet.eachRow((row, rowNumber) => {
@@ -824,46 +769,40 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   name: action || activeAction?.name,
                 },
                 input_values: {
-                  ...value,
+                  // ...value,
                   action_input_form_values:
                     action_input_form_values[action_input_form_values_key] ||
                     {},
                 },
+                action_mode: {
+                  name: action_mode,
+                  id: "tasks:maigldp650smirgmie97",
+                  response_model: "ProposedSQLCodeResponse",
+                  entity_type: "sql",
+                },
+                action_modes: action_modes,
                 // credential: value?.credential || "surrealdb catchmytask dev",
                 // data_model: data_model,
                 application: {
                   id: activeApplication?.id,
                   name: activeApplication?.name,
+                  profile_id: activeApplication?.profile_id,
                 },
                 session: {
                   id: activeSession?.id,
                   name: activeSession?.name,
+                  profile_id: activeSession?.profile_id,
                 },
                 task: {
                   id: activeTask?.id,
                   name: activeTask?.name,
+                  profile_id: activeTask?.profile_id,
                 },
-                // task_variables: {},
-                // global_variables: {
-                //   ...global_variables,
-                // },
-                // include_execution_orders: [record?.execution_order || 1],
-                // include_execution_orders: include_execution_orders,
-                // action_steps: records || [
-                //   {
-                //     ...value,
-                //     execution_order: value?.execution_order || 1,
-                //     description: value?.description || "generic description",
-                //     name: value?.name || "generic name",
-                //     job: value?.description || "generic job",
-                //     method: value?.method || "select",
-                //     type: value?.type || "action_steps",
-                //     credential:
-                //       value?.credential || "surrealdb catchmytask dev",
-                //     implement: value?.implement,
-                //     success_message_code: success_message_code_selected,
-                //   },
-                // ],
+                view: {
+                  id: activeView?.id,
+                  name: activeView?.name,
+                  profile_id: activeView?.profile_id,
+                },
               },
             },
             {
@@ -1206,6 +1145,18 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     return dayjs(input, "DD/MM/YYYY").toDate();
   };
 
+  // Helper function to determine which fields to include based on action_mode
+  const getFieldsToInclude = (schema: any, action_mode: string) => {
+    if (action_mode === "default") {
+      return schema?.required || [];
+    }
+    return schema?.action_modes?.[action_mode] || [];
+  };
+
+  const setActiveAccordionSections = (items: any) => {
+    console.log(items);
+  };
+
   return (
     <>
       <form
@@ -1220,15 +1171,16 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         {/* <MonacoEditor
           value={{
             formId: formId,
-            action_input_form_values_key: action_input_form_values_key,
-            action: action,
-            include_items: include_items,
+            // action_input_form_values_key: action_input_form_values_key,
+            // action: action,
+            // include_items: include_items,
           }}
           language="json"
           height="25vh"
         /> */}
         {/* <MonacoEditor
           value={{
+            action_mode: action_mode,
             record: record,
             // data_model: data_model,
           }}
@@ -1241,29 +1193,104 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         {/* <div>{JSON.stringify(form?.store?.state.values)}</div> */}
         {/* <div>{JSON.stringify(form?.store?.state.values?.list_items)}</div> */}
 
-        <Accordion defaultValue={["main", "on local data"]} multiple={true}>
-          {Object.entries(
-            Object.keys(schema?.properties)
-              .sort((a, b) => {
-                const idA = parseInt(schema.properties[a]?.id, 10) || 0;
-                const idB = parseInt(schema.properties[b]?.id, 10) || 0;
-                return idA - idB;
-              })
-              .reduce((groups, key) => {
-                const group = schema.properties[key]?.group || "fields"; // Default group if no group key
-                if (!groups[group]) groups[group] = [];
-                groups[group].push(key);
-                return groups;
-              }, {} as Record<string, string[]>)
-          ).map(([groupName, groupFields]) => (
-            <Accordion.Item value={groupName} key={groupName}>
-              <Accordion.Control>{`${
-                data_model?.name || ""
-              } / ${groupName}`}</Accordion.Control>
-              <Accordion.Panel>
-                {groupFields
-                  .filter((key) => include_items.includes(key)) // Filter based on include_items state
-                  .map((key) => {
+        {activeAgent ? (
+          // Agent view - only show description field without accordion
+          (() => {
+            const key = "description";
+            // Ensure we have a valid string for the field name
+            const fieldName = schema.properties[key]?.title
+              ? schema.properties[key].title.toLowerCase().replace(/ /g, "_")
+              : "description"; // Fallback to "description" if title is undefined
+
+            const Component = getComponentByResourceType(
+              schema.properties[key]?.component as ComponentKey
+            );
+
+            if (!schema.properties[key]) {
+              return null; // Return null if the description field is not found in schema
+            }
+
+            return (
+              <div className="mb-4">
+                <form.Field name={fieldName}>
+                  {(field) => (
+                    <Component
+                      schema={schema.properties[key]}
+                      disabled={schema.properties[key]?.readOnly}
+                      label={
+                        schema.properties[key]?.label ||
+                        schema.properties[key]?.title
+                      }
+                      value={
+                        schema.properties[key]?.component === "DateInput" &&
+                        typeof field.state.value === "string"
+                          ? new Date(field.state.value)
+                          : field.state.value
+                      }
+                      onBlur={field.handleBlur}
+                      action_input_form_values_key={
+                        action_input_form_values_key
+                      }
+                      form_id={formId}
+                      record={record}
+                      onChange={
+                        [
+                          "NumberInput",
+                          "MonacoEditorFormInput",
+                          "NaturalLanguageEditorFormInput",
+                          "SearchInput",
+                          "DateInput",
+                          "MultiSelect",
+                          "Select",
+                          "FileInput",
+                        ].includes(schema.properties[key]?.component)
+                          ? field.handleChange
+                          : (e: any) => field.handleChange(e?.target?.value)
+                      }
+                      form={form}
+                      isLoading={mutationIsLoading}
+                      {...(schema.properties[key]?.props || {})}
+                      {...(schema.properties[key]?.component === "DateInput"
+                        ? { dateParser }
+                        : {})}
+                    />
+                  )}
+                </form.Field>
+              </div>
+            );
+          })()
+        ) : (
+          // Regular view - show all fields with accordion
+          <Accordion defaultValue={["main"]} multiple={true}>
+            {Object.entries(
+              Object.keys(schema?.properties)
+                .sort((a, b) => {
+                  const idA = parseInt(schema.properties[a]?.id, 10) || 0;
+                  const idB = parseInt(schema.properties[b]?.id, 10) || 0;
+                  return idA - idB;
+                })
+                .filter((key) => {
+                  const fieldsToInclude = getFieldsToInclude(
+                    schema,
+                    action_mode
+                  );
+                  return (
+                    include_items.includes(key) && fieldsToInclude.includes(key)
+                  );
+                })
+                .reduce((groups, key) => {
+                  const group = schema.properties[key]?.group || "fields";
+                  if (!groups[group]) groups[group] = [];
+                  groups[group].push(key);
+                  return groups;
+                }, {} as Record<string, string[]>)
+            ).map(([groupName, groupFields]) => (
+              <Accordion.Item value={groupName} key={groupName}>
+                <Accordion.Control>{`${
+                  data_model?.name || ""
+                } / ${groupName}`}</Accordion.Control>
+                <Accordion.Panel>
+                  {groupFields.map((key) => {
                     const fieldName = schema.properties[key]?.title
                       .toLowerCase()
                       .replace(/ /g, "_");
@@ -1281,12 +1308,11 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                                     if (value) {
                                       const error =
                                         await debouncedValidationPromise(value);
-                                      // Assuming `debouncedValidationPromise` returns an error string if there's an issue
                                       if (error) {
-                                        return error as ValidationError; // Ensure the returned error is a valid ValidationError type
+                                        return error as ValidationError;
                                       }
                                     }
-                                    return undefined; // No error
+                                    return undefined;
                                   },
                                 }
                               : undefined
@@ -1294,11 +1320,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                         >
                           {(field) => (
                             <>
-                              {/* <div>
-                                {JSON.stringify(
-                                  form?.store?.state.values?.[key]
-                                )}
-                              </div> */}
                               <Component
                                 schema={schema.properties[key]}
                                 disabled={schema.properties[key]?.readOnly}
@@ -1310,7 +1331,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                                   schema.properties[key]?.component ===
                                     "DateInput" &&
                                   typeof field.state.value === "string"
-                                    ? new Date(field.state.value) // Convert ISO string to Date
+                                    ? new Date(field.state.value)
                                     : field.state.value
                                 }
                                 onBlur={field.handleBlur}
@@ -1336,7 +1357,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                                 }
                                 form={form}
                                 isLoading={mutationIsLoading}
-                                // Spread additional props dynamically based on the component type
                                 {...(schema.properties[key]?.props || {})}
                                 {...(schema.properties[key]?.component ===
                                 "DateInput"
@@ -1346,18 +1366,17 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                               {fieldName === "query" && (
                                 <FieldInfo field={field} />
                               )}
-
-                              {/* <div>fieldinfo here</div> */}
                             </>
                           )}
                         </form.Field>
                       </div>
                     );
                   })}
-              </Accordion.Panel>
-            </Accordion.Item>
-          ))}
-        </Accordion>
+                </Accordion.Panel>
+              </Accordion.Item>
+            ))}
+          </Accordion>
+        )}
       </form>
       {/* <div>{JSON.stringify(mutationError)}</div> */}
       {/* <div>{JSON.stringify(mutationData)}</div> */}

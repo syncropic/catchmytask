@@ -24,7 +24,7 @@ export function StateView() {
       <SearchInput
         placeholder="Search for applications"
         description="applications"
-        value={activeApplication?.name || ""}
+        value={activeApplication?.id || ""}
         disabled={activeApplication?.disabled_sections?.includes(
           "select_application"
         )}
@@ -43,11 +43,11 @@ export function StateView() {
         placeholder="Search for sessions"
         description="sessions"
         handleOptionSubmit={setActiveSession}
-        value={activeSession?.name || ""}
+        value={activeSession?.id || ""}
         disabled={activeApplication?.disabled_sections?.includes(
           "select_session"
         )}
-        include_action_icons={["remove_from_state"]}
+        include_action_icons={[]}
         activeFilters={[
           {
             id: 1,
@@ -63,12 +63,8 @@ export function StateView() {
         placeholder="Search for tasks"
         description="tasks"
         handleOptionSubmit={setActiveTask}
-        value={activeTask?.name || ""}
-        include_action_icons={[
-          "remove_from_state",
-          "add_new_item",
-          "dublicate",
-        ]}
+        value={activeTask?.id || ""}
+        include_action_icons={[]}
         navigateOnSelect={{ resource: "tasks" }}
         navigateOnClear={{ resource: "home" }}
         activeFilters={[
@@ -85,12 +81,8 @@ export function StateView() {
         placeholder="Search for views"
         description="views"
         handleOptionSubmit={setActiveView}
-        value={activeView?.name || ""}
-        include_action_icons={[
-          "remove_from_state",
-          "add_new_item",
-          "dublicate",
-        ]}
+        value={activeView?.id || ""}
+        include_action_icons={["info"]}
         navigateOnSelect={{ resource: "views" }}
         navigateOnClear={{ resource: "home" }}
         activeFilters={[

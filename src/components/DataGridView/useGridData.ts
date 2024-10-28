@@ -1,6 +1,18 @@
-import { Row, Column, TextCell, DateCell, Id, CellStyle, DefaultCellTypes } from "@silevis/reactgrid";
+import {
+  Row,
+  Column,
+  TextCell,
+  DateCell,
+  Id,
+  CellStyle,
+  DefaultCellTypes,
+} from "@silevis/reactgrid";
 import { useEffect, useState } from "react";
-import { cellTemplateMap, getReactGridCellStyle, useReadRecordByState } from "@components/Utils";
+import {
+  cellTemplateMap,
+  getReactGridCellStyle,
+  useReadRecordByState,
+} from "@components/Utils";
 
 interface DataField {
   name: string;
@@ -13,12 +25,12 @@ interface FormattingRule {
 }
 
 interface ConditionalFormatting {
-  field_name: string;
+  name: string;
   rules: FormattingRule[];
 }
 
 interface ViewField {
-  field_name: string;
+  name: string;
   conditional_formatting?: ConditionalFormatting;
 }
 
@@ -31,8 +43,14 @@ interface AppState {
   activeTemplateRecord: { name?: string } | null;
 }
 
-function getActiveFormattingRules(fieldName: string, view_record: any): ConditionalFormatting | null {
-  return view_record?.fields.find((f: any) => f.field_name === fieldName)?.conditional_formatting || null;
+function getActiveFormattingRules(
+  fieldName: string,
+  view_record: any
+): ConditionalFormatting | null {
+  return (
+    view_record?.fields.find((f: any) => f.name === fieldName)
+      ?.conditional_formatting || null
+  );
 }
 
 function applyConditionalFormatting(
@@ -43,7 +61,7 @@ function applyConditionalFormatting(
   const rules = getActiveFormattingRules(fieldName, view_record);
   if (!rules) return { className: "", style: {} };
 
-  const comparisonValue = String(record[rules.field_name]).toLowerCase().trim();
+  const comparisonValue = String(record[rules.name]).toLowerCase().trim();
   const matchingRule = rules.rules.find(
     (rule) => String(rule.value).toLowerCase().trim() === comparisonValue
   );
@@ -56,7 +74,11 @@ function applyConditionalFormatting(
   return { className: "", style: {} };
 }
 
-export function useGridData(data_items: any[], data_fields: DataField[], view_record: any) {
+export function useGridData(
+  data_items: any[],
+  data_fields: DataField[],
+  view_record: any
+) {
   const [rows, setRows] = useState<Row[]>([]);
   const [columns, setColumns] = useState<Column[]>([]);
 
@@ -84,14 +106,13 @@ export function useGridData(data_items: any[], data_fields: DataField[], view_re
   const headerRow: Row = {
     rowId: "header",
     cells: [
-      ...data_fields
-            ?.map((field) => {
-              return {
-                type: "header" as const,
-                text: field?.name,
-              };
-            })
-    ]
+      ...data_fields?.map((field) => {
+        return {
+          type: "header" as const,
+          text: field?.name,
+        };
+      }),
+    ],
   };
 
   // const headerRow: Row = {
@@ -102,25 +123,31 @@ export function useGridData(data_items: any[], data_fields: DataField[], view_re
   //   ]
   // };
 
-  const generateRows = (headerRow: any, data_items: any[], view_record: any): Row[] => [
+  const generateRows = (
+    headerRow: any,
+    data_items: any[],
+    view_record: any
+  ): Row[] => [
     headerRow,
-    ...data_items
-      .map<Row>((record, idx) => ({
-        rowId: idx,
-        cells: [
-          ...data_fields
-            .map((field) => {
-              const { className, style } = applyConditionalFormatting(
-                field?.name,
-                record,
-                view_record
-              );
-              // console.log(field?.name, className, style)
-              return createCell(field, record, className, style) as DefaultCellTypes;
-              
-            })
-        ],
-      })),
+    ...data_items.map<Row>((record, idx) => ({
+      rowId: idx,
+      cells: [
+        ...data_fields.map((field) => {
+          const { className, style } = applyConditionalFormatting(
+            field?.name,
+            record,
+            view_record
+          );
+          // console.log(field?.name, className, style)
+          return createCell(
+            field,
+            record,
+            className,
+            style
+          ) as DefaultCellTypes;
+        }),
+      ],
+    })),
   ];
 
   useEffect(() => {
@@ -171,7 +198,7 @@ export function createCell(
         value: Number(record[field?.name]),
         className,
         style,
-      }
+      };
     default:
       return {
         type: "text",
@@ -181,4 +208,3 @@ export function createCell(
       };
   }
 }
-

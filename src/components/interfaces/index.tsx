@@ -277,7 +277,7 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   data_items?: any[];
   nested_data_items?: T[];
   record?: any;
-  resource_group: string;
+  resource_group?: string;
   execlude_components?: string[];
   // view_data: any;
   // data_columns: T[];
@@ -321,6 +321,43 @@ export interface DataDisplayComponentProps<T extends Record<string, any>> {
   data_fields: T[];
   action?: any;
   resource_group?: string;
+  // invalidate_queries_on_submit_success?: string[];
+  // session?: ISession;
+  // // initialStateColumnPinningLeft: string[];
+  // customTableConfig?: any;
+  // updateTableVisibility: (
+  //   tableInstance: MRT_TableInstance<T>,
+  //   columnsConfig: ColumnConfig[] | null
+  // ) => void;
+}
+
+export interface DocumentationComponentProps<T extends Record<string, any>> {
+  activeFilters?: FilterItem[];
+  // data_columns: any[]; // Define more specific type if possible
+  // item: IView;
+  // resource: string;
+  // results?: any;
+  // display_mode?: any;
+  view_mode?: string;
+  // record?: any;
+  // entity_type?: string;
+  // // data_columns?: ColumnDef<RowData>[];
+  // isLoadingDataItems?: boolean;
+  // // read_write_mode?: string;
+  // ui?: Record<string, any>;
+  // // data_columns: ColumnDef<RowData>[];
+  // // name?: string;
+  // // tableInstance?: TanStackTable<T>;
+  // display?: string;
+  // data_items: any[];
+  // // record?: any;
+  // // resource_group: string;
+  // // execlude_components?: string[];
+  // // view_data: any;
+  // // data_columns: T[];
+  // data_fields: T[];
+  // action?: any;
+  // resource_group?: string;
   // invalidate_queries_on_submit_success?: string[];
   // session?: ISession;
   // // initialStateColumnPinningLeft: string[];
@@ -1057,6 +1094,7 @@ export interface FilterItem {
   description: string;
   entity_type: string;
   is_selected: boolean;
+  metadata?: any;
 }
 
 // Add these new types to your existing interfaces file
@@ -1075,18 +1113,19 @@ export interface NavigateOnSelect {
 export interface SearchInputComponentProps<T extends Record<string, any>> {
   success_message_code?: string;
   activeFilters?: FilterItem[];
-  placeholder?: string;
+  placeholder?: string | undefined;
   label?: string;
   description?: string;
-  handleOptionSubmit?: (value: any | null) => void;
+  handleOptionSubmit?: (option: any | null) => void;
   onChange?: (value: any | null) => void;
-  value?: string;
+  value?: any;
   disabled?: boolean;
   include_action_icons?: string[];
   schema?: any;
   size?: string;
   navigateOnSelect?: NavigateOnSelect;
   navigateOnClear?: NavigateOnSelect;
+  multiselect?: boolean;
 }
 
 export interface GlobalSearchInputComponentProps<

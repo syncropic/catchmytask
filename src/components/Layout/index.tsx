@@ -39,6 +39,10 @@ import { viewAccordionConfig } from "./viewAccordionConfig";
 import { viewSearchActionAccordionConfig } from "./viewSearchActionAccordionConfig";
 import { UploadedWrapper } from "@components/Uploaded";
 import { actionAccordionConfig } from "./actionAccordionConfig";
+import { activityActionAccordionConfig } from "./activityActionAccordionConfig";
+import { Carousel } from "@mantine/carousel";
+import { viewQueryActionAccordionConfig } from "./viewQueryActionAccordionConfig";
+import { customComponentsAccordionConfig } from "./customComponentsAccordionConfig";
 
 const Layout = ({
   children,
@@ -268,11 +272,30 @@ const Layout = ({
               {/* Left section content */}
               {activeView && activeTask && (
                 <AccordionComponent
+                  sections={viewQueryActionAccordionConfig}
+                  activeView={activeView}
+                  activeTask={activeTask}
+                  defaultExpandedValues={["query"]}
+                  action={action}
+                />
+              )}
+              {/* {activeView && activeTask && (
+                <AccordionComponent
                   sections={viewSearchActionAccordionConfig}
                   activeView={activeView}
                   activeTask={activeTask}
                   defaultExpandedValues={["search"]}
                   action={action}
+                />
+              )} */}
+
+              {activeView && activeTask && (
+                <AccordionComponent
+                  sections={activityActionAccordionConfig}
+                  activeView={activeView}
+                  activeTask={activeTask}
+                  defaultExpandedValues={["activity"]}
+                  // action={action}
                 />
               )}
 
@@ -530,13 +553,32 @@ const Layout = ({
                     effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
                   }`}
                 >
-                  {activeView && activeTask && (
+                  {/* {activeView && activeTask && (
                     <AccordionComponent
                       sections={viewSearchActionAccordionConfig}
                       activeView={activeView}
                       activeTask={activeTask}
                       defaultExpandedValues={["search"]}
                       action={action}
+                    />
+                  )} */}
+                  {activeView && activeTask && (
+                    <AccordionComponent
+                      sections={viewQueryActionAccordionConfig}
+                      activeView={activeView}
+                      activeTask={activeTask}
+                      defaultExpandedValues={["query"]}
+                      action={action}
+                    />
+                  )}
+
+                  {activeView && activeTask && (
+                    <AccordionComponent
+                      sections={activityActionAccordionConfig}
+                      activeView={activeView}
+                      activeTask={activeTask}
+                      defaultExpandedValues={["activity"]}
+                      action={"activity"}
                     />
                   )}
 
@@ -566,6 +608,7 @@ const Layout = ({
             )}
 
             {/* Center Panel */}
+
             {centerSection.isDisplayed && (
               <>
                 <PanelResizeHandle>
@@ -766,7 +809,7 @@ const Layout = ({
                       activeSession={activeSession}
                     />
                     {/* pinned action step issues */}
-                    {activeTask &&
+                    {/* {activeTask &&
                       action &&
                       !["save", "search", "upload"]?.includes(action) && (
                         <AccordionComponent
@@ -776,7 +819,7 @@ const Layout = ({
                           activeTask={activeTask}
                           defaultExpandedValues={["action_input"]}
                         />
-                      )}
+                      )} */}
                     {/* pinned action step summary */}
                     {/* {activeTask &&
                       pinned_action_steps["summary"]?.is_displayed && (
@@ -811,12 +854,12 @@ const Layout = ({
                     )} */}
                     {activeTask && activeView && activeSession && (
                       <AccordionComponent
-                        sections={actionAccordionConfig}
+                        sections={customComponentsAccordionConfig}
                         activeTask={activeTask}
                         activeSession={activeSession}
-                        record={activeView}
-                        defaultExpandedValues={["view_modes"]}
-                        action="view_modes"
+                        // record={activeView}
+                        defaultExpandedValues={["custom_components"]}
+                        // action="view_modes"
                       />
                     )}
                   </div>

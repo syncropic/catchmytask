@@ -9,6 +9,7 @@ import ViewPayment from "@components/ViewPayment";
 import ViewTask from "@components/ViewTask";
 import ViewTestRun from "@components/ViewTestRun";
 import ViewTrip from "@components/ViewTrip";
+
 import {
   ComponentKey,
   NavigateOnSelect,
@@ -93,6 +94,7 @@ import {
   IconUserPlus,
   IconListCheck,
   IconUpload,
+  IconTimelineEventText,
 } from "@tabler/icons-react";
 import { localDb } from "src/localDb";
 import { useQueryClient } from "@tanstack/react-query";
@@ -2835,7 +2837,7 @@ export const iconMap: Record<string, React.ElementType> = {
   fields: IconTallymark3,
   edit: IconPencil,
   summary: IconChartBar,
-  activity: IconTimelineEventPlus,
+  activity: IconTimelineEventText,
   issues: IconSquare,
   state: IconStackBack,
   execution: IconListDetails,
@@ -2954,8 +2956,10 @@ export const useUpdateComponentAction = () => {
     action: string,
     type: string
   ) => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
     if (focused_entities) {
       const new_focused_entities = { ...focused_entities };
@@ -4010,118 +4014,344 @@ export interface PaymentSupplierEntry
 //   return result;
 // };
 
-export const processReconciliationData: ProcessReconciliationData = (
-  bookings: any[]
-): StandardReconciliationResult => {
-  // Initialize the data structure
-  const supplierStats: Record<string, StandardSupplierStats> = {};
-  const totalStats = {
-    cost: { total: 0, matches: 0, mismatches: 0, missing: 0 },
-    status: { total: 0, matches: 0, mismatches: 0, missing: 0 },
-  };
+// export const processSupplierReconciliationData: ProcessReconciliationData = (
+//   bookings: any[]
+// ): StandardReconciliationResult => {
+//   // Initialize the data structure
+//   const supplierStats: Record<string, StandardSupplierStats> = {};
+//   const totalStats = {
+//     cost: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     status: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//   };
 
-  // Process each booking
-  bookings.forEach((booking) => {
-    const supplierName = booking.sst_supplier_name;
+//   // Process each booking
+//   bookings.forEach((booking) => {
+//     const supplierName = booking.sst_supplier_name;
 
-    // Initialize supplier if not exists
-    if (!supplierStats[supplierName]) {
-      supplierStats[supplierName] = {
-        cost: {
-          total: 0,
-          matches: 0,
-          mismatches: 0,
-          missing: 0,
-          breakdown: { match: 0, mismatch: 0, missing: 0 },
-        },
-        status: {
-          total: 0,
-          matches: 0,
-          mismatches: 0,
-          missing: 0,
-          breakdown: { match: 0, mismatch: 0, missing: 0 },
-        },
-      };
-    }
+//     // Initialize supplier if not exists
+//     if (!supplierStats[supplierName]) {
+//       supplierStats[supplierName] = {
+//         cost: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//         status: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//       };
+//     }
 
-    // Process Cost Comparison
-    supplierStats[supplierName].cost.total++;
-    totalStats.cost.total++;
+//     // Process Cost Comparison
+//     supplierStats[supplierName].cost.total++;
+//     totalStats.cost.total++;
 
-    if (booking.supplier_cost_comparison === null) {
-      supplierStats[supplierName].cost.missing++;
-      supplierStats[supplierName].cost.breakdown.missing++;
-      totalStats.cost.missing++;
-    } else if (booking.supplier_cost_comparison === "match") {
-      supplierStats[supplierName].cost.matches++;
-      supplierStats[supplierName].cost.breakdown.match++;
-      totalStats.cost.matches++;
-    } else {
-      supplierStats[supplierName].cost.mismatches++;
-      supplierStats[supplierName].cost.breakdown.mismatch++;
-      totalStats.cost.mismatches++;
-    }
+//     if (booking.supplier_cost_comparison === null) {
+//       supplierStats[supplierName].cost.missing++;
+//       supplierStats[supplierName].cost.breakdown.missing++;
+//       totalStats.cost.missing++;
+//     } else if (booking.supplier_cost_comparison === "match") {
+//       supplierStats[supplierName].cost.matches++;
+//       supplierStats[supplierName].cost.breakdown.match++;
+//       totalStats.cost.matches++;
+//     } else {
+//       supplierStats[supplierName].cost.mismatches++;
+//       supplierStats[supplierName].cost.breakdown.mismatch++;
+//       totalStats.cost.mismatches++;
+//     }
 
-    // Process Status Comparison
-    supplierStats[supplierName].status.total++;
-    totalStats.status.total++;
+//     // Process Status Comparison
+//     supplierStats[supplierName].status.total++;
+//     totalStats.status.total++;
 
-    if (booking.supplier_status_comparison === null) {
-      supplierStats[supplierName].status.missing++;
-      supplierStats[supplierName].status.breakdown.missing++;
-      totalStats.status.missing++;
-    } else if (booking.supplier_status_comparison === "match") {
-      supplierStats[supplierName].status.matches++;
-      supplierStats[supplierName].status.breakdown.match++;
-      totalStats.status.matches++;
-    } else {
-      supplierStats[supplierName].status.mismatches++;
-      supplierStats[supplierName].status.breakdown.mismatch++;
-      totalStats.status.mismatches++;
-    }
-  });
+//     if (booking.supplier_status_comparison === null) {
+//       supplierStats[supplierName].status.missing++;
+//       supplierStats[supplierName].status.breakdown.missing++;
+//       totalStats.status.missing++;
+//     } else if (booking.supplier_status_comparison === "match") {
+//       supplierStats[supplierName].status.matches++;
+//       supplierStats[supplierName].status.breakdown.match++;
+//       totalStats.status.matches++;
+//     } else {
+//       supplierStats[supplierName].status.mismatches++;
+//       supplierStats[supplierName].status.breakdown.mismatch++;
+//       totalStats.status.mismatches++;
+//     }
+//   });
 
-  return {
-    costMatrix: {
-      suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
-        name,
-        matches: stats.cost.matches,
-        total: stats.cost.total,
-        missing: stats.cost.missing,
-        breakdown: stats.cost.breakdown,
-      })),
-      totals: {
-        matches: totalStats.cost.matches,
-        total: totalStats.cost.total,
-        missing: totalStats.cost.missing,
-        breakdown: {
-          match: totalStats.cost.matches,
-          mismatch: totalStats.cost.mismatches,
-          missing: totalStats.cost.missing,
-        },
-      },
-    },
-    statusMatrix: {
-      suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
-        name,
-        matches: stats.status.matches,
-        total: stats.status.total,
-        missing: stats.status.missing,
-        breakdown: stats.status.breakdown,
-      })),
-      totals: {
-        matches: totalStats.status.matches,
-        total: totalStats.status.total,
-        missing: totalStats.status.missing,
-        breakdown: {
-          match: totalStats.status.matches,
-          mismatch: totalStats.status.mismatches,
-          missing: totalStats.status.missing,
-        },
-      },
-    },
-  };
-};
+//   return {
+//     costMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.cost.matches,
+//         total: stats.cost.total,
+//         missing: stats.cost.missing,
+//         breakdown: stats.cost.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.cost.matches,
+//         total: totalStats.cost.total,
+//         missing: totalStats.cost.missing,
+//         breakdown: {
+//           match: totalStats.cost.matches,
+//           mismatch: totalStats.cost.mismatches,
+//           missing: totalStats.cost.missing,
+//         },
+//       },
+//     },
+//     statusMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.status.matches,
+//         total: stats.status.total,
+//         missing: stats.status.missing,
+//         breakdown: stats.status.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.status.matches,
+//         total: totalStats.status.total,
+//         missing: totalStats.status.missing,
+//         breakdown: {
+//           match: totalStats.status.matches,
+//           mismatch: totalStats.status.mismatches,
+//           missing: totalStats.status.missing,
+//         },
+//       },
+//     },
+//   };
+// };
+
+// interface CostBreakdown {
+//   match: number;
+//   high_negative_difference: number;
+//   medium_negative_difference: number;
+//   low_positive_difference: number;
+//   low_negative_difference: number;
+//   missing: number;
+// }
+
+// interface StatusBreakdown {
+//   match: number;
+//   mismatch: number;
+//   missing: number;
+// }
+
+// interface SupplierStats {
+//   cost: {
+//     total: number;
+//     matches: number;
+//     differences: number;
+//     missing: number;
+//     breakdown: CostBreakdown;
+//   };
+//   status: {
+//     total: number;
+//     matches: number;
+//     mismatches: number;
+//     missing: number;
+//     breakdown: StatusBreakdown;
+//   };
+// }
+
+// interface TotalStats {
+//   cost: {
+//     total: number;
+//     matches: number;
+//     differences: number;
+//     missing: number;
+//     breakdown: CostBreakdown;
+//   };
+//   status: {
+//     total: number;
+//     matches: number;
+//     mismatches: number;
+//     missing: number;
+//     breakdown: StatusBreakdown;
+//   };
+// }
+
+// export interface StandardReconciliationResult {
+//   costMatrix: {
+//     suppliers: Array<{
+//       name: string;
+//       matches: number;
+//       total: number;
+//       missing: number;
+//       breakdown: CostBreakdown;
+//     }>;
+//     totals: {
+//       matches: number;
+//       total: number;
+//       missing: number;
+//       breakdown: CostBreakdown;
+//     };
+//   };
+//   statusMatrix: {
+//     suppliers: Array<{
+//       name: string;
+//       matches: number;
+//       total: number;
+//       missing: number;
+//       breakdown: StatusBreakdown;
+//     }>;
+//     totals: {
+//       matches: number;
+//       total: number;
+//       missing: number;
+//       breakdown: StatusBreakdown;
+//     };
+//   };
+// }
+
+// // export type ProcessReconciliationData = (bookings: any[]) => StandardReconciliationResult;
+
+// export const processSupplierReconciliationData: ProcessReconciliationData = (
+//   bookings: any[]
+// ): StandardReconciliationResult => {
+//   // Initialize the data structure
+//   const supplierStats: Record<string, SupplierStats> = {};
+//   const totalStats: TotalStats = {
+//     cost: {
+//       total: 0,
+//       matches: 0,
+//       differences: 0,
+//       missing: 0,
+//       breakdown: {
+//         match: 0,
+//         high_negative_difference: 0,
+//         medium_negative_difference: 0,
+//         low_positive_difference: 0,
+//         low_negative_difference: 0,
+//         missing: 0,
+//       },
+//     },
+//     status: {
+//       total: 0,
+//       matches: 0,
+//       mismatches: 0,
+//       missing: 0,
+//       breakdown: { match: 0, mismatch: 0, missing: 0 },
+//     },
+//   };
+
+//   // Process each booking
+//   bookings.forEach((booking) => {
+//     const supplierName = booking.sst_supplier_name;
+
+//     // Initialize supplier if not exists
+//     if (!supplierStats[supplierName]) {
+//       supplierStats[supplierName] = {
+//         cost: {
+//           total: 0,
+//           matches: 0,
+//           differences: 0,
+//           missing: 0,
+//           breakdown: {
+//             match: 0,
+//             high_negative_difference: 0,
+//             medium_negative_difference: 0,
+//             low_positive_difference: 0,
+//             low_negative_difference: 0,
+//             missing: 0,
+//           },
+//         },
+//         status: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//       };
+//     }
+
+//     // Process Cost Comparison
+//     supplierStats[supplierName].cost.total++;
+//     totalStats.cost.total++;
+
+//     if (booking.supplier_cost_comparison === null) {
+//       supplierStats[supplierName].cost.missing++;
+//       supplierStats[supplierName].cost.breakdown.missing++;
+//       totalStats.cost.missing++;
+//       totalStats.cost.breakdown.missing++;
+//     } else if (booking.supplier_cost_comparison === "match") {
+//       supplierStats[supplierName].cost.matches++;
+//       supplierStats[supplierName].cost.breakdown.match++;
+//       totalStats.cost.matches++;
+//       totalStats.cost.breakdown.match++;
+//     } else {
+//       // Handle different types of cost differences
+//       supplierStats[supplierName].cost.differences++;
+//       totalStats.cost.differences++;
+
+//       // Update specific difference breakdowns
+//       supplierStats[supplierName].cost.breakdown[
+//         booking.supplier_cost_comparison
+//       ]++;
+//       totalStats.cost.breakdown[booking.supplier_cost_comparison]++;
+//     }
+
+//     // Process Status Comparison (unchanged)
+//     supplierStats[supplierName].status.total++;
+//     totalStats.status.total++;
+
+//     if (booking.supplier_status_comparison === null) {
+//       supplierStats[supplierName].status.missing++;
+//       supplierStats[supplierName].status.breakdown.missing++;
+//       totalStats.status.missing++;
+//       totalStats.status.breakdown.missing++;
+//     } else if (booking.supplier_status_comparison === "match") {
+//       supplierStats[supplierName].status.matches++;
+//       supplierStats[supplierName].status.breakdown.match++;
+//       totalStats.status.matches++;
+//       totalStats.status.breakdown.match++;
+//     } else {
+//       supplierStats[supplierName].status.mismatches++;
+//       supplierStats[supplierName].status.breakdown.mismatch++;
+//       totalStats.status.mismatches++;
+//       totalStats.status.breakdown.mismatch++;
+//     }
+//   });
+
+//   return {
+//     costMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.cost.matches,
+//         total: stats.cost.total,
+//         missing: stats.cost.missing,
+//         breakdown: stats.cost.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.cost.matches,
+//         total: totalStats.cost.total,
+//         missing: totalStats.cost.missing,
+//         breakdown: totalStats.cost.breakdown,
+//       },
+//     },
+//     statusMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.status.matches,
+//         total: stats.status.total,
+//         missing: stats.status.missing,
+//         breakdown: stats.status.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.status.matches,
+//         total: totalStats.status.total,
+//         missing: totalStats.status.missing,
+//         breakdown: totalStats.status.breakdown,
+//       },
+//     },
+//   };
+// };
 
 // export const processPaymentReconciliationData: ProcessPaymentReconciliationData =
 //   (bookings: any[]): PaymentReconciliationResult => {
@@ -4310,215 +4540,500 @@ export const processReconciliationData: ProcessReconciliationData = (
 //     };
 //   };
 
-export const processPaymentReconciliationData: ProcessPaymentReconciliationData =
-  (bookings: any[]): PaymentReconciliationResult => {
-    const supplierStats: Record<string, PaymentSupplierStats> = {};
-    const totalStats = {
-      payment: { total: 0, matches: 0, mismatches: 0, missing: 0 },
-      status: {
-        total: 0,
-        matches: 0,
-        mismatches: 0,
-        missing: 0,
-        cancelled_succeeded: 0,
-      },
-      individualCosts: { total: 0, matches: 0, mismatches: 0, missing: 0 },
-    };
+// export const processPaymentReconciliationData: ProcessPaymentReconciliationData =
+//   (bookings: any[]): PaymentReconciliationResult => {
+//     const supplierStats: Record<string, PaymentSupplierStats> = {};
+//     const totalStats = {
+//       payment: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//       status: {
+//         total: 0,
+//         matches: 0,
+//         mismatches: 0,
+//         missing: 0,
+//         cancelled_succeeded: 0,
+//       },
+//       individualCosts: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     };
 
-    bookings.forEach((booking) => {
-      const supplierName = booking.sst_supplier_name;
+//     bookings.forEach((booking) => {
+//       const supplierName = booking.sst_supplier_name;
 
-      // Initialize supplier if not exists
-      if (!supplierStats[supplierName]) {
-        supplierStats[supplierName] = {
-          payment: {
-            total: 0,
-            matches: 0,
-            mismatches: 0,
-            missing: 0,
-            breakdown: {
-              match: 0,
-              high_negative_difference: 0,
-              low_negative_difference: 0,
-              low_positive_difference: 0,
-              high_positive_difference: 0,
-            },
-            totalExpectedAmount: 0,
-            totalCapturedAmount: 0,
-          },
-          status: {
-            total: 0,
-            matches: 0,
-            mismatches: 0,
-            missing: 0,
-            breakdown: {
-              match: 0,
-              mismatch: 0,
-              missing: 0,
-              cancelled_succeeded: 0, // Add the new status type
-            },
-          },
-          individualCosts: {
-            total: 0,
-            matches: 0,
-            mismatches: 0,
-            missing: 0,
-            breakdown: {
-              match: 0,
-              high_negative_difference: 0,
-              low_negative_difference: 0,
-              low_positive_difference: 0,
-              high_positive_difference: 0,
-            },
-          },
-        };
-      }
+//       // Initialize supplier if not exists
+//       if (!supplierStats[supplierName]) {
+//         supplierStats[supplierName] = {
+//           payment: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: {
+//               match: 0,
+//               high_negative_difference: 0,
+//               low_negative_difference: 0,
+//               low_positive_difference: 0,
+//               high_positive_difference: 0,
+//             },
+//             totalExpectedAmount: 0,
+//             totalCapturedAmount: 0,
+//           },
+//           status: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: {
+//               match: 0,
+//               mismatch: 0,
+//               missing: 0,
+//               cancelled_succeeded: 0, // Add the new status type
+//             },
+//           },
+//           individualCosts: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: {
+//               match: 0,
+//               high_negative_difference: 0,
+//               low_negative_difference: 0,
+//               low_positive_difference: 0,
+//               high_positive_difference: 0,
+//             },
+//           },
+//         };
+//       }
 
-      // Process Payment Amount Comparison (unchanged)
-      const payment = supplierStats[supplierName].payment;
-      payment.total++;
-      totalStats.payment.total++;
-      payment.totalExpectedAmount += booking.sst_final_selling_price_usd || 0;
-      payment.totalCapturedAmount +=
-        booking.payment_amount_captured_usd_total || 0;
+//       // Process Payment Amount Comparison (unchanged)
+//       const payment = supplierStats[supplierName].payment;
+//       payment.total++;
+//       totalStats.payment.total++;
+//       payment.totalExpectedAmount += booking.sst_final_selling_price_usd || 0;
+//       payment.totalCapturedAmount +=
+//         booking.payment_amount_captured_usd_total || 0;
 
-      if (!booking.payment_amount_usd_comparison) {
-        payment.missing++;
-        totalStats.payment.missing++;
-      } else if (booking.payment_amount_usd_comparison === "match") {
-        payment.matches++;
-        payment.breakdown.match++;
-        totalStats.payment.matches++;
+//       if (!booking.payment_amount_usd_comparison) {
+//         payment.missing++;
+//         totalStats.payment.missing++;
+//       } else if (booking.payment_amount_usd_comparison === "match") {
+//         payment.matches++;
+//         payment.breakdown.match++;
+//         totalStats.payment.matches++;
+//       } else {
+//         payment.mismatches++;
+//         payment.breakdown[
+//           booking.payment_amount_usd_comparison as keyof PaymentBreakdown
+//         ]++;
+//         totalStats.payment.mismatches++;
+//       }
+
+//       // Enhanced Payment Status Comparison
+//       const status = supplierStats[supplierName].status;
+//       status.total++;
+//       totalStats.status.total++;
+
+//       if (!booking.payment_status_comparison) {
+//         status.missing++;
+//         status.breakdown.missing++;
+//         totalStats.status.missing++;
+//       } else if (booking.payment_status_comparison === "match") {
+//         status.matches++;
+//         status.breakdown.match++;
+//         totalStats.status.matches++;
+//       } else if (booking.payment_status_comparison === "cancelled_succeeded") {
+//         // Special handling for cancelled_succeeded status
+//         status.breakdown.cancelled_succeeded =
+//           (status.breakdown.cancelled_succeeded || 0) + 1;
+//         totalStats.status.cancelled_succeeded++;
+//         // We still count this as a mismatch for total counts
+//         status.mismatches++;
+//         totalStats.status.mismatches++;
+//       } else {
+//         status.mismatches++;
+//         status.breakdown.mismatch++;
+//         totalStats.status.mismatches++;
+//       }
+
+//       // Process Individual Costs Comparison (unchanged)
+//       const costs = supplierStats[supplierName].individualCosts;
+//       costs.total++;
+//       totalStats.individualCosts.total++;
+
+//       if (!booking.individual_costs_and_final_usd_comparison) {
+//         costs.missing++;
+//         totalStats.individualCosts.missing++;
+//       } else if (
+//         booking.individual_costs_and_final_usd_comparison === "match"
+//       ) {
+//         costs.matches++;
+//         costs.breakdown.match++;
+//         totalStats.individualCosts.matches++;
+//       } else {
+//         costs.mismatches++;
+//         costs.breakdown[
+//           booking.individual_costs_and_final_usd_comparison as keyof PaymentBreakdown
+//         ]++;
+//         totalStats.individualCosts.mismatches++;
+//       }
+//     });
+
+//     return {
+//       paymentMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.payment.matches,
+//           total: stats.payment.total,
+//           missing: stats.payment.missing,
+//           breakdown: stats.payment.breakdown,
+//           totalExpectedAmount: stats.payment.totalExpectedAmount,
+//           totalCapturedAmount: stats.payment.totalCapturedAmount,
+//         })),
+//         totals: {
+//           matches: totalStats.payment.matches,
+//           total: totalStats.payment.total,
+//           missing: totalStats.payment.missing,
+//           breakdown: {
+//             match: totalStats.payment.matches,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//         },
+//       },
+//       statusMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.status.matches,
+//           total: stats.status.total,
+//           missing: stats.status.missing,
+//           breakdown: {
+//             match: stats.status.breakdown.match,
+//             mismatch: stats.status.breakdown.mismatch,
+//             missing: stats.status.breakdown.missing,
+//             cancelled_succeeded:
+//               stats.status.breakdown.cancelled_succeeded || 0,
+//           },
+//         })),
+//         totals: {
+//           matches: totalStats.status.matches,
+//           total: totalStats.status.total,
+//           missing: totalStats.status.missing,
+//           breakdown: {
+//             match: totalStats.status.matches,
+//             mismatch:
+//               totalStats.status.mismatches -
+//               totalStats.status.cancelled_succeeded,
+//             missing: totalStats.status.missing,
+//             cancelled_succeeded: totalStats.status.cancelled_succeeded,
+//           },
+//         },
+//       },
+//       individualCostsMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.individualCosts.matches,
+//           total: stats.individualCosts.total,
+//           missing: stats.individualCosts.missing,
+//           breakdown: stats.individualCosts.breakdown,
+//         })),
+//         totals: {
+//           matches: totalStats.individualCosts.matches,
+//           total: totalStats.individualCosts.total,
+//           missing: totalStats.individualCosts.missing,
+//           breakdown: {
+//             match: totalStats.individualCosts.matches,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//         },
+//       },
+//     };
+//   };
+
+export function inferDataTypes(
+  jsonData: any[]
+): { name: string; data_type: string }[] {
+  if (jsonData.length === 0) {
+    return [];
+  }
+
+  const columns = Object.keys(jsonData[0]);
+  const inferredTypes: { name: string; data_type: string }[] = [];
+
+  columns.forEach((column) => {
+    const nonNullValues = jsonData.filter((row) => row[column] != null);
+
+    if (nonNullValues.length === 0) {
+      inferredTypes.push({ name: column, data_type: "unknown" });
+    } else {
+      const types = new Set(nonNullValues.map((row) => typeof row[column]));
+
+      let inferredType: string;
+      if (types.size === 1) {
+        const type = types.values().next().value || "";
+        inferredType = typeMapping[type] || "unknown";
+      } else if (types.has("number")) {
+        // If mixed types but includes number, prefer number
+        inferredType = "float";
       } else {
-        payment.mismatches++;
-        payment.breakdown[
-          booking.payment_amount_usd_comparison as keyof PaymentBreakdown
-        ]++;
-        totalStats.payment.mismatches++;
+        // For mixed types, default to string
+        inferredType = "string";
       }
 
-      // Enhanced Payment Status Comparison
-      const status = supplierStats[supplierName].status;
-      status.total++;
-      totalStats.status.total++;
-
-      if (!booking.payment_status_comparison) {
-        status.missing++;
-        status.breakdown.missing++;
-        totalStats.status.missing++;
-      } else if (booking.payment_status_comparison === "match") {
-        status.matches++;
-        status.breakdown.match++;
-        totalStats.status.matches++;
-      } else if (booking.payment_status_comparison === "cancelled_succeeded") {
-        // Special handling for cancelled_succeeded status
-        status.breakdown.cancelled_succeeded =
-          (status.breakdown.cancelled_succeeded || 0) + 1;
-        totalStats.status.cancelled_succeeded++;
-        // We still count this as a mismatch for total counts
-        status.mismatches++;
-        totalStats.status.mismatches++;
-      } else {
-        status.mismatches++;
-        status.breakdown.mismatch++;
-        totalStats.status.mismatches++;
-      }
-
-      // Process Individual Costs Comparison (unchanged)
-      const costs = supplierStats[supplierName].individualCosts;
-      costs.total++;
-      totalStats.individualCosts.total++;
-
-      if (!booking.individual_costs_and_final_usd_comparison) {
-        costs.missing++;
-        totalStats.individualCosts.missing++;
-      } else if (
-        booking.individual_costs_and_final_usd_comparison === "match"
+      // Additional checks for more specific types
+      if (
+        inferredType === "float" &&
+        nonNullValues.every((row) => Number.isInteger(row[column]))
       ) {
-        costs.matches++;
-        costs.breakdown.match++;
-        totalStats.individualCosts.matches++;
-      } else {
-        costs.mismatches++;
-        costs.breakdown[
-          booking.individual_costs_and_final_usd_comparison as keyof PaymentBreakdown
-        ]++;
-        totalStats.individualCosts.mismatches++;
+        inferredType = "integer";
+      } else if (inferredType === "string") {
+        // Check for date strings
+        const isAllDates = nonNullValues.every(
+          (row) => !isNaN(Date.parse(row[column]))
+        );
+        if (isAllDates) {
+          inferredType = "datetime";
+        }
       }
-    });
 
-    return {
-      paymentMatrix: {
-        suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
-          name,
-          matches: stats.payment.matches,
-          total: stats.payment.total,
-          missing: stats.payment.missing,
-          breakdown: stats.payment.breakdown,
-          totalExpectedAmount: stats.payment.totalExpectedAmount,
-          totalCapturedAmount: stats.payment.totalCapturedAmount,
-        })),
-        totals: {
-          matches: totalStats.payment.matches,
-          total: totalStats.payment.total,
-          missing: totalStats.payment.missing,
-          breakdown: {
-            match: totalStats.payment.matches,
-            high_negative_difference: 0,
-            low_negative_difference: 0,
-            low_positive_difference: 0,
-            high_positive_difference: 0,
-          },
-        },
-      },
-      statusMatrix: {
-        suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
-          name,
-          matches: stats.status.matches,
-          total: stats.status.total,
-          missing: stats.status.missing,
-          breakdown: {
-            match: stats.status.breakdown.match,
-            mismatch: stats.status.breakdown.mismatch,
-            missing: stats.status.breakdown.missing,
-            cancelled_succeeded:
-              stats.status.breakdown.cancelled_succeeded || 0,
-          },
-        })),
-        totals: {
-          matches: totalStats.status.matches,
-          total: totalStats.status.total,
-          missing: totalStats.status.missing,
-          breakdown: {
-            match: totalStats.status.matches,
-            mismatch:
-              totalStats.status.mismatches -
-              totalStats.status.cancelled_succeeded,
-            missing: totalStats.status.missing,
-            cancelled_succeeded: totalStats.status.cancelled_succeeded,
-          },
-        },
-      },
-      individualCostsMatrix: {
-        suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
-          name,
-          matches: stats.individualCosts.matches,
-          total: stats.individualCosts.total,
-          missing: stats.individualCosts.missing,
-          breakdown: stats.individualCosts.breakdown,
-        })),
-        totals: {
-          matches: totalStats.individualCosts.matches,
-          total: totalStats.individualCosts.total,
-          missing: totalStats.individualCosts.missing,
-          breakdown: {
-            match: totalStats.individualCosts.matches,
-            high_negative_difference: 0,
-            low_negative_difference: 0,
-            low_positive_difference: 0,
-            high_positive_difference: 0,
-          },
-        },
-      },
-    };
-  };
+      inferredTypes.push({ name: column, data_type: inferredType });
+    }
+  });
+
+  return inferredTypes;
+}
+
+// Type mapping similar to the Python version
+export const typeMapping: { [key: string]: string } = {
+  number: "float",
+  bigint: "integer",
+  string: "string",
+  boolean: "boolean",
+  object: "object", // For nested objects or null
+  undefined: "unknown",
+};
+
+interface Field {
+  name: string;
+  data_type?: string;
+  summary?: string;
+  distinct_values?: any[] | string | null;
+  samples?: any[] | string;
+}
+
+interface Collection {
+  name: string;
+  description?: string;
+}
+
+export function createFieldsDocumentation(
+  fields: Field[],
+  collection: Collection
+): string {
+  let markdown = `# Field Documentation\n\n`;
+
+  // Add collection information
+  markdown += `## Collection Information\n\n`;
+  markdown += `**Collection/Table:** ${collection.name}\n\n`;
+  if (collection.description) {
+    markdown += `**Description:** ${collection.description}\n\n`;
+  }
+
+  markdown += `---\n\n`;
+  markdown += `## Fields\n\n`;
+
+  for (const field of fields) {
+    markdown += `### ${field.name}\n\n`;
+
+    if (field.summary) {
+      markdown += `**Description:** ${field.summary}\n\n`;
+    }
+
+    if (field.data_type) {
+      markdown += `**Data Type:** ${field.data_type}\n\n`;
+    }
+
+    // Show distinct_values if available, otherwise show samples
+    if (field.distinct_values !== null && field.distinct_values !== undefined) {
+      markdown += `**Allowed Values:**\n`;
+      if (Array.isArray(field.distinct_values)) {
+        field.distinct_values.forEach((value) => {
+          markdown += `- ${value}\n`;
+        });
+      } else {
+        markdown += `- ${field.distinct_values}\n`;
+      }
+      markdown += `\n`;
+    } else if (field.samples) {
+      markdown += `**Sample Values:**\n`;
+      if (Array.isArray(field.samples)) {
+        field.samples.forEach((sample) => {
+          markdown += `- ${sample}\n`;
+        });
+      } else {
+        markdown += `- ${field.samples}\n`;
+      }
+      markdown += `\n`;
+    }
+
+    markdown += `---\n\n`;
+  }
+
+  return markdown;
+}
+
+export function createFieldsDocumentationHTML(
+  fields: Field[],
+  collection: Collection
+): string {
+  const html = `
+      <div class="documentation">
+          <h1 class="text-2xl font-bold mb-6">Field Documentation</h1>
+          
+          <!-- Collection Information -->
+          <div class="collection-info mb-8">
+              <h2 class="text-xl font-semibold mb-4">Collection Information</h2>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                  <div class="mb-2">
+                      <span class="font-semibold">Collection/Table:</span> ${
+                        collection.name
+                      }
+                  </div>
+                  ${
+                    collection.description
+                      ? `
+                      <div>
+                          <span class="font-semibold">Description:</span> ${collection.description}
+                      </div>
+                  `
+                      : ""
+                  }
+              </div>
+          </div>
+
+          <!-- Fields -->
+          <div class="fields">
+              <h2 class="text-xl font-semibold mb-4">Fields</h2>
+              ${fields
+                .map(
+                  (field) => `
+                  <div class="field-card bg-white border rounded-lg p-4 mb-4 shadow-sm">
+                      <h3 class="text-lg font-semibold text-blue-600 mb-2">${
+                        field.name
+                      }</h3>
+                      
+                      ${
+                        field.summary
+                          ? `
+                          <div class="mb-2">
+                              <span class="font-semibold">Description:</span> 
+                              <span class="text-gray-700">${field.summary}</span>
+                          </div>
+                      `
+                          : ""
+                      }
+                      
+                      ${
+                        field.data_type
+                          ? `
+                          <div class="mb-2">
+                              <span class="font-semibold">Data Type:</span> 
+                              <code class="bg-gray-100 px-2 py-1 rounded">${field.data_type}</code>
+                          </div>
+                      `
+                          : ""
+                      }
+                      
+                      ${
+                        field.distinct_values !== null &&
+                        field.distinct_values !== undefined
+                          ? `
+                          <div class="mt-3">
+                              <span class="font-semibold">Allowed Values:</span>
+                              <ul class="list-disc pl-5 mt-1">
+                                  ${
+                                    Array.isArray(field.distinct_values)
+                                      ? field.distinct_values
+                                          .map(
+                                            (value) => `
+                                          <li class="text-gray-700">${
+                                            value === null
+                                              ? '<span class="text-gray-400">null</span>'
+                                              : value
+                                          }</li>
+                                      `
+                                          )
+                                          .join("")
+                                      : `<li class="text-gray-700">${field.distinct_values}</li>`
+                                  }
+                              </ul>
+                          </div>
+                      `
+                          : field.samples
+                          ? `
+                          <div class="mt-3">
+                              <span class="font-semibold">Sample Values:</span>
+                              <ul class="list-disc pl-5 mt-1">
+                                  ${
+                                    Array.isArray(field.samples)
+                                      ? field.samples
+                                          .map(
+                                            (sample) => `
+                                          <li class="text-gray-700">${sample}</li>
+                                      `
+                                          )
+                                          .join("")
+                                      : `<li class="text-gray-700">${field.samples}</li>`
+                                  }
+                              </ul>
+                          </div>
+                      `
+                          : ""
+                      }
+                  </div>
+              `
+                )
+                .join("")}
+          </div>
+      </div>
+  `;
+
+  return html.trim();
+}
+
+// Most comprehensive version that handles special cases
+export const toTitleCase = (text: string) => {
+  // List of words that should not be capitalized (unless they're the first word)
+  const minorWords = new Set([
+    "a",
+    "an",
+    "the",
+    "and",
+    "but",
+    "or",
+    "for",
+    "nor",
+    "in",
+    "of",
+    "on",
+    "at",
+    "to",
+    "with",
+    "by",
+  ]);
+
+  return text
+    .toLowerCase()
+    .split(/[_\s-]+/)
+    .map((word, index) => {
+      // Always capitalize the first word or if it's not a minor word
+      if (index === 0 || !minorWords.has(word)) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      return word;
+    })
+    .join(" ");
+};

@@ -1,10 +1,12 @@
 import { Text } from "@mantine/core";
 import {
+  inferDataTypes,
   useFetchActionPlanDataByState,
   useFetchActionStepDataByState,
   useFetchGenerativeComponentDataByStateAndModel,
   useFetchQueryDataByState,
   useFetchRecommendationDataByState,
+  useReadRecordByState,
 } from "@components/Utils";
 import DataDisplay from "@components/DataDisplay";
 import { useAppStore } from "src/store";
@@ -13,7 +15,7 @@ import MonacoEditor from "@components/MonacoEditor";
 import { AggregateActionStepResultsWrapper } from "@components/AggregateActionStepResults";
 
 interface ActionStepsProps {
-  entity_type: string;
+  entity_type?: string;
   types?: string[];
   state?: any;
   read_write_mode?: string;
@@ -27,46 +29,75 @@ interface ActionStepsProps {
   aggregate_action_steps?: boolean;
 }
 
-export const ActionStepsWrapper = ({
-  entity_type = "action_steps",
+export const ActivityWrapper = ({
+  entity_type = "activity",
   aggregate_action_steps,
   record,
 }: ActionStepsProps) => {
-  const { activeTask, selectedRecords } = useAppStore();
+  const { activeTask, activeSession, activeView } = useAppStore();
 
   // let selected_record_items_key = `${action}_action_input_${record?.id}`;
   // const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
-  let plan_action_input_form_values_key = `plan_${activeTask?.id}`;
+  // let plan_action_input_form_values_key = `plan_${activeTask?.id}`;
 
-  let action_plan_state = {
+  let activity_state = {
     id: record?.id,
-    query_name: "read action plan data with task info",
-    task_id: record?.id,
-    success_message_code: "action_plan",
+    query_name: "read activity",
+    task_id: activeTask?.id,
+    session_id: activeSession?.id,
+    view_id: activeView?.id,
+    success_message_code: "activity",
   };
   const {
-    data: actionPlanData,
-    isLoading: actionPlanIsLoading,
-    error: actionPlanError,
-  } = useFetchQueryDataByState(action_plan_state);
+    data: activityData,
+    isLoading: activityIsLoading,
+    error: activityError,
+  } = useFetchQueryDataByState(activity_state);
 
-  if (actionPlanError)
+  let activity_view_read_record_state = {
+    credential: "surrealdb catchmytask dev",
+    success_message_code: "views:hxtnpwjnhhws9wuh0wr2",
+    record: {
+      id: "views:hxtnpwjnhhws9wuh0wr2",
+    },
+    read_record_mode: "remote",
+  };
+
+  const {
+    data: activityViewData,
+    isLoading: activityViewIsLoading,
+    error: activityViewError,
+  } = useReadRecordByState(activity_view_read_record_state);
+
+  let activityViewRecord = activityViewData?.data?.find(
+    (item: any) =>
+      item?.message?.code ===
+      activity_view_read_record_state?.success_message_code
+  )?.data[0];
+
+  if (activityError || activityViewError)
     return (
       <MonacoEditor
         value={{
-          data: actionPlanError?.response?.data,
-          status: actionPlanError?.response?.status,
+          data: activityError?.response?.data,
+          status: activityError?.response?.status,
         }}
         language="json"
         height="25vh"
       />
     );
-  if (actionPlanIsLoading) return <div>Loading...</div>;
+  if (activityIsLoading || activityViewIsLoading) return <div>Loading...</div>;
 
-  let all_action_steps =
-    actionPlanData?.data?.find(
-      (item: any) => item?.message?.code === "action_plan"
+  let activity =
+    activityData?.data?.find(
+      (item: any) =>
+        item?.message?.code === activity_state?.success_message_code
     )?.data || [];
+
+  // let all_action_steps =
+  //   actionPlanData?.data?.find(
+  //     (item: any) => item?.message?.code === "action_plan"
+  //   )?.data || [];
   // let filtered_action_steps = all_action_steps?.filter(
   //   (item: { name: string }) =>
   //     item &&
@@ -86,51 +117,48 @@ export const ActionStepsWrapper = ({
   //           )
   //       );
   // action steps where initial_state?.read is true
-  let initial_state_read = all_action_steps?.filter((step: any) => {
-    return step?.initial_state?.read === true;
-  });
+  // let initial_state_read = all_action_steps?.filter((step: any) => {
+  //   return step?.initial_state?.read === true;
+  // });
 
   return (
     <>
-      {/* <div>action steps wrapper</div> */}
+      {/* <div>activity wrapper</div> */}
       {/* <div>{JSON.stringify(stepsToRender)}</div> */}
       {/* <div>action plan execution</div> */}
       {/* <MonacoEditor
         value={{
-          // actionPlanData: actionPlanData,
-          initial_state_read: initial_state_read,
+          // activityData: activityData,
+          // activity: activity[0]?.items,
+          // dataFields: inferDataTypes(activity[0]?.items),
+          activityViewRecord: activityViewRecord,
           // filteredData: filtered_action_steps,
           // stepsToRender: stepsToRender
         }}
         language="json"
         height="25vh"
       /> */}
-      {/* {filtered_action_steps &&
-        filtered_action_steps.length > 0 &&
-        !aggregate_action_steps && (
-          <DataDisplay
-            data_items={filtered_action_steps}
-            record={record || {}}
-            data_fields={data_fields}
-            entity_type={entity_type}
-            display="datagridview"
-            ui={{}}
-            action="execute"
-          ></DataDisplay>
-        )} */}
+      {activity[0]?.items.length > 0 && (
+        <DataDisplay
+          data_items={activity[0]?.items}
+          // data_fields={inferDataTypes(activity[0]?.items)}
+          data_fields={activityViewRecord?.fields}
+          view_mode="table"
+        ></DataDisplay>
+      )}
 
       {/* {stepsToRender && stepsToRender.length > 0 && aggregate_action_steps && (
         <AggregateActionStepResultsWrapper
           filtered_action_steps={stepsToRender}
         />
       )} */}
-      {initial_state_read &&
+      {/* {initial_state_read &&
         initial_state_read.length > 0 &&
         aggregate_action_steps && (
           <AggregateActionStepResultsWrapper
             filtered_action_steps={initial_state_read}
           />
-        )}
+        )} */}
 
       {/* (
         <div className="flex items-center justify-center p-4">
@@ -143,4 +171,4 @@ export const ActionStepsWrapper = ({
   );
 };
 
-export default ActionStepsWrapper;
+export default ActivityWrapper;

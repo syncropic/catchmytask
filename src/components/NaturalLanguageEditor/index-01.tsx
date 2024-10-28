@@ -25,7 +25,6 @@ import SearchInput from "@components/SearchInput";
 import { useEffect } from "react";
 import { ActionIcon, Button, Tooltip } from "@mantine/core";
 import { useAppStore } from "src/store";
-import ExternalSubmitButton from "@components/SubmitButton";
 
 // import "./styles.scss";
 
@@ -64,9 +63,9 @@ interface NaturalLanguageEditorProps {
 const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
   value,
   setValue = () => {},
-  // form,
-  // isLoading = false,
-  // action_input_form_values_key = "",
+  form,
+  isLoading = false,
+  action_input_form_values_key = "",
   // setValues,
   // handleSubmit,
   // language = "json",
@@ -108,22 +107,6 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
       }),
     ],
     content: value || "",
-    // editorProps: {
-    //   attributes: {
-    //     class: "h-48",
-    //   },
-    // },
-    // editorProps: {
-    //   attributes: {
-    //     class:
-    //       "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none",
-    //   },
-    // },
-    editorProps: {
-      attributes: {
-        class: "prose prose-sm h-full w-full", // Remove any margin auto to ensure proper scrolling
-      },
-    },
     // triggered on every change
     onUpdate: ({ editor }) => {
       const content = editor.getJSON();
@@ -141,16 +124,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
     },
   });
 
-  const {
-    live_generate,
-    setLiveGenerate,
-    activeView,
-    focused_entities,
-    activeTask,
-    activeAgent,
-    default_action,
-  } = useAppStore();
-  let action = focused_entities[activeTask?.id]?.["action"];
+  const { live_generate, setLiveGenerate } = useAppStore();
 
   // Add useEffect to update editor content when value prop changes
   useEffect(() => {
@@ -185,30 +159,27 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
   // const canSubmit = form.useStore((state: any) => state.canSubmit);
   // const isSubmitting = form.useStore((state: any) => state.isSubmitting);
 
-  // const toggleLiveGenerate = (action_input_form_values_key: string) => {
-  //   // Create a copy of the live_generate object
-  //   let newLiveGenerate = { ...live_generate };
+  const toggleLiveGenerate = (action_input_form_values_key: string) => {
+    // Create a copy of the live_generate object
+    let newLiveGenerate = { ...live_generate };
 
-  //   // Ensure the key exists in newLiveGenerate, initialize it if not
-  //   if (!newLiveGenerate[action_input_form_values_key]) {
-  //     newLiveGenerate[action_input_form_values_key] = {
-  //       is_live_generating: false,
-  //     };
-  //   }
+    // Ensure the key exists in newLiveGenerate, initialize it if not
+    if (!newLiveGenerate[action_input_form_values_key]) {
+      newLiveGenerate[action_input_form_values_key] = {
+        is_live_generating: false,
+      };
+    }
 
-  //   // Toggle the is_live_generating state
-  //   newLiveGenerate[action_input_form_values_key].is_live_generating =
-  //     !newLiveGenerate[action_input_form_values_key].is_live_generating;
+    // Toggle the is_live_generating state
+    newLiveGenerate[action_input_form_values_key].is_live_generating =
+      !newLiveGenerate[action_input_form_values_key].is_live_generating;
 
-  //   // Update global state
-  //   setLiveGenerate(newLiveGenerate);
-  // };
+    // Update global state
+    setLiveGenerate(newLiveGenerate);
+  };
 
   return (
-    <RichTextEditor
-      editor={editor}
-      className="h-full overflow-y-auto p-4 hover:cursor-text"
-    >
+    <RichTextEditor editor={editor}>
       <RichTextEditor.Toolbar>
         <RichTextEditor.ControlsGroup>
           {/* <RichTextEditor.Bold /> */}
@@ -264,27 +235,17 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
           />
         </RichTextEditor.ControlsGroup> */}
         <RichTextEditor.ControlsGroup>
-          {activeAgent && (
-            <ExternalSubmitButton
-              record={activeView}
-              entity_type="tasks"
-              action={action || default_action}
-            />
-          )}
-
-          {/* <Tooltip
+          <Tooltip
             multiline
             w={220}
             withArrow
             transitionProps={{ duration: 200 }}
             label="When activated, just describe or partially fill in this form and let the system automatically and in realtime generate other parts of the form, including queries and code that you can immediately edit to your liking before executing"
           >
-            <RichTextEditor.Control
-              aria-label="Live Generate"
-           
-            >
+            <RichTextEditor.Control aria-label="Live Generate">
               {live_generate[action_input_form_values_key]
                 ?.is_live_generating ? (
+                // Button with rightSection for loading state
                 <Button
                   size="compact-xs"
                   // variant="filled"
@@ -314,7 +275,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
                 </Button>
               )}
             </RichTextEditor.Control>
-          </Tooltip> */}
+          </Tooltip>
         </RichTextEditor.ControlsGroup>
       </RichTextEditor.Toolbar>
     </RichTextEditor>

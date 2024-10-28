@@ -13,29 +13,26 @@ import {
   ResultsComponentProps,
 } from "@components/interfaces";
 // import _, { set } from "lodash";
-import {
-  ColumnDef,
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  SortingFn,
-  SortingState,
-  useReactTable,
-  FilterFn,
-  sortingFns,
-  Column,
-} from "@tanstack/react-table";
+// import {
+//   ColumnDef,
+//   createColumnHelper,
+//   flexRender,
+//   getCoreRowModel,
+//   getSortedRowModel,
+//   SortingFn,
+//   SortingState,
+//   useReactTable,
+//   FilterFn,
+//   sortingFns,
+//   Column,
+// } from "@tanstack/react-table";
 import * as React from "react";
-import {
-  ColumnFiltersState,
-  VisibilityState,
-  getFilteredRowModel,
-  getPaginationRowModel,
-} from "@tanstack/react-table";
-
-import TableView from "@components/TableView";
-
+// import {
+//   ColumnFiltersState,
+//   VisibilityState,
+//   getFilteredRowModel,
+//   getPaginationRowModel,
+// } from "@tanstack/react-table";
 // A TanStack fork of Kent C. Dodds' match-sorter library that provides ranking information
 import {
   RankingInfo,
@@ -43,38 +40,38 @@ import {
   compareItems,
 } from "@tanstack/match-sorter-utils";
 import { useEffect, useMemo, useState } from "react";
-import { useElementSize } from "@mantine/hooks";
+// import { useElementSize } from "@mantine/hooks";
 import { useAppStore } from "src/store";
-import Board from "@components/Board";
-
-import dynamic from "next/dynamic";
+// import Board from "@components/Board";
+// import dynamic from "next/dynamic";
 // import { initializeLocalDB } from "src/local_db";
-import { useDuckDB } from "pages/_app";
+// import { useDuckDB } from "pages/_app";
 import DataGridView from "@components/DataGridView";
+import TableView from "@components/TableView";
 
-declare module "@tanstack/react-table" {
-  //add fuzzy filter to the filterFns
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>;
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo;
-  }
-}
+// declare module "@tanstack/react-table" {
+//   //add fuzzy filter to the filterFns
+//   interface FilterFns {
+//     fuzzy: FilterFn<unknown>;
+//   }
+//   interface FilterMeta {
+//     itemRank: RankingInfo;
+//   }
+// }
 
 // Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value);
+// const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+//   // Rank the item
+//   const itemRank = rankItem(row.getValue(columnId), value);
 
-  // Store the itemRank info
-  addMeta({
-    itemRank,
-  });
+//   // Store the itemRank info
+//   addMeta({
+//     itemRank,
+//   });
 
-  // Return if the item should be filtered in/out
-  return itemRank.passed;
-};
+//   // Return if the item should be filtered in/out
+//   return itemRank.passed;
+// };
 
 export interface RowData {
   [key: string]: any;
@@ -122,71 +119,71 @@ export function DataDisplay<T extends Record<string, any>>({
     (item: any) => item?.message?.code === activeView?.id
   )?.data[0];
 
-  const { tableColumns } = useTableColumns({
-    field_configurations: data_fields?.map((nested_field: any) =>
-      mergeEdgeWithEntityValues(nested_field)
-    ),
-    table_id: record?.id,
-  });
-  const [sorting, setSorting] = useState<SortingState>([
-    {
-      id: "priority",
-      desc: true, // sort by name in descending order by default
-    },
-  ]);
+  // const { tableColumns } = useTableColumns({
+  //   field_configurations: data_fields?.map((nested_field: any) =>
+  //     mergeEdgeWithEntityValues(nested_field)
+  //   ),
+  //   table_id: record?.id,
+  // });
+  // const [sorting, setSorting] = useState<SortingState>([
+  //   {
+  //     id: "priority",
+  //     desc: true, // sort by name in descending order by default
+  //   },
+  // ]);
   // const [viewAsvalue, setViewAsValue] = useState(
   //   view_data?.data[0]?.view_as ?? ""
   // );
   // const [viewAsvalue, setViewAsValue] = useState("table");
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  // const [globalFilter, setGlobalFilter] = useState("");
-  // const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  // const [rowSelection, setRowSelection] = useState({});
+  // const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  // // const [globalFilter, setGlobalFilter] = useState("");
+  // // const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  // // const [rowSelection, setRowSelection] = useState({});
 
-  // Memoize table data and columns to avoid unnecessary renders
-  const memoizedData = useMemo(() => data_items ?? [], [data_items]);
-  const memoizedColumns = useMemo(() => tableColumns ?? [], [tableColumns]);
+  // // Memoize table data and columns to avoid unnecessary renders
+  // const memoizedData = useMemo(() => data_items ?? [], [data_items]);
+  // const memoizedColumns = useMemo(() => tableColumns ?? [], [tableColumns]);
 
-  const table = useReactTable({
-    data: memoizedData,
-    columns: memoizedColumns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    // onColumnVisibilityChange: setColumnVisibility,
-    // onColumnVisibilityChange: handleColumnVisibilityChange,
-    // onRowSelectionChange: setRowSelection,
-    // onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: "includesString", //apply fuzzy filter to the global filter (most common use case for fuzzy filter)
-    filterFns: {
-      //add the fuzzy filter to the filter functions
-      fuzzy: fuzzyFilter,
-    }, //define as a filter function that can be used in column definitions
-    state: {
-      sorting,
-      columnFilters,
-      // columnVisibility,
-      // rowSelection,
-      // globalFilter,
-    },
-    initialState: {
-      // columnFilters: [
-      //   {
-      //     id: "payment_status_comparison",
-      //     value: `match`, // filter the name column by 'John' by default
-      //   },
-      // ],
-      // sorting: [
-      //   {
-      //     id: "priority",
-      //     desc: true, // sort by name in descending order by default
-      //   },
-      // ],
-    },
-  });
+  // const table = useReactTable({
+  //   data: memoizedData,
+  //   columns: memoizedColumns,
+  //   onSortingChange: setSorting,
+  //   onColumnFiltersChange: setColumnFilters,
+  //   getCoreRowModel: getCoreRowModel(),
+  //   getPaginationRowModel: getPaginationRowModel(),
+  //   getSortedRowModel: getSortedRowModel(),
+  //   getFilteredRowModel: getFilteredRowModel(),
+  //   // onColumnVisibilityChange: setColumnVisibility,
+  //   // onColumnVisibilityChange: handleColumnVisibilityChange,
+  //   // onRowSelectionChange: setRowSelection,
+  //   // onGlobalFilterChange: setGlobalFilter,
+  //   globalFilterFn: "includesString", //apply fuzzy filter to the global filter (most common use case for fuzzy filter)
+  //   filterFns: {
+  //     //add the fuzzy filter to the filter functions
+  //     fuzzy: fuzzyFilter,
+  //   }, //define as a filter function that can be used in column definitions
+  //   state: {
+  //     sorting,
+  //     columnFilters,
+  //     // columnVisibility,
+  //     // rowSelection,
+  //     // globalFilter,
+  //   },
+  //   initialState: {
+  //     // columnFilters: [
+  //     //   {
+  //     //     id: "payment_status_comparison",
+  //     //     value: `match`, // filter the name column by 'John' by default
+  //     //   },
+  //     // ],
+  //     // sorting: [
+  //     //   {
+  //     //     id: "priority",
+  //     //     desc: true, // sort by name in descending order by default
+  //     //   },
+  //     // ],
+  //   },
+  // });
 
   useEffect(() => {
     if (data_fields && record?.id) {
@@ -217,9 +214,9 @@ export function DataDisplay<T extends Record<string, any>>({
   const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
   let action_input_form_values_key = `${action}_${actionInputId}`;
   // return board for action steps by default
-  if (view_mode === "board") {
-    return <Board data_fields={data_items}></Board>;
-  }
+  // if (view_mode === "board") {
+  //   return <Board data_fields={data_items}></Board>;
+  // }
   if (view_mode === "json") {
     return (
       <MonacoEditor
@@ -229,6 +226,19 @@ export function DataDisplay<T extends Record<string, any>>({
         language="json"
         height="75vh"
       />
+    );
+  }
+  if (view_mode === "table") {
+    return (
+      // <MonacoEditor
+      //   value={{
+      //     data_items: data_items,
+      //   }}
+      //   language="json"
+      //   height="75vh"
+      // />
+      <TableView data_items={data_items} data_fields={data_fields}></TableView>
+      // <div>table</div>
     );
   }
   if (view_mode === "datagrid") {

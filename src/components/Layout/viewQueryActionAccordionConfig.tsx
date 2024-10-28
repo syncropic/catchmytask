@@ -9,11 +9,11 @@ import AccordionComponent from "@components/AccordionComponent";
 import { saveActionAccordionConfig } from "./saveActionAccordionConfig";
 import { actionAccordionConfig } from "./actionAccordionConfig";
 
-export const viewSearchActionAccordionConfig: AccordionSection[] = [
+export const viewQueryActionAccordionConfig: AccordionSection[] = [
   {
-    key: "search",
-    title: <AccordionHeader name="search" entity_type="views" />,
-    Component: ({ activeView, activeTask, action }) => (
+    key: "query",
+    title: <AccordionHeader name="query" entity_type="views" />,
+    Component: ({ activeView, action }) => (
       <>
         {action === "save" && (
           <AccordionComponent
@@ -31,12 +31,12 @@ export const viewSearchActionAccordionConfig: AccordionSection[] = [
             record={activeView}
           />
         )}
-        {/* {activeView?.["action_models"]?.["search"]} */}
+        {/* {activeView?.["action_models"]?.["query"]} */}
         <ActionInputWrapper
-          name={activeView?.["action_models"]?.["search"]}
+          name={activeView?.["action_models"]?.["query"]}
           query_name="data_model"
           record={{ ...activeView }}
-          action={"search"}
+          action={"query"}
           success_message_code="action_input_data_model_schema"
         />
       </>

@@ -111,6 +111,33 @@ export const useAppStore = create(
       },
       views: {},
       setViews: (views) => set((state) => ({ views })),
+      activeMainCustomComponent: {
+        id: "components:h1ttsa94g3pcfbl278jq",
+        name: "datagrid",
+      },
+      setActiveMainCustomComponent: (activeMainCustomComponent) =>
+        set((state) => ({ activeMainCustomComponent })),
+      activeSummaryCustomComponents: {},
+      setActiveSummaryCustomComponents: (key, newData) =>
+        set((state) => {
+          const existingData = state.activeSummaryCustomComponents[key] || {};
+          return {
+            activeSummaryCustomComponents: {
+              ...state.activeSummaryCustomComponents,
+              [key]: newData,
+            },
+          };
+        }),
+      // setActiveSummaryCustomComponents: (activeSummaryCustomComponents) =>
+      //   set((state) => ({ activeSummaryCustomComponents })),
+      activeRecordCustomComponent: {
+        id: "components:yazjrjexplgg74vcp5be",
+        name: "json",
+      },
+      setActiveRecordCustomComponent: (activeRecordCustomComponent) =>
+        set((state) => ({ activeRecordCustomComponent })),
+      activity: {},
+      setActivity: (activity) => set((state) => ({ activity })),
       focused_entities: {},
       setFocusedEntities: (focused_entities) =>
         set((state) => ({ ...state, focused_entities: focused_entities })),
@@ -122,6 +149,18 @@ export const useAppStore = create(
 
       activeRecord: null,
       setActiveRecord: (activeRecord) => set((state) => ({ activeRecord })),
+      action_mode: "default",
+      setActionMode: (actionMode) =>
+        set((state) => ({ action_mode: actionMode })),
+      default_action: "query",
+      setDefaultAction: (defaultAction) =>
+        set((state) => ({ default_action: defaultAction })),
+      action_modes: ["default"],
+      activeAgent: null,
+      setActiveAgent: (actionAgent) =>
+        set((state) => ({ activeAgent: actionAgent })),
+      setActionModes: (actionModes) =>
+        set((state) => ({ action_modes: actionModes })),
       navigationHistory: null,
       setNavigationHistory: (navigationHistory) =>
         set((state) => ({ navigationHistory })),
