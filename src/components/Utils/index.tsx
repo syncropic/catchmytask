@@ -5069,3 +5069,70 @@ export const replaceGlobalSearchQuery = (
   // Replace all occurrences with the sanitized value
   return sqlQuery.replace(regex, sanitizedQueryValue);
 };
+
+interface Step {
+  explanation: string;
+  output?: string;
+}
+
+/**
+ * Configuration options for markdown conversion
+ */
+interface MarkdownOptions {
+  codeLanguage?: string;
+  includeMainTitle?: boolean;
+  mainTitleText?: string;
+  stepPrefix?: string;
+}
+
+/**
+ * Default options for markdown conversion
+ */
+const defaultOptions: MarkdownOptions = {
+  codeLanguage: "sql",
+  includeMainTitle: true,
+  mainTitleText: "Analysis Steps",
+  stepPrefix: "Step",
+};
+
+export const stepsToMarkdown = (
+  steps: Step[],
+  options: MarkdownOptions = defaultOptions
+): string => {
+  if (!Array.isArray(steps) || steps.length === 0) {
+    return "";
+  }
+
+  const { codeLanguage, includeMainTitle, mainTitleText, stepPrefix } = {
+    ...defaultOptions,
+    ...options,
+  };
+
+  let markdown = "";
+
+  // Add main title if enabled
+  // if (includeMainTitle) {
+  //   markdown += `# ${mainTitleText}\n\n`;
+  // }
+
+  // Convert each step to markdown
+  const stepsMarkdown = steps.map((step: Step, index: number) => {
+    const stepNumber = index + 1;
+    let stepMarkdown = `### ${stepPrefix} ${stepNumber}\n\n`;
+
+    // Add explanation
+    stepMarkdown += `${step.explanation}\n\n`;
+
+    // Add output in a code block if it exists
+    // if (step.output) {
+    //   stepMarkdown += `\`\`\`${codeLanguage}\n`;
+    //   stepMarkdown += `${step.output}\n`;
+    //   stepMarkdown += "```\n\n";
+    // }
+
+    return stepMarkdown;
+  });
+
+  markdown += stepsMarkdown.join("");
+  return markdown.trim();
+};

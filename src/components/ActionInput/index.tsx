@@ -171,7 +171,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   records,
   focused_item,
 }) => {
-  // const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
   const { data: identity } = useGetIdentity<IIdentity>();
   const { setFormSubmitHandler, setFormInstance } = useTransientStore();
   const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
@@ -334,7 +334,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       // const specialActions = ["save", "upload"]; // List of special actions
       // const action_url = specialActions.includes(action) ? "execute" : action; // Check if action is in the list and replace if necessary
       let action_url = action;
-      let agent_actions = ["search"];
+      let agent_actions = ["search", "query"];
       if (agent_actions.includes(action)) {
         action_url = "agent";
       }
@@ -729,16 +729,16 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         // console.log("value", value);
       } else {
         return new Promise((resolve, reject) => {
-          let include_execution_orders = [];
-          // if action is save then include the execution_order value for the record
-          if (action === "save") {
-            // include_execution_orders = [record?.execution_order || 1];
-            console.log("implement save action");
-          } else {
-            include_execution_orders = selectedRecords[
-              `${action_input_form_values_key}`
-            ]?.map((item: any) => item?.index) || [1];
-          }
+          // let include_execution_orders = [];
+          // // if action is save then include the execution_order value for the record
+          // if (action === "save") {
+          //   // include_execution_orders = [record?.execution_order || 1];
+          //   console.log("implement save action");
+          // } else {
+          //   include_execution_orders = selectedRecords[
+          //     `${action_input_form_values_key}`
+          //   ]?.map((item: any) => item?.index) || [1];
+          // }
           // set form status
           let new_form_status = { ...form_status };
           // if form status for action_input_form_values_key is not set then set it
@@ -748,6 +748,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           // set is_submitting value to true
           new_form_status[action_input_form_values_key].is_submitting = true;
           setFormStatus(new_form_status);
+          console.log("action", action);
           mutate(
             {
               // url: `${config.API_URL}/catch-${
@@ -774,12 +775,13 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                     action_input_form_values[action_input_form_values_key] ||
                     {},
                 },
-                action_mode: {
-                  name: action_mode,
-                  id: "tasks:maigldp650smirgmie97",
-                  response_model: "ProposedSQLCodeResponse",
-                  entity_type: "sql",
-                },
+                // action_mode: {
+                //   name: action_mode,
+                //   id: "tasks:maigldp650smirgmie97",
+                //   response_model: "ProposedSQLCodeResponse",
+                //   entity_type: "sql",
+                // },
+                agent: activeAgent,
                 action_modes: action_modes,
                 // credential: value?.credential || "surrealdb catchmytask dev",
                 // data_model: data_model,
@@ -897,15 +899,32 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 //   //   success_message_code: item?.message?.code,
                 //   // }));
 
-                //   // query_state.forEach((state) => {
-                //   //   queryClient.invalidateQueries({
-                //   //     queryKey: [
-                //   //       `readByState_${JSON.stringify({
-                //   //         success_message_code: state?.success_message_code,
-                //   //       })}`,
-                //   //     ],
-                //   //   });
-                //   // });
+                // query_state.forEach((state) => {
+                //   queryClient.invalidateQueries({
+                //     queryKey: [
+                //       `readByState_${JSON.stringify({
+                //         success_message_code: state?.success_message_code,
+                //       })}`,
+                //     ],
+                //   });
+                // });
+                if (action === "query") {
+                  let activity_state = {
+                    // id: record?.id,
+                    query_name: "read activity",
+                    task_id: activeTask?.id,
+                    session_id: activeSession?.id,
+                    view_id: activeView?.id,
+                    success_message_code: "activity",
+                  };
+                  let query_key = `useFetchQueryDataByState_${JSON.stringify(
+                    activity_state
+                  )}`;
+                  queryClient.invalidateQueries({
+                    queryKey: [query_key],
+                  });
+                  console.log("invalidated", query_key);
+                }
 
                 //   resolve(data);
                 // }

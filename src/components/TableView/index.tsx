@@ -1,5 +1,6 @@
 import { ResultsComponentProps } from "@components/interfaces";
 import MonacoEditor from "@components/MonacoEditor";
+import { stepsToMarkdown } from "@components/Utils";
 import { ActionIcon, Box, Group, Tooltip } from "@mantine/core";
 import {
   IconEdit,
@@ -7,7 +8,9 @@ import {
   IconPin,
   IconPlayCard,
   IconPlayerPlay,
+  IconRobot,
   IconSearch,
+  IconUser,
 } from "@tabler/icons-react";
 // import { useClipboard, useMediaQuery, useViewportSize } from "@mantine/hooks";
 // import { flexRender } from "@tanstack/react-table";
@@ -19,6 +22,7 @@ import {
   useDataTableColumns,
 } from "mantine-datatable";
 import { useAppStore } from "src/store";
+import Markdown from "react-markdown";
 // import { useEffect, useState } from "react";
 // import { getColumnIdWithoutResourceGroup } from "src/utils";
 // import { Column } from "@tanstack/react-table";
@@ -89,7 +93,8 @@ export function TableView<T extends Record<string, any>>({
       ...action_input_form_values,
       [action_input_form_values_key]: {
         ...action_input_form_values[action_input_form_values_key],
-        query: record_action?.record?.content,
+        query:
+          record_action?.record?.content?.structured_content?.[0]?.final_answer,
       },
     };
     setActionInputFormValues(new_action_input_form_values);
@@ -127,6 +132,36 @@ export function TableView<T extends Record<string, any>>({
                 accessor: field?.name,
                 ellipsis: true,
                 title: field?.name,
+                render: (record: any) => {
+                  if (field?.name === "author_id") {
+                    return (
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`
+                          p-1.5 
+                          rounded-full 
+                          flex 
+                          items-center 
+                          justify-center
+                          ${
+                            record?.author_type === "user"
+                              ? "bg-orange-50 text-orange-500 border border-orange-200"
+                              : "bg-blue-50 text-blue-500 border border-blue-200"
+                          }`}
+                        >
+                          {record?.author_type === "user" ? (
+                            <IconUser size={16} />
+                          ) : (
+                            <IconRobot size={16} />
+                          )}
+                        </div>
+                        <span className="text-sm">{record[field?.name]}</span>
+                      </div>
+                    );
+                  } else {
+                    return <div>{record[field?.name]}</div>;
+                  }
+                },
               };
             }),
             {
@@ -255,8 +290,9 @@ export function TableView<T extends Record<string, any>>({
           // }}
           rowExpansion={{
             allowMultiple: true,
-            initiallyExpanded: ({ record: { entity_type } }) =>
-              entity_type === "messages",
+            trigger: "always",
+            // initiallyExpanded: ({ record: { entity_type } }) =>
+            //   entity_type === "messages",
             // expanded: {
             //   recordIds: [
             //     "issues",
@@ -270,9 +306,18 @@ export function TableView<T extends Record<string, any>>({
               <>
                 {/* <div className="pl-6">{record?.content}</div> */}
                 {["agent"]?.includes(record?.author_type) && (
-                  <div className="pl-6">
+                  <div className="pl-6 max-w-xs">
+                    <div className="markdown-wrapper overflow-hidden">
+                      <Markdown className="prose prose-sm max-w-none break-words overflow-x-auto">
+                        {stepsToMarkdown(
+                          record?.content?.structured_content?.[0]?.steps
+                        )}
+                      </Markdown>
+                    </div>
                     <MonacoEditor
-                      value={record?.content}
+                      value={
+                        record?.content?.structured_content?.[0]?.final_answer
+                      }
                       language="sql"
                       height="10vh"
                     />
