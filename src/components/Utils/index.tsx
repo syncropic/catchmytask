@@ -5037,3 +5037,35 @@ export const toTitleCase = (text: string) => {
     })
     .join(" ");
 };
+
+// export const replaceGlobalSearchQuery = (
+//   sqlQuery: string,
+//   newQueryValue: string
+// ) => {
+//   // Using a regular expression to match {{globalSearchQuery}} with optional whitespace
+//   const regex = /\{\{\s*globalSearchQuery\s*\}\}/g;
+
+//   // Replace all occurrences with the new value
+//   return sqlQuery.replace(regex, newQueryValue);
+// };
+
+export const replaceGlobalSearchQuery = (
+  sqlQuery: string,
+  newQueryValue: string
+): string => {
+  if (!sqlQuery || !newQueryValue) {
+    return sqlQuery;
+  }
+
+  // Remove leading/trailing semicolons and whitespace from the new query value
+  const sanitizedQueryValue = newQueryValue
+    .trim()
+    .replace(/^;+|;+$/g, "")
+    .trim();
+
+  // Using a regular expression to match {{globalSearchQuery}} with optional whitespace
+  const regex = /\{\{\s*globalSearchQuery\s*\}\}/g;
+
+  // Replace all occurrences with the sanitized value
+  return sqlQuery.replace(regex, sanitizedQueryValue);
+};

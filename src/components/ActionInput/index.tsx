@@ -349,7 +349,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             // let downloadQuery = "SELECT * FROM issues";
             // console.log(`Form values for ${formId}:`, value);
             // let downloadQuery = value?.query;
-            const search_action_input_form_values_key = `search_${activeView?.id}`;
+            const search_action_input_form_values_key = `query_${activeView?.id}`;
             const globalSearchQuery =
               action_input_form_values[`${search_action_input_form_values_key}`]
                 ?.query;
@@ -1377,7 +1377,18 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             ))}
           </Accordion>
         )}
+        <div className="flex justify-end pt-3">
+          <Button
+            size="compact-sm"
+            onClick={() => form.setFieldValue("query", record?.query)}
+          >
+            Reset
+          </Button>
+        </div>
       </form>
+
+      {/* // Reset to default values
+form.reset(); */}
       {/* <div>{JSON.stringify(mutationError)}</div> */}
       {/* <div>{JSON.stringify(mutationData)}</div> */}
       {/* {mutationData && (

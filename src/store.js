@@ -281,7 +281,7 @@ export const useAppStore = create(
         }),
     }),
     {
-      name: "catchmytask-store",
+      name: "dpw-store",
       storage: createJSONStorage(() => localStorage),
     }
   )

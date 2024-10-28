@@ -5,6 +5,7 @@ import { Card, Text, Grid, Title } from "@mantine/core";
 import { toTitleCase, useReadRecordByState } from "@components/Utils";
 import MonacoEditor from "@components/MonacoEditor";
 import { useDuckDB } from "pages/_app";
+import { useSingleRowData } from "@components/hooks/useSingleRowData";
 
 interface CoverageMetric {
   title: string;
@@ -96,61 +97,88 @@ const CoverageMetrics = ({
 };
 
 export const CoverageMetricsWrapper = ({ record }: { record: any }) => {
-  const [data, setData] = useState<CoverageData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const dbInstance = useDuckDB();
+  //   const [data, setData] = useState<CoverageData | null>(null);
+  //   const [isLoading, setIsLoading] = useState(false);
+  //   const dbInstance = useDuckDB();
 
-  let read_record_state = {
-    credential: "surrealdb catchmytask dev",
-    success_message_code: record?.id,
-    record: record,
-    read_record_mode: "remote",
-  };
+  //   let read_record_state = {
+  //     credential: "surrealdb catchmytask dev",
+  //     success_message_code: record?.id,
+  //     record: record,
+  //     read_record_mode: "remote",
+  //   };
 
+  //   const {
+  //     data: componentData,
+  //     isLoading: componentIsLoading,
+  //     error: componentError,
+  //   } = useReadRecordByState(read_record_state);
+
+  //   let componentRecord = componentData?.data?.find(
+  //     (item: any) =>
+  //       item?.message?.code === read_record_state?.success_message_code
+  //   )?.data[0];
+
+  //   useEffect(() => {
+  //     const executeQuery = async () => {
+  //       if (!componentRecord?.query || !dbInstance) return;
+
+  //       try {
+  //         const result = await dbInstance.query(componentRecord.query);
+  //         const rows = result.toArray();
+  //         // Get the TOTAL row
+  //         const totalRow = rows.find((row: any) => row.group === "TOTAL");
+  //         if (totalRow) {
+  //           setData(totalRow);
+  //         }
+  //         setIsLoading(false);
+  //       } catch (error) {
+  //         console.error("Error executing query:", error);
+  //       }
+  //     };
+
+  //     executeQuery();
+  //   }, [componentRecord?.query, dbInstance]);
+
+  //   if (componentError)
+  //     return (
+  //       <MonacoEditor
+  //         value={{
+  //           data: componentError?.response?.data,
+  //           status: componentError?.response?.status,
+  //         }}
+  //         language="json"
+  //         height="25vh"
+  //       />
+  //     );
+  //   if (componentIsLoading || isLoading) return <div>Loading...</div>;
   const {
-    data: componentData,
-    isLoading: componentIsLoading,
-    error: componentError,
-  } = useReadRecordByState(read_record_state);
+    data,
+    isLoading,
+    error,
+    queryDebugInfo, // optional debug info
+  } = useSingleRowData<CoverageData>({
+    record,
+    rowIdentifier: "TOTAL", // get the TOTAL row
+    debug: true, // enable debugging in development
+  });
 
-  let componentRecord = componentData?.data?.find(
-    (item: any) =>
-      item?.message?.code === read_record_state?.success_message_code
-  )?.data[0];
-
-  useEffect(() => {
-    const executeQuery = async () => {
-      if (!componentRecord?.query || !dbInstance) return;
-
-      try {
-        const result = await dbInstance.query(componentRecord.query);
-        const rows = result.toArray();
-        // Get the TOTAL row
-        const totalRow = rows.find((row: any) => row.group === "TOTAL");
-        if (totalRow) {
-          setData(totalRow);
-        }
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error executing query:", error);
-      }
-    };
-
-    executeQuery();
-  }, [componentRecord?.query, dbInstance]);
-
-  if (componentError)
+  if (error) {
     return (
       <MonacoEditor
         value={{
-          data: componentError?.response?.data,
-          status: componentError?.response?.status,
+          data: error?.response?.data,
+          status: error?.response?.status,
         }}
         language="json"
         height="25vh"
       />
     );
-  if (componentIsLoading || isLoading) return <div>Loading...</div>;
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>

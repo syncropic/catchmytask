@@ -1,5 +1,6 @@
 // components/CostComparisonChart.tsx
 
+import { useComponentData } from "@components/hooks/useComponentData";
 import MonacoEditor from "@components/MonacoEditor";
 import { toTitleCase, useReadRecordByState } from "@components/Utils";
 import { useDuckDB } from "pages/_app";
@@ -180,56 +181,72 @@ export const CostComparisonChart = ({
 };
 
 export const CostComparisonChartWrapper = ({ record }: { record: any }) => {
-  const [dataItems, setDataItems] = useState<[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const dbInstance = useDuckDB();
+  //   const [dataItems, setDataItems] = useState<[]>([]);
+  //   const [isLoading, setIsLoading] = useState(false);
+  //   const dbInstance = useDuckDB();
 
-  let read_record_state = {
-    credential: "surrealdb catchmytask dev",
-    success_message_code: record?.id,
-    record: record,
-    read_record_mode: "remote",
-  };
+  //   let read_record_state = {
+  //     credential: "surrealdb catchmytask dev",
+  //     success_message_code: record?.id,
+  //     record: record,
+  //     read_record_mode: "remote",
+  //   };
 
-  const {
-    data: componentData,
-    isLoading: componentIsLoading,
-    error: componentError,
-  } = useReadRecordByState(read_record_state);
+  //   const {
+  //     data: componentData,
+  //     isLoading: componentIsLoading,
+  //     error: componentError,
+  //   } = useReadRecordByState(read_record_state);
 
-  let componentRecord = componentData?.data?.find(
-    (item: any) =>
-      item?.message?.code === read_record_state?.success_message_code
-  )?.data[0];
+  //   let componentRecord = componentData?.data?.find(
+  //     (item: any) =>
+  //       item?.message?.code === read_record_state?.success_message_code
+  //   )?.data[0];
 
-  useEffect(() => {
-    const executeQuery = async () => {
-      if (!componentRecord?.query || !dbInstance) return;
+  //   useEffect(() => {
+  //     const executeQuery = async () => {
+  //       if (!componentRecord?.query || !dbInstance) return;
 
-      try {
-        const result = await dbInstance.query(componentRecord.query);
-        setDataItems(result.toArray());
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error executing query:", error);
-      }
-    };
+  //       try {
+  //         const result = await dbInstance.query(componentRecord.query);
+  //         setDataItems(result.toArray());
+  //         setIsLoading(false);
+  //       } catch (error) {
+  //         console.error("Error executing query:", error);
+  //       }
+  //     };
 
-    executeQuery();
-  }, [componentRecord?.query, dbInstance]);
+  //     executeQuery();
+  //   }, [componentRecord?.query, dbInstance]);
 
-  if (componentError)
+  //   if (componentError)
+  //     return (
+  //       <MonacoEditor
+  //         value={{
+  //           data: componentError?.response?.data,
+  //           status: componentError?.response?.status,
+  //         }}
+  //         language="json"
+  //         height="25vh"
+  //       />
+  //     );
+  //   if (componentIsLoading) return <div>Loading...</div>;
+  const { dataItems, isLoading, error, componentRecord } = useComponentData({
+    record,
+  });
+
+  if (error)
     return (
       <MonacoEditor
         value={{
-          data: componentError?.response?.data,
-          status: componentError?.response?.status,
+          data: error?.response?.data,
+          status: error?.response?.status,
         }}
         language="json"
         height="25vh"
       />
     );
-  if (componentIsLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <>

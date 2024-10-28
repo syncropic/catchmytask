@@ -3,14 +3,21 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table, Badge, Text, Group, Title } from "@mantine/core";
 import {
+  buildSQLQuery,
+  enrichFilters,
   formatPercentage,
   formatRatio,
+  replaceGlobalSearchQuery,
+  sanitizeFilters,
   StandardMatrix,
   toTitleCase,
+  useFetchQueryDataByState,
   useReadRecordByState,
 } from "@components/Utils";
 import MonacoEditor from "@components/MonacoEditor";
 import { useDuckDB } from "pages/_app";
+import { useAppStore } from "src/store";
+import { useComponentData } from "@components/hooks/useComponentData";
 
 interface CostDataItem {
   group: string;
@@ -150,56 +157,22 @@ const CostComparisonMatrix = ({
 };
 
 export const CostComparisonMatrixWrapper = ({ record }: { record: any }) => {
-  const [dataItems, setDataItems] = useState<[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const dbInstance = useDuckDB();
+  const { dataItems, isLoading, error, componentRecord } = useComponentData({
+    record,
+  });
 
-  let read_record_state = {
-    credential: "surrealdb catchmytask dev",
-    success_message_code: record?.id,
-    record: record,
-    read_record_mode: "remote",
-  };
-
-  const {
-    data: componentData,
-    isLoading: componentIsLoading,
-    error: componentError,
-  } = useReadRecordByState(read_record_state);
-
-  let componentRecord = componentData?.data?.find(
-    (item: any) =>
-      item?.message?.code === read_record_state?.success_message_code
-  )?.data[0];
-
-  useEffect(() => {
-    const executeQuery = async () => {
-      if (!componentRecord?.query || !dbInstance) return;
-
-      try {
-        const result = await dbInstance.query(componentRecord.query);
-        setDataItems(result.toArray());
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error executing query:", error);
-      }
-    };
-
-    executeQuery();
-  }, [componentRecord?.query, dbInstance]);
-
-  if (componentError)
+  if (error)
     return (
       <MonacoEditor
         value={{
-          data: componentError?.response?.data,
-          status: componentError?.response?.status,
+          data: error?.response?.data,
+          status: error?.response?.status,
         }}
         language="json"
         height="25vh"
       />
     );
-  if (componentIsLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <>
