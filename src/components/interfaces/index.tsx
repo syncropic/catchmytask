@@ -279,9 +279,10 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   record?: any;
   resource_group?: string;
   execlude_components?: string[];
+  view_record?: any;
   // view_data: any;
   // data_columns: T[];
-  data_fields: T[];
+  data_fields?: T[];
   invalidate_queries_on_submit_success?: string[];
   setSorting?: any;
   sorting?: any;

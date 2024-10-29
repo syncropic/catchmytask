@@ -8,8 +8,8 @@ export function CustomComponentsView() {
   const {
     activeMainCustomComponent,
     setActiveMainCustomComponent,
-    activeRecordCustomComponent,
-    setActiveRecordCustomComponent,
+    activeRecordCustomComponents,
+    setActiveRecordCustomComponents,
     setActiveSummaryCustomComponents,
     activeSummaryCustomComponents,
     activeView,
@@ -22,6 +22,11 @@ export function CustomComponentsView() {
     // console.log("handleSetActiveSummaryCustomComponents");
     // console.log(item);
     setActiveSummaryCustomComponents(activeView?.id, item);
+  };
+  const handleSetActiveRecordCustomComponents = (item: any) => {
+    // console.log("handleSetActiveSummaryCustomComponents");
+    // console.log(item);
+    setActiveRecordCustomComponents(activeView?.id, item);
   };
   return (
     <>
@@ -136,11 +141,11 @@ export function CustomComponentsView() {
       <SearchInput
         placeholder="record components"
         description="record"
-        handleOptionSubmit={setActiveRecordCustomComponent}
-        value={activeRecordCustomComponent?.id || ""}
-        // include_action_icons={["add_new_item", "dublicate"]}
-        // navigateOnSelect={{ resource: "views" }}
-        // navigateOnClear={{ resource: "home" }}
+        handleOptionSubmit={handleSetActiveRecordCustomComponents}
+        value={activeRecordCustomComponents?.[activeView?.id]?.map(
+          (item: any) => item?.id
+        )}
+        multiselect={true}
         activeFilters={[
           {
             id: 1,

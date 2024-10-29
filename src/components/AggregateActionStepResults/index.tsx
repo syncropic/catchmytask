@@ -24,6 +24,7 @@ import { useDuckDB } from "pages/_app"; // Import the useDuckDB hook
 import { set } from "lodash";
 import nunjucks from "nunjucks";
 import SummariesDisplay from "@components/SummariesDisplay";
+import RecordsDisplay from "@components/RecordsDisplay";
 
 interface AggregateActionStepResultsProps {
   action_steps?: any[];
@@ -38,6 +39,7 @@ export function AggregateActionStepResults({
     activeView,
     activeMainCustomComponent,
     activeSummaryCustomComponents,
+    activeRecordCustomComponents,
   } = useAppStore(); // Zustand store access
 
   const [fetchedSteps, setFetchedSteps] = useState<Record<string, boolean>>({});
@@ -293,6 +295,9 @@ export function AggregateActionStepResults({
       {/* <div>{JSON.stringify(fetchedSteps)}</div> */}
 
       {isLoading && <div>Loading...</div>}
+      {!isLoading && view_record?.fields && dataItems && (
+        <RecordsDisplay data_items={dataItems} />
+      )}
       {!isLoading &&
         view_record?.fields &&
         dataItems &&
@@ -302,14 +307,6 @@ export function AggregateActionStepResults({
             // data_fields={view_record?.fields}
           />
         )}
-      {/* {!isLoading &&
-        view_record?.fields &&
-        dataItems &&
-        activeSummaryCustomComponents?.[activeView?.id]?.map(
-          (item: any, index: any) => {
-            return <div key={index}>hello</div>;
-          }
-        )} */}
       {!isLoading && view_record?.fields && dataItems && (
         <DataDisplay
           data_items={dataItems}

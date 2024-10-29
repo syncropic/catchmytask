@@ -228,6 +228,15 @@ export function DataDisplay<T extends Record<string, any>>({
       />
     );
   }
+  // if (view_mode === "embed") {
+  //   return (
+  //     <EmbedView
+  //       data_items={data_items}
+  //       data_fields={data_fields}
+  //       view_record={viewRecord}
+  //     />
+  //   );
+  // }
   if (view_mode === "table") {
     return (
       // <MonacoEditor

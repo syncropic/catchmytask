@@ -130,12 +130,17 @@ export const useAppStore = create(
         }),
       // setActiveSummaryCustomComponents: (activeSummaryCustomComponents) =>
       //   set((state) => ({ activeSummaryCustomComponents })),
-      activeRecordCustomComponent: {
-        id: "components:yazjrjexplgg74vcp5be",
-        name: "json",
-      },
-      setActiveRecordCustomComponent: (activeRecordCustomComponent) =>
-        set((state) => ({ activeRecordCustomComponent })),
+      activeRecordCustomComponents: {},
+      setActiveRecordCustomComponents: (key, newData) =>
+        set((state) => {
+          const existingData = state.activeRecordCustomComponents[key] || {};
+          return {
+            activeRecordCustomComponents: {
+              ...state.activeRecordCustomComponents,
+              [key]: newData,
+            },
+          };
+        }),
       activity: {},
       setActivity: (activity) => set((state) => ({ activity })),
       focused_entities: {},

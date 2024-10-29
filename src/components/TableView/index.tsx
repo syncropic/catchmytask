@@ -118,7 +118,7 @@ export function TableView<T extends Record<string, any>>({
       </div> */}
       {/* <div>{JSON.stringify(sorting)}</div> */}
 
-      {data_items && (
+      {data_items && data_fields && (
         <DataTable<T>
           // page={1}
           // onPageChange={(page) => console.log(page)}
