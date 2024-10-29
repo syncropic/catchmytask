@@ -546,16 +546,22 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   if (fieldType === "datetime" && value) {
                     try {
                       // Handle different date string formats
-                      const date = new Date(value);
-                      if (!isNaN(date.getTime())) {
-                        return [key, date];
+                      // First ensure value is a string
+                      if (
+                        typeof value === "string" ||
+                        typeof value === "number" ||
+                        value instanceof Date
+                      ) {
+                        const date = new Date(value);
+                        if (!isNaN(date.getTime())) {
+                          return [key, date];
+                        }
                       }
                     } catch (error) {
                       console.warn(
                         `Failed to parse date for column ${key}:`,
                         value
                       );
-                      return [key, value]; // Keep original value if parsing fails
                     }
                   }
 
