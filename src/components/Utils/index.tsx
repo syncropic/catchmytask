@@ -1157,9 +1157,25 @@ export function useReadByState(state: any) {
     setLocalDB,
     updateLocalDB,
     setDataFields,
+    activeView,
   } = useAppStore();
 
+  const viewState = {
+    record: { id: activeView?.id },
+    read_record_mode: "remote",
+  };
+
+  let view_query_key = `readByState_${JSON.stringify({
+    id: viewState?.record?.id,
+    success_message_code: viewState?.record?.id || "record_read",
+  })}`;
+
   const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
+  const queryClient = useQueryClient();
+  const viewData = queryClient.getQueryData([view_query_key]);
+  const viewRecord = viewData?.data?.find(
+    (item: any) => item?.message?.code === activeView?.id
+  )?.data[0];
 
   // State variables for LocalDB operation statuses
   const [isLocalDBLoading, setIsLocalDBLoading] = useState(false);
@@ -1189,10 +1205,17 @@ export function useReadByState(state: any) {
         );
 
         const data_items = dataRecord?.data || [];
-        const data_fields = (dataRecord?.data_fields || []).map(
+        const infered_data_fields = (dataRecord?.data_fields || []).map(
           (field: any) => ({
             ...field,
           })
+        );
+
+        // console.log("useReadByState > viewRecord", viewRecord);
+        const data_fields = viewRecord?.fields || infered_data_fields || [];
+        console.log(
+          `${state?.success_message_code} / useReadByState > viewRecord data_fields`,
+          data_fields
         );
 
         // Save the data fields to the Zustand store
@@ -1316,7 +1339,7 @@ export function useReadRecordByState(state: any) {
             credential_id: "credentials:5drygx90zfe8mf2jigvl",
             implement: state?.implement,
             action_step_query: `SELECT * FROM ${state?.record?.id}`,
-            success_message_code: state?.success_message_code || "record_read",
+            success_message_code: state?.success_message_code || "read_record",
           },
         ],
       },
@@ -1325,7 +1348,7 @@ export function useReadRecordByState(state: any) {
       queryKey: [
         `readByState_${JSON.stringify({
           id: state?.record?.id,
-          success_message_code: state?.success_message_code || "record_read",
+          success_message_code: state?.success_message_code || "read_record",
         })}`,
       ],
       enabled: state?.enable_query || true,

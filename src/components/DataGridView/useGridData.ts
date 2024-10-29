@@ -176,12 +176,20 @@ export function createCell(
     };
   }
 
+  // Define the date formatter
+  const dateFormat = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "UTC",
+  });
+
   switch (field.data_type) {
     case "datetime":
       return {
         type: "date",
         date: fieldValue ? new Date(fieldValue) : undefined,
-        // format: "dd/MM/yyyy",
+        format: dateFormat,
         className,
         style,
       };

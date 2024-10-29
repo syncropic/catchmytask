@@ -312,6 +312,28 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
   const defaultValues = _.merge({}, ...defaultValueObjects);
 
+  // Add this function before your main code to handle date formatting
+  const formatDateForExcel = (value: any, field: any) => {
+    // Check if the value is a date string
+    if (
+      typeof value === "string" &&
+      value.match(/^\d{4}-\d{2}-\d{2}/) &&
+      field.type === "datetime"
+    ) {
+      // Parse the date string and create a proper Excel date
+      const date = new Date(value + "Z"); // Append Z to treat as UTC
+      return date;
+    }
+    return value;
+  };
+  // Helper function to find field type from data_fields
+
+  // First, modify the getFieldType helper to be more precise
+  const getFieldType = (fieldName: string, fields: any[]) => {
+    const field = fields.find((f) => f.name === fieldName);
+    return field?.data_type?.toLowerCase() || null;
+  };
+
   const form = useForm({
     defaultValues: defaultValues,
     onSubmit: async ({ value }) => {
@@ -420,11 +442,27 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             const worksheet = workbook.addWorksheet(`${value?.name}`);
 
             // Step 2: Add headers and apply formatting to the headers
-            worksheet.columns = columnNames.map((col: any) => ({
-              header: col,
-              key: col,
-              width: 20, // Adjust column width here
-            }));
+            // worksheet.columns = columnNames.map((col: any) => ({
+            //   header: col,
+            //   key: col,
+            //   width: 20, // Adjust column width here
+            // }));
+
+            // Modify the column definition part
+
+            // 1. Column definitions
+            worksheet.columns = columnNames.map((col: any) => {
+              const fieldType = getFieldType(col, record.fields);
+              return {
+                header: col,
+                key: col,
+                width: fieldType === "datetime" ? 25 : 20,
+                style:
+                  fieldType === "datetime"
+                    ? { numFmt: "yyyy-mm-dd hh:mm:ss" }
+                    : {},
+              };
+            });
 
             // Apply refined dark mode styling to the header row (first row)
             worksheet.getRow(1).eachCell((cell) => {
@@ -450,84 +488,132 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             });
 
             // Step 3: Convert BigInt values and Add data rows
+            // downloadData.forEach((row: any) => {
+            //   const convertedRow = Object.fromEntries(
+            //     Object.entries(row).map(([key, value]) => {
+            //       if (typeof value === "bigint") {
+            //         return [key, value.toString()]; // Convert BigInt to string
+            //       }
+            //       return [key, value];
+            //     })
+            //   );
+            //   worksheet.addRow(convertedRow);
+            // });
+
+            // Modify the data rows part
+            // downloadData.forEach((row: any) => {
+            //   const convertedRow = Object.fromEntries(
+            //     Object.entries(row).map(([key, value]) => {
+            //       // Handle BigInt
+            //       if (typeof value === "bigint") {
+            //         return [key, value.toString()];
+            //       }
+
+            //       // Check if field is datetime
+            //       const fieldType = getFieldType(key, record?.fields);
+            //       if (fieldType === "datetime" && value) {
+            //         // Parse the date string and create a proper Excel date
+            //         const date = new Date(value + "Z"); // Append Z to treat as UTC
+            //         return [key, date];
+            //       }
+
+            //       return [key, value];
+            //     })
+            //   );
+
+            //   const newRow = worksheet.addRow(convertedRow);
+
+            //   // Apply date format to datetime columns
+            //   columnNames.forEach((colName: string, index: number) => {
+            //     const fieldType = getFieldType(colName, record?.fields);
+            //     if (fieldType === "datetime") {
+            //       const cell = newRow.getCell(index + 1);
+            //       cell.numFmt = "yyyy-mm-dd hh:mm:ss";
+            //     }
+            //   });
+            // });
+            // 2. Data row handling
             downloadData.forEach((row: any) => {
               const convertedRow = Object.fromEntries(
                 Object.entries(row).map(([key, value]) => {
+                  // Handle BigInt
                   if (typeof value === "bigint") {
-                    return [key, value.toString()]; // Convert BigInt to string
+                    return [key, value.toString()];
                   }
+
+                  // Check if field is datetime
+                  const fieldType = getFieldType(key, record.fields);
+                  if (fieldType === "datetime" && value) {
+                    try {
+                      // Handle different date string formats
+                      const date = new Date(value);
+                      if (!isNaN(date.getTime())) {
+                        return [key, date];
+                      }
+                    } catch (error) {
+                      console.warn(
+                        `Failed to parse date for column ${key}:`,
+                        value
+                      );
+                      return [key, value]; // Keep original value if parsing fails
+                    }
+                  }
+
                   return [key, value];
                 })
               );
-              worksheet.addRow(convertedRow);
+
+              const newRow = worksheet.addRow(convertedRow);
+
+              // Apply date format to datetime columns
+              columnNames.forEach((colName: string, index: number) => {
+                const fieldType = getFieldType(colName, record.fields);
+                if (fieldType === "datetime") {
+                  const cell = newRow.getCell(index + 1);
+                  if (cell.value) {
+                    // Only set format if there's a value
+                    cell.numFmt = "yyyy-mm-dd hh:mm:ss";
+                  }
+                }
+              });
             });
 
-            // Step 4: Apply conditional formatting based on view.fields
-            // let active_template_record_view_key = null;
+            // Modify the part where you add data rows (replace the existing downloadData.forEach block):
+            // downloadData.forEach((row: any) => {
+            //   const convertedRow = Object.fromEntries(
+            //     Object.entries(row).map(([key, value]) => {
+            //       // Handle BigInt
+            //       if (typeof value === "bigint") {
+            //         return [key, value.toString()];
+            //       }
 
-            // if (activeTemplateRecord) {
-            //   active_template_record_view_key =
-            //     activeTemplateRecord?.success_message_code
-            //       ? activeTemplateRecord?.success_message_code
-            //           .toLowerCase()
-            //           .replace(/\s+/g, "_")
-            //       : activeTemplateRecord?.name
-            //           .toLowerCase()
-            //           .replace(/\s+/g, "_");
-            // }
+            //       // Find the field definition from schema
+            //       const field = downloadResult.schema.fields.find(
+            //         (f: any) => f.name === key
+            //       );
 
-            // if (active_template_record_view_key) {
-            //   let active_view = views[active_template_record_view_key];
+            //       // Format date if it's a datetime field
+            //       return [key, formatDateForExcel(value, field)];
+            //     })
+            //   );
+
+            //   const newRow = worksheet.addRow(convertedRow);
+
+            //   // Apply date format to datetime columns
+            //   downloadResult.schema.fields.forEach(
+            //     (field: any, index: number) => {
+            //       if (field.type === "datetime") {
+            //         const cell = newRow.getCell(index + 1);
+            //         cell.numFmt = "yyyy-mm-dd hh:mm:ss";
+            //       }
+            //     }
+            //   );
+            // });
+
             console.log(
               "activeView to use in save, the record will be the active view being read directly from react query",
               record
             );
-
-            //   active_view.fields.forEach((field: any) => {
-            //   //   if (field.conditional_formatting) {
-            //   //     const targetColumnIndex =
-            //   //       columnNames.indexOf(field.name) + 1; // Get the index of the field to apply formatting
-            //   //     const comparisonColumnIndex =
-            //   //       columnNames.indexOf(
-            //   //         field.conditional_formatting.name
-            //   //       ) + 1; // Get the index of the comparison field
-
-            //   //     if (targetColumnIndex > 0 && comparisonColumnIndex > 0) {
-            //   //       worksheet.eachRow((row, rowNumber) => {
-            //   //         if (rowNumber === 1) return; // Skip header row
-
-            //   //         const targetCell = row.getCell(targetColumnIndex); // Cell where formatting will be applied
-            //   //         const comparisonCell = row.getCell(comparisonColumnIndex); // Cell used for comparison
-            //   //         const comparisonCellValue = String(comparisonCell.value)
-            //   //           .toLowerCase()
-            //   //           .trim(); // Normalize comparison value
-
-            //   //         // Find the matching rule for conditional formatting
-            //   //         const matchingRule =
-            //   //           field.conditional_formatting.rules.find(
-            //   //             (rule: any) =>
-            //   //               String(rule.value).toLowerCase().trim() ===
-            //   //               comparisonCellValue
-            //   //           );
-
-            //   //         if (matchingRule) {
-            //   //           const style = getExcelJSStyleFromClass(
-            //   //             matchingRule.class
-            //   //           );
-            //   //           if (style) {
-            //   //             targetCell.fill = {
-            //   //               type: "pattern",
-            //   //               pattern: "solid",
-            //   //               ...style,
-            //   //             };
-            //   //             targetCell.font = { color: { argb: "FFFFFFFF" } }; // White text color
-            //   //           }
-            //   //         }
-            //   //       });
-            //   //     }
-            //   //   }
-            //   // });
-            // }
 
             record.fields.forEach((field: any) => {
               if (field.conditional_formatting) {
@@ -580,6 +666,21 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               const header = columnNames[index];
               column.width = calculateColumnWidth(header);
             });
+            // Also modify the column definition part to set proper width for datetime columns:
+            // worksheet.columns = columnNames.map((col: any) => {
+            //   const field = downloadResult.schema.fields.find(
+            //     (f: any) => f.name === col
+            //   );
+            //   return {
+            //     header: col,
+            //     key: col,
+            //     width: field?.type === "datetime" ? 25 : 20, // Make datetime columns wider
+            //     style:
+            //       field?.type === "datetime"
+            //         ? { numFmt: "yyyy-mm-dd hh:mm:ss" }
+            //         : {},
+            //   };
+            // });
 
             // Step 7: Add a summary sheet
             const summarySheet = workbook.addWorksheet("summary");

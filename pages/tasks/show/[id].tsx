@@ -31,18 +31,22 @@ export const ShowPage: React.FC = () => {
   // Define states for the records
   const applicationState = {
     record: { id: params?.applicationId },
+    success_message_code: params?.applicationId,
     read_record_mode: "remote",
   };
   const sessionState = {
     record: { id: params?.sessionId },
+    success_message_code: params?.sessionId,
     read_record_mode: "remote",
   };
   const viewState = {
     record: { id: params?.viewId },
+    success_message_code: params?.viewId,
     read_record_mode: "remote",
   };
   const taskState = {
     record: { id: params?.id },
+    success_message_code: params?.id,
     read_record_mode: "remote",
   };
 
@@ -72,7 +76,8 @@ export const ShowPage: React.FC = () => {
   useEffect(() => {
     const updateEntities = () => {
       const newApplication = appData?.data?.find(
-        (item: any) => item?.message?.code === "record_read"
+        (item: any) =>
+          item?.message?.code === params?.applicationId || "record_read"
       )?.data[0];
 
       if (newApplication && newApplication.id !== activeApplication?.id) {
@@ -80,7 +85,8 @@ export const ShowPage: React.FC = () => {
       }
 
       const newSession = sessionData?.data?.find(
-        (item: any) => item?.message?.code === "record_read"
+        (item: any) =>
+          item?.message?.code === params?.sessionId || "read_record"
       )?.data[0];
 
       if (newSession && newSession.id !== activeSession?.id) {
@@ -88,7 +94,7 @@ export const ShowPage: React.FC = () => {
       }
 
       const newTask = taskData?.data?.find(
-        (item: any) => item?.message?.code === "record_read"
+        (item: any) => item?.message?.code === params?.id || "read_record"
       )?.data[0];
 
       if (newTask && newTask.id !== previousTaskIdRef.current) {
@@ -97,7 +103,7 @@ export const ShowPage: React.FC = () => {
       }
 
       const newView = viewData?.data?.find(
-        (item: any) => item?.message?.code === "record_read"
+        (item: any) => item?.message?.code === params?.viewId || "read_record"
       )?.data[0];
 
       if (newView && newView.id !== activeView?.id) {
@@ -166,7 +172,7 @@ export const ShowPage: React.FC = () => {
   // Render the page content
   return (
     <>
-    {/* {!activeView && (<Title order={3}>Get Important Things Done.</Title>)} */}
+      {/* {!activeView && (<Title order={3}>Get Important Things Done.</Title>)} */}
       {/* <Breadcrumbs /> */}
       {/* <Text>Task Show Page</Text>
       <Title order={2}>{activeTask?.name || "No Task Name"}</Title> */}
