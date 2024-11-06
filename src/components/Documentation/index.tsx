@@ -30,29 +30,29 @@ export function Documentation<T extends Record<string, any>>({
   // action = "set_fields",
   // display,
   view_mode,
-  activeFilters,
+  record,
 }: DocumentationComponentProps<T>) {
   // const { ref, width } = useElementSize();
   // const [isLarge, setIsLarge] = useState(true);
 
-  const { activeView } = useAppStore();
+  // const { activeView } = useAppStore();
 
-  let read_record_state = {
-    credential: "surrealdb catchmytask dev",
-    success_message_code: activeView?.id,
-    record: activeView,
-    read_record_mode: "remote",
-  };
+  // let read_record_state = {
+  //   credential: "surrealdb catchmytask dev",
+  //   success_message_code: activeView?.id,
+  //   record: activeView,
+  //   read_record_mode: "remote",
+  // };
 
-  const {
-    data: viewData,
-    isLoading: viewIsLoading,
-    error: viewError,
-  } = useReadRecordByState(read_record_state);
+  // const {
+  //   data: viewData,
+  //   isLoading: viewIsLoading,
+  //   error: viewError,
+  // } = useReadRecordByState(read_record_state);
 
-  let viewRecord = viewData?.data?.find(
-    (item: any) => item?.message?.code === activeView?.id
-  )?.data[0];
+  // let viewRecord = viewData?.data?.find(
+  //   (item: any) => item?.message?.code === activeView?.id
+  // )?.data[0];
 
   // let selected_record_items_key = `${action}_action_input_${record?.id}`;
   // const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
@@ -146,9 +146,9 @@ export function Documentation<T extends Record<string, any>>({
       /> */}
       <div className="h-96 relative border border-gray-300 rounded-md overflow-hidden">
         <NaturalLanguageEditor
-          value={createFieldsDocumentationHTML(viewRecord?.fields, {
-            name: viewRecord?.name,
-            description: viewRecord?.description,
+          value={createFieldsDocumentationHTML(record?.fields, {
+            name: record?.name,
+            description: record?.description,
           })}
         />
       </div>

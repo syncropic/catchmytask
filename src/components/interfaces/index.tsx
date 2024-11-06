@@ -339,7 +339,8 @@ export interface DataDisplayComponentProps<T extends Record<string, any>> {
 }
 
 export interface DocumentationComponentProps<T extends Record<string, any>> {
-  activeFilters?: FilterItem[];
+  record?: any;
+  // activeFilters?: FilterItem[];
   // data_columns: any[]; // Define more specific type if possible
   // item: IView;
   // resource: string;

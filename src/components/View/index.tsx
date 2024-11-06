@@ -25,6 +25,8 @@ import { titleAccordionConfig } from "./titleAccordionConfig";
 import { Tooltip, Text } from "@mantine/core";
 import Reveal from "@components/Reveal";
 import { useViewportSize } from "@mantine/hooks";
+import Documentation from "@components/Documentation";
+import { IconInfoCircle } from "@tabler/icons-react";
 
 interface ViewProps {
   view_record: any;
@@ -388,17 +390,21 @@ const ViewWrapper = () => {
                   transitionProps={{ duration: 200 }}
                   label={getTooltipLabel(view_record)}
                 >
-                  <Text
-                    size="sm"
-                    className="text-blue-500 truncate overflow-hidden whitespace-nowrap px-3"
-                    style={{ maxWidth: width < 500 ? 100 : 500 }}
-                  >
-                    {getLabel(view_record)}
-                  </Text>
+                  <div className="flex">
+                    <Text
+                      size="sm"
+                      className="text-blue-500 truncate overflow-hidden whitespace-nowrap px-3"
+                      style={{ maxWidth: width < 500 ? 100 : 500 }}
+                    >
+                      {getLabel(view_record)}
+                    </Text>
+                    <IconInfoCircle size={18} />
+                  </div>
                 </Tooltip>
               }
             >
-              <MonacoEditor value={view_record} language="json" height="50vh" />
+              {/* <MonacoEditor value={view_record} language="json" height="50vh" /> */}
+              <Documentation record={view_record}></Documentation>
             </Reveal>
           </div>
         }

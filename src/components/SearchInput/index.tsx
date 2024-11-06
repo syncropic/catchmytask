@@ -260,7 +260,7 @@ function SearchInput<T extends Record<string, any>>({
         </Tooltip>
       )}
 
-      {include_action_icons?.includes("info") && (
+      {/* {include_action_icons?.includes("info") && (
         <Reveal
           trigger="click"
           target={
@@ -277,9 +277,9 @@ function SearchInput<T extends Record<string, any>>({
             </Tooltip>
           }
         >
-          <Documentation activeFilters={activeFilters}></Documentation>
+          <Documentation record={activeFilters}></Documentation>
         </Reveal>
-      )}
+      )} */}
 
       {include_action_icons?.includes("record_info") && (
         <Reveal
