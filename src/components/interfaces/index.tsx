@@ -1137,6 +1137,8 @@ export interface SearchInputComponentProps<T extends Record<string, any>> {
   ref?: any;
   handleEdit?: any;
   record?: any;
+  query_name?: string;
+  data_items?: any;
 }
 
 export interface GlobalSearchInputComponentProps<

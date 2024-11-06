@@ -187,6 +187,7 @@ export const UserMenu = () => {
                 include_action_icons={["edit", "add_new", "record_info"]}
                 handleEdit={handleEdit}
                 record={activeProfile}
+                query_name="fetch profiles"
                 // navigateOnSelect={{ resource: "views" }}
                 // navigateOnClear={{ resource: "home" }}
                 activeFilters={[
