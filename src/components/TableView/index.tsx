@@ -4,8 +4,11 @@ import {
 } from "@components/interfaces";
 import MonacoEditor from "@components/MonacoEditor";
 import {
+  buildSQLQuery,
+  enrichFilters,
   formatDate,
   formatPythonTemplate,
+  sanitizeFilters,
   stepsToMarkdown,
 } from "@components/Utils";
 import {
@@ -89,6 +92,9 @@ export function TableView<T extends Record<string, any>>({
   const { params } = useParsed();
 
   const action_input_form_values_key = `query_${params?.id || activeTask?.id}`;
+  const query_action_input_form_values = useAppStore(
+    (state) => state.action_input_form_values[action_input_form_values_key]
+  );
 
   const globalSearchQuery = useAppStore(
     (state) =>
@@ -104,15 +110,37 @@ export function TableView<T extends Record<string, any>>({
     let action_input_values = {
       number_of_results: 10,
     };
+
     let language = record?.content?.structured_content?.[0]?.language;
     let query = record?.content?.structured_content?.[0]?.final_answer || "";
     if (language === "python") {
+      console.log("format python");
       query = formatPythonTemplate(
         record?.content?.structured_content?.[0]?.final_answer,
         action_input_values || {}
       );
     }
-    // console.log(record_action);
+    if (language === "sql") {
+      console.log("format sql");
+      let active_view_query_model_data_data_model_query_filters =
+        view_record?.data_model?.schema?.query_filters;
+      let enriched_query_filters = enrichFilters(
+        active_view_query_model_data_data_model_query_filters,
+        query_action_input_form_values
+      );
+
+      let rendered_globalQuery = buildSQLQuery(
+        record?.content?.structured_content?.[0]?.final_answer,
+        sanitizeFilters(enriched_query_filters),
+        { caseSensitive: false }
+      )?.query;
+      console.log("rendered_globalQuery", rendered_globalQuery);
+      // query = formatPythonTemplate(
+      //   record?.content?.structured_content?.[0]?.final_answer,
+      //   action_input_values || {}
+      // );
+    }
+    console.log(`query: ${query}`);
     let new_action_input_form_values = {
       ...action_input_form_values,
       [action_input_form_values_key]: {
@@ -175,27 +203,29 @@ export function TableView<T extends Record<string, any>>({
   };
   const viewportRef = useRef<HTMLDivElement>(null);
 
-  const scrollToRow = (selector: string) => {
-    const el = document.querySelector<HTMLElement>(selector)!;
-    viewportRef.current?.scrollTo({
-      top: el.offsetTop - el.clientHeight - 1,
-      behavior: "smooth",
-    });
-  };
-
-  // Effect to scroll to last row
+  // Move scrollToRow inside useEffect to avoid unnecessary recreations
   useEffect(() => {
     if (
       data_items?.length &&
       view_record?.include_items?.includes("scroll_to_last_item")
     ) {
-      const timeoutId = setTimeout(() => {
-        scrollToRow(`[data-row-index="${title} - ${data_items.length - 1}"]`);
-      }, 100);
+      const scrollToRow = () => {
+        const lastRowSelector = `[data-row-index="${title} - ${
+          data_items.length - 1
+        }"]`;
+        const el = document.querySelector<HTMLElement>(lastRowSelector);
+        if (el && viewportRef.current) {
+          viewportRef.current.scrollTo({
+            top: el.offsetTop - el.clientHeight - 1,
+            behavior: "smooth",
+          });
+        }
+      };
 
+      const timeoutId = setTimeout(scrollToRow, 100);
       return () => clearTimeout(timeoutId);
     }
-  }, [data_items, scrollToRow]);
+  }, [data_items]); // Only depend on data_items
   let input_record_item = {
     id: "input_record",
     name: "input_record",

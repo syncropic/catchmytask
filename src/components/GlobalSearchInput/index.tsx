@@ -456,8 +456,7 @@ function SearchInput<T extends Record<string, any>>({
             </Tooltip>
           }
         >
-          {/* <MonacoEditor value={activeView} language="json" height="50vh" /> */}
-          <Documentation activeFilters={activeFilters}></Documentation>
+          <MonacoEditor value={activeView} language="json" height="50vh" />
         </Reveal>
       )}
       {include_action_icons?.includes("dublicate") && (

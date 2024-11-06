@@ -27,8 +27,7 @@ import Reveal from "@components/Reveal";
 import { useViewportSize } from "@mantine/hooks";
 import Documentation from "@components/Documentation";
 import { IconInfoCircle } from "@tabler/icons-react";
-import { View } from "./View";
-import { viewFooterAccordionConfig } from "./viewFooterAccordionConfig";
+import { viewItemsAccordionConfig } from "./viewItemsAccordionConfig";
 
 const ViewWrapper = () => {
   const { params } = useParsed();
@@ -109,94 +108,42 @@ const ViewWrapper = () => {
   }
 
   return (
-    <div className="flex flex-col">
-      {/* <div>view wrapper</div> */}
-      {/* <MonacoEditor
-        value={{
-          view_record: view_record,
-        }}
-        height="25vh"
-        language="json"
-      ></MonacoEditor> */}
-
-      <div>
-        <AccordionComponent
-          sections={titleAccordionConfig}
-          include_items={["toolbar"]}
-          key="view_title"
-          title={
-            <div onClick={(e) => e.stopPropagation()}>
-              <Reveal
-                trigger="click"
-                target={
-                  <Tooltip
-                    multiline
-                    w={220}
-                    withArrow
-                    transitionProps={{ duration: 200 }}
-                    label={getTooltipLabel(view_record)}
-                  >
-                    <div className="flex">
-                      <Text
-                        size="sm"
-                        className="text-blue-500 truncate overflow-hidden whitespace-nowrap px-3"
-                        style={{ maxWidth: width < 500 ? 100 : 500 }}
-                      >
-                        {getLabel(view_record)}
-                      </Text>
-                      <IconInfoCircle size={18} />
-                    </div>
-                  </Tooltip>
-                }
+    <AccordionComponent
+      sections={viewItemsAccordionConfig}
+      include_items={["toolbar"]}
+      defaultExpandedValues={["main"]}
+      key="view_title"
+      view_record={view_record}
+      title={
+        <div onClick={(e) => e.stopPropagation()}>
+          <Reveal
+            trigger="click"
+            target={
+              <Tooltip
+                multiline
+                w={220}
+                withArrow
+                transitionProps={{ duration: 200 }}
+                label={getTooltipLabel(view_record)}
               >
-                <Documentation record={view_record}></Documentation>
-              </Reveal>
-            </div>
-          }
-        />
-      </div>
-      {/* <AccordionComponent
-        sections={viewQueryAccordionConfig}
-        globalQuery={globalQuery}
-      /> */}
-      <div>{view_record && <View view_record={view_record} />}</div>
-      {/* <div>
-        <AccordionComponent
-          sections={viewFooterAccordionConfig}
-          globalQuery={view_record?.query}
-          include_items={[]}
-          key="view_footer"
-          title="view footer"
-        />
-      </div> */}
-
-      {/* <ActionInputForm
-        fields={fields}
-        // data_model={
-        //   data?.data?.find(
-        //     (item: any) => item?.message?.code === success_message_code
-        //   )?.data[0]?.data_model
-        // }
-        // record={
-        //   read_record_mode
-        //     ? recordData
-        //     : recordData?.data?.find(
-        //         (item: any) => item?.message?.code === record?.id
-        //       )?.data[0]
-        // }
-        // records={records}
-        // action={action}
-        // children={children}
-        // focused_item={focused_item}
-      ></ActionInputForm> */}
-      {/* <AccordionComponent
-        sections={actionInputAccordionConfig}
-        globalQuery={""}
-      /> */}
-      {/* {globalQuery && (
-        <PythonEnvironment code={globalQuery}></PythonEnvironment>
-      )} */}
-    </div>
+                <div className="flex">
+                  <Text
+                    size="sm"
+                    className="text-blue-500 truncate overflow-hidden whitespace-nowrap px-3"
+                    style={{ maxWidth: width < 500 ? 100 : 500 }}
+                  >
+                    {getLabel(view_record)}
+                  </Text>
+                  <IconInfoCircle size={18} />
+                </div>
+              </Tooltip>
+            }
+          >
+            <Documentation record={view_record}></Documentation>
+          </Reveal>
+        </div>
+      }
+    />
   );
 };
 export default ViewWrapper;

@@ -17,14 +17,26 @@ import { viewQueryAccordionConfig } from "@components/View/viewQueryAccordionCon
 import { getDb } from "src/surreal";
 import Surreal, { LiveHandler, Uuid } from "surrealdb";
 import { viewSearchActionAccordionConfig } from "@components/Layout/viewSearchActionAccordionConfig";
+import { viewFooterAccordionConfig } from "@components/View/viewFooterAccordionConfig";
+import { IconCode } from "@tabler/icons-react";
 
 export const ShowPage: React.FC = () => {
-  const { colorScheme } = useAppStore();
+  const { colorScheme, activeTask } = useAppStore();
 
   const { params } = useParsed();
   const computedColorScheme = useComputedColorScheme("light"); // Default to light theme if auto is selected
   const effectiveScheme =
     colorScheme.scheme === "auto" ? computedColorScheme : colorScheme.scheme;
+
+  const action_input_form_values_key = `query_${params?.id || activeTask?.id}`;
+  // const action_input_form_values = useAppStore(
+  //   (state) => state.action_input_form_values[action_input_form_values_key]
+  // );
+
+  const globalQuery = useAppStore(
+    (state) =>
+      state.action_input_form_values[`${action_input_form_values_key}`]?.query
+  );
 
   const {
     data: events,
@@ -89,7 +101,62 @@ export const ShowPage: React.FC = () => {
         <PanelResizeHandle>
           <ResizeHandle />
         </PanelResizeHandle>
-        <Panel
+
+        <Panel defaultSize={50} minSize={0}>
+          <div className="h-[85vh] flex flex-col">
+            {" "}
+            {/* Using 85% of viewport height */}
+            {/* Top component */}
+            <div className="min-h-0 flex-1 overflow-y-auto pb-6">
+              {/* {params?.id && events && (
+                <EventsWrapper
+                  task_id={params?.id}
+                  title="events"
+                  data_items={events || []}
+                />
+              )} */}
+              {params?.view_id && <ViewWrapper></ViewWrapper>}
+            </div>
+            {/* Bottom component */}
+            <div>
+              {/* <div>
+                <AccordionComponent
+                  sections={viewSearchActionAccordionConfig}
+                  activeView={{}}
+                  activeTask={{}}
+                  defaultExpandedValues={[]}
+                  action={"filters"}
+                />
+              </div> */}
+              {/* <ActionInputWrapper
+                name={"query"}
+                query_name="data_model"
+                record={{
+                  id: params?.id,
+                }}
+                action={"query"}
+                action_form_key="query_general"
+                success_message_code="action_input_data_model_schema"
+              /> */}
+              <div>
+                <AccordionComponent
+                  sections={viewFooterAccordionConfig}
+                  globalQuery={globalQuery}
+                  include_items={[]}
+                  key="view_footer"
+                  title={
+                    <div className="flex gap-4 items-center">
+                      <IconCode size={16} />
+                      <Text>ActiveCode</Text>
+                    </div>
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </Panel>
+
+        {/* <Panel
           defaultSize={50}
           minSize={0}
           style={{
@@ -103,7 +170,7 @@ export const ShowPage: React.FC = () => {
           >
             {params?.view_id && <ViewWrapper></ViewWrapper>}
           </div>
-        </Panel>
+        </Panel> */}
       </PanelGroup>
     </>
   );

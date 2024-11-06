@@ -305,6 +305,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         // alert(JSON.stringify(value));
         const fetchFromDuckDB = async () => {
           try {
+            console.log(`globalQuery: ${globalQuery}`);
             // const conn = await initializeLocalDB();
             // let downloadQuery = "SELECT * FROM issues";
             // console.log(`Form values for ${formId}:`, value);
@@ -321,35 +322,35 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             // const globalSearchQuery =
             //   action_input_form_values[`${search_action_input_form_values_key}`]
             //     ?.query;
-            let active_view_search_model_data_data_model_search_filters =
-              active_view_search_model_data?.data?.find(
-                (item: any) =>
-                  item?.message?.code === "action_input_data_model_schema"
-              )?.data[0]?.data_model?.schema?.search_filters;
-            // console.log("active_view_search_model_data_data_model_search_filters", active_view_search_model_data_data_model_search_filters)
+            // let active_view_search_model_data_data_model_search_filters =
+            //   active_view_search_model_data?.data?.find(
+            //     (item: any) =>
+            //       item?.message?.code === "action_input_data_model_schema"
+            //   )?.data[0]?.data_model?.schema?.search_filters;
+            // // console.log("active_view_search_model_data_data_model_search_filters", active_view_search_model_data_data_model_search_filters)
 
-            let enriched_search_filters = enrichFilters(
-              active_view_search_model_data_data_model_search_filters,
-              globalQuery
-            );
-            console.log(
-              "save enriched_search_filters",
-              enriched_search_filters
-            );
-            let rendered_globalSearchQuery = buildSQLQuery(
-              globalQuery,
-              sanitizeFilters(enriched_search_filters),
-              { caseSensitive: false }
-            )?.query;
-            console.log(
-              "save rendererendered_globalSearchQuery",
-              rendered_globalSearchQuery
-            );
-            // let downloadQuery =
-            //   rendered_globalSearchQuery || globalSearchQuery || value?.query;
-            let downloadQuery = rendered_globalSearchQuery || globalQuery; // fix later to include dynamic generation from above
-            console.log("Executing dowloadQuery:", downloadQuery);
-            const downloadResult = await dbInstance.query(downloadQuery);
+            // let enriched_search_filters = enrichFilters(
+            //   active_view_search_model_data_data_model_search_filters,
+            //   globalQuery
+            // );
+            // console.log(
+            //   "save enriched_search_filters",
+            //   enriched_search_filters
+            // );
+            // let rendered_globalSearchQuery = buildSQLQuery(
+            //   globalQuery,
+            //   sanitizeFilters(enriched_search_filters),
+            //   { caseSensitive: false }
+            // )?.query;
+            // console.log(
+            //   "save rendererendered_globalSearchQuery",
+            //   rendered_globalSearchQuery
+            // );
+            // // let downloadQuery =
+            // //   rendered_globalSearchQuery || globalSearchQuery || value?.query;
+            // let downloadQuery = rendered_globalSearchQuery || globalQuery; // fix later to include dynamic generation from above
+            // console.log("Executing dowloadQuery:", downloadQuery);
+            const downloadResult = await dbInstance.query(globalQuery);
 
             // Debugging logs
             console.log("Download result:", downloadResult);
@@ -360,7 +361,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             );
 
             const downloadData = downloadResult.toArray();
-            console.log("downloadData", downloadData);
+            // console.log("downloadData", downloadData);
 
             // Check if data exists
             if (!downloadData || downloadData.length === 0) {
