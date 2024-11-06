@@ -14,8 +14,10 @@ import { useAppStore } from "src/store";
 import { FilterItem, SearchInputComponentProps } from "@components/interfaces";
 import {
   IconCopy,
+  IconEdit,
   IconInfoCircle,
   IconPlus,
+  IconSquareRoundedPlusFilled,
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
@@ -41,6 +43,10 @@ function SearchInput<T extends Record<string, any>>({
   navigateOnSelect,
   navigateOnClear,
   multiselect,
+  withinPortal = true,
+  ref,
+  handleEdit = () => console.log("Edit"),
+  record,
 }: SearchInputComponentProps<T>) {
   // const [query, setQuery] = useState(value || "");
   const [query, setQuery] = useState(value?.value || "");
@@ -315,6 +321,7 @@ function SearchInput<T extends Record<string, any>>({
             onChange={enhancedHandleOnChangeMultiple}
             searchable={true}
             clearable={true}
+            comboboxProps={{ withinPortal: withinPortal }}
             // onChange={enhancedHandleOnChange}
             // data={autocompleteData.filter((item: any) =>
             //   selected_filters
@@ -363,6 +370,8 @@ function SearchInput<T extends Record<string, any>>({
             searchable={true}
             clearable={true}
             onChange={enhancedHandleOnChange}
+            comboboxProps={{ withinPortal: withinPortal }}
+            ref={ref}
             // data={autocompleteData.filter((item: any) =>
             //   selected_filters
             //     .map((filter: any) => filter.entity_type)
@@ -449,7 +458,46 @@ function SearchInput<T extends Record<string, any>>({
           }
         >
           {/* <MonacoEditor value={activeView} language="json" height="50vh" /> */}
-          <Documentation></Documentation>
+          <Documentation activeFilters={activeFilters}></Documentation>
+        </Reveal>
+      )}
+      {include_action_icons?.includes("record_info") && (
+        <Reveal
+          trigger="click"
+          target={
+            <Tooltip
+              multiline
+              w={220}
+              withArrow
+              transitionProps={{ duration: 200 }}
+              label="info"
+            >
+              <ActionIcon size="xs" variant="default" aria-label="info">
+                <IconInfoCircle size={18} />
+              </ActionIcon>
+            </Tooltip>
+          }
+        >
+          {data && (
+            <>
+              {/* {value} */}
+              <MonacoEditor
+                value={data.data
+                  ?.find(
+                    (item: any) => item?.message?.code === success_message_code
+                  )
+                  ?.data[0]?.search_results?.map((item: any) => ({
+                    ...item,
+                    value: item.id,
+                    label: item.name,
+                  }))
+                  .filter((item: any) => item?.id === value)}
+                language="json"
+                height="50vh"
+              />
+            </>
+          )}
+          {/* <Documentation activeFilters={activeFilters}></Documentation> */}
         </Reveal>
       )}
       {include_action_icons?.includes("dublicate") && (
@@ -467,7 +515,7 @@ function SearchInput<T extends Record<string, any>>({
           </ActionIcon>
         </Tooltip>
       )}
-      {include_action_icons?.includes("add_new_item") && (
+      {include_action_icons?.includes("add_new") && (
         <Tooltip label="Add new" position="top">
           <ActionIcon
             size="xs"
@@ -479,6 +527,36 @@ function SearchInput<T extends Record<string, any>>({
             disabled={true}
           >
             <IconPlus size={18} />
+          </ActionIcon>
+        </Tooltip>
+      )}
+      {include_action_icons?.includes("add_new_large") && (
+        <Tooltip label="Add new" position="top">
+          <ActionIcon
+            // size="xs"
+            variant="outline"
+            color="blue"
+            aria-label="Add new"
+            onClick={() => console.log("Add new")}
+            style={{ visibility: disabled ? "hidden" : "visible" }}
+            // disabled={true}
+          >
+            <IconSquareRoundedPlusFilled />
+          </ActionIcon>
+        </Tooltip>
+      )}
+      {include_action_icons?.includes("edit") && (
+        <Tooltip label="Edit" position="top">
+          <ActionIcon
+            size="xs"
+            variant="filled"
+            color="blue"
+            aria-label="Edit"
+            onClick={() => handleEdit(componentSelectedItem || record)} // improve later to include plural, but check for empty and use records instead
+            style={{ visibility: disabled ? "hidden" : "visible" }}
+            // disabled={true}
+          >
+            <IconEdit size={18} />
           </ActionIcon>
         </Tooltip>
       )}

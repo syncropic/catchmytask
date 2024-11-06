@@ -1,72 +1,59 @@
-import { ResultsComponentProps } from "@components/interfaces";
+import {
+  ActionComponentProps,
+  ResultsComponentProps,
+} from "@components/interfaces";
 import MonacoEditor from "@components/MonacoEditor";
-import { stepsToMarkdown } from "@components/Utils";
-import { ActionIcon, Box, Group, Tooltip } from "@mantine/core";
+import {
+  formatDate,
+  formatPythonTemplate,
+  stepsToMarkdown,
+} from "@components/Utils";
+import {
+  ActionIcon,
+  Box,
+  Group,
+  LoadingOverlay,
+  Tooltip,
+  Text,
+} from "@mantine/core";
 import {
   IconEdit,
   IconEye,
+  IconPaperclip,
   IconPin,
   IconPlayCard,
+  IconPlayerPause,
   IconPlayerPlay,
   IconRobot,
   IconSearch,
+  IconServer,
   IconUser,
+  TablerIconsProps,
 } from "@tabler/icons-react";
-// import { useClipboard, useMediaQuery, useViewportSize } from "@mantine/hooks";
-// import { flexRender } from "@tanstack/react-table";
-// import { Table as TanStackTable, ColumnDef } from "@tanstack/react-table";
+import { format, isValid, parseISO } from "date-fns";
+import { MouseEvent } from "react";
 import {
   DataTable,
   DataTableColumn,
+  DataTableRowClickHandler,
   DataTableSortStatus,
   useDataTableColumns,
 } from "mantine-datatable";
 import { useAppStore } from "src/store";
 import Markdown from "react-markdown";
-// import { useEffect, useState } from "react";
-// import { getColumnIdWithoutResourceGroup } from "src/utils";
-// import { Column } from "@tanstack/react-table";
-// import React from "react";
-// import { DebouncedInput, serializeBigInt } from "@components/Utils";
-// import {
-//   ActionIcon,
-//   Box,
-//   Button,
-//   Card,
-//   Group,
-//   Tooltip,
-//   Text,
-//   CheckIcon,
-// } from "@mantine/core";
-// import { useAppStore } from "src/store";
-// import RecordActionsWrapper from "@components/RecordActions";
-// import { sortBy } from "lodash";
-// import MonacoEditor from "@components/MonacoEditor";
-// import { IconChevronRight, IconCopy, IconEye } from "@tabler/icons-react";
-// import clsx from "clsx";
-// import classes from "./NestedTablesExample.module.css";
-// import { useContextMenu } from "mantine-contextmenu";
-// import dynamic from "next/dynamic";
-// import { format } from "date-fns";
-// import { DatePicker } from "@mantine/dates";
-// import "dayjs/locale/en"; // Adjust locale if needed
-// import { showNotification } from "@mantine/notifications";
-// import RecordSummaryView from "@components/RecordSummaryView";
-
-// const PAGE_SIZES = [10, 15, 20];
+import { useGo, useParsed } from "@refinedev/core";
+import AccordionComponent from "@components/AccordionComponent";
+import { contentAccordionConfig } from "@components/View/contentAccordionConfig";
+import { useEffect, useRef } from "react";
+import AuthorInfo, { authorInfoConfigs } from "./AuthorInfo";
+import AutomationToggle from "./AutomationToggle";
 
 export function TableView<T extends Record<string, any>>({
-  // tableInstance,
-  nested_data_items,
   data_items,
-  resource_group,
   data_fields,
-  ui,
-  execlude_components,
-  invalidate_queries_on_submit_success,
-  setSorting,
-  sorting,
-  summary_view,
+  view_record,
+  title,
+  query_key,
 }: ResultsComponentProps<T>) {
   // Define the type for record_action
   type RecordAction = {
@@ -74,35 +61,156 @@ export function TableView<T extends Record<string, any>>({
     record: any;
     e: React.MouseEvent<HTMLButtonElement>;
   };
+  const go = useGo();
+  const {
+    activeView,
+    activeSession,
+    activeProfile,
+    activeTask,
+    setActiveTask,
+    setActiveEvent,
+    setActionInputFormValues,
+    action_input_form_values,
+    setActionInputFormFields,
+  } = useAppStore();
 
-  const { activeView, setActionInputFormValues, action_input_form_values } =
-    useAppStore();
+  // interface RowClickProps {
+  //   record: any;
+  //   index: number;
+  //   event: React.MouseEvent<HTMLButtonElement>; // or React.MouseEvent<HTMLElement> if you want to be more specific
+  // }
+  // Update the RowClickProps to match Mantine's expected types
+  interface RowClickProps<T> {
+    record: T;
+    index: number;
+    event: MouseEvent<Element, MouseEvent>;
+  }
 
-  const action_input_form_values_key = `query_${activeView?.id}`;
+  const { params } = useParsed();
 
-  // const globalSearchQuery = useAppStore(
-  //   (state) =>
-  //     state.action_input_form_values[`${search_action_input_form_values_key}`]
-  //       ?.query
-  // );
+  const action_input_form_values_key = `query_${params?.id || activeTask?.id}`;
+
+  const globalSearchQuery = useAppStore(
+    (state) =>
+      state.action_input_form_values[`${action_input_form_values_key}`]?.query
+  );
 
   const handleAction = (record_action: RecordAction) => {
     record_action.e.stopPropagation();
-
+    let record = record_action?.record;
+    let action = record_action.action;
+    // console.log(action);
+    // console.log(record);
+    let action_input_values = {
+      number_of_results: 10,
+    };
+    let language = record?.content?.structured_content?.[0]?.language;
+    let query = record?.content?.structured_content?.[0]?.final_answer || "";
+    if (language === "python") {
+      query = formatPythonTemplate(
+        record?.content?.structured_content?.[0]?.final_answer,
+        action_input_values || {}
+      );
+    }
+    // console.log(record_action);
     let new_action_input_form_values = {
       ...action_input_form_values,
       [action_input_form_values_key]: {
         ...action_input_form_values[action_input_form_values_key],
-        query:
-          record_action?.record?.content?.structured_content?.[0]?.final_answer,
+        query_template: record?.content?.structured_content?.[0]?.final_answer,
+        query: query,
       },
     };
     setActionInputFormValues(new_action_input_form_values);
-    // alert(JSON.stringify(record_action.record));
+    setActionInputFormFields(
+      action_input_form_values_key,
+      record?.content?.structured_content?.[0]?.arguments || []
+    );
+    if (record?.entity_type === "events") {
+      setActiveEvent(record);
+    }
   };
+  // const handleRowClick = ({ record, index, event }: RowClickProps) => {
+  //   // console.log(record);
+  //   if (record?.entity_type == "tasks") {
+  //     // console.log(record);
+  //     setActiveTask(record); // improve this later
+  //   }
+  //   go({
+  //     to: {
+  //       resource: "tasks",
+  //       action: "show",
+  //       id: record?.id,
+  //     },
+  //     query: {
+  //       session_id: activeSession?.id,
+  //       profile_id: activeProfile?.id,
+  //       ...record?.initial_state?.params,
+  //     },
+  //     type: "push",
+  //   });
+  // };
+  // Update the handler to use generic type and match Mantine's expected signature
+  const handleRowClick: DataTableRowClickHandler<T> = ({
+    record,
+    index,
+    event,
+  }) => {
+    if (record?.entity_type === "tasks") {
+      setActiveTask(record);
+    }
+    go({
+      to: {
+        resource: "tasks",
+        action: "show",
+        id: record?.id,
+      },
+      query: {
+        session_id: activeSession?.id,
+        profile_id: activeProfile?.id,
+        ...record?.initial_state?.params,
+      },
+      type: "push",
+    });
+  };
+  const viewportRef = useRef<HTMLDivElement>(null);
+
+  const scrollToRow = (selector: string) => {
+    const el = document.querySelector<HTMLElement>(selector)!;
+    viewportRef.current?.scrollTo({
+      top: el.offsetTop - el.clientHeight - 1,
+      behavior: "smooth",
+    });
+  };
+
+  // Effect to scroll to last row
+  useEffect(() => {
+    if (
+      data_items?.length &&
+      view_record?.include_items?.includes("scroll_to_last_item")
+    ) {
+      const timeoutId = setTimeout(() => {
+        scrollToRow(`[data-row-index="${title} - ${data_items.length - 1}"]`);
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [data_items, scrollToRow]);
+  let input_record_item = {
+    id: "input_record",
+    name: "input_record",
+    description: "input_record",
+    author_id: "system",
+    created_datetime: new Date().toISOString(),
+  };
+
   return (
     <>
-      {/* <MonacoEditor value={data_items} language="json" height="50vh" /> */}
+      {/* <MonacoEditor
+        value={{ query_key: query_key }}
+        language="json"
+        height="25vh"
+      /> */}
       {/* <div>{JSON.stringify(tableInstance?.getVisibleFlatColumns())}</div> */}
       {/* <div>{JSON.stringify(data_fields)}</div> */}
       {/* <div>{resource_group}</div> */}
@@ -116,225 +224,246 @@ export function TableView<T extends Record<string, any>>({
           {expandedRecordIds.length === 0 ? "expand all" : "collapse all"}
         </Button>
       </div> */}
-      {/* <div>{JSON.stringify(sorting)}</div> */}
 
       {data_items && data_fields && (
         <DataTable<T>
-          // page={1}
-          // onPageChange={(page) => console.log(page)}
-          // recordsPerPage={10}
-          // storeColumnsKey={key}
-          // columns={effectiveColumns as DataTableColumn<T>[]}
           columns={[
-            ...data_fields.map((field) => {
-              return {
-                id: field?.name,
-                accessor: field?.name,
-                ellipsis: true,
-                title: field?.name,
-                render: (record: any) => {
-                  if (field?.name === "author_id") {
-                    return (
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`
-                          p-1.5 
-                          rounded-full 
-                          flex 
-                          items-center 
-                          justify-center
-                          ${
-                            record?.author_type === "user"
-                              ? "bg-orange-50 text-orange-500 border border-orange-200"
-                              : "bg-blue-50 text-blue-500 border border-blue-200"
-                          }`}
-                        >
-                          {record?.author_type === "user" ? (
-                            <IconUser size={16} />
-                          ) : (
-                            <IconRobot size={16} />
-                          )}
-                        </div>
-                        <span className="text-sm">{record[field?.name]}</span>
-                      </div>
-                    );
-                  } else {
-                    return <div>{record[field?.name]}</div>;
-                  }
-                },
-              };
-            }),
-            {
-              accessor: "actions",
-              title: <Box mr={6}>actions</Box>,
-              textAlign: "right",
-              render: (record) => (
-                <Group gap={4} justify="right" wrap="nowrap">
-                  {/* <Tooltip key="edit" label={`edit`} position="top">
-                    <ActionIcon
-                      size="sm"
-                      variant="subtle"
-                      color="blue"
-                      // onClick={() => showModal({ company, action: "view" })}
-                    >
-                      <IconEdit size={16} />
-                    </ActionIcon>
-                  </Tooltip> */}
-                  {/* {["user"]?.includes(record?.author_type) && (
-                    <Tooltip key="query" label={`query`} position="top">
-                      <ActionIcon
+            // First spread the data fields columns
+            ...data_fields.map(
+              (field) =>
+                ({
+                  id: field?.name,
+                  accessor: field?.name,
+                  ellipsis: true,
+                  title: ["name", "author_id"]?.includes(field?.name)
+                    ? title
+                    : null,
+                  render: (record: any) => {
+                    if (field?.name === "author_id") {
+                      return (
+                        <AuthorInfo
+                          record={record}
+                          onAction={handleAction}
+                          displayConfig={authorInfoConfigs.compact}
+                          formatDate={formatDate}
+                        />
+                      );
+                    } else if (
+                      field?.name === "name" &&
+                      view_record?.include_items?.includes("name_and_details")
+                    ) {
+                      return (
+                        <AuthorInfo
+                          record={record}
+                          onAction={handleAction}
+                          displayConfig={authorInfoConfigs.full}
+                          formatDate={formatDate}
+                          AutomationToggle={AutomationToggle}
+                          query_key={query_key}
+                        />
+                      );
+                    } else {
+                      return <div>{record[field?.name]}</div>;
+                    }
+                  },
+                } as DataTableColumn<T>)
+            ),
+
+            // Then conditionally spread the actions column
+            ...(view_record?.include_items?.includes("actions")
+              ? [
+                  {
+                    accessor: "actions",
+                    title: <Box mr={6}>actions</Box>,
+                    textAlign: "right",
+                    render: (record: any) => (
+                      <Group gap={4} justify="right" wrap="nowrap">
+                        {["user"]?.includes(record?.author_type) && (
+                          // <Tooltip key="query" label={`query`} position="top">
+                          //   <ActionIcon
+                          //     size="sm"
+                          //     variant="subtle"
+                          //     color="blue"
+                          //     // onClick={() => showModal({ company, action: "view" })}
+                          //   >
+                          //     <IconSearch size={16} />
+                          //   </ActionIcon>
+                          // </Tooltip>
+                          <>
+                            {/* {!["resolved", "closed"]?.includes(
+                              record?.resolution_status
+                            ) && (
+                              <Tooltip label="running" position="top">
+                                <span className="text-sm">
+                                  <Box pos="relative">
+                                    <LoadingOverlay
+                                      visible={true}
+                                      zIndex={1000}
+                                      overlayProps={{ radius: "sm", blur: 8 }}
+                                      loaderProps={{
+                                        color: "blue",
+                                        size: "xs",
+                                        type: "dots",
+                                      }}
+                                    />
+                                    loading
+                                  </Box>
+                                </span>
+                              </Tooltip>
+                            )} */}
+                          </>
+                        )}
+                        {["agent"]?.includes(record?.author_type) && (
+                          <>
+                            <Tooltip key="view" label={`view`} position="top">
+                              <ActionIcon
+                                size="sm"
+                                variant="subtle"
+                                color="green"
+                                onClick={(e) =>
+                                  handleAction({
+                                    record: record,
+                                    action: "view",
+                                    e: e,
+                                  })
+                                }
+                              >
+                                <IconPlayerPlay size={24} />
+                              </ActionIcon>
+                            </Tooltip>
+                            <Tooltip key="pin" label={`pin`} position="top">
+                              <ActionIcon
+                                size="sm"
+                                variant="subtle"
+                                color="orange"
+                                // onClick={() => showModal({ company, action: "edit" })}
+                              >
+                                <IconPin size={16} />
+                              </ActionIcon>
+                            </Tooltip>
+                            <Tooltip
+                              key="attachment"
+                              label={`attachment`}
+                              position="top"
+                            >
+                              <ActionIcon
+                                size="sm"
+                                variant="subtle"
+                                // color="green"
+                                // onClick={() => showModal({ company, action: "edit" })}
+                              >
+                                <IconPaperclip size={16} />
+                              </ActionIcon>
+                            </Tooltip>
+                          </>
+                        )}
+
+                        {/* <ActionIcon
                         size="sm"
                         variant="subtle"
-                        color="blue"
-                        // onClick={() => showModal({ company, action: "view" })}
+                        color="red"
+                        onClick={() => showModal({ company, action: "delete" })}
                       >
-                        <IconSearch size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                  )} */}
-                  {["agent"]?.includes(record?.author_type) && (
-                    <>
-                      <Tooltip key="execute" label={`execute`} position="top">
-                        <ActionIcon
-                          size="sm"
-                          variant="subtle"
-                          color="green"
-                          onClick={(e) =>
-                            handleAction({
-                              record: record,
-                              action: "execute",
-                              e: e,
-                            })
-                          }
-                        >
-                          <IconPlayerPlay size={24} />
-                        </ActionIcon>
-                      </Tooltip>
-                      <Tooltip key="pin" label={`pin`} position="top">
-                        <ActionIcon
-                          size="sm"
-                          variant="subtle"
-                          // color="green"
-                          // onClick={() => showModal({ company, action: "edit" })}
-                        >
-                          <IconPin size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </>
-                  )}
-
-                  {/* <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    color="red"
-                    onClick={() => showModal({ company, action: "delete" })}
-                  >
-                    <IconTrash size={16} />
-                  </ActionIcon> */}
-                </Group>
-              ),
-            },
+                        <IconTrash size={16} />
+                      </ActionIcon> */}
+                      </Group>
+                    ),
+                  } as DataTableColumn<T>,
+                ]
+              : []),
           ]}
-          // records={tableInstance
-          //   .getFilteredRowModel()
-          //   .rows.map((row) => row.original)}
-          // {...(resource_group !== "summary" && { height: "60vh" })} // dynamically include or exclude height
-          // records={tableInstance
-          //   .getSortedRowModel()
-          //   .rows.map((row) => row.original)}
           // sortStatus={localSortStatus}
           // onSortStatusChange={customSetSorting}
-          height="50vh"
+          customRowAttributes={({ id }, recordIndex) => ({
+            "data-row-first-name": id,
+            "data-row-index": `${title} - ${recordIndex}`,
+          })}
+          scrollViewportRef={viewportRef}
+          // height="100%"
           records={data_items}
           highlightOnHover={true}
           withColumnBorders={true}
           pinFirstColumn={true}
+          {...(view_record?.include_items?.includes("row_click")
+            ? { onRowClick: handleRowClick }
+            : {})}
           // textSelectionDisabled={isTouch} // 👈 disable text selection on touch devices
           pinLastColumn={true}
           striped={true}
-          // totalRecords={data_items.length}
-          // height="70dvh"
-          // minHeight={400}
-          // 75% of the viewport height as the maximum height
-          // maxHeight={height * 0.75}
-          // fz="xs"
-          // selectedRecords={selectedRecords[resource_group] ?? []}
-          // onSelectedRecordsChange={handleSelectValue}
-          // defaultColumnRender={(row, _, accessor) => {
-          //   const data = row[accessor as keyof typeof row];
-          //   return typeof data === "string" ? data : JSON.stringify(data);
-          //   return <div>hello world</div>;
-          // }}
-          // onRowClick={({ record, index, event }) => {
-          //   setActiveRecord(serializeBigInt(record));
-          //   // if (resource_group === "action_steps") {
-          //   //   setActiveAction(record);
-          //   // }
-          // }}
-          // onRowContextMenu={({ record, event }) =>
-          //   showContextMenu([
-          //     {
-          //       key: "copy-record-to-clipboard",
-          //       icon: <IconCopy size={16} />,
-          //       onClick: () => clipboard.copy(record),
-          //       // showNotification({
-          //       //   message: `Clicked on view context-menu action for ${record.name} company`,
-          //       //   withBorder: true,
-          //       // }),
-          //     },
-          //   ])(event)
-          // }
-          // onCellClick={({ event, record, index, column, columnIndex }) => {
-          //   // console.log("cell value clicked", record[column?.accessor]);
-          //   clipboard.copy(record[column?.accessor]);
-          // }}
-          rowExpansion={{
-            allowMultiple: true,
-            trigger: "always",
-            // initiallyExpanded: ({ record: { entity_type } }) =>
-            //   entity_type === "messages",
-            // expanded: {
-            //   recordIds: [
-            //     "issues",
-            //     "payment_analysis",
-            //     "supplier_analysis",
-            //     ...expandedRecordIds,
-            //   ],
-            //   onRecordIdsChange: setExpandedRecordIds,
-            // },
-            content: ({ record, collapse }) => (
-              <>
-                {/* <div className="pl-6">{record?.content}</div> */}
-                {["agent"]?.includes(record?.author_type) && (
-                  <div className="pl-6 max-w-xs">
-                    <div className="markdown-wrapper overflow-hidden">
-                      <Markdown className="prose prose-sm max-w-none break-words overflow-x-auto">
-                        {stepsToMarkdown(
-                          record?.content?.structured_content?.[0]?.steps
-                        )}
-                      </Markdown>
-                    </div>
-                    <MonacoEditor
-                      value={
-                        record?.content?.structured_content?.[0]?.final_answer
-                      }
-                      language="sql"
-                      height="10vh"
-                    />
-                  </div>
-                )}
-                {["user"]?.includes(record?.author_type) && (
-                  <div className="pl-6">
-                    {record?.content &&
-                    typeof record.content === "object" &&
-                    record.content !== null
-                      ? record.content?.text_content
-                      : record?.content}
-                  </div>
-                )}
-              </>
-            ),
-          }}
+          {...(view_record?.include_items?.includes("row_expansion")
+            ? {
+                rowExpansion: {
+                  allowMultiple: true,
+                  trigger: "always",
+                  content: ({ record, collapse }) => (
+                    <>
+                      {["agent"]?.includes(record?.author_type) && (
+                        <div className="pl-12 max-w-lg">
+                          <div className="pl-4">
+                            {record?.content?.structured_content?.[0]?.title}
+                          </div>
+                          <div className="markdown-wrapper overflow-hidden">
+                            {record?.content?.structured_content?.[0]
+                              ?.steps && (
+                              <AccordionComponent
+                                sections={contentAccordionConfig}
+                                action="reasoning"
+                                defaultExpandedValues={["reasoning"]}
+                                content={
+                                  record?.content?.structured_content?.[0]
+                                    ?.steps
+                                }
+                                language="markdown"
+                              />
+                            )}
+                          </div>
+                          <AccordionComponent
+                            sections={contentAccordionConfig}
+                            action="code"
+                            content={
+                              record?.content?.structured_content?.[0]
+                                ?.final_answer
+                            }
+                            language={
+                              record?.content?.structured_content?.[0]
+                                ?.language || "sql"
+                            }
+                          />
+                          {/* <div>
+                            {JSON.stringify(
+                              record?.content?.structured_content?.[0]
+                                ?.arguments
+                            )}
+                          </div> */}
+                        </div>
+                      )}
+                      {["user"]?.includes(record?.author_type) && (
+                        <div className="pl-12">
+                          {record?.content &&
+                          typeof record.content === "object" &&
+                          record.content !== null
+                            ? record.content?.text_content
+                            : record?.content}
+                        </div>
+                      )}
+                      {["system"]?.includes(record?.author_type) && (
+                        <div className="pl-12">
+                          {/* {record?.content &&
+                          typeof record.content === "object" &&
+                          record.content !== null
+                            ? record.content?.text_content
+                            : record?.content} */}
+                          <div>{record?.name}</div>
+                          <div>
+                            {record.content?.structured_content?.[0]?.name}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ),
+                },
+              }
+            : {})}
         />
       )}
     </>

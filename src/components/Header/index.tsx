@@ -185,7 +185,7 @@ const LargeScreenHeader = ({
 
       {/* {authenticatedData?.authenticated && activeTask && <AutomationsToggle />} */}
 
-      {authenticatedData?.authenticated && activeTask && activeView && (
+      {authenticatedData?.authenticated && activeTask && (
         <Reveal
           trigger="click"
           target={
@@ -201,18 +201,43 @@ const LargeScreenHeader = ({
                 className="text-blue-500 truncate overflow-hidden whitespace-nowrap px-3"
                 style={{ maxWidth: width < 500 ? 100 : 500 }}
               >
-                {getLabel(activeView)}
+                {getLabel(activeTask)}
               </Text>
             </Tooltip>
           }
         >
-          <MonacoEditor value={activeView} language="json" height="50vh" />
+          <MonacoEditor value={activeTask} language="json" height="50vh" />
         </Reveal>
       )}
+      {/* {authenticatedData?.authenticated && (
+        <div className="max-w-xl">
+          <SearchInput
+            placeholder="search"
+            description={undefined}
+            handleOptionSubmit={(item) => console.log(item)}
+            // value={activeAgent?.id || ""}
+            // include_action_icons={activeAgent?.id ? ["filter"] : []}
+            // navigateOnSelect={{ resource: "views" }}
+            // navigateOnClear={{ resource: "home" }}
+            // activeFilters={[
+            //   {
+            //     id: 1,
+            //     name: "tasks",
+            //     description: "tasks",
+            //     entity_type: "tasks",
+            //     metadata: {
+            //       is_agent: true,
+            //     },
+            //     is_selected: true,
+            //   },
+            // ]}
+          />
+        </div>
+      )} */}
 
-      {authenticatedData?.authenticated && activeTask && activeView && (
+      {/* {authenticatedData?.authenticated && activeTask && activeView && (
         <SectionsToggle />
-      )}
+      )} */}
 
       {<UserMenu />}
     </div>

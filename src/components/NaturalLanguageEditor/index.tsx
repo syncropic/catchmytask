@@ -26,6 +26,8 @@ import { useEffect } from "react";
 import { ActionIcon, Button, Tooltip } from "@mantine/core";
 import { useAppStore } from "src/store";
 import ExternalSubmitButton from "@components/SubmitButton";
+import MonacoEditor from "@components/MonacoEditor";
+import { useParsed } from "@refinedev/core";
 
 // import "./styles.scss";
 
@@ -39,6 +41,7 @@ interface NaturalLanguageEditorProps {
   form?: any;
   isLoading?: boolean;
   action_input_form_values_key?: string;
+  record?: any;
   // setValues?: (values: any) => void;
   // handleSubmit?: (e: any) => void;
 
@@ -64,6 +67,7 @@ interface NaturalLanguageEditorProps {
 const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
   value,
   setValue = () => {},
+  record,
   // form,
   // isLoading = false,
   // action_input_form_values_key = "",
@@ -145,20 +149,22 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
     live_generate,
     setLiveGenerate,
     activeView,
-    focused_entities,
     activeTask,
+    activeSession,
+    focused_entities,
     activeAgent,
     default_action,
   } = useAppStore();
   let action = focused_entities[activeTask?.id]?.["action"];
+  const { params } = useParsed();
 
-  // Add useEffect to update editor content when value prop changes
-  useEffect(() => {
-    if (editor && value) {
-      // Update the editor content when the value prop changes
-      editor.commands.setContent(value);
-    }
-  }, [value, editor]);
+  // // Add useEffect to update editor content when value prop changes
+  // useEffect(() => {
+  //   if (editor && value) {
+  //     // Update the editor content when the value prop changes
+  //     editor.commands.setContent(value);
+  //   }
+  // }, [value, editor]);
 
   // let actions = [
   //   {
@@ -248,10 +254,6 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
         {/* <RichTextEditor.ControlsGroup>
           <SearchInput
             placeholder="templates"
-            // description="tasks"
-            // handleOptionSubmit={setActiveTask}
-            // value={activeTask?.name || ""}
-            // include_action_icons={["remove_from_state"]}
             activeFilters={[
               {
                 id: 1,
@@ -264,13 +266,19 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
           />
         </RichTextEditor.ControlsGroup> */}
         <RichTextEditor.ControlsGroup>
-          {activeAgent && (
+          {/* {activeAgent && (
             <ExternalSubmitButton
-              record={activeView}
+              record={activeView || activeTask || activeSession}
               entity_type="tasks"
               action={action || default_action}
             />
-          )}
+          )} */}
+          <ExternalSubmitButton
+            record={record}
+            entity_type="tasks"
+            action_form_key={`query_${params?.id || activeTask?.id}`}
+            action={action || default_action}
+          />
 
           {/* <Tooltip
             multiline
@@ -316,6 +324,30 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
             </RichTextEditor.Control>
           </Tooltip> */}
         </RichTextEditor.ControlsGroup>
+        {/* <RichTextEditor.ControlsGroup>
+          <Button
+            size="compact-sm"
+            // onClick={() => form.setFieldValue("query", record?.query)}
+          >
+            address
+          </Button>
+        </RichTextEditor.ControlsGroup> */}
+        {/* <RichTextEditor.ControlsGroup>
+          <Button
+            size="compact-sm"
+            // onClick={() => form.setFieldValue("query", record?.query)}
+          >
+            filters
+          </Button>
+        </RichTextEditor.ControlsGroup> */}
+        {/* <RichTextEditor.ControlsGroup>
+          <Button
+            size="compact-sm"
+            // onClick={() => form.setFieldValue("query", record?.query)}
+          >
+            reset
+          </Button>
+        </RichTextEditor.ControlsGroup> */}
       </RichTextEditor.Toolbar>
     </RichTextEditor>
   );
@@ -332,13 +364,21 @@ export const NaturalLanguageEditorFormInput = ({ ...props }: any) => {
   // };
   return (
     <>
+      {/* <MonacoEditor
+        value={{
+          component: "NaturalLanguageEditorFormInput",
+          props_value: props?.value,
+        }}
+        language="json"
+        height="25vh"
+      /> */}
       {/* {props?.schema?.title && (
         <Text fw={500} size="sm">
           {props?.schema?.title}
         </Text>
       )} */}
       {/* <div>{JSON.stringify(props?.action_input_form_values_key)}</div> */}
-      {props?.value && (
+      {/* {props?.value && (
         <NaturalLanguageEditor
           // {...props?.schema}
           // value={props?.value}
@@ -350,7 +390,19 @@ export const NaturalLanguageEditorFormInput = ({ ...props }: any) => {
           // field={props?.schema.title.toLowerCase().replace(/ /g, "_")}
           // {...props}
         />
-      )}
+      )} */}
+      <NaturalLanguageEditor
+        // {...props?.schema}
+        // value={props?.value}
+        // action_input_form_values_key={props?.action_input_form_values_key}
+        value={props?.value}
+        setValue={props?.onChange}
+        // form={props?.form}
+        // isLoading={props?.isLoading}
+        record={props?.record}
+        // field={props?.schema.title.toLowerCase().replace(/ /g, "_")}
+        // {...props}
+      />
     </>
     // <div>monaco editor form input</div>
   );

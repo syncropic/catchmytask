@@ -89,6 +89,9 @@ export function DataDisplay<T extends Record<string, any>>({
   action = "set_fields",
   display,
   view_mode,
+  view_record,
+  title,
+  query_key,
 }: DataDisplayComponentProps<T>) {
   // const { ref, width } = useElementSize();
   // const [isLarge, setIsLarge] = useState(true);
@@ -102,22 +105,22 @@ export function DataDisplay<T extends Record<string, any>>({
     activeView,
   } = useAppStore();
 
-  let read_record_state = {
-    credential: "surrealdb catchmytask dev",
-    success_message_code: activeView?.id,
-    record: activeView,
-    read_record_mode: "remote",
-  };
+  // let read_record_state = {
+  //   credential: "surrealdb catchmytask dev",
+  //   success_message_code: activeView?.id,
+  //   record: activeView,
+  //   read_record_mode: "remote",
+  // };
 
-  const {
-    data: viewData,
-    isLoading: viewIsLoading,
-    error: viewError,
-  } = useReadRecordByState(read_record_state);
+  // const {
+  //   data: viewData,
+  //   isLoading: viewIsLoading,
+  //   error: viewError,
+  // } = useReadRecordByState(read_record_state);
 
-  let viewRecord = viewData?.data?.find(
-    (item: any) => item?.message?.code === activeView?.id
-  )?.data[0];
+  // let viewRecord = viewData?.data?.find(
+  //   (item: any) => item?.message?.code === activeView?.id
+  // )?.data[0];
 
   // const { tableColumns } = useTableColumns({
   //   field_configurations: data_fields?.map((nested_field: any) =>
@@ -242,12 +245,18 @@ export function DataDisplay<T extends Record<string, any>>({
       // <MonacoEditor
       //   value={{
       //     data_items: data_items,
+      //     // view_record: view_record,
       //   }}
       //   language="json"
       //   height="75vh"
       // />
-      <TableView data_items={data_items} data_fields={data_fields}></TableView>
-      // <div>table</div>
+      <TableView
+        data_items={data_items}
+        data_fields={data_fields}
+        view_record={view_record}
+        title={title}
+        query_key={query_key}
+      ></TableView>
     );
   }
   if (view_mode === "datagrid") {
@@ -273,7 +282,7 @@ export function DataDisplay<T extends Record<string, any>>({
           data_items={data_items}
           // setSorting={setSorting}
           // sorting={sorting}
-          view_record={viewRecord}
+          view_record={view_record}
           // ui={ui || {}}
         />
       </>
@@ -332,3 +341,60 @@ export function DataDisplay<T extends Record<string, any>>({
 }
 
 export default DataDisplay;
+
+// <div className="flex justify-center w-full">
+//                         <div className="w-1/5"></div>
+//                         <div className="w-3/5 pb-2 pt-2 flex gap-2">
+//                           {selectedRecords["issues"]?.length > 0 && (
+//                             <>
+//                               <BulkOperationsToolbar
+//                                 include_components={[
+//                                   {
+//                                     action: "view",
+//                                     entity_type: "selected_records",
+//                                     type: "action",
+//                                     record: activeTask,
+//                                     onClick: bulkActionSelect,
+//                                   },
+//                                   {
+//                                     action: "bulk_update",
+//                                     entity_type: "selected_records",
+//                                     type: "action",
+//                                     record: activeTask,
+//                                     onClick: bulkActionSelect,
+//                                   },
+//                                   {
+//                                     action: "close",
+//                                     entity_type: "selected_records",
+//                                     type: "action",
+//                                     record: activeTask,
+//                                     onClick: bulkActionSelect,
+//                                   },
+//                                   {
+//                                     action: "assign",
+//                                     entity_type: "selected_records",
+//                                     type: "action",
+//                                     record: activeTask,
+//                                     onClick: bulkActionSelect,
+//                                   },
+//                                   {
+//                                     action: "delete",
+//                                     entity_type: "selected_records",
+//                                     type: "action",
+//                                     record: activeTask,
+//                                     onClick: bulkActionSelect,
+//                                   },
+//                                   {
+//                                     action: "custom_actions",
+//                                     entity_type: "selected_records",
+//                                     type: "action",
+//                                     record: activeTask,
+//                                     onClick: bulkActionSelect,
+//                                   },
+//                                 ]}
+//                               ></BulkOperationsToolbar>
+//                             </>
+//                           )}
+//                         </div>
+//                         <div className="w-1/5"></div>
+//                       </div>

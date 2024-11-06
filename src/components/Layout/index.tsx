@@ -43,6 +43,10 @@ import { activityActionAccordionConfig } from "./activityActionAccordionConfig";
 import { Carousel } from "@mantine/carousel";
 import { viewQueryActionAccordionConfig } from "./viewQueryActionAccordionConfig";
 import { customComponentsAccordionConfig } from "./customComponentsAccordionConfig";
+import { sessionQueryActionAccordionConfig } from "./sessionQueryActionAccordionConfig";
+import ActivityWrapper from "@components/Activity";
+import TasksWrapper from "@components/Tasks";
+import SearchInput from "@components/SearchInput";
 
 const Layout = ({
   children,
@@ -75,6 +79,7 @@ const Layout = ({
     activeView,
     pinned_action_steps,
     navigationHistory,
+    setActiveTask,
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
 
@@ -448,7 +453,7 @@ const Layout = ({
                       // paddingBottom: "60px",
                     }}
                   >
-                    {children}
+                    {/* {children} */}
 
                     <Breadcrumbs />
                     <p className="text-sm text-gray-600 text-center max-w-sm">
@@ -475,68 +480,6 @@ const Layout = ({
             </div>
 
             {/* Right Section */}
-            <div
-              ref={rightRef}
-              className="min-w-full h-screen bg-gray-100 relative"
-              style={{ display: rightSection.isDisplayed ? "block" : "none" }}
-            >
-              {/* Right section content */}
-              {/* state view */}
-              <AccordionComponent
-                sections={stateViewAccordionConfig}
-                activeTask={activeTask}
-                activeSession={activeSession}
-              />
-              {/* pinned action step issues */}
-              {activeTask &&
-                action &&
-                !["save", "search", "upload"]?.includes(action) && (
-                  <AccordionComponent
-                    sections={actionInputAccordionConfig}
-                    selectedRecords={selectedRecords}
-                    action={action}
-                    activeTask={activeTask}
-                    defaultExpandedValues={["action_input"]}
-                  />
-                )}
-
-              {/* plan accordion component */}
-              {/* {activeTask && (
-                <AccordionComponent
-                  sections={planViewAccordionConfig}
-                  activeTask={activeTask}
-                  activeSession={activeSession}
-                  defaultExpandedValues={[]}
-                />
-              )} */}
-              {activeTask && (
-                <AccordionComponent
-                  sections={actionAccordionConfig}
-                  activeTask={activeTask}
-                  activeSession={activeSession}
-                  record={activeView}
-                  defaultExpandedValues={[]}
-                  action="view_modes"
-                />
-              )}
-              {/* Right Scroll Gradient */}
-
-              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-200 opacity-75 pointer-events-none" />
-            </div>
-
-            {/* Scroll Hints */}
-            {showScrollHint && (
-              <>
-                {/* Left Scroll Hint */}
-                <div className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400">
-                  <IconArrowLeft />
-                </div>
-                {/* Right Scroll Hint */}
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400">
-                  <IconArrowRight />
-                </div>
-              </>
-            )}
           </div>
         ) : (
           // Desktop layout with left, center, and right sections
@@ -549,10 +492,46 @@ const Layout = ({
                 style={{ display: leftSection.isDisplayed ? "block" : "none" }}
               >
                 <div
-                  className={`lg:block overflow-auto h-[80vh] ${
+                  className={`overflow-auto h-[85vh] ${
                     effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
                   }`}
                 >
+                  {/* state view */}
+                  {/* <AccordionComponent
+                    sections={stateViewAccordionConfig}
+                    activeTask={activeTask}
+                    activeSession={activeSession}
+                  /> */}
+                  {/* <div className="p-3">
+                    <SearchInput
+                      placeholder="search or create task"
+                      description="tasks"
+                      handleOptionSubmit={setActiveTask}
+                      value={activeTask?.id || ""}
+                      include_action_icons={["add_new_large"]}
+                      navigateOnSelect={{ resource: "tasks" }}
+                      navigateOnClear={{ resource: "home" }}
+                      activeFilters={[
+                        {
+                          id: 1,
+                          name: "tasks",
+                          description: "tasks",
+                          entity_type: "tasks",
+                          is_selected: true,
+                        },
+                      ]}
+                    />
+                  </div> */}
+                  {/* activity wrapper search list */}
+                  <TasksWrapper
+                    // name={action}
+                    query_name="fetch tasks"
+                    view_id="views:36xo8keq9tsoyly68shk"
+                    title="tasks"
+                    // record={record}
+                    // action={action}
+                    success_message_code="action_input_data_model_schema"
+                  />
                   {/* {activeView && activeTask && (
                     <AccordionComponent
                       sections={viewSearchActionAccordionConfig}
@@ -562,17 +541,20 @@ const Layout = ({
                       action={action}
                     />
                   )} */}
-                  {activeView && activeTask && (
+                  {/* {!activeView && !activeTask && <div>session input form</div>} */}
+                  {/* session query */}
+                  {/* {activeSession && !activeView && !activeTask && (
                     <AccordionComponent
-                      sections={viewQueryActionAccordionConfig}
+                      sections={sessionQueryActionAccordionConfig}
                       activeView={activeView}
                       activeTask={activeTask}
-                      defaultExpandedValues={["query"]}
+                      activeSession={activeSession}
+                      defaultExpandedValues={["session_query"]}
                       action={action}
                     />
-                  )}
-
-                  {activeView && activeTask && (
+                  )} */}
+                  {/* session activity */}
+                  {/* {activeSession && !activeView && !activeTask && (
                     <AccordionComponent
                       sections={activityActionAccordionConfig}
                       activeView={activeView}
@@ -580,7 +562,27 @@ const Layout = ({
                       defaultExpandedValues={["activity"]}
                       action={"activity"}
                     />
-                  )}
+                  )} */}
+
+                  {/* {activeView && activeTask && (
+                    <AccordionComponent
+                      sections={viewQueryActionAccordionConfig}
+                      activeView={activeView}
+                      activeTask={activeTask}
+                      defaultExpandedValues={["query"]}
+                      action={action}
+                    />
+                  )} */}
+
+                  {/* {activeView && activeTask && (
+                    <AccordionComponent
+                      sections={activityActionAccordionConfig}
+                      activeView={activeView}
+                      activeTask={activeTask}
+                      defaultExpandedValues={["activity"]}
+                      action={"activity"}
+                    />
+                  )} */}
 
                   {/* <div>{JSON.stringify(activeView)}</div> */}
                   {/* Left section content */}
@@ -614,7 +616,8 @@ const Layout = ({
                 <PanelResizeHandle>
                   <ResizeHandle />
                 </PanelResizeHandle>
-                <Panel defaultSize={60} minSize={30}>
+                <Panel defaultSize={80} minSize={0}>
+                  {children && children}
                   <div className="">
                     {/* // to load in the page content */}
                     {!select_or_create_to_continue_items.some(
@@ -633,63 +636,6 @@ const Layout = ({
                     )} */}
 
                     <div className="w-full">
-                      <div className="flex justify-center w-full">
-                        <div className="w-1/5"></div>
-                        <div className="w-3/5 pb-2 pt-2 flex gap-2">
-                          {selectedRecords["issues"]?.length > 0 && (
-                            <>
-                              <BulkOperationsToolbar
-                                include_components={[
-                                  {
-                                    action: "view",
-                                    entity_type: "selected_records",
-                                    type: "action",
-                                    record: activeTask,
-                                    onClick: bulkActionSelect,
-                                  },
-                                  {
-                                    action: "bulk_update",
-                                    entity_type: "selected_records",
-                                    type: "action",
-                                    record: activeTask,
-                                    onClick: bulkActionSelect,
-                                  },
-                                  {
-                                    action: "close",
-                                    entity_type: "selected_records",
-                                    type: "action",
-                                    record: activeTask,
-                                    onClick: bulkActionSelect,
-                                  },
-                                  {
-                                    action: "assign",
-                                    entity_type: "selected_records",
-                                    type: "action",
-                                    record: activeTask,
-                                    onClick: bulkActionSelect,
-                                  },
-                                  {
-                                    action: "delete",
-                                    entity_type: "selected_records",
-                                    type: "action",
-                                    record: activeTask,
-                                    onClick: bulkActionSelect,
-                                  },
-                                  {
-                                    action: "custom_actions",
-                                    entity_type: "selected_records",
-                                    type: "action",
-                                    record: activeTask,
-                                    onClick: bulkActionSelect,
-                                  },
-                                ]}
-                              ></BulkOperationsToolbar>
-                            </>
-                          )}
-                        </div>
-                        <div className="w-1/5"></div>
-                      </div>
-
                       {activeTask && action !== "upload" && (
                         <div className="w-full">
                           <ActionStepsWrapper
@@ -745,127 +691,39 @@ const Layout = ({
                     )} */}
                     {select_or_create_to_continue_items.some(
                       (item) => item === null
-                    ) && (
-                      <div
-                        className="flex flex-col h-screen items-center justify-center p-4"
-                        style={{
-                          height: "calc(100vh - 100px)",
-                          // paddingBottom: "60px",
-                        }}
-                      >
-                        {children}
+                    ) &&
+                      ["/home", "/"].includes(parsed?.pathname || "") && (
+                        <div
+                          className="flex flex-col h-screen items-center justify-center p-4"
+                          // style={{
+                          //   height: "calc(100vh - 100px)",
+                          //   // paddingBottom: "60px",
+                          // }}
+                        >
+                          {/* {children} */}
 
-                        <Breadcrumbs />
-                        <p className="text-sm text-gray-600 text-center max-w-sm">
-                          <Highlight
-                            component="p"
-                            color="lime"
-                            highlight={
-                              select_or_create_to_continue_items_map[
-                                nullIndex
-                              ] || ""
-                            }
-                          >
-                            {/* {JSON.stringify(`Create or select a ${select_or_create_to_continue_items_map[nullIndex]} to continue.`)} */}
-                            {message || ""}
-                          </Highlight>
-                          {/* {JSON.stringify(select_or_create_to_continue_items.map((item) => item?.id))}
-                          {nullIndex}
-                          {select_or_create_to_continue_items_map[nullIndex]} */}
-                          {/* {message} */}
-                        </p>
-                      </div>
-                    )}
-                    {/* {children} */}
+                          <Breadcrumbs />
+                          <p className="text-sm text-gray-600 text-center max-w-sm">
+                            <Highlight
+                              component="p"
+                              color="lime"
+                              highlight={
+                                select_or_create_to_continue_items_map[
+                                  nullIndex
+                                ] || ""
+                              }
+                            >
+                              {message || ""}
+                            </Highlight>
+                          </p>
+                        </div>
+                      )}
                   </div>
                 </Panel>
               </>
             )}
 
             {/* Right Panel */}
-            {rightSection.isDisplayed && (
-              <>
-                <PanelResizeHandle>
-                  <ResizeHandle />
-                </PanelResizeHandle>
-                <Panel
-                  defaultSize={20}
-                  minSize={0}
-                  style={{
-                    display: rightSection.isDisplayed ? "block" : "none",
-                  }}
-                >
-                  <div
-                    className={`overflow-auto h-[80vh] ${
-                      effectiveScheme === "light"
-                        ? "bg-gray-100"
-                        : "bg-gray-800"
-                    }`}
-                  >
-                    {/* state view */}
-                    <AccordionComponent
-                      sections={stateViewAccordionConfig}
-                      activeTask={activeTask}
-                      activeSession={activeSession}
-                    />
-                    {/* pinned action step issues */}
-                    {/* {activeTask &&
-                      action &&
-                      !["save", "search", "upload"]?.includes(action) && (
-                        <AccordionComponent
-                          sections={actionInputAccordionConfig}
-                          selectedRecords={selectedRecords}
-                          action={action}
-                          activeTask={activeTask}
-                          defaultExpandedValues={["action_input"]}
-                        />
-                      )} */}
-                    {/* pinned action step summary */}
-                    {/* {activeTask &&
-                      pinned_action_steps["summary"]?.is_displayed && (
-                        <AccordionComponent
-                          sections={summaryViewAccordionConfig}
-                          selectedRecords={selectedRecords}
-                          defaultExpandedValues={["summary"]}
-                        />
-                      )} */}
-                    {/* pinned action step issues */}
-                    {/* {activeTask &&
-                      pinned_action_steps["issues"]?.is_displayed && (
-                        <AccordionComponent
-                          sections={issuesViewAccordionConfig}
-                          selectedRecords={selectedRecords}
-                          defaultExpandedValues={["issues"]}
-                        />
-                      )} */}
-                    {/* <AccordionComponent
-                      sections={viewAccordionConfig}
-                      // selectedRecords={selectedRecords}
-                      defaultExpandedValues={["view"]}
-                    /> */}
-                    {/* plan accordion component */}
-                    {/* {activeTask && (
-                      <AccordionComponent
-                        sections={planViewAccordionConfig}
-                        activeTask={activeTask}
-                        activeSession={activeSession}
-                        defaultExpandedValues={[]}
-                      />
-                    )} */}
-                    {activeTask && activeView && activeSession && (
-                      <AccordionComponent
-                        sections={customComponentsAccordionConfig}
-                        activeTask={activeTask}
-                        activeSession={activeSession}
-                        // record={activeView}
-                        defaultExpandedValues={["custom_components"]}
-                        // action="view_modes"
-                      />
-                    )}
-                  </div>
-                </Panel>
-              </>
-            )}
           </PanelGroup>
         )}
       </AppLayout>

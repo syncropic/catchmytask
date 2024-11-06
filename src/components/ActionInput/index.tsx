@@ -1,9 +1,13 @@
 import {
   buildSQLQuery,
+  calculateColumnWidth,
   enrichFilters,
+  excelToStandardizedJson,
   extractDefaultValues,
   extractIdentifier,
   extractLabelsFromDefaults,
+  FieldInfo,
+  formatPythonTemplate,
   getComponentByResourceType,
   inferDataTypes,
   sanitizeFilters,
@@ -20,7 +24,6 @@ import { Accordion, Button, Title } from "@mantine/core";
 import dayjs from "dayjs";
 import { DateInputProps } from "@mantine/dates";
 // import { ActionControlFormWrapper } from "@components/ActionControlForm";
-import type { FieldApi } from "@tanstack/react-form";
 import { useForm } from "@tanstack/react-form";
 // import { IconArrowsVertical } from "@tabler/icons-react";
 import { Children, useEffect, useRef, useState } from "react";
@@ -29,13 +32,17 @@ import {
   ActionStepsActionInputFormProps,
   ComponentKey,
   DynamicFormProps,
+  Field,
   IIdentity,
+  Schema,
+  SchemaProperty,
 } from "@components/interfaces";
 import {
   BaseRecord,
   HttpError,
   useCustomMutation,
   useGetIdentity,
+  useParsed,
 } from "@refinedev/core";
 import config from "src/config";
 import { debounce, update } from "lodash";
@@ -50,24 +57,8 @@ import { saveAs } from "file-saver";
 import { useDuckDB } from "pages/_app";
 import { showNotification } from "@mantine/notifications";
 import { saveToLocalDB } from "src/local_db";
-
-type ValidationError = string;
-
-function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
-  return (
-    <>
-      {field.state.meta.isTouched && field.state.meta.errors.length ? (
-        <em style={{ color: "red" }}>{field.state.meta.errors.join(",")}</em>
-      ) : field.state.meta.isValidating ? (
-        "Validating..."
-      ) : (
-        !field.state.meta.errors.length && (
-          <em style={{ color: "green" }}>Looks good!</em>
-        )
-      )}
-    </>
-  );
-}
+import React from "react";
+import { IconFilter } from "@tabler/icons-react";
 
 // Function to map class names to ExcelJS ARGB colors
 const getExcelJSStyleFromClass = (className: string) => {
@@ -84,108 +75,60 @@ const getExcelJSStyleFromClass = (className: string) => {
       return null;
   }
 };
-
-// Utility function to calculate column width based on header length
-const calculateColumnWidth = (header: any) => {
-  return Math.max(header.length + 8, 15); // Add padding and set a minimum width
-};
-
-async function excelToStandardizedJson(
-  file: File,
-  section?: string
-): Promise<any[]> {
-  const workbook = new ExcelJS.Workbook();
-  const arrayBuffer = await file.arrayBuffer();
-  await workbook.xlsx.load(arrayBuffer);
-
-  let worksheet;
-  if (section) {
-    worksheet = workbook.getWorksheet(section);
-    if (!worksheet) {
-      throw new Error(`Worksheet "${section}" not found in the Excel file.`);
-    }
-  } else {
-    worksheet = workbook.getWorksheet(1);
-  }
-
-  const jsonData: any[] = [];
-
-  // Get headers and standardize them
-  const headers = worksheet?.getRow(1).values as string[];
-  const standardizedHeaders = headers
-    .map((header) =>
-      header
-        ? header
-            .toString()
-            .toLowerCase()
-            .replace(/\s+/g, "_")
-            .replace(/[^a-z0-9_]/g, "")
-        : ""
-    )
-    .filter(Boolean);
-
-  // Process each row
-  worksheet?.eachRow((row, rowNumber) => {
-    if (rowNumber > 1) {
-      // Skip header row
-      const rowData: any = {};
-      row.eachCell((cell, colNumber) => {
-        const header = standardizedHeaders[colNumber - 1];
-        if (header) {
-          switch (cell.type) {
-            case ExcelJS.ValueType.Date:
-              rowData[header] =
-                cell.value instanceof Date ? cell.value.toISOString() : null;
-              break;
-            // case ExcelJS.ValueType.Hyperlink:
-            //   rowData[header] = (cell.value as ExcelJS.CellHyperlink).text || null;
-            //   break;
-            case ExcelJS.ValueType.Number:
-              rowData[header] = Number(cell.value);
-              break;
-            case ExcelJS.ValueType.Boolean:
-              rowData[header] = Boolean(cell.value);
-              break;
-            case ExcelJS.ValueType.Null:
-              rowData[header] = null;
-              break;
-            default:
-              rowData[header] = cell.text || null;
-          }
-        }
-      });
-      jsonData.push(rowData);
-    }
-  });
-
-  return jsonData;
-}
+type ValidationError = string;
 
 export const ActionInputForm: React.FC<DynamicFormProps> = ({
   data_model,
   record = {},
   action,
-  setExpandedRecordIds,
   success_message_code = "query_success_results",
-  endpoint,
-  records,
-  focused_item,
+  fields,
+  title,
+  action_form_key,
 }) => {
+  const {
+    activeSession,
+    activeAction,
+    activeApplication,
+    activeTask,
+    setActionInputFormValues,
+    action_input_form_values,
+    action_input_form_fields,
+    focused_entities,
+    setFocusedEntities,
+    selectedRecords,
+    activeLayout,
+    setActiveLayout,
+    // globalQuery,
+    setGlobalQuery,
+    views,
+    setViews,
+    form_status,
+    setFormStatus,
+    activeView,
+    uploaded,
+    setUploaded,
+    action_mode,
+    action_modes,
+    activeAgent,
+    activeSections,
+    activeEvent,
+    activeInvalidateQueryKey,
+    activeProfile,
+    setActionInputFormFields,
+  } = useAppStore();
   const queryClient = useQueryClient();
   const { data: identity } = useGetIdentity<IIdentity>();
   const { setFormSubmitHandler, setFormInstance } = useTransientStore();
   const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
   const { searchFilters } = useSearchFilters();
+  const { params } = useParsed();
+  let actionInputId = record?.id || params?.id;
+  // let action_input_form_values_key =
+  //   action_form_key || `${action || "query"}_${actionInputId}`;
 
-  // Generate the ID once and persist it across re-renders
-  // const generatedIdRef = useRef(uuidv4());
-
-  // Access the persisted ID using generatedIdRef.current
-  // const generatedId = generatedIdRef.current;
-  // const actionInputId =
-  //   record?.id || data_model?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
-  let actionInputId = record?.id;
-  let action_input_form_values_key = `${action}_${actionInputId}`;
+  let action_input_form_values_key = `query_${params?.id || activeTask?.id}`;
+  // let action_input_form_fields_key = `${action || "query"}_${actionInputId}`;
   const [activeTemplateRecord, setActiveTemplateRecord] = useState<any>(null);
 
   // Define the response type for your specific data
@@ -215,63 +158,42 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     },
   });
 
+  // get view_record for utilization across all action inputs
+  // const action_input_form_values_key = `query_${params?.id || activeTask?.id}`;
+  // const fields = action_input_form_fields[action_input_form_values_key];
+
+  const view_id = params?.view_id;
+  const task_id = params?.task_id;
+  const session_id = params?.session_id;
+
+  let fetch_view_by_id_state = {
+    credential: "surrealdb catchmytask dev",
+    success_message_code: view_id,
+    record: {
+      id: view_id,
+    },
+    read_record_mode: "remote",
+  };
+
   const {
-    activeSession,
-    activeAction,
-    activeApplication,
-    activeTask,
-    setActionInputFormValues,
-    action_input_form_values,
-    focused_entities,
-    setFocusedEntities,
-    selectedRecords,
-    activeLayout,
-    setActiveLayout,
-    globalQuery,
-    setGlobalQuery,
-    views,
-    setViews,
-    form_status,
-    setFormStatus,
-    activeView,
-    uploaded,
-    setUploaded,
-    action_mode,
-    action_modes,
-    activeAgent,
-    activeSections,
-  } = useAppStore();
+    data: viewData,
+    isLoading: viewIsLoading,
+    error: viewError,
+  } = useReadRecordByState(fetch_view_by_id_state);
+
+  let view_record = viewData?.data?.find(
+    (item: any) => item?.message?.code === view_id
+  )?.data[0];
+
+  const globalQuery =
+    useAppStore(
+      (state) =>
+        state.action_input_form_values[`${action_input_form_values_key}`]?.query
+    ) || view_record?.query; // use query as default if nothing is in the global store
 
   const identity_object = {
     author_id: identity?.email,
   };
-
-  // let standardized_data_model_name = data_model?.name
-  //   ?.replace(/\s+/g, "_")
-  //   .toLowerCase();
-
-  // Create the key with the transformed data_model.name
-  // const action_input_form_values_key =
-  //   action === "proceed_execute_with_action_input"
-  //     ? "action_input"
-  //     : `${action}_${standardized_data_model_name}_${actionInputId}`;
-
-  // const action_input_form_values_key = `${action}_action_input`;
-  // if focused_item == "actin_input" then use the action_input key
-  // let action_input_form_values_key = "";
-  // if (focused_item === "action_input") {
-  //   action_input_form_values_key = "action_input";
-  // } else {
-  //   action_input_form_values_key = `${action}_action_input_${actionInputId}`;
-  // }
-
-  // let standardized_data_model_name = data_model?.name
-  // ?.replace(/\s+/g, "_")
-  // .toLowerCase();
-
-  // Create the key with the transformed data_model.name
-  // const proceed_action_input_form_values_key = `proceed_execute_with_action_input_${standardized_data_model_name}_${actionInputId}`;
-  // const proceed_action_input_form_values_key = "action_input";
 
   let active_view_search_model_state = {
     id: activeView?.id,
@@ -355,14 +277,30 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
       // const specialActions = ["save", "upload"]; // List of special actions
       // const action_url = specialActions.includes(action) ? "execute" : action; // Check if action is in the list and replace if necessary
-      let action_url = action;
-      let agent_actions = ["search", "query"];
-      if (agent_actions.includes(action)) {
-        action_url = "agent";
-      }
+      let action_url = "route";
+      // let agent_actions = ["search", "query"];
+      // if (agent_actions.includes(action)) {
+      //   action_url = "agent";
+      // }
 
       // if action is not special then perform the following otherwise alert the action name
-      if (action === "save") {
+      // if (activeAction?.name == "save") {
+      //   // alert(JSON.stringify(activeAction));
+      //   console.log("save");
+      // }
+      if (activeAction?.name === "reset") {
+        // console.log("reset");
+        let new_action_input_form_values = {
+          ...action_input_form_values,
+          [action_input_form_values_key]: {
+            ...action_input_form_values[action_input_form_values_key],
+            query_template: view_record?.query,
+            query: view_record?.query,
+          },
+        };
+        setActionInputFormValues(new_action_input_form_values);
+        setActionInputFormFields(action_input_form_values_key, []);
+      } else if (activeAction?.name === "save") {
         console.log("searchFilters", searchFilters);
         // alert(JSON.stringify(value));
         const fetchFromDuckDB = async () => {
@@ -371,10 +309,18 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             // let downloadQuery = "SELECT * FROM issues";
             // console.log(`Form values for ${formId}:`, value);
             // let downloadQuery = value?.query;
-            const search_action_input_form_values_key = `query_${activeView?.id}`;
-            const globalSearchQuery =
-              action_input_form_values[`${search_action_input_form_values_key}`]
-                ?.query;
+            // const search_action_input_form_values_key =
+            //   action_form_key || `query_${activeView?.id}`;
+            // console.log(search_action_input_form_values_key);
+            // const search_action_input_form_values_key = `query_${
+            //   params?.id || activeTask?.id
+            // }`;
+
+            // let search_action_input_form_values_key =
+            //   action_input_form_values_key;
+            // const globalSearchQuery =
+            //   action_input_form_values[`${search_action_input_form_values_key}`]
+            //     ?.query;
             let active_view_search_model_data_data_model_search_filters =
               active_view_search_model_data?.data?.find(
                 (item: any) =>
@@ -384,14 +330,14 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
             let enriched_search_filters = enrichFilters(
               active_view_search_model_data_data_model_search_filters,
-              action_input_form_values[`${search_action_input_form_values_key}`]
+              globalQuery
             );
             console.log(
               "save enriched_search_filters",
               enriched_search_filters
             );
             let rendered_globalSearchQuery = buildSQLQuery(
-              globalSearchQuery,
+              globalQuery,
               sanitizeFilters(enriched_search_filters),
               { caseSensitive: false }
             )?.query;
@@ -399,8 +345,9 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               "save rendererendered_globalSearchQuery",
               rendered_globalSearchQuery
             );
-            let downloadQuery =
-              rendered_globalSearchQuery || globalSearchQuery || value?.query;
+            // let downloadQuery =
+            //   rendered_globalSearchQuery || globalSearchQuery || value?.query;
+            let downloadQuery = rendered_globalSearchQuery || globalQuery; // fix later to include dynamic generation from above
             console.log("Executing dowloadQuery:", downloadQuery);
             const downloadResult = await dbInstance.query(downloadQuery);
 
@@ -413,6 +360,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             );
 
             const downloadData = downloadResult.toArray();
+            console.log("downloadData", downloadData);
 
             // Check if data exists
             if (!downloadData || downloadData.length === 0) {
@@ -430,6 +378,9 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             const columnNames = downloadResult.schema.fields.map(
               (field: any) => field.name
             );
+
+            console.log("column names", columnNames);
+            console.log("view_record", view_record);
 
             // // Ensure the data is an array of arrays
             // const dataWithHeaders = [
@@ -452,7 +403,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
             // 1. Column definitions
             worksheet.columns = columnNames.map((col: any) => {
-              const fieldType = getFieldType(col, record.fields);
+              const fieldType = getFieldType(col, view_record?.fields);
               return {
                 header: col,
                 key: col,
@@ -487,51 +438,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               };
             });
 
-            // Step 3: Convert BigInt values and Add data rows
-            // downloadData.forEach((row: any) => {
-            //   const convertedRow = Object.fromEntries(
-            //     Object.entries(row).map(([key, value]) => {
-            //       if (typeof value === "bigint") {
-            //         return [key, value.toString()]; // Convert BigInt to string
-            //       }
-            //       return [key, value];
-            //     })
-            //   );
-            //   worksheet.addRow(convertedRow);
-            // });
-
-            // Modify the data rows part
-            // downloadData.forEach((row: any) => {
-            //   const convertedRow = Object.fromEntries(
-            //     Object.entries(row).map(([key, value]) => {
-            //       // Handle BigInt
-            //       if (typeof value === "bigint") {
-            //         return [key, value.toString()];
-            //       }
-
-            //       // Check if field is datetime
-            //       const fieldType = getFieldType(key, record?.fields);
-            //       if (fieldType === "datetime" && value) {
-            //         // Parse the date string and create a proper Excel date
-            //         const date = new Date(value + "Z"); // Append Z to treat as UTC
-            //         return [key, date];
-            //       }
-
-            //       return [key, value];
-            //     })
-            //   );
-
-            //   const newRow = worksheet.addRow(convertedRow);
-
-            //   // Apply date format to datetime columns
-            //   columnNames.forEach((colName: string, index: number) => {
-            //     const fieldType = getFieldType(colName, record?.fields);
-            //     if (fieldType === "datetime") {
-            //       const cell = newRow.getCell(index + 1);
-            //       cell.numFmt = "yyyy-mm-dd hh:mm:ss";
-            //     }
-            //   });
-            // });
             // 2. Data row handling
             downloadData.forEach((row: any) => {
               const convertedRow = Object.fromEntries(
@@ -542,7 +448,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   }
 
                   // Check if field is datetime
-                  const fieldType = getFieldType(key, record.fields);
+                  const fieldType = getFieldType(key, view_record.fields);
                   if (fieldType === "datetime" && value) {
                     try {
                       // Handle different date string formats
@@ -573,7 +479,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
               // Apply date format to datetime columns
               columnNames.forEach((colName: string, index: number) => {
-                const fieldType = getFieldType(colName, record.fields);
+                const fieldType = getFieldType(colName, view_record.fields);
                 if (fieldType === "datetime") {
                   const cell = newRow.getCell(index + 1);
                   if (cell.value) {
@@ -584,44 +490,12 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               });
             });
 
-            // Modify the part where you add data rows (replace the existing downloadData.forEach block):
-            // downloadData.forEach((row: any) => {
-            //   const convertedRow = Object.fromEntries(
-            //     Object.entries(row).map(([key, value]) => {
-            //       // Handle BigInt
-            //       if (typeof value === "bigint") {
-            //         return [key, value.toString()];
-            //       }
-
-            //       // Find the field definition from schema
-            //       const field = downloadResult.schema.fields.find(
-            //         (f: any) => f.name === key
-            //       );
-
-            //       // Format date if it's a datetime field
-            //       return [key, formatDateForExcel(value, field)];
-            //     })
-            //   );
-
-            //   const newRow = worksheet.addRow(convertedRow);
-
-            //   // Apply date format to datetime columns
-            //   downloadResult.schema.fields.forEach(
-            //     (field: any, index: number) => {
-            //       if (field.type === "datetime") {
-            //         const cell = newRow.getCell(index + 1);
-            //         cell.numFmt = "yyyy-mm-dd hh:mm:ss";
-            //       }
-            //     }
-            //   );
-            // });
-
             console.log(
               "activeView to use in save, the record will be the active view being read directly from react query",
               record
             );
 
-            record.fields.forEach((field: any) => {
+            view_record.fields.forEach((field: any) => {
               if (field.conditional_formatting) {
                 const targetColumnIndex = columnNames.indexOf(field.name) + 1; // Get the index of the field to apply formatting
                 const comparisonColumnIndex =
@@ -673,20 +547,20 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               column.width = calculateColumnWidth(header);
             });
             // Also modify the column definition part to set proper width for datetime columns:
-            // worksheet.columns = columnNames.map((col: any) => {
-            //   const field = downloadResult.schema.fields.find(
-            //     (f: any) => f.name === col
-            //   );
-            //   return {
-            //     header: col,
-            //     key: col,
-            //     width: field?.type === "datetime" ? 25 : 20, // Make datetime columns wider
-            //     style:
-            //       field?.type === "datetime"
-            //         ? { numFmt: "yyyy-mm-dd hh:mm:ss" }
-            //         : {},
-            //   };
-            // });
+            worksheet.columns = columnNames.map((col: any) => {
+              const field = downloadResult.schema.fields.find(
+                (f: any) => f.name === col
+              );
+              return {
+                header: col,
+                key: col,
+                width: field?.type === "datetime" ? 25 : 20, // Make datetime columns wider
+                style:
+                  field?.type === "datetime"
+                    ? { numFmt: "yyyy-mm-dd hh:mm:ss" }
+                    : {},
+              };
+            });
 
             // Step 7: Add a summary sheet
             const summarySheet = workbook.addWorksheet("summary");
@@ -872,10 +746,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               //   },
               // }),
               values: {
-                action: {
-                  id: action || activeAction?.id,
-                  name: action || activeAction?.name,
-                },
+                action: activeAction,
                 input_values: {
                   // ...value,
                   action_input_form_values:
@@ -889,28 +760,46 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 //   entity_type: "sql",
                 // },
                 agent: activeAgent,
-                action_modes: action_modes,
+                // action_modes: action_modes,
                 // credential: value?.credential || "surrealdb catchmytask dev",
                 // data_model: data_model,
                 application: {
                   id: activeApplication?.id,
                   name: activeApplication?.name,
-                  profile_id: activeApplication?.profile_id,
                 },
                 session: {
-                  id: activeSession?.id,
-                  name: activeSession?.name,
-                  profile_id: activeSession?.profile_id,
+                  id: params?.session_id || activeSession?.id,
+                  name: params?.session_id || activeSession?.name,
                 },
                 task: {
-                  id: activeTask?.id,
-                  name: activeTask?.name,
-                  profile_id: activeTask?.profile_id,
+                  id: params?.id || activeTask?.id,
+                  name: params?.id || activeTask?.name,
+                },
+                event: {
+                  name: action,
+                },
+                automation: {
+                  frequency: "every 20 seconds",
                 },
                 view: {
-                  id: activeView?.id,
-                  name: activeView?.name,
-                  profile_id: activeView?.profile_id,
+                  id: params?.view_id || activeView?.id,
+                  name: params?.view_id || activeView?.name,
+                },
+                profile: {
+                  id:
+                    params?.profile_id || activeProfile?.id || identity?.email,
+                  name:
+                    params?.profile_id ||
+                    activeProfile?.name ||
+                    identity?.email,
+                },
+                parents: {
+                  task_id: params?.id || activeTask?.id,
+                  profile_id:
+                    params?.profile_id || activeProfile?.id || identity?.email,
+                  view_id: params?.view_id || activeView?.id,
+                  session_id: params?.session_id || activeSession?.id,
+                  application_id: activeApplication?.id,
                 },
               },
             },
@@ -924,113 +813,22 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 setFormStatus(new_form_status);
               },
               onSuccess: (data, variables, context) => {
-                // const extendedData = data as CustomMutationResponse<any>;
-                // // Extract the headers and content data
-                // const contentDisposition =
-                //   extendedData?.headers?.["content-disposition"];
-                // // console.log("Content Disposition:", contentDisposition);
-                // const contentType = extendedData?.headers?.["content-type"];
-
-                // // console.log("Content Type:", contentType);
-                // // console.log("Extended Headers:", extendedData?.headers);
-                // // Check if the response is for a file download
-                // if (
-                //   contentDisposition &&
-                //   contentDisposition.includes("attachment")
-                // ) {
-                //   // Create a JSON blob and trigger download
-                //   // const jsonBlob = new Blob([JSON.stringify(extendedData.data)], {
-                //   //   type: contentType,
-                //   // });
-                //   const blob = new Blob([extendedData.data], {
-                //     type: contentType,
-                //   });
-                //   const link = document.createElement("a");
-                //   link.href = window.URL.createObjectURL(blob);
-
-                //   // Extract the filename from the content-disposition header
-                //   const filename = contentDisposition
-                //     ? contentDisposition
-                //         .split("filename=")[1]
-                //         .replace(/"/g, "")
-                //         .trim()
-                //     : "downloaded_file.json";
-
-                //   link.download = filename;
-                //   document.body.appendChild(link);
-                //   link.click();
-                //   document.body.removeChild(link);
-
-                //   // Create a JSON object with information about the file
-                //   const file = {
-                //     filename: filename,
-                //     type: contentType,
-                //     size: blob.size,
-                //   };
-                //   console.log("File:", file);
-
-                //   resolve(file);
-                // } else {
-                //   // if there execute_mode it means user is being prompted to provide required values
-                //   let execute_mode_item = Array.isArray(data?.data)
-                //     ? data.data.find(
-                //         (item: any) => item?.message?.code === "execute_mode"
-                //       )
-                //     : null;
-
-                //   if (execute_mode_item) {
-                //     // we need to open and display the form for the user to provide the required values
-                //     // console.log("open action input");
-                //     openDisplay("rightSection");
-                //     // let new_focused_entities = { ...focused_entities };
-                //     // new_focused_entities["action_input"] = {
-                //     //   ...new_focused_entities["action_input"],
-                //     //   execute_mode: execute_mode_item["data"],
-                //     //   action: `proceed_${action}`,
-                //     // };
-                //     // new_focused_entities[record?.id] = {
-                //     //   ...new_focused_entities[record?.id],
-                //     //   action: `proceed_${action}`,
-                //     // };
-                //     // setFocusedEntities(new_focused_entities);
-                //   }
-
-                //   // let action_step_items = Array.isArray(data?.data)
-                //   //   ? data.data.filter(
-                //   //       (item: any) =>
-                //   //         item?.action_step?.id && item?.exit_code === 0
-                //   //     )
-                //   //   : [];
-                //   // let query_state = action_step_items.map((item: any) => ({
-                //   //   id: item?.action_step?.id,
-                //   //   success_message_code: item?.message?.code,
-                //   // }));
-
-                // query_state.forEach((state) => {
-                //   queryClient.invalidateQueries({
-                //     queryKey: [
-                //       `readByState_${JSON.stringify({
-                //         success_message_code: state?.success_message_code,
-                //       })}`,
-                //     ],
-                //   });
-                // });
                 if (action === "query") {
-                  let activity_state = {
-                    // id: record?.id,
-                    query_name: "read activity",
-                    task_id: activeTask?.id,
-                    session_id: activeSession?.id,
-                    view_id: activeView?.id,
-                    success_message_code: "activity",
-                  };
-                  let query_key = `useFetchQueryDataByState_${JSON.stringify(
-                    activity_state
-                  )}`;
+                  // let activity_state = {
+                  //   // id: record?.id,
+                  //   query_name: "read activity",
+                  //   task_id: activeTask?.id,
+                  //   session_id: activeSession?.id,
+                  //   view_id: activeView?.id,
+                  //   success_message_code: "activity",
+                  // };
+                  // let query_key = `useFetchQueryDataByState_${JSON.stringify(
+                  //   activity_state
+                  // )}`;
                   queryClient.invalidateQueries({
-                    queryKey: [query_key],
+                    queryKey: [activeInvalidateQueryKey],
                   });
-                  console.log("invalidated", query_key);
+                  console.log("invalidated", activeInvalidateQueryKey);
                 }
 
                 //   resolve(data);
@@ -1051,10 +849,46 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   // const [templateUpdate, setTemplateUpdate] = useState(0);
 
   const debouncedLog = debounce((values) => {
-    setActionInputFormValues({
+    // render query if fields match
+    // let view_fields = action_input_form_fields[action_input_form_fields_key];
+    // let query_template =
+    //   action_input_form_values[action_input_form_values_key]?.query_template;
+    // let query = formatPythonTemplate(query_template, values);
+    // // console.log(query);
+
+    let enriched_search_filters = enrichFilters(
+      view_record?.data_model?.schema?.query_filters,
+      values
+    );
+
+    console.log(enriched_search_filters);
+
+    let rendered_globalSearchQuery = buildSQLQuery(
+      view_record?.query,
+      sanitizeFilters(enriched_search_filters),
+      { caseSensitive: false }
+    )?.query;
+
+    let new_action_input_form_values = {
       ...action_input_form_values,
-      [action_input_form_values_key]: values,
-    });
+      [action_input_form_values_key]: {
+        ...action_input_form_values[action_input_form_values_key],
+        ...values,
+        query_template: view_record?.query,
+        query: rendered_globalSearchQuery,
+        // query: formatPythonTemplate(
+        //   view_record?.query,
+        //   action_input_values || {}
+        // ),
+      },
+    };
+    // setActionInputFormValues(new_action_input_form_values);
+    // setActionInputFormFields(
+    //   action_input_form_values_key,
+    //   record?.content?.structured_content?.[0]?.arguments || []
+    // );
+
+    setActionInputFormValues(new_action_input_form_values);
   }, 300); // 300ms debounce delay, adjust as needed
 
   // Store the previous validity state
@@ -1230,8 +1064,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     form,
   ]);
 
-  if (!data_model) return <div>No data model </div>;
-  const { schema } = data_model;
+  if (!data_model && !fields) return <div>No data model or fields </div>;
+  // const { schema } = data_model;
 
   // Use useRef to keep a reference to the form instance
   const formRef = useRef(form);
@@ -1254,9 +1088,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   }, [formId, setFormSubmitHandler, setFormInstance]);
 
   // conditionally set include_items based on the name. read include items from the corresponding state variable. i.e query_mode.include_items for name = query
-  let include_items: string[] = [];
   // if data_model use the data_model.schema.required as the default include_items
-  include_items = schema?.required || [];
+  let include_items = fields
+    ? fields?.map((field) => field?.title)
+    : data_model?.schema?.required;
 
   // const dateParser: DateInputProps["dateParser"] = (input: string) => {
   //   // make sure to set time to 00:00:00
@@ -1279,297 +1114,281 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     return schema?.action_modes?.[action_mode] || [];
   };
 
-  const setActiveAccordionSections = (items: any) => {
-    console.log(items);
+  // const setActiveAccordionSections = (items: any) => {
+  //   console.log(items);
+  // };
+
+  // Function to normalize schema properties into our fields format
+  const normalizeSchemaFields = (schema: Schema): Field[] => {
+    return Object.entries(schema.properties || {})
+      .map(([key, prop]) => {
+        // Type assertion here since we know the structure matches SchemaProperty
+        const schemaProp = prop as SchemaProperty;
+        return {
+          ...schemaProp,
+          key,
+          fieldName: schemaProp.title?.toLowerCase().replace(/ /g, "_"),
+        };
+      })
+      .sort((a, b) => {
+        const idA = parseInt(a.id || "0", 10);
+        const idB = parseInt(b.id || "0", 10);
+        return idA - idB;
+      });
   };
 
+  // // Function to filter fields based on include_items and action_mode
+  // const filterFields = (fields: Field[]): Field[] => {
+  //   // const fieldsToInclude = getFieldsToInclude(data_model?.schema, action_mode);
+  //   // const fieldsToInclude = include_items;
+  //   if (data_model?.schema?.required) {
+  //     return fields.filter(
+  //       (field) => field.key && data_model?.schema?.required.includes(field.key)
+  //     );
+  //   }
+
+  //   return fields;
+  // };
+
+  // Filter fields based on required fields in schema
+  const filterFields = (fields: any) => {
+    const requiredFields =
+      view_record?.data_model?.schema?.required ||
+      data_model?.schema?.required ||
+      [];
+
+    return fields.filter(
+      (field: any) => field.key && requiredFields.includes(field.key)
+    );
+  };
+
+  // Function to group fields by their group property
+  const groupFields = (fields: Field[]): Record<string, Field[]> => {
+    return fields.reduce((groups, field) => {
+      const group = field.group || "main";
+      if (!groups[group]) groups[group] = [];
+      groups[group].push(field);
+      return groups;
+    }, {} as Record<string, Field[]>);
+  };
+
+  // Get normalized fields from either props or schema
+  // const normalizedFields = React.useMemo(() => {
+  //   if (fields) {
+  //     // If fields are provided directly, ensure they have keys
+  //     return fields.map((field, index) => ({
+  //       ...field,
+  //       key: field.key || `field-${index}`,
+  //       fieldName:
+  //         field.fieldName || field.title.toLowerCase().replace(/ /g, "_"),
+  //     }));
+  //   }
+  //   return data_model?.schema ? normalizeSchemaFields(data_model?.schema) : [];
+  //   // return normalized_schema_fields.filter(
+  //   //   (item) => item?.key == data_model?.schema?.required?.
+  //   // );
+  // }, [fields, data_model?.schema]);
+
+  // Get normalized fields from either props or schema
+  const normalizedFields = React.useMemo(() => {
+    if (fields) {
+      return fields.map((field, index) => ({
+        ...field,
+        key: field.key || `field-${index}`,
+        fieldName:
+          field.fieldName || field.title.toLowerCase().replace(/ /g, "_"),
+      }));
+    }
+    const schema = view_record?.data_model?.schema || data_model?.schema;
+    return schema ? normalizeSchemaFields(schema) : [];
+  }, [fields, view_record?.data_model?.schema, data_model?.schema]);
+
+  // // Filter and group the fields
+  // const filteredFields = React.useMemo(
+  //   () => filterFields(normalizedFields),
+  //   [normalizedFields, include_items, action_mode]
+  // );
+
+  // const groupedFields = React.useMemo(
+  //   () => groupFields(filteredFields),
+  //   [filteredFields]
+  // );
+  // Filter and group the fields
+  const filteredFields = React.useMemo(
+    () => filterFields(normalizedFields),
+    [normalizedFields]
+  );
+
+  const groupedFields = React.useMemo(
+    () => groupFields(filteredFields),
+    [filteredFields]
+  );
+
+  // Render a single field
+  const renderField = (fieldData: Field) => {
+    const Component = getComponentByResourceType(fieldData.component);
+    const fieldName =
+      fieldData.fieldName || fieldData.title.toLowerCase().replace(/ /g, "_");
+
+    return (
+      <div key={fieldData.key || fieldData.title} className="mb-4">
+        <form.Field
+          name={fieldName}
+          validators={
+            fieldName === "query"
+              ? {
+                  onChangeAsync: async ({ value }) => {
+                    if (value) {
+                      const error = await debouncedValidationPromise(value);
+                      if (error) {
+                        return error as ValidationError;
+                      }
+                    }
+                    return undefined;
+                  },
+                }
+              : undefined
+          }
+        >
+          {(field) => (
+            <>
+              <Component
+                schema={fieldData}
+                disabled={fieldData.readOnly}
+                label={fieldData.label || fieldData.title}
+                value={
+                  fieldData.component === "DateInput" &&
+                  typeof field.state.value === "string"
+                    ? new Date(field.state.value)
+                    : field.state.value
+                }
+                onBlur={field.handleBlur}
+                action_input_form_values_key={action_input_form_values_key}
+                form_id={formId}
+                record={record}
+                onChange={
+                  [
+                    "NumberInput",
+                    "MonacoEditorFormInput",
+                    "NaturalLanguageEditorFormInput",
+                    "SearchInput",
+                    "DateInput",
+                    "MultiSelect",
+                    "Select",
+                    "FileInput",
+                  ].includes(fieldData.component)
+                    ? field.handleChange
+                    : (e: any) => field.handleChange(e?.target?.value)
+                }
+                form={form}
+                isLoading={mutationIsLoading}
+                {...(fieldData.props || {})}
+                {...(fieldData.component === "DateInput" ? { dateParser } : {})}
+              />
+              {fieldName === "query" && <FieldInfo field={field} />}
+            </>
+          )}
+        </form.Field>
+      </div>
+    );
+  };
+
+  // Check if we should render the form based on required fields
+  const hasRequiredFields =
+    view_record?.data_model?.schema?.required?.length > 0 ||
+    data_model?.schema?.required?.length > 0;
+
+  if (!hasRequiredFields) return null;
+
   return (
-    <>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          // form.handleSubmit();
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
+      {/* <div>form</div> */}
+      {/* <MonacoEditor
+        value={{
+          // fields: fields,
+          // normalizedFields: normalizedFields,
+          // filteredFields: filteredFields,
+          // groupedFields: groupedFields,
+          formId: formId,
+          // action_input_form_values_key: action_input_form_values_key,
+          // action: action,
+          // include_items: include_items,
+          // view_record: view_record,
+          // data_model: data_model?.schema.required.length,
         }}
-      >
-        {/* Include templateUpdate to force re-render */}
-        {/* <div>Template Update Count: {templateUpdate}</div> */}
-        {/* <MonacoEditor
-          value={{
-            formId: formId,
-            // action_input_form_values_key: action_input_form_values_key,
-            // action: action,
-            // include_items: include_items,
-          }}
-          language="json"
-          height="25vh"
-        /> */}
-        {/* <MonacoEditor
-          value={{
-            action_mode: action_mode,
-            record: record,
-            // data_model: data_model,
-          }}
-          language="json"
-          height="25vh"
-        /> */}
-        {/* <div>{JSON.stringify(focused_item)}</div> */}
-        {/* <div>{JSON.stringify(include_items)}</div> */}
-        {/* <div>{JSON.stringify(record?.list_items)}</div> */}
-        {/* <div>{JSON.stringify(form?.store?.state.values)}</div> */}
-        {/* <div>{JSON.stringify(form?.store?.state.values?.list_items)}</div> */}
+        language="json"
+        height="25vh"
+      /> */}
 
-        {activeAgent ? (
-          // Agent view - only show description field without accordion
-          (() => {
-            const key = "description";
-            // Ensure we have a valid string for the field name
-            const fieldName = schema.properties[key]?.title
-              ? schema.properties[key].title.toLowerCase().replace(/ /g, "_")
-              : "description"; // Fallback to "description" if title is undefined
+      {/* {view_record?.data_model?.schema.required.length > 0 && (
+        <Accordion defaultValue={["main"]} multiple={true}>
+          {Object.entries(groupedFields).map(([groupName, groupFields]) => (
+            <Accordion.Item value={groupName} key={groupName}>
+              <Accordion.Control>
+                {`${data_model?.name || ""} ${
+                  data_model?.name ? "/" : ""
+                } ${groupName}`}
+              </Accordion.Control>
+              <Accordion.Panel>
+                {groupFields.map((field) => renderField(field))}
+              </Accordion.Panel>
+            </Accordion.Item>
+          ))}
+        </Accordion>
+      )} */}
 
-            const Component = getComponentByResourceType(
-              schema.properties[key]?.component as ComponentKey
-            );
-
-            if (!schema.properties[key]) {
-              return null; // Return null if the description field is not found in schema
-            }
-
-            return (
-              <div className="mb-4">
-                <form.Field name={fieldName}>
-                  {(field) => (
-                    <Component
-                      schema={schema.properties[key]}
-                      disabled={schema.properties[key]?.readOnly}
-                      label={
-                        schema.properties[key]?.label ||
-                        schema.properties[key]?.title
-                      }
-                      value={
-                        schema.properties[key]?.component === "DateInput" &&
-                        typeof field.state.value === "string"
-                          ? new Date(field.state.value)
-                          : field.state.value
-                      }
-                      onBlur={field.handleBlur}
-                      action_input_form_values_key={
-                        action_input_form_values_key
-                      }
-                      form_id={formId}
-                      record={record}
-                      onChange={
-                        [
-                          "NumberInput",
-                          "MonacoEditorFormInput",
-                          "NaturalLanguageEditorFormInput",
-                          "SearchInput",
-                          "DateInput",
-                          "MultiSelect",
-                          "Select",
-                          "FileInput",
-                        ].includes(schema.properties[key]?.component)
-                          ? field.handleChange
-                          : (e: any) => field.handleChange(e?.target?.value)
-                      }
-                      form={form}
-                      isLoading={mutationIsLoading}
-                      {...(schema.properties[key]?.props || {})}
-                      {...(schema.properties[key]?.component === "DateInput"
-                        ? { dateParser }
-                        : {})}
-                    />
-                  )}
-                </form.Field>
+      <Accordion defaultValue={[]} multiple={true}>
+        {Object.entries(groupedFields).map(([groupName, groupFields]) => (
+          <Accordion.Item value={groupName} key={groupName}>
+            <Accordion.Control>
+              <div className="flex items-center gap-3">
+                <IconFilter size={16}></IconFilter>
+                {`${view_record?.data_model?.name || data_model?.name || ""} ${
+                  view_record?.data_model?.name || data_model?.name ? "/" : ""
+                } filters`}
               </div>
-            );
-          })()
-        ) : (
-          // Regular view - show all fields with accordion
-          <Accordion defaultValue={["main"]} multiple={true}>
-            {Object.entries(
-              Object.keys(schema?.properties)
-                .sort((a, b) => {
-                  const idA = parseInt(schema.properties[a]?.id, 10) || 0;
-                  const idB = parseInt(schema.properties[b]?.id, 10) || 0;
-                  return idA - idB;
-                })
-                .filter((key) => {
-                  const fieldsToInclude = getFieldsToInclude(
-                    schema,
-                    action_mode
-                  );
-                  return (
-                    include_items.includes(key) && fieldsToInclude.includes(key)
-                  );
-                })
-                .reduce((groups, key) => {
-                  const group = schema.properties[key]?.group || "fields";
-                  if (!groups[group]) groups[group] = [];
-                  groups[group].push(key);
-                  return groups;
-                }, {} as Record<string, string[]>)
-            ).map(([groupName, groupFields]) => (
-              <Accordion.Item value={groupName} key={groupName}>
-                <Accordion.Control>{`${
-                  data_model?.name || ""
-                } / ${groupName}`}</Accordion.Control>
-                <Accordion.Panel>
-                  {groupFields.map((key) => {
-                    const fieldName = schema.properties[key]?.title
-                      .toLowerCase()
-                      .replace(/ /g, "_");
-                    const Component = getComponentByResourceType(
-                      schema.properties[key]?.component as ComponentKey
-                    );
-                    return (
-                      <div key={schema.properties[key]?.title} className="mb-4">
-                        <form.Field
-                          name={fieldName}
-                          validators={
-                            fieldName === "query"
-                              ? {
-                                  onChangeAsync: async ({ value }) => {
-                                    if (value) {
-                                      const error =
-                                        await debouncedValidationPromise(value);
-                                      if (error) {
-                                        return error as ValidationError;
-                                      }
-                                    }
-                                    return undefined;
-                                  },
-                                }
-                              : undefined
-                          }
-                        >
-                          {(field) => (
-                            <>
-                              <Component
-                                schema={schema.properties[key]}
-                                disabled={schema.properties[key]?.readOnly}
-                                label={
-                                  schema.properties[key]?.label ||
-                                  schema.properties[key]?.title
-                                }
-                                value={
-                                  schema.properties[key]?.component ===
-                                    "DateInput" &&
-                                  typeof field.state.value === "string"
-                                    ? new Date(field.state.value)
-                                    : field.state.value
-                                }
-                                onBlur={field.handleBlur}
-                                action_input_form_values_key={
-                                  action_input_form_values_key
-                                }
-                                form_id={formId}
-                                record={record}
-                                onChange={
-                                  [
-                                    "NumberInput",
-                                    "MonacoEditorFormInput",
-                                    "NaturalLanguageEditorFormInput",
-                                    "SearchInput",
-                                    "DateInput",
-                                    "MultiSelect",
-                                    "Select",
-                                    "FileInput",
-                                  ].includes(schema.properties[key]?.component)
-                                    ? field.handleChange
-                                    : (e: any) =>
-                                        field.handleChange(e?.target?.value)
-                                }
-                                form={form}
-                                isLoading={mutationIsLoading}
-                                {...(schema.properties[key]?.props || {})}
-                                {...(schema.properties[key]?.component ===
-                                "DateInput"
-                                  ? { dateParser }
-                                  : {})}
-                              />
-                              {fieldName === "query" && (
-                                <FieldInfo field={field} />
-                              )}
-                            </>
-                          )}
-                        </form.Field>
-                      </div>
-                    );
-                  })}
-                </Accordion.Panel>
-              </Accordion.Item>
-            ))}
-          </Accordion>
-        )}
-        <div className="flex justify-end pt-3">
-          <Button
-            size="compact-sm"
-            onClick={() => form.setFieldValue("query", record?.query)}
-          >
-            Reset
-          </Button>
-        </div>
-      </form>
+            </Accordion.Control>
+            <Accordion.Panel>
+              {groupFields.map((field) => renderField(field))}
+            </Accordion.Panel>
+          </Accordion.Item>
+        ))}
+      </Accordion>
 
-      {/* // Reset to default values
-form.reset(); */}
-      {/* <div>{JSON.stringify(mutationError)}</div> */}
-      {/* <div>{JSON.stringify(mutationData)}</div> */}
-      {/* {mutationData && (
-        <MonacoEditor
-          value={mutationData?.data}
-          language="json"
-          height="50vh"
-        />
+      {activeAgent ||
+        (data_model?.schema?.required &&
+          data_model?.schema.required.length === 1 &&
+          // Agent view - only show first required field
+          (() => {
+            // const field = filteredFields.find(
+            //   (f) => f.key && data_model?.schema?.required?.includes(f.key)
+            // );
+            const field = data_model?.schema?.properties?.description;
+            return field ? renderField(field) : null;
+          })())}
+
+      {/* {!activeAgent && data_model?.schema.required.length !== 1 && (
+        <Accordion defaultValue={["main"]} multiple={true}>
+          {Object.entries(groupedFields).map(([groupName, groupFields]) => (
+            <Accordion.Item value={groupName} key={groupName}>
+              <Accordion.Control>
+                {`${data_model?.name || ""} ${
+                  data_model?.name ? "/" : ""
+                } ${groupName}`}
+              </Accordion.Control>
+              <Accordion.Panel>
+                {groupFields.map((field) => renderField(field))}
+              </Accordion.Panel>
+            </Accordion.Item>
+          ))}
+        </Accordion>
       )} */}
-      {/* if data.data contains at least one object with exit_code = 1 then show error message */}
-      {/* {mutationData?.data?.find((item: any) => item?.exit_code === 1) && (
-        <MonacoEditor value={mutationData} language="json" height="50vh" />
-      )} */}
-      {typeof mutationData?.data === "object" &&
-      Array.isArray(mutationData?.data)
-        ? mutationData?.data?.find((item: any) => item?.exit_code === 1) && (
-            <MonacoEditor
-              value={JSON.stringify(mutationData, null, 2)}
-              language="json"
-              height="50vh"
-            />
-          )
-        : null}
-
-      {mutationError && (
-        <MonacoEditor
-          value={{
-            data: mutationError?.response?.data,
-            status: mutationError?.response?.status,
-            code: mutationError?.code,
-            headers: mutationError?.response?.headers,
-            statusText: mutationError?.response?.statusText,
-            config: {
-              headers: mutationError?.config?.headers,
-              method: mutationError?.config?.method,
-              data: mutationError?.config?.data,
-              url: mutationError?.config?.url,
-            },
-          }}
-          language="json"
-          height="25vh"
-        />
-      )}
-
-      {/* <div
-        className="flex justify-end w-full p-3"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ExternalSubmitButton
-          record={record}
-          entity_type="action_steps"
-          action={action}
-        ></ExternalSubmitButton>
-      </div> */}
-    </>
+    </form>
   );
 };
 
@@ -1598,6 +1417,7 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   include_form_components,
   focused_item,
   read_record_mode,
+  action_form_key,
 }) => {
   let state = {
     id: execution_record?.id,
@@ -1657,6 +1477,7 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
             action={action}
             children={children}
             focused_item={focused_item}
+            action_form_key={action_form_key}
           ></ActionInputForm>
         )}
       </div>

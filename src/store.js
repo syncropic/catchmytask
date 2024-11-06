@@ -181,11 +181,20 @@ export const useAppStore = create(
         set((state) => ({ ...state, activeSession: session })),
       activeTask: null,
       setActiveTask: (task) => set((state) => ({ ...state, activeTask: task })),
+      activeProfile: null,
+      setActiveProfile: (task) =>
+        set((state) => ({ ...state, activeProfile: task })),
       activeView: null,
       setActiveView: (view) => set((state) => ({ ...state, activeView: view })),
       activeActionStep: null,
       setActiveActionStep: (actionStep) =>
         set((state) => ({ ...state, activeActionStep: actionStep })),
+      activeAction: null,
+      setActiveAction: (action) =>
+        set((state) => ({ ...state, activeAction: action })),
+      activeInvalidateQueryKey: null,
+      setActiveInvalidateQueryKey: (item) =>
+        set((state) => ({ ...state, activeInvalidateQueryKey: item })),
       selectedRecords: {},
       setSelectedRecords: (records) =>
         set((state) => ({ ...state, selectedRecords: records })),
@@ -214,6 +223,9 @@ export const useAppStore = create(
       setUploaded: (uploaded) => set((state) => ({ ...state, uploaded })),
       action: null,
       setAction: (action) => set((state) => ({ ...state, action: action })),
+      activeEvent: null,
+      setActiveEvent: (event) =>
+        set((state) => ({ ...state, activeEvent: event })),
       fields: {},
       setFields: (fields) => set((state) => ({ ...state, fields })),
       dataFields: {},
@@ -227,6 +239,19 @@ export const useAppStore = create(
       action_input_form_values: {},
       setActionInputFormValues: (values) =>
         set((state) => ({ ...state, action_input_form_values: values })),
+
+      action_input_form_fields: {},
+      setActionInputFormFields: (key, newData) =>
+        set((state) => {
+          const existingData = state.action_input_form_fields[key] || [];
+          return {
+            action_input_form_fields: {
+              ...state.action_input_form_fields,
+              [key]: newData,
+            },
+          };
+        }),
+
       sessionConfig: {
         interaction_mode: "interactive",
       },

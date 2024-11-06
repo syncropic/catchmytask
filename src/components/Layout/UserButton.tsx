@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { IconChevronRight } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
 import { Avatar, Text, UnstyledButton } from "@mantine/core";
 
 interface UserButtonProps extends React.ComponentPropsWithoutRef<"button"> {
@@ -7,10 +7,11 @@ interface UserButtonProps extends React.ComponentPropsWithoutRef<"button"> {
   name: string;
   email: string;
   icon?: React.ReactNode;
+  opened?: boolean;
 }
 
 export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>(
-  ({ image, name, email, icon, ...others }: UserButtonProps, ref) => (
+  ({ image, name, email, icon, opened, ...others }: UserButtonProps, ref) => (
     <UnstyledButton
       ref={ref}
       style={{
@@ -37,7 +38,18 @@ export const UserButton = forwardRef<HTMLButtonElement, UserButtonProps>(
       </div>
 
       <div className="ml-auto hidden lg:flex items-center">
-        {icon || <IconChevronRight size="1rem" />}
+        {icon ||
+          (opened ? (
+            <IconChevronDown
+              size="1rem"
+              className="transition-transform duration-200"
+            />
+          ) : (
+            <IconChevronRight
+              size="1rem"
+              className="transition-transform duration-200"
+            />
+          ))}
       </div>
     </UnstyledButton>
   )

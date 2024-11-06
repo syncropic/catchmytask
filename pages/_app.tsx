@@ -309,6 +309,34 @@ const App = (props: React.PropsWithChildren) => {
                   show: "/tasks/show/:id",
                 },
                 {
+                  name: "profiles",
+                  list: "/profiles",
+                  show: "/profiles/show/:id",
+                  edit: "/profiles/edit/:id",
+                },
+                {
+                  name: "account",
+                  list: "/account",
+                  edit: "/account/edit/:id",
+                },
+                {
+                  name: "settings",
+                  list: "/settings",
+                  edit: "/settings/edit/:id",
+                },
+                {
+                  name: "messages",
+                  list: "/messages",
+                  edit: "/messages/edit/:id",
+                  show: "/messages/show/:id",
+                },
+                {
+                  name: "activities",
+                  list: "/activities",
+                  edit: "/activities/edit/:id",
+                  show: "/activities/show/:id",
+                },
+                {
                   name: "views",
                   list: "/tasks",
                   show: "/tasks/show/:id",

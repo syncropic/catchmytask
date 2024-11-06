@@ -172,6 +172,7 @@ export interface ActionInputWrapperProps {
   records?: any;
   focused_item?: string;
   read_record_mode?: string;
+  action_form_key?: string;
 }
 
 export interface PlanWrapperProps {
@@ -270,6 +271,7 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   data_columns?: ColumnDef<RowData>[];
   isLoadingDataItems?: boolean;
   read_write_mode?: string;
+  query_key?: string;
   ui?: Record<string, any>;
   // data_columns: ColumnDef<RowData>[];
   name?: string;
@@ -280,6 +282,7 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   resource_group?: string;
   execlude_components?: string[];
   view_record?: any;
+  title?: string;
   // view_data: any;
   // data_columns: T[];
   data_fields?: T[];
@@ -301,8 +304,10 @@ export interface DataDisplayComponentProps<T extends Record<string, any>> {
   // item: IView;
   // resource: string;
   // results?: any;
+  title?: string;
   display_mode?: any;
   view_mode?: string;
+  query_key?: string;
   record?: any;
   entity_type?: string;
   // data_columns?: ColumnDef<RowData>[];
@@ -314,6 +319,7 @@ export interface DataDisplayComponentProps<T extends Record<string, any>> {
   // tableInstance?: TanStackTable<T>;
   display?: string;
   data_items: any[];
+  view_record?: any;
   // record?: any;
   // resource_group: string;
   // execlude_components?: string[];
@@ -1127,6 +1133,10 @@ export interface SearchInputComponentProps<T extends Record<string, any>> {
   navigateOnSelect?: NavigateOnSelect;
   navigateOnClear?: NavigateOnSelect;
   multiselect?: boolean;
+  withinPortal?: boolean;
+  ref?: any;
+  handleEdit?: any;
+  record?: any;
 }
 
 export interface GlobalSearchInputComponentProps<
@@ -1181,6 +1191,7 @@ export interface DataModel {
 
 export interface DynamicFormProps {
   // data_model: DataModel["data_model"] | null;
+  action_form_key?: string;
   data_model?: any;
   record?: any;
   action_steps?: any;
@@ -1199,6 +1210,8 @@ export interface DynamicFormProps {
   include_action_icons?: string[];
   include_form_components?: string[];
   focused_item?: string;
+  fields?: any[];
+  title?: string;
 }
 
 // This file will define the structure and configuration of accordion sections.
@@ -1229,4 +1242,47 @@ export interface SQLTemplateOptions {
 export interface QueryResult {
   query: string;
   error?: string;
+}
+
+export interface Field {
+  component: ComponentKey;
+  description?: string;
+  group?: string;
+  id?: string;
+  placeholder?: string;
+  readOnly?: boolean;
+  size?: string;
+  title: string;
+  type?: string;
+  props?: Record<string, any>;
+  label?: string;
+  key?: string;
+  fieldName?: string; // Added fieldName property
+}
+
+export interface SchemaProperty {
+  component: ComponentKey;
+  description?: string;
+  group?: string;
+  id?: string;
+  placeholder?: string;
+  readOnly?: boolean;
+  size?: string;
+  title: string;
+  type?: string;
+  props?: Record<string, any>;
+  label?: string;
+  fieldName?: string;
+}
+
+export interface Schema {
+  properties: Record<string, SchemaProperty>;
+  required?: string[];
+}
+
+export interface ActionComponentProps {
+  onClick: () => void;
+  disabled: boolean;
+  loading: boolean;
+  children?: React.ReactNode;
 }

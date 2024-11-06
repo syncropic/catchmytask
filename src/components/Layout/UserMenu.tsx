@@ -9,6 +9,7 @@ import {
 import { IIdentity } from "@components/interfaces";
 import { Button, Group, Menu } from "@mantine/core";
 import {
+  IconAdjustmentsHorizontal,
   IconApps,
   IconClipboard,
   IconComponents,
@@ -20,12 +21,17 @@ import {
   IconPuzzle,
   IconSearch,
   IconSettings,
+  IconUser,
   IconUserCircle,
   IconUserPlus,
+  IconUserScan,
 } from "@tabler/icons-react";
 import UserButton from "./UserButton";
 import { useAppStore } from "src/store";
 import { signIn } from "next-auth/react";
+import SearchInput from "@components/SearchInput";
+import { useState } from "react";
+import { useClickOutside } from "@mantine/hooks";
 // import MonacoEditor from "@components/MonacoEditor";
 
 export const UserMenu = () => {
@@ -36,18 +42,26 @@ export const UserMenu = () => {
   const { data: user } = useGetIdentity({
     v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
   });
-  const { setIsFloatingWindowOpen, setActiveFloatingWindow, setNavigationHistory } = useAppStore();
+  const {
+    setIsFloatingWindowOpen,
+    setActiveFloatingWindow,
+    setNavigationHistory,
+    setActiveProfile,
+    activeProfile,
+  } = useAppStore();
   const { resource, action, id, pathname, params } = useParsed();
+  const [opened, setOpened] = useState(false);
+  const ref = useClickOutside(() => {
+    return setOpened(false);
+  });
 
   // handle logout
   const handleLogout = () => {
     // get the current full url
-    setNavigationHistory(
-      {
-        pathname: pathname,
-        params: params
-      }
-    )
+    setNavigationHistory({
+      pathname: pathname,
+      params: params,
+    });
     logout();
   };
   if (!user) {
@@ -70,23 +84,122 @@ export const UserMenu = () => {
     setActiveFloatingWindow({ name: section });
     setIsFloatingWindowOpen(true);
   };
+  const handleEdit = (item: any) => {
+    console.log("Edit", item);
+    go({
+      to: {
+        resource: item?.entity_type,
+        action: "edit",
+        id: item?.id,
+        // meta: navigationHistory?.params,
+      },
+      // query: navigationHistory?.params,
+      type: "push",
+    });
+    setOpened(!opened);
+  };
+  const handleMenuNavigate = (item: any) => {
+    // console.log("Edit", item);
+    go({
+      to: {
+        resource: item?.entity_type,
+        action: item?.action_type,
+        id: item?.id,
+        // meta: navigationHistory?.params,
+      },
+      // query: navigationHistory?.params,
+      type: "push",
+    });
+    setOpened(!opened);
+  };
+
   return (
     <Group align="center">
-      <Menu withArrow withinPortal>
+      <Menu withArrow withinPortal opened={opened}>
         <Menu.Target>
           <UserButton
             image=""
             // image="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
             name={user?.name}
-            email={user?.email}
+            email={activeProfile?.name || user?.email}
+            onClick={() => setOpened(!opened)}
+            opened={opened}
           />
           {/* <div>userbutton</div> */}
         </Menu.Target>
         {/* ...Menu.Items */}
         <Menu.Dropdown>
           {/* <Menu.Label>Profile</Menu.Label> */}
-          <Menu.Item leftSection={<IconUserCircle size={14} />} disabled>
-            Switch Profile
+          {/* <Menu.Item leftSection={<IconUserCircle size={14} />}>
+            <div>
+              <SearchInput
+                placeholder="profiles"
+                description="profiles"
+                handleOptionSubmit={setActiveProfile}
+                value={activeProfile?.id || ""}
+                // include_action_icons={activeAgent?.id ? ["filter"] : []}
+                // navigateOnSelect={{ resource: "views" }}
+                // navigateOnClear={{ resource: "home" }}
+                activeFilters={[
+                  {
+                    id: 1,
+                    name: "profiles",
+                    description: "profiles",
+                    entity_type: "profiles",
+                    is_selected: true,
+                  },
+                ]}
+              />
+            </div>
+          </Menu.Item> */}
+          {/* <div onClick={(e) => e.stopPropagation()}>
+            <Menu.Item
+              component={SearchInput}
+              placeholder="profiles"
+              description="profiles"
+              handleOptionSubmit={setActiveProfile}
+              value={activeProfile?.id || ""}
+              withinPortal={true}
+              // include_action_icons={activeAgent?.id ? ["filter"] : []}
+              // navigateOnSelect={{ resource: "views" }}
+              // navigateOnClear={{ resource: "home" }}
+              activeFilters={[
+                {
+                  id: 1,
+                  name: "profiles",
+                  description: "profiles",
+                  entity_type: "profiles",
+                  is_selected: true,
+                },
+              ]}
+            ></Menu.Item>
+          </div> */}
+
+          <Menu.Item leftSection={<IconUser size={14} />}>
+            <div onClick={(e) => e.stopPropagation()}>
+              <SearchInput
+                placeholder="profiles"
+                description="profiles"
+                handleOptionSubmit={setActiveProfile}
+                value={activeProfile?.id || ""}
+                withinPortal={true}
+                ref={ref}
+                include_action_icons={["edit", "add_new", "record_info"]}
+                handleEdit={handleEdit}
+                record={activeProfile}
+                // navigateOnSelect={{ resource: "views" }}
+                // navigateOnClear={{ resource: "home" }}
+                activeFilters={[
+                  {
+                    id: 1,
+                    name: "profiles",
+                    description: "profiles",
+                    entity_type: "profiles",
+                    is_selected: true,
+                  },
+                ]}
+              ></SearchInput>
+            </div>
           </Menu.Item>
           {/* <Menu.Item
             leftSection={<IconPuzzle size={14} />}
@@ -100,11 +213,42 @@ export const UserMenu = () => {
           >
             Settings
           </Menu.Item> */}
-          <Menu.Item leftSection={<IconSettings size={14} />} disabled>
+          <Menu.Item
+            leftSection={<IconUserScan size={14} />}
+            onClick={() =>
+              handleMenuNavigate({
+                entity_type: "account",
+                action_type: "edit",
+                id: user?.email,
+              })
+            }
+          >
             Manage Account
           </Menu.Item>
-          <Menu.Item leftSection={<IconMail size={14} />} disabled>
-            Inbox
+          <Menu.Item
+            leftSection={<IconAdjustmentsHorizontal size={14} />}
+            onClick={() =>
+              handleMenuNavigate({
+                entity_type: "settings",
+                action_type: "edit",
+                id: user?.email,
+              })
+            }
+          >
+            Settings
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconMail size={14} />}
+            onClick={() =>
+              handleMenuNavigate({
+                entity_type: "tasks",
+                action_type: "list",
+                id: user?.email,
+              })
+            }
+          >
+            Tasks
+            {/* where the action happens */}
           </Menu.Item>
           <Menu.Item
             leftSection={<IconLogout size={14} />}

@@ -59,7 +59,7 @@ export function StateView() {
         ]}
         navigateOnSelect={{ resource: "sessions" }}
       />
-      <SearchInput
+      {/* <SearchInput
         placeholder="Search for tasks"
         description="tasks"
         handleOptionSubmit={setActiveTask}
@@ -76,8 +76,8 @@ export function StateView() {
             is_selected: true,
           },
         ]}
-      />
-      <SearchInput
+      /> */}
+      {/* <SearchInput
         placeholder="Search for views"
         description="views"
         handleOptionSubmit={setActiveView}
@@ -94,7 +94,7 @@ export function StateView() {
             is_selected: true,
           },
         ]}
-      />
+      /> */}
       {/* <SearchInput
         placeholder="Search for records"
         description="records"

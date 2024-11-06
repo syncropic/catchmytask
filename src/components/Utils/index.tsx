@@ -9,6 +9,9 @@ import ViewPayment from "@components/ViewPayment";
 import ViewTask from "@components/ViewTask";
 import ViewTestRun from "@components/ViewTestRun";
 import ViewTrip from "@components/ViewTrip";
+import type { FieldApi } from "@tanstack/react-form";
+import ExcelJS from "exceljs";
+import { format, isValid, parseISO } from "date-fns";
 
 import {
   ComponentKey,
@@ -95,6 +98,8 @@ import {
   IconListCheck,
   IconUpload,
   IconTimelineEventText,
+  IconAffiliate,
+  IconFilter,
 } from "@tabler/icons-react";
 import { localDb } from "src/localDb";
 import { useQueryClient } from "@tanstack/react-query";
@@ -1172,7 +1177,11 @@ export function useReadByState(state: any) {
 
   const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
   const queryClient = useQueryClient();
-  const viewData = queryClient.getQueryData([view_query_key]);
+  // const viewData = queryClient.getQueryData([view_query_key]);
+  const viewData = queryClient.getQueryData([view_query_key]) as {
+    data: any[];
+  };
+
   const viewRecord = viewData?.data?.find(
     (item: any) => item?.message?.code === activeView?.id
   )?.data[0];
@@ -1310,6 +1319,187 @@ export function useReadByState(state: any) {
   };
 }
 
+export function useFetchExecutionData(state: any) {
+  const { runtimeConfig: config, updateLocalDB, setDataFields } = useAppStore();
+  const { view_record, ...rest } = state;
+
+  // const viewState = {
+  //   record: { id: state?.view_id },
+  //   read_record_mode: "remote",
+  // };
+
+  // let view_query_key = `readByState_${JSON.stringify({
+  //   id: viewState?.record?.id,
+  //   success_message_code: viewState?.record?.id || "record_read",
+  // })}`;
+
+  const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
+  // const queryClient = useQueryClient();
+  // // const viewData = queryClient.getQueryData([view_query_key]);
+  // const viewData = queryClient.getQueryData([view_query_key]) as {
+  //   data: any[];
+  // };
+
+  // const viewRecord = viewData?.data?.find(
+  //   (item: any) => item?.message?.code === state?.view_id
+  // )?.data[0];
+
+  // State variables for LocalDB operation statuses
+  const [isLocalDBLoading, setIsLocalDBLoading] = useState(false);
+  const [isLocalDBSuccess, setIsLocalDBSuccess] = useState(false);
+  const [localDBError, setLocalDBError] = useState(null);
+
+  const { data, isLoading, error, isError, refetch } = useCustom({
+    url: `${config?.API_URL}/execute?task_id=${state?.task.id}`,
+    method: "post",
+    config: {
+      payload: {
+        ...rest,
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `readByState_${JSON.stringify({
+          success_message_code: state?.success_message_code,
+        })}`,
+      ],
+      onSuccess: async (fetchedData) => {
+        console.log(
+          `Fetched data successfully: ${state?.success_message_code}`
+        );
+        // table name is the success message code
+        let tableName = state.success_message_code;
+
+        // Extract data_items and data_fields from the fetched data
+        const dataRecord = fetchedData?.data?.find(
+          (item: any) => item?.message?.code === state.success_message_code
+        );
+        console.log("dataRecord");
+        console.log(fetchedData);
+
+        const data_items = dataRecord?.data || [];
+        const infered_data_fields = (dataRecord?.data_fields || []).map(
+          (field: any) => ({
+            ...field,
+          })
+        );
+        console.log("data_items");
+        console.log(data_items);
+
+        // // console.log("useReadByState > viewRecord", viewRecord);
+        const data_fields = view_record?.fields || infered_data_fields || [];
+        // console.log(
+        //   `${state?.success_message_code} / useReadByState > viewRecord data_fields`,
+        //   data_fields
+        // );
+
+        // // Save the data fields to the Zustand store
+        setDataFields(tableName, data_fields);
+        // const data_items = [];
+        // const data_fields = [];
+
+        // Save to DuckDB local_db
+        if (data_items.length > 0 && data_fields.length > 0) {
+          // console.log("update local db here");
+          setIsLocalDBLoading(true);
+          setLocalDBError(null);
+          setIsLocalDBSuccess(false);
+          // Update the state with functional updates
+          // setLocalDB((prevLocalDB) => ({
+          //   ...prevLocalDB,
+          //   [tableName]: {
+          //     isLocalDBLoading: true,
+          //     isLocalDBSuccess: false,
+          //     localDBError: null,
+          //   },
+          // }));
+          let item = {
+            isLocalDBLoading: true,
+            isLocalDBSuccess: false,
+            localDBError: null,
+          };
+          updateLocalDB(tableName, item);
+
+          try {
+            // console.log("save to db here");
+            const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
+            await dbInstance.query(dropQuery);
+            await saveToLocalDB(data_items, tableName, data_fields, dbInstance);
+            console.log("Data saved to DuckDB successfully");
+            setIsLocalDBSuccess(true);
+            let success_item = {
+              isLocalDBLoading: false,
+              isLocalDBSuccess: true,
+              localDBError: null,
+            };
+            updateLocalDB(tableName, success_item);
+            console.log(
+              `Local DB item success item: ${tableName}`,
+              success_item
+            );
+            // setLocalDB(item);
+            // let success_merged = { ...local_db, ...success_item };
+            // console.log("Local DB item success item:", success_item);
+            // setLocalDB(local_db_item);
+            // console.log("Local DB item success:", tableName, local_db_item);
+            // success message code
+            // console.log("Data saved to Table:", tableName);
+            // console.log("Data saved to DuckDB:", data_items);
+            // console.log("Data fields:", data_fields);
+          } catch (error) {
+            console.error("Error saving data to DuckDB:", error);
+            setLocalDBError(error as any);
+            let success_item = {
+              isLocalDBLoading: false,
+              isLocalDBSuccess: false,
+              localDBError: JSON.stringify(error),
+            };
+            updateLocalDB(tableName, success_item);
+            // setLocalDB({
+            //   ...local_db,
+            //   [tableName]: {
+            //     isLocalDBLoading: false,
+            //     isLocalDBSuccess: false,
+            //     localDBError: error,
+            //   },
+            // });
+          } finally {
+            setIsLocalDBLoading(false);
+            let success_item = {
+              isLocalDBLoading: false,
+              isLocalDBSuccess: false,
+              localDBError: null,
+            };
+            updateLocalDB(tableName, success_item);
+            // setLocalDB({
+            //   ...local_db,
+            //   [tableName]: {
+            //     isLocalDBLoading: false,
+            //     isLocalDBSuccess: false,
+            //     localDBError: null,
+            //   },
+            // });
+          }
+        }
+      },
+      onError: (fetchError) => {
+        console.log("Error fetching data:", fetchError);
+      },
+    },
+  });
+
+  return {
+    data,
+    isLoading,
+    error,
+    isError,
+    refetch,
+    isLocalDBLoading,
+    isLocalDBSuccess,
+    localDBError,
+  };
+}
+
 export function useReadRecordByState(state: any) {
   // const variables = state;
   const { runtimeConfig: config } = useAppStore();
@@ -1338,7 +1528,7 @@ export function useReadRecordByState(state: any) {
             credential: state?.credential || "surrealdb catchmytask dev",
             credential_id: "credentials:5drygx90zfe8mf2jigvl",
             implement: state?.implement,
-            action_step_query: `SELECT * FROM ${state?.record?.id}`,
+            action_step_query: `SELECT *, data_model.* FROM ${state?.record?.id}`,
             success_message_code: state?.success_message_code || "read_record",
           },
         ],
@@ -1761,12 +1951,58 @@ export function useFetchQueryDataByState(state: any) {
       },
     },
     queryOptions: {
-      queryKey: [`useFetchQueryDataByState_${JSON.stringify(state)}`],
+      queryKey: [`useFetchQueryDataByState_${JSON.stringify(rest)}`],
     },
   });
 
   return { data, isLoading, error, isError };
 }
+
+// export function useListItems(state: any) {
+//   const { runtimeConfig: config } = useAppStore();
+//   // pop out frequently changing search_term or other part of state i don't want to trigger a new fetch/use in queryKey
+//   const { search_term, ...rest } = state;
+
+//   const { data, isLoading, error, isError } = useCustom({
+//     url: `${config?.API_URL}/execute-query`,
+//     method: "post",
+//     config: {
+//       payload: {
+//         task_variables: {},
+//         global_variables: {},
+//         include_action_steps: [1],
+//         action_steps: [
+//           {
+//             id: "1",
+//             execution_order: 1,
+//             description: "query data",
+//             name: "query data",
+//             job: "query data",
+//             action_step_query: `SELECT * FROM fn::execute_query('${
+//               state?.query_name
+//             }', '${JSON.stringify(state)}')`,
+//             method: "get",
+//             type: "main",
+//             credential: "surrealdb catchmytask dev",
+//             success_message_code:
+//               state?.success_message_code ?? "query_success_results",
+//             select: {
+//               query: `SELECT * FROM fn::execute_query('${
+//                 state?.query_name
+//               }', '${JSON.stringify(state)}')`,
+//               credential: "surrealdb catchmytask dev",
+//             },
+//           },
+//         ],
+//       },
+//     },
+//     queryOptions: {
+//       queryKey: [`useFetchQueryDataByState_${JSON.stringify(state)}`],
+//     },
+//   });
+
+//   return { data, isLoading, error, isError };
+// }
 
 export function useFetchSessionById(sessionId: string | null) {
   const { runtimeConfig: config } = useAppStore();
@@ -2872,6 +3108,11 @@ export const iconMap: Record<string, React.ElementType> = {
   view: IconEye,
   upload: IconUpload,
   view_modes: IconEye,
+  code: IconCode,
+  input: IconForms,
+  thinking: IconAffiliate,
+  reasoning: IconAffiliate,
+  filters: IconFilter,
 };
 
 export const useDuckDBSchema = () => {
@@ -5158,4 +5399,165 @@ export const stepsToMarkdown = (
 
   markdown += stepsMarkdown.join("");
   return markdown.trim();
+};
+
+export function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
+  return (
+    <>
+      {field.state.meta.isTouched && field.state.meta.errors.length ? (
+        <em style={{ color: "red" }}>{field.state.meta.errors.join(",")}</em>
+      ) : field.state.meta.isValidating ? (
+        "Validating..."
+      ) : (
+        !field.state.meta.errors.length && (
+          <em style={{ color: "green" }}>Looks good!</em>
+        )
+      )}
+    </>
+  );
+}
+
+// Function to map class names to ExcelJS ARGB colors
+// export const getExcelJSStyleFromClass = (className: string) => {
+//   switch (className) {
+//     case "bg-green-500":
+//       return { fgColor: { argb: "FF4CAF50" } }; // Green background
+//     case "bg-red-500":
+//       return { fgColor: { argb: "FFFF0000" } }; // Red background
+//     case "bg-gray-500":
+//       return { fgColor: { argb: "FF9E9E9E" } }; // Gray background
+//     case "bg-orange-500":
+//       return { fgColor: { argb: "FFFFA500" } }; // Orange background
+//     default:
+//       return null;
+//   }
+// };
+
+// Utility function to calculate column width based on header length
+export const calculateColumnWidth = (header: any) => {
+  return Math.max(header.length + 8, 15); // Add padding and set a minimum width
+};
+
+export async function excelToStandardizedJson(
+  file: File,
+  section?: string
+): Promise<any[]> {
+  const workbook = new ExcelJS.Workbook();
+  const arrayBuffer = await file.arrayBuffer();
+  await workbook.xlsx.load(arrayBuffer);
+
+  let worksheet;
+  if (section) {
+    worksheet = workbook.getWorksheet(section);
+    if (!worksheet) {
+      throw new Error(`Worksheet "${section}" not found in the Excel file.`);
+    }
+  } else {
+    worksheet = workbook.getWorksheet(1);
+  }
+
+  const jsonData: any[] = [];
+
+  // Get headers and standardize them
+  const headers = worksheet?.getRow(1).values as string[];
+  const standardizedHeaders = headers
+    .map((header) =>
+      header
+        ? header
+            .toString()
+            .toLowerCase()
+            .replace(/\s+/g, "_")
+            .replace(/[^a-z0-9_]/g, "")
+        : ""
+    )
+    .filter(Boolean);
+
+  // Process each row
+  worksheet?.eachRow((row, rowNumber) => {
+    if (rowNumber > 1) {
+      // Skip header row
+      const rowData: any = {};
+      row.eachCell((cell, colNumber) => {
+        const header = standardizedHeaders[colNumber - 1];
+        if (header) {
+          switch (cell.type) {
+            case ExcelJS.ValueType.Date:
+              rowData[header] =
+                cell.value instanceof Date ? cell.value.toISOString() : null;
+              break;
+            // case ExcelJS.ValueType.Hyperlink:
+            //   rowData[header] = (cell.value as ExcelJS.CellHyperlink).text || null;
+            //   break;
+            case ExcelJS.ValueType.Number:
+              rowData[header] = Number(cell.value);
+              break;
+            case ExcelJS.ValueType.Boolean:
+              rowData[header] = Boolean(cell.value);
+              break;
+            case ExcelJS.ValueType.Null:
+              rowData[header] = null;
+              break;
+            default:
+              rowData[header] = cell.text || null;
+          }
+        }
+      });
+      jsonData.push(rowData);
+    }
+  });
+
+  return jsonData;
+}
+
+// Function to format Python code template with arguments
+export const formatPythonTemplate = (
+  template: string,
+  args: Record<string, any>
+): string => {
+  let formattedCode = template;
+
+  // Replace each argument placeholder with its value
+  Object.entries(args).forEach(([key, value]) => {
+    // Convert value to Python literal representation
+    const pythonValue =
+      typeof value === "string" ? `"${value}"` : JSON.stringify(value);
+
+    // Replace {{key}} pattern (handles both {{key}} and {{ key }})
+    formattedCode = formattedCode.replace(
+      new RegExp(`{{\\s*${key}\\s*}}`, "g"),
+      pythonValue
+    );
+  });
+
+  return formattedCode;
+};
+
+export const formatDate = (
+  dateValue: string | Date | null | undefined,
+  formatString: string = "MMM d, h:mm a",
+  fallback: string = ""
+): string => {
+  try {
+    // Handle null/undefined
+    if (!dateValue) {
+      return fallback;
+    }
+
+    // If it's already a Date object
+    if (dateValue instanceof Date) {
+      return isValid(dateValue) ? format(dateValue, formatString) : fallback;
+    }
+
+    // If it's a string, try to parse it
+    if (typeof dateValue === "string") {
+      const parsedDate = parseISO(dateValue);
+      return isValid(parsedDate) ? format(parsedDate, formatString) : fallback;
+    }
+
+    // If we get here, the input was of an unexpected type
+    return fallback;
+  } catch (error) {
+    console.warn(`Error formatting date value: ${dateValue}`, error);
+    return fallback;
+  }
 };

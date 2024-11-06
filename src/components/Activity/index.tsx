@@ -14,39 +14,40 @@ import _, { filter } from "lodash";
 import MonacoEditor from "@components/MonacoEditor";
 import { AggregateActionStepResultsWrapper } from "@components/AggregateActionStepResults";
 
-interface ActionStepsProps {
-  entity_type?: string;
-  types?: string[];
-  state?: any;
-  read_write_mode?: string;
-  ui?: any;
-  append_items?: any[];
-  nested_item?: string | boolean;
-  exclude_components?: string[];
+interface ActionProps {
   success_message_code?: string;
-  invalidate_queries_on_submit_success?: string[];
-  record?: any;
-  aggregate_action_steps?: boolean;
+  display_mode?: string;
+  query_name?: string;
+  view_id?: string;
 }
 
 export const ActivityWrapper = ({
-  entity_type = "activity",
-  aggregate_action_steps,
-  record,
-}: ActionStepsProps) => {
-  const { activeTask, activeSession, activeView } = useAppStore();
-
-  // let selected_record_items_key = `${action}_action_input_${record?.id}`;
-  // const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
-  // let plan_action_input_form_values_key = `plan_${activeTask?.id}`;
+  display_mode,
+  view_id,
+  query_name,
+  success_message_code,
+}: ActionProps) => {
+  const {
+    activeTask,
+    activeSession,
+    activeView,
+    activeProfile,
+    activeApplication,
+  } = useAppStore();
 
   let activity_state = {
-    id: record?.id,
-    query_name: "read activity",
+    id:
+      activeView?.id ||
+      activeTask?.id ||
+      activeSession?.id ||
+      activeProfile?.id,
+    query_name: query_name || "read activity",
     task_id: activeTask?.id,
     session_id: activeSession?.id,
     view_id: activeView?.id,
-    success_message_code: "activity",
+    profile_id: activeProfile?.id,
+    application_id: activeApplication?.id,
+    success_message_code: success_message_code || "activity",
   };
   const {
     data: activityData,
@@ -56,9 +57,9 @@ export const ActivityWrapper = ({
 
   let activity_view_read_record_state = {
     credential: "surrealdb catchmytask dev",
-    success_message_code: "views:hxtnpwjnhhws9wuh0wr2",
+    success_message_code: view_id || "views:hxtnpwjnhhws9wuh0wr2",
     record: {
-      id: "views:hxtnpwjnhhws9wuh0wr2",
+      id: view_id || "views:hxtnpwjnhhws9wuh0wr2",
     },
     read_record_mode: "remote",
   };
@@ -129,20 +130,24 @@ export const ActivityWrapper = ({
       {/* <MonacoEditor
         value={{
           // activityData: activityData,
+          // activity_state: activity_state,
           // activity: activity[0]?.items,
+          activity: activity,
           // dataFields: inferDataTypes(activity[0]?.items),
-          activityViewRecord: activityViewRecord,
+          // activityViewRecord: activityViewRecord,
           // filteredData: filtered_action_steps,
           // stepsToRender: stepsToRender
+          // activity_view_read_record_state: activity_view_read_record_state,
         }}
         language="json"
         height="25vh"
       /> */}
-      {activity[0]?.items.length > 0 && (
+      {activity[0]?.items?.length > 0 && activityViewRecord && (
         <DataDisplay
           data_items={activity[0]?.items}
           // data_fields={inferDataTypes(activity[0]?.items)}
           data_fields={activityViewRecord?.fields}
+          view_record={activityViewRecord}
           view_mode="table"
         ></DataDisplay>
       )}

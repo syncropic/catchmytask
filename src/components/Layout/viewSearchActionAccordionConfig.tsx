@@ -11,29 +11,30 @@ import { actionAccordionConfig } from "./actionAccordionConfig";
 
 export const viewSearchActionAccordionConfig: AccordionSection[] = [
   {
-    key: "search",
-    title: <AccordionHeader name="search" entity_type="views" />,
+    // key: "search",
+    // title: <AccordionHeader name="search" entity_type="views" />,
     Component: ({ activeView, activeTask, action }) => (
       <>
-        {action === "save" && (
+        {/* {action === "save" && (
           <AccordionComponent
             sections={actionAccordionConfig}
             defaultExpandedValues={[action]}
             action={action}
             record={activeView}
           />
-        )}
-        {action === "upload" && (
+        )} */}
+        {/* {action === "upload" && (
           <AccordionComponent
             sections={actionAccordionConfig}
             defaultExpandedValues={[action]}
             action={action}
             record={activeView}
           />
-        )}
+        )} */}
         {/* {activeView?.["action_models"]?.["search"]} */}
         <ActionInputWrapper
-          name={activeView?.["action_models"]?.["search"]}
+          // name={activeView?.["action_models"]?.["search"]}
+          name={"supplier analysis"}
           query_name="data_model"
           record={{ ...activeView }}
           action={"search"}
