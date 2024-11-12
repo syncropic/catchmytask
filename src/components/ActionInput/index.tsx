@@ -408,7 +408,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               return {
                 header: col,
                 key: col,
-                width: fieldType === "datetime" ? 25 : 20,
+                width: fieldType === "datetime",
                 style:
                   fieldType === "datetime"
                     ? { numFmt: "yyyy-mm-dd hh:mm:ss" }
@@ -543,10 +543,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               { state: "frozen", ySplit: 1, xSplit: 3 }, // Freeze the first row and the specific column
             ];
             // Step 6: Adjust column widths
-            worksheet.columns.forEach((column, index) => {
-              const header = columnNames[index];
-              column.width = calculateColumnWidth(header);
-            });
+            // worksheet.columns.forEach((column, index) => {
+            //   const header = columnNames[index];
+            //   column.width = calculateColumnWidth(header);
+            // });
             // Also modify the column definition part to set proper width for datetime columns:
             worksheet.columns = columnNames.map((col: any) => {
               const field = downloadResult.schema.fields.find(
@@ -555,7 +555,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               return {
                 header: col,
                 key: col,
-                width: field?.type === "datetime" ? 25 : 20, // Make datetime columns wider
+                width:
+                  field?.type === "datetime"
+                    ? 25
+                    : calculateColumnWidth(field?.name), // Make datetime columns wider
                 style:
                   field?.type === "datetime"
                     ? { numFmt: "yyyy-mm-dd hh:mm:ss" }
@@ -802,6 +805,9 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   session_id: params?.session_id || activeSession?.id,
                   application_id: activeApplication?.id,
                 },
+                include_action_steps:
+                  view_record.initial_state?.action_steps ||
+                  activeTask?.initial_state?.action_steps,
               },
             },
             {
@@ -862,13 +868,17 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       values
     );
 
-    console.log(enriched_search_filters);
+    // console.log("enriched_search_filters");
+    // console.log(enriched_search_filters);
 
     let rendered_globalSearchQuery = buildSQLQuery(
       view_record?.query,
       sanitizeFilters(enriched_search_filters),
       { caseSensitive: false }
     )?.query;
+
+    // console.log("rendered_globalSearchQuery");
+    // console.log(rendered_globalSearchQuery);
 
     let new_action_input_form_values = {
       ...action_input_form_values,
@@ -1229,7 +1239,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const renderField = (fieldData: Field) => {
     const Component = getComponentByResourceType(fieldData.component);
     const fieldName =
-      fieldData.fieldName || fieldData.title.toLowerCase().replace(/ /g, "_");
+      fieldData.name || fieldData?.title.toLowerCase().replace(/ /g, "_");
 
     return (
       <div key={fieldData.key || fieldData.title} className="mb-4">
@@ -1454,6 +1464,10 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
       />
     );
   if (isLoading) return <div>Loading...</div>;
+  let item_record = read_record_mode
+    ? recordData
+    : recordData?.data?.find((item: any) => item?.message?.code === record?.id)
+        ?.data[0];
 
   return (
     <>
@@ -1467,13 +1481,9 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
                 (item: any) => item?.message?.code === success_message_code
               )?.data[0]?.data_model
             }
-            record={
-              read_record_mode
-                ? recordData
-                : recordData?.data?.find(
-                    (item: any) => item?.message?.code === record?.id
-                  )?.data[0]
-            }
+            record={{
+              description: item_record?.description,
+            }}
             records={records}
             action={action}
             children={children}

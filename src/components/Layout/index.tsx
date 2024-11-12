@@ -635,7 +635,7 @@ const Layout = ({
                       />
                     )} */}
 
-                    <div className="w-full">
+                    {/* <div className="w-full">
                       {activeTask && action !== "upload" && (
                         <div className="w-full">
                           <ActionStepsWrapper
@@ -650,7 +650,7 @@ const Layout = ({
                           <UploadedWrapper />
                         </div>
                       )}
-                    </div>
+                    </div> */}
 
                     {/* {!activeSession && (
                       <div

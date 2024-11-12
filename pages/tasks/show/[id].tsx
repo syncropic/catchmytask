@@ -19,6 +19,7 @@ import Surreal, { LiveHandler, Uuid } from "surrealdb";
 import { viewSearchActionAccordionConfig } from "@components/Layout/viewSearchActionAccordionConfig";
 import { viewFooterAccordionConfig } from "@components/View/viewFooterAccordionConfig";
 import { IconCode } from "@tabler/icons-react";
+import MonacoEditor from "@components/MonacoEditor";
 
 export const ShowPage: React.FC = () => {
   const { colorScheme, activeTask } = useAppStore();
@@ -53,6 +54,11 @@ export const ShowPage: React.FC = () => {
   // Render the page content
   return (
     <>
+      {/* <MonacoEditor
+        value={activeTask}
+        language="json"
+        height="25vh"
+      ></MonacoEditor> */}
       {/* <div>{JSON.stringify(events)}</div> */}
       {/* {!activeView && (<Title order={3}>Get Important Things Done.</Title>)} */}
       {/* <Breadcrumbs /> */}
@@ -147,7 +153,7 @@ export const ShowPage: React.FC = () => {
                   title={
                     <div className="flex gap-4 items-center">
                       <IconCode size={16} />
-                      <Text>ActiveCode</Text>
+                      <Text>Code</Text>
                     </div>
                   }
                 />

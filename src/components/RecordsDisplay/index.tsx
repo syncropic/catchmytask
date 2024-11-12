@@ -4,6 +4,7 @@ import {
   SummariesDisplayComponentProps,
   ResultsComponentProps,
 } from "@components/interfaces";
+import { useParsed } from "@refinedev/core";
 import React, { lazy, Suspense } from "react";
 import { useAppStore } from "src/store";
 
@@ -37,12 +38,6 @@ interface SummariesDisplayProps {
 const componentMap: ComponentMapType = {
   MonacoEditor: () => import("@components/MonacoEditor"),
   EmbedComponent: () => import("@components/EmbedComponent"),
-  // StatusComparisonMatrix: () =>
-  //   import("@components/SummariesDisplay/StatusComparisonMatrix"),
-  // CostComparisonChart: () =>
-  //   import("@components/SummariesDisplay/CostComparisonChart"),
-  // StatusComparisonChart: () =>
-  //   import("@components/SummariesDisplay/StatusComparisonChart"),
 };
 
 const DynamicComponentLoader: React.FC<DynamicComponentLoaderProps> = ({
@@ -96,12 +91,32 @@ const RecordsDisplay: React.FC<SummariesDisplayProps> = ({
 }) => {
   const { activeRecordCustomComponents, activeView, activeRecord } =
     useAppStore();
+  const { params } = useParsed();
+  let view_id = params?.view_id || activeView?.id;
+
+  // Check if there are custom components for the current view
+  const hasCustomComponents =
+    activeRecordCustomComponents?.[view_id]?.length > 0;
+
+  // Render default MonacoEditor if no custom components are available
+  if (!hasCustomComponents && activeRecord) {
+    return (
+      <DynamicComponentLoader
+        componentName="MonacoEditor"
+        props={{
+          value: activeRecord,
+          height: "50vh",
+          readOnly: true,
+        }}
+      />
+    );
+  }
 
   return (
     <>
-      {activeRecordCustomComponents && activeView && (
+      {activeRecordCustomComponents && activeRecord && (
         <Suspense fallback={<div className="p-4">Loading components...</div>}>
-          {activeRecordCustomComponents[activeView.id]?.map(
+          {activeRecordCustomComponents[view_id]?.map(
             (item: CustomComponent, index: number) => (
               <React.Fragment key={index}>
                 <DynamicComponentLoader

@@ -149,6 +149,7 @@ export function Documentation<T extends Record<string, any>>({
           value={createFieldsDocumentationHTML(record?.fields, {
             name: record?.name,
             description: record?.description,
+            id: record?.id,
           })}
         />
       </div>

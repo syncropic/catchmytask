@@ -1,10 +1,16 @@
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
-import { IconX, IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconX,
+  IconPlus,
+  IconTrash,
+  IconSquareRoundedX,
+} from "@tabler/icons-react";
 import SearchInput from "@components/SearchInput";
 import { SearchInputComponentProps } from "@components/interfaces";
 import { useAppStore } from "src/store";
+import { useParsed } from "@refinedev/core";
 
-export function CustomComponentsView() {
+export function CustomComponentsView({ handleClose }: { handleClose?: any }) {
   const {
     activeMainCustomComponent,
     setActiveMainCustomComponent,
@@ -18,15 +24,17 @@ export function CustomComponentsView() {
   // const handleOptionSubmit = (value: string) => {
   //   // navigateToSession(value, autocompleteData); // Pass the actual sessions list
   // };
+  const { params } = useParsed();
+  let view_id = params?.view_id || activeView?.id;
   const handleSetActiveSummaryCustomComponents = (item: any) => {
     // console.log("handleSetActiveSummaryCustomComponents");
     // console.log(item);
-    setActiveSummaryCustomComponents(activeView?.id, item);
+    setActiveSummaryCustomComponents(view_id, item);
   };
   const handleSetActiveRecordCustomComponents = (item: any) => {
     // console.log("handleSetActiveSummaryCustomComponents");
     // console.log(item);
-    setActiveRecordCustomComponents(activeView?.id, item);
+    setActiveRecordCustomComponents(view_id, item);
   };
   return (
     <>
@@ -87,16 +95,30 @@ export function CustomComponentsView() {
           },
         ]}
       /> */}
+      <div className="flex justify-end">
+        <Tooltip
+          multiline
+          w={220}
+          withArrow
+          transitionProps={{ duration: 200 }}
+          label="close"
+          onClick={() => handleClose(false)}
+        >
+          <ActionIcon size="xs" variant="default" aria-label="info">
+            <IconSquareRoundedX />
+          </ActionIcon>
+        </Tooltip>
+      </div>
       <SearchInput
         placeholder="summaries"
         description="summaries"
         handleOptionSubmit={handleSetActiveSummaryCustomComponents}
         // value={
-        //   activeSummaryCustomComponents?.[activeView?.id] ||
+        //   activeSummaryCustomComponents?.[view_id] ||
         //   []?.map((item: any) => item?.id)
         // }
-        // value={activeSummaryCustomComponents?.[activeView?.id]}
-        value={activeSummaryCustomComponents?.[activeView?.id]?.map(
+        // value={activeSummaryCustomComponents?.[view_id]}
+        value={activeSummaryCustomComponents?.[view_id]?.map(
           (item: any) => item?.id
         )}
         multiselect={true}
@@ -138,27 +160,29 @@ export function CustomComponentsView() {
           },
         ]}
       />
-      <SearchInput
-        placeholder="record components"
-        description="record"
-        handleOptionSubmit={handleSetActiveRecordCustomComponents}
-        value={activeRecordCustomComponents?.[activeView?.id]?.map(
-          (item: any) => item?.id
-        )}
-        multiselect={true}
-        activeFilters={[
-          {
-            id: 1,
-            name: "components",
-            description: "components",
-            entity_type: "components",
-            is_selected: true,
-            metadata: {
-              section: "record",
+      <div onClick={(e) => e.stopPropagation()}>
+        <SearchInput
+          placeholder="record components"
+          description="record"
+          handleOptionSubmit={handleSetActiveRecordCustomComponents}
+          value={activeRecordCustomComponents?.[view_id]?.map(
+            (item: any) => item?.id
+          )}
+          multiselect={true}
+          activeFilters={[
+            {
+              id: 1,
+              name: "components",
+              description: "components",
+              entity_type: "components",
+              is_selected: true,
+              metadata: {
+                section: "record",
+              },
             },
-          },
-        ]}
-      />
+          ]}
+        />
+      </div>
       {/* <SearchInput
         placeholder="Search for records"
         description="records"

@@ -6,9 +6,10 @@ interface RevealProps {
   target: ReactNode;
   children: ReactNode;
   trigger: "hover" | "click";
+  opened?: boolean;
 }
 
-function Reveal({ target, children, trigger }: RevealProps) {
+function Reveal({ target, children, trigger, opened }: RevealProps) {
   const TriggerComponent = trigger === "hover" ? HoverCard : Popover;
   const { width } = useViewportSize();
 
@@ -17,7 +18,12 @@ function Reveal({ target, children, trigger }: RevealProps) {
 
   return (
     <div>
-      <TriggerComponent width={popoverWidth} shadow="md" withinPortal={true}>
+      <TriggerComponent
+        width={popoverWidth}
+        shadow="md"
+        withinPortal={true}
+        opened={opened}
+      >
         <TriggerComponent.Target>{target}</TriggerComponent.Target>
         <TriggerComponent.Dropdown>{children}</TriggerComponent.Dropdown>
       </TriggerComponent>

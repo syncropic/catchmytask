@@ -181,6 +181,7 @@ function SearchInput<T extends Record<string, any>>({
 
   return (
     <div className="flex items-end w-full space-x-2">
+      {/* <div>{JSON.stringify(autocompleteData)}</div> */}
       <div className="flex-grow">
         {multiselect ? (
           <MultiSelect
@@ -224,23 +225,29 @@ function SearchInput<T extends Record<string, any>>({
             onChange={enhancedHandleOnChange}
             comboboxProps={{ withinPortal: withinPortal }}
             ref={ref}
-            data={autocompleteData.filter((item) => {
-              const entityTypeMatch = selected_filters
-                .map((filter: FilterItem) => filter.entity_type)
-                .includes(item.entity_type);
+            data={
+              data_items
+                ? autocompleteData
+                : autocompleteData.filter((item) => {
+                    const entityTypeMatch = selected_filters
+                      .map((filter: FilterItem) => filter.entity_type)
+                      .includes(item.entity_type);
 
-              if (!entityTypeMatch) return false;
+                    if (!entityTypeMatch) return false;
 
-              const matchingFilter = selected_filters.find(
-                (filter: FilterItem) => filter.entity_type === item.entity_type
-              );
+                    const matchingFilter = selected_filters.find(
+                      (filter: FilterItem) =>
+                        filter.entity_type === item.entity_type
+                    );
 
-              if (!matchingFilter.metadata) return true;
+                    if (!matchingFilter.metadata) return true;
 
-              return Object.entries(matchingFilter.metadata).every(
-                ([key, value]) => item.metadata && item.metadata[key] === value
-              );
-            })}
+                    return Object.entries(matchingFilter.metadata).every(
+                      ([key, value]) =>
+                        item.metadata && item.metadata[key] === value
+                    );
+                  })
+            }
             renderOption={(props) => renderSearchItem(props)}
             rightSection={isLoading ? <Loader size="xs" /> : null}
             placeholder={placeholder}

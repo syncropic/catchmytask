@@ -1232,7 +1232,7 @@ export type SQLValueType = "string" | "number" | "boolean" | "date";
 
 export interface SQLFilter {
   name: string;
-  operation: string;
+  operator: string;
   value: any;
   type?: SQLValueType;
 }
@@ -1256,6 +1256,7 @@ export interface Field {
   readOnly?: boolean;
   size?: string;
   title: string;
+  name?: string;
   type?: string;
   props?: Record<string, any>;
   label?: string;

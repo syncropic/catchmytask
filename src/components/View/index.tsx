@@ -113,6 +113,7 @@ const ViewWrapper = () => {
       {/* <div>view wrapper</div> */}
       {/* <MonacoEditor
         value={{
+          activeTask: activeTask,
           view_record: view_record,
         }}
         height="25vh"
@@ -122,7 +123,7 @@ const ViewWrapper = () => {
       <div>
         <AccordionComponent
           sections={titleAccordionConfig}
-          include_items={["toolbar"]}
+          include_items={["toolbar", "action_input"]}
           key="view_title"
           title={
             <div onClick={(e) => e.stopPropagation()}>
@@ -159,40 +160,10 @@ const ViewWrapper = () => {
         sections={viewQueryAccordionConfig}
         globalQuery={globalQuery}
       /> */}
-      <div>{view_record && <View view_record={view_record} />}</div>
-      {/* <div>
-        <AccordionComponent
-          sections={viewFooterAccordionConfig}
-          globalQuery={view_record?.query}
-          include_items={[]}
-          key="view_footer"
-          title="view footer"
-        />
-      </div> */}
+      <div>
+        {view_record && activeTask && <View view_record={view_record} />}
+      </div>
 
-      {/* <ActionInputForm
-        fields={fields}
-        // data_model={
-        //   data?.data?.find(
-        //     (item: any) => item?.message?.code === success_message_code
-        //   )?.data[0]?.data_model
-        // }
-        // record={
-        //   read_record_mode
-        //     ? recordData
-        //     : recordData?.data?.find(
-        //         (item: any) => item?.message?.code === record?.id
-        //       )?.data[0]
-        // }
-        // records={records}
-        // action={action}
-        // children={children}
-        // focused_item={focused_item}
-      ></ActionInputForm> */}
-      {/* <AccordionComponent
-        sections={actionInputAccordionConfig}
-        globalQuery={""}
-      /> */}
       {/* {globalQuery && (
         <PythonEnvironment code={globalQuery}></PythonEnvironment>
       )} */}

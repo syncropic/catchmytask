@@ -3584,19 +3584,138 @@ export const concatenateAliasedDataFields = (
   });
 };
 
-export function enrichFilters(filters: any[], dataObject: any) {
-  return filters?.map((filter: any) => {
-    // Deep clone the filter to avoid modifying the original
+// Define all possible operators
+type ComparisonOperator =
+  | "="
+  | "!="
+  | "<>" // equality
+  | ">"
+  | "<"
+  | ">="
+  | "<=" // comparison
+  | "BETWEEN" // range
+  | "LIKE"
+  | "ILIKE"
+  | "NOT LIKE"
+  | "NOT ILIKE" // pattern matching
+  | "SIMILAR TO"
+  | "NOT SIMILAR TO" // regex-like
+  | "GLOB" // file pattern matching
+  | "IS NULL"
+  | "IS NOT NULL" // null checking
+  | "IS DISTINCT FROM"
+  | "IS NOT DISTINCT FROM"; // null-aware equality
+
+interface Filter {
+  name: string;
+  operator: ComparisonOperator;
+  value?: any;
+  secondValue?: any; // for BETWEEN operator
+}
+
+interface PatternConfig {
+  type: "exact" | "contains" | "startsWith" | "endsWith" | "custom";
+  caseSensitive?: boolean;
+  customPattern?: (value: string) => string;
+}
+
+export function enrichFilters(
+  filters: Filter[],
+  dataObject: any,
+  patternConfigs: Record<string, PatternConfig> = {}
+) {
+  return filters?.map((filter: Filter) => {
     const enrichedFilter = { ...filter };
+    let value = dataObject?.[filter.name];
+    // console.log("filter");
+    // console.log(filter);
 
-    // Get value from data object for the specified name
-    const value = dataObject?.[filter.name];
+    // Handle different types of operators
+    switch (filter.operator) {
+      // Pattern matching operators
+      case "LIKE":
+      case "ILIKE":
+      case "NOT LIKE":
+      case "NOT ILIKE": {
+        if (value) {
+          const config = patternConfigs[filter.name] || {
+            type: "contains",
+            caseSensitive: false,
+          };
+          value = formatPatternValue(value, config);
+        }
+        break;
+      }
 
-    // Add the value to the filter
+      // BETWEEN operator
+      case "BETWEEN": {
+        enrichedFilter.value = dataObject?.[`${filter.name}_from`] ?? value;
+        enrichedFilter.secondValue = dataObject?.[`${filter.name}_to`];
+        break;
+      }
+
+      // GLOB operator
+      case "GLOB": {
+        if (value) {
+          // Handle file pattern matching
+          value = formatGlobPattern(value);
+        }
+        break;
+      }
+
+      // NULL checking operators don't need value transformation
+      case "IS NULL":
+      case "IS NOT NULL":
+        value = null;
+        break;
+
+      // SIMILAR TO operators (regex-like)
+      case "SIMILAR TO":
+      case "NOT SIMILAR TO": {
+        if (value) {
+          value = formatSimilarToPattern(value);
+        }
+        break;
+      }
+
+      // Default case handles simple comparison operators
+      default:
+        // No transformation needed for =, !=, >, <, >=, <=
+        break;
+    }
+
     enrichedFilter.value = value;
-
     return enrichedFilter;
   });
+}
+
+function formatPatternValue(value: string, config: PatternConfig): string {
+  if (config.type === "custom" && config.customPattern) {
+    return config.customPattern(value);
+  }
+
+  switch (config.type) {
+    case "contains":
+      return `%${value}%`;
+    case "startsWith":
+      return `${value}%`;
+    case "endsWith":
+      return `%${value}`;
+    case "exact":
+      return value;
+    default:
+      return `%${value}%`;
+  }
+}
+
+function formatGlobPattern(value: string): string {
+  // Convert SQL LIKE patterns to GLOB patterns
+  return value.replace(/%/g, "*").replace(/_/g, "?");
+}
+
+function formatSimilarToPattern(value: string): string {
+  // Escape special regex characters and convert to SIMILAR TO pattern
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export const isEmptyOrNull = (value: any): boolean => {
@@ -3664,11 +3783,11 @@ export const guessValueType = (value: any): SQLValueType => {
 export const sanitizeFilters = (filters: any[]): SQLFilter[] => {
   return filters
     ?.filter(
-      (filter) => filter && typeof filter.name === "string" && filter.operation
+      (filter) => filter && typeof filter.name === "string" && filter.operator
     )
     ?.map((filter) => ({
       name: filter.name.trim(),
-      operation: filter.operation.trim(),
+      operator: filter.operator.trim(),
       value: filter.value,
       type: filter.type || guessValueType(filter.value),
     }));
@@ -3697,7 +3816,7 @@ const buildComparisonClause = (
 
   const column = formatSQLIdentifier(filter.name);
 
-  if (filter.operation.toUpperCase() === "LIKE") {
+  if (filter.operator.toUpperCase() === "LIKE") {
     const value = formatSQLValue(filter.value, "string");
     return options.caseSensitive
       ? `${column} LIKE ${value}`
@@ -3705,7 +3824,7 @@ const buildComparisonClause = (
   }
 
   const value = formatSQLValue(filter.value, filter.type);
-  return `${column} ${filter.operation} ${value}`;
+  return `${column} ${filter.operator} ${value}`;
 };
 
 const buildWhereClause = (
@@ -3717,7 +3836,7 @@ const buildWhereClause = (
   }
 
   const conditions = filters
-    .filter((filter) => filter.name && filter.operation)
+    .filter((filter) => filter.name && filter.operator)
     .map((filter) => {
       try {
         return buildComparisonClause(filter, options);
@@ -5091,6 +5210,7 @@ interface Field {
 interface Collection {
   name: string;
   description?: string;
+  id?: string;
 }
 
 export function createFieldsDocumentation(
@@ -5171,6 +5291,15 @@ export function createFieldsDocumentationHTML(
                       ? `
                       <div>
                           <span class="font-semibold">Description:</span> ${collection.description}
+                      </div>
+                  `
+                      : ""
+                  }
+                  ${
+                    collection.id
+                      ? `
+                      <div>
+                          <span class="font-semibold">Id:</span> ${collection.id}
                       </div>
                   `
                       : ""

@@ -11,6 +11,7 @@ import ActionInputWrapper from "@components/ActionInput";
 // import { iconMap } from "@components/Utils";
 import React from "react";
 import MonacoEditor from "@components/MonacoEditor";
+import RecordsDisplay from "@components/RecordsDisplay";
 
 export const titleAccordionConfig: AccordionSection[] = [
   {
@@ -22,7 +23,12 @@ export const titleAccordionConfig: AccordionSection[] = [
     Component: ({ record }) => (
       // <div>view query accordion </div>
       <div className="border-b border-gray-200">
-        {null}
+        {/* {!isLoading && view_record?.fields && dataItems && (
+          <RecordsDisplay data_items={dataItems} />
+        )} */}
+        <RecordsDisplay />
+        {/* <div>record</div>
+        <div>custom components</div> */}
         {/* <MonacoEditor
           value={globalQuery}
           language="python"

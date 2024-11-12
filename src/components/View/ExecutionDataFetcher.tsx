@@ -45,11 +45,11 @@ export function ExecutionDataFetcher({
   task_id,
   session_id,
 }: ExecutionDataFetcherProps) {
-  const { activeApplication } = useAppStore();
+  const { activeApplication, activeTask } = useAppStore();
   const { data, isLocalDBSuccess, isLoading } = useFetchExecutionData({
-    success_message_code: view?.success_message_code,
-    id: view_id,
-    // action_steps: [step],
+    success_message_code:
+      view?.success_message_code || activeTask?.success_message_code,
+    id: view_id || activeTask?.id,
     application: {
       id: activeApplication?.id,
       name: activeApplication?.name,
@@ -64,11 +64,12 @@ export function ExecutionDataFetcher({
       id: view_id,
     },
     view_record: view,
-    include_action_steps: view.metadata?.action_steps,
+    include_action_steps:
+      view.initial_state?.action_steps ||
+      activeTask?.initial_state?.action_steps,
     action: {
       name: "read",
     },
-    // input_values: {},
   });
 
   useEffect(() => {

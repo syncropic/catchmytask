@@ -251,7 +251,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
 
       <RichTextEditor.Content />
       <RichTextEditor.Toolbar>
-        {/* <RichTextEditor.ControlsGroup>
+        <RichTextEditor.ControlsGroup>
           <SearchInput
             placeholder="templates"
             activeFilters={[
@@ -264,7 +264,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
               },
             ]}
           />
-        </RichTextEditor.ControlsGroup> */}
+        </RichTextEditor.ControlsGroup>
         <RichTextEditor.ControlsGroup>
           {/* {activeAgent && (
             <ExternalSubmitButton

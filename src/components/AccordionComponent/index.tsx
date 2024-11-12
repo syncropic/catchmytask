@@ -1,14 +1,19 @@
 // AccordionComponent.ts
 // This component dynamically generates accordion sections based on the provided layout configuration.
 
-import React from "react";
-import { Accordion } from "@mantine/core";
+import React, { useState } from "react";
+import { Accordion, Tooltip, Text } from "@mantine/core";
 import { AccordionSection } from "@components/interfaces";
 import { useAppStore } from "src/store";
 import { iconMap } from "@components/Utils";
 import ComponentsToolbar from "@components/ComponentsToolbar";
 import ExternalSubmitButton from "@components/SubmitButton";
 import { useParsed } from "@refinedev/core";
+import Reveal from "@components/Reveal";
+import { IconInfoCircle } from "@tabler/icons-react";
+import { useViewportSize } from "@mantine/hooks";
+import CustomComponentsView from "@components/CustomComponentsView";
+import SearchInput from "@components/SearchInput";
 
 interface AccordionComponentProps {
   sections: AccordionSection[]; // The sections to render in the accordion
@@ -20,8 +25,11 @@ const AccordionComponent: React.FC<AccordionComponentProps> = ({
   defaultExpandedValues,
   ...restProps
 }) => {
-  const { activeTask, activeSession } = useAppStore();
+  const { activeTask, activeSession, setActiveActionSteps, activeActionSteps } =
+    useAppStore();
+  const [opened, setOpened] = useState(false);
   const { params } = useParsed();
+  const { width } = useViewportSize();
   let action_input_form_values_key = `query_${params?.id || activeTask?.id}`;
 
   return (
@@ -63,12 +71,82 @@ const AccordionComponent: React.FC<AccordionComponentProps> = ({
                         section?.title || restProps?.action || restProps?.title
                       )
                     : null}
+                  {/* {restProps?.include_items?.includes("action_input") && (
+                    <>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <SearchInput
+                          placeholder="profiles"
+                          description={undefined}
+                          handleOptionSubmit={setActiveActionSteps}
+                          value={activeActionSteps || []}
+                          withinPortal={true}
+                          // ref={ref}
+                          // include_action_icons={[
+                          //   "edit",
+                          //   "add_new",
+                          //   "record_info",
+                          // ]}
+                          // handleEdit={handleEdit}
+                          record={{}}
+                          query_name="fetch profiles"
+                          // navigateOnSelect={{ resource: "views" }}
+                          // navigateOnClear={{ resource: "home" }}
+                          data_items={[
+                            {
+                              name: "fetch audio from spotify",
+                              id: "123",
+                              author_id: "dpwanjala@gmail.com",
+                              description: "fetch audio from spotify",
+                            },
+                          ]}
+                          activeFilters={[
+                            {
+                              id: 1,
+                              name: "profiles",
+                              description: "profiles",
+                              entity_type: "profiles",
+                              is_selected: true,
+                            },
+                          ]}
+                        ></SearchInput>
+                      </div>
+                    </>
+                  )} */}
                   {restProps?.include_items?.includes("toolbar") && (
                     <>
                       <div
                         className="flex p-3 gap-3"
                         onClick={(e) => e.stopPropagation()}
                       >
+                        <Reveal
+                          trigger="click"
+                          opened={opened}
+                          target={
+                            <Tooltip
+                              multiline
+                              w={220}
+                              withArrow
+                              transitionProps={{ duration: 200 }}
+                              label={"set custom components"}
+                              onClick={() => setOpened(!opened)}
+                            >
+                              <div className="flex">
+                                <Text
+                                  size="sm"
+                                  className="text-blue-500 truncate overflow-hidden whitespace-nowrap px-3"
+                                  style={{ maxWidth: width < 500 ? 100 : 500 }}
+                                >
+                                  set custom components
+                                </Text>
+                                <IconInfoCircle size={18} />
+                              </div>
+                            </Tooltip>
+                          }
+                        >
+                          <CustomComponentsView
+                            handleClose={setOpened}
+                          ></CustomComponentsView>
+                        </Reveal>
                         <ExternalSubmitButton
                           record={{}}
                           entity_type="views"

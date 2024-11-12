@@ -44,12 +44,12 @@ export function View({ view_record }: ViewProps) {
   const session_id = params?.session_id;
 
   const dbInstance = useDuckDB(); // Get DuckDB instance
-  // const {
-  //   activeSections,
-  //   activeMainCustomComponent,
-  //   activeSummaryCustomComponents,
-  //   activeRecordCustomComponents,
-  // } = useAppStore(); // Zustand store access
+  const {
+    activeSections,
+    activeMainCustomComponent,
+    // activeSummaryCustomComponents,
+    activeRecordCustomComponents,
+  } = useAppStore(); // Zustand store access
 
   const [dataItems, setDataItems] = useState<[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -186,20 +186,20 @@ export function View({ view_record }: ViewProps) {
   return (
     <>
       {/* <MonacoEditor
-          value={{
-            // view_record: view_record,
-            query_action_input_form_values_key:
-              query_action_input_form_values_key,
-            globalQuery: globalQuery,
-            // active_view_query_model_data_data_model_query_filters:
-            //   active_view_query_model_data_data_model_query_filters,
-            // active_view_query_model_data: active_view_query_model_data,
-            enriched_query_filters: enriched_query_filters,
-            dataItems: dataItems,
-          }}
-          language="json"
-          height="75vh"
-        /> */}
+        value={{
+          // view_record: view_record,
+          query_action_input_form_values_key:
+            query_action_input_form_values_key,
+          // globalQuery: globalQuery,
+          // active_view_query_model_data_data_model_query_filters:
+          //   active_view_query_model_data_data_model_query_filters,
+          // active_view_query_model_data: active_view_query_model_data,
+          // enriched_query_filters: enriched_query_filters,
+          // dataItems: dataItems,
+        }}
+        language="json"
+        height="75vh"
+      /> */}
       {view_record && (
         <ExecutionDataFetcher
           view={view_record}
@@ -213,7 +213,7 @@ export function View({ view_record }: ViewProps) {
         <DataDisplay
           data_items={dataItems}
           entity_type="action_step_results"
-          view_mode={"datagrid"}
+          view_mode={activeMainCustomComponent?.name || "datagrid"}
           view_record={view_record}
           data_fields={view_record?.fields}
         />

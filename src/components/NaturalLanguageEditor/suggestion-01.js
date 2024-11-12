@@ -20,53 +20,27 @@ export default {
             // Render the SearchInput component
             return (
               <SearchInput
-                placeholder="profiles"
-                description={undefined}
-                // handleOptionSubmit={(item) => console.log(item)}
+                value={props.query} // Pass the current query to the SearchInput
+                // onChange={(newValue) => {
+                //   // Update the query as the user types in the SearchInput
+                //   props.editor.commands.insertContent(`${newValue}`);
+                //   popup[0]?.destroy(); // Close the popup once an item is selected
+                // }}
+                data_items={[
+                  {
+                    name: "fetch audio from spotify",
+                    id: "123",
+                    author_id: "dpwanjala@gmail.com",
+                    description: "fetch audio from spotify",
+                  },
+                ]}
                 handleOptionSubmit={(selectedItem) => {
                   // Handle the item selection
                   props.command(selectedItem);
-                  // props.editor.commands.insertContent(`${selectedItem?.label}`);
-                  // popup[0]?.destroy(); // Close the popup after insertion
+                  //   props.editor.commands.insertContent(`${selectedItem.label}`);
+                  popup[0]?.destroy(); // Close the popup after insertion
                 }}
-                // value={[]}
-                value={props.query} // Pass the current query to the SearchInput
-                withinPortal={true}
-                // ref={ref}
-                // include_action_icons={[
-                //   "edit",
-                //   "add_new",
-                //   "record_info",
-                // ]}
-                // handleEdit={handleEdit}
-                record={{}}
-                query_name="fetch profiles"
-                // navigateOnSelect={{ resource: "views" }}
-                // navigateOnClear={{ resource: "home" }}
-                data_items={[
-                  {
-                    name: "fetch spotify audio analysis",
-                    id: "action_steps:1pehwbyh70qsh63coc4e",
-                    author_id: "dpwanjala@gmail.com",
-                    description: "fetch spotify audio analysis",
-                  },
-                  {
-                    name: "fetch or create catchmyvibe audio analysis",
-                    id: "action_steps:95blh99lo9tgd7mbzvzi",
-                    author_id: "dpwanjala@gmail.com",
-                    description: "fetch or create catchmyvibe audio analysis",
-                  },
-                ]}
-                activeFilters={[
-                  {
-                    id: 1,
-                    name: "profiles",
-                    description: "profiles",
-                    entity_type: "profiles",
-                    is_selected: true,
-                  },
-                ]}
-              ></SearchInput>
+              />
             );
           },
           { props, editor: props.editor }
