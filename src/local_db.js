@@ -92,6 +92,24 @@ export function clearDatabaseFromLocalStorage() {
 }
 
 // Type mapping between field types and DuckDB-compatible types
+// const typeMapping = {
+//   integer: "BIGINT",
+//   unsigned_integer: "UBIGINT",
+//   float: "DOUBLE",
+//   complex: "DOUBLE",
+//   string: "VARCHAR",
+//   boolean: "BOOLEAN",
+//   datetime: "TIMESTAMP",
+//   timedelta: "INTERVAL",
+//   category: "VARCHAR",
+//   sparse: "VARCHAR",
+//   period: "VARCHAR",
+//   interval: "INTERVAL",
+//   mixed: "VARCHAR",
+//   unknown: "VARCHAR",
+// };
+
+// Updated type mapping to better handle nullable fields
 const typeMapping = {
   integer: "BIGINT",
   unsigned_integer: "UBIGINT",
@@ -144,7 +162,7 @@ const typeMapping = {
 //       console.error("Error during rollback:", rollbackError);
 //     }
 //     throw error; // Re-throw the original error
-//   }
+//   }f
 // }
 
 export async function saveToLocalDB(data, tableName, dataFields, dbInstance) {
@@ -169,75 +187,167 @@ export async function saveToLocalDB(data, tableName, dataFields, dbInstance) {
   });
 }
 
+// async function createTableAndInsertData(
+//   data,
+//   tableName,
+//   dataFields,
+//   dbInstance
+// ) {
+//   // Build the CREATE TABLE query dynamically based on the data fields
+//   const columns = dataFields.map((field) => {
+//     let type = typeMapping[field.data_type] || "VARCHAR"; // Default to VARCHAR
+//     // if (field.data_type === "integer") {
+//     //   const sampleValue = data.find((item) => item[field.name] !== undefined)?.[
+//     //     field.name
+//     //   ];
+//     //   if (sampleValue > 2147483647) type = "BIGINT"; // Handle large integers
+//     // }
+//     return `${field.name} ${type}`;
+//   });
+
+//   const createTableQuery = `
+//         CREATE TABLE IF NOT EXISTS ${tableName} (
+//             ${columns.join(",\n    ")}
+//         );
+//     `;
+//   console.log("Create Table Query:", createTableQuery);
+//   await dbInstance.query(createTableQuery);
+
+//   // Ensure there is data to insert
+//   if (data.length === 0) {
+//     console.warn(`No data to insert into table: ${tableName}`);
+//     return;
+//   }
+
+//   // Prepare the INSERT statement dynamically
+//   const columnNames = dataFields.map((field) => field.name);
+//   const valuesClauses = data.map((record) => {
+//     const values = columnNames.map((column) => {
+//       let value = record[column];
+
+//       // Serialize objects or arrays as JSON
+//       if (typeof value === "object" && value !== null) {
+//         value = JSON.stringify(value);
+//       }
+
+//       // Escape single quotes to avoid SQL injection
+//       if (typeof value === "string") {
+//         if (value.trim() === "") {
+//           return "NULL"; // Treat empty strings as NULL
+//         }
+//         return `'${value.replace(/'/g, "''")}'`;
+//       }
+
+//       // Check for numeric fields and fallback to NULL for invalid data
+//       if (typeof value === "number") {
+//         if (isNaN(value)) {
+//           return "NULL"; // Handle invalid numbers as NULL
+//         }
+//         return value;
+//       }
+
+//       // Handle undefined values as NULL
+//       return value !== undefined ? value : "NULL";
+//     });
+//     return `(${values.join(", ")})`;
+//   });
+
+//   const insertQuery = `
+//         INSERT INTO ${tableName} (${columnNames.join(", ")})
+//         VALUES ${valuesClauses.join(",\n    ")};
+//     `;
+//   // console.log("Insert Query:", insertQuery);
+//   await dbInstance.query(insertQuery);
+// }
+
 async function createTableAndInsertData(
   data,
   tableName,
   dataFields,
   dbInstance
 ) {
-  // Build the CREATE TABLE query dynamically based on the data fields
+  // Build CREATE TABLE query with nullable columns
   const columns = dataFields.map((field) => {
-    let type = typeMapping[field.data_type] || "VARCHAR"; // Default to VARCHAR
-    // if (field.data_type === "integer") {
-    //   const sampleValue = data.find((item) => item[field.name] !== undefined)?.[
-    //     field.name
-    //   ];
-    //   if (sampleValue > 2147483647) type = "BIGINT"; // Handle large integers
-    // }
-    return `${field.name} ${type}`;
+    const type = typeMapping[field.data_type] || "VARCHAR";
+    return `${field.name} ${type} NULL`; // Explicitly make all columns nullable
   });
 
   const createTableQuery = `
-        CREATE TABLE IF NOT EXISTS ${tableName} (
-            ${columns.join(",\n    ")}
-        );
-    `;
+    CREATE TABLE IF NOT EXISTS ${tableName} (
+        ${columns.join(",\n        ")}
+    );
+  `;
   console.log("Create Table Query:", createTableQuery);
   await dbInstance.query(createTableQuery);
 
-  // Ensure there is data to insert
   if (data.length === 0) {
     console.warn(`No data to insert into table: ${tableName}`);
     return;
   }
 
-  // Prepare the INSERT statement dynamically
+  // Improved value handling for INSERT
   const columnNames = dataFields.map((field) => field.name);
   const valuesClauses = data.map((record) => {
     const values = columnNames.map((column) => {
-      let value = record[column];
+      const value = record[column];
 
-      // Serialize objects or arrays as JSON
-      if (typeof value === "object" && value !== null) {
-        value = JSON.stringify(value);
+      // Handle various forms of null/undefined values
+      if (
+        value === null ||
+        value === undefined ||
+        value === "None" ||
+        value === "NULL" ||
+        value === "null"
+      ) {
+        return "NULL";
       }
 
-      // Escape single quotes to avoid SQL injection
-      if (typeof value === "string") {
-        if (value.trim() === "") {
-          return "NULL"; // Treat empty strings as NULL
+      // Handle objects and arrays
+      if (typeof value === "object") {
+        if (Array.isArray(value)) {
+          // Handle empty arrays
+          if (value.length === 0) return "NULL";
+          return `'${JSON.stringify(value).replace(/'/g, "''")}'`;
         }
+        // Handle non-null objects
+        if (value !== null) {
+          return `'${JSON.stringify(value).replace(/'/g, "''")}'`;
+        }
+        return "NULL";
+      }
+
+      // Handle strings
+      if (typeof value === "string") {
+        // Handle empty or whitespace-only strings
+        if (value.trim() === "") return "NULL";
         return `'${value.replace(/'/g, "''")}'`;
       }
 
-      // Check for numeric fields and fallback to NULL for invalid data
+      // Handle numbers
       if (typeof value === "number") {
-        if (isNaN(value)) {
-          return "NULL"; // Handle invalid numbers as NULL
-        }
-        return value;
+        if (isNaN(value) || !isFinite(value)) return "NULL";
+        return value.toString();
       }
 
-      // Handle undefined values as NULL
-      return value !== undefined ? value : "NULL";
+      // Handle booleans
+      if (typeof value === "boolean") {
+        return value.toString();
+      }
+
+      // Default case: treat as NULL if we can't handle it
+      return "NULL";
     });
     return `(${values.join(", ")})`;
   });
 
-  const insertQuery = `
-        INSERT INTO ${tableName} (${columnNames.join(", ")})
-        VALUES ${valuesClauses.join(",\n    ")};
+  // Split inserts into chunks to handle large datasets
+  const CHUNK_SIZE = 1000;
+  for (let i = 0; i < valuesClauses.length; i += CHUNK_SIZE) {
+    const chunk = valuesClauses.slice(i, i + CHUNK_SIZE);
+    const insertQuery = `
+      INSERT INTO ${tableName} (${columnNames.join(", ")})
+      VALUES ${chunk.join(",\n      ")};
     `;
-  // console.log("Insert Query:", insertQuery);
-  await dbInstance.query(insertQuery);
+    await dbInstance.query(insertQuery);
+  }
 }

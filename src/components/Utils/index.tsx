@@ -49,6 +49,7 @@ import {
   Popover,
   rem,
   Tooltip,
+  RangeSlider,
 } from "@mantine/core";
 import { DateInput, DateTimePicker } from "@mantine/dates";
 import {
@@ -739,6 +740,7 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   supplier_issues: ViewJson,
   JsonEditor: MonacoEditor,
   MonacoEditor: MonacoEditor,
+  RangeSlider: RangeSlider,
   MonacoEditorFormInput: MonacoEditorFormInput,
   NaturalLanguageEditorFormInput: NaturalLanguageEditorFormInput,
   ListEditorFormInput: ListEditorFormInput,
@@ -3649,8 +3651,11 @@ export function enrichFilters(
 
       // BETWEEN operator
       case "BETWEEN": {
-        enrichedFilter.value = dataObject?.[`${filter.name}_from`] ?? value;
-        enrichedFilter.secondValue = dataObject?.[`${filter.name}_to`];
+        // console.log("between");
+        // console.log(value);
+        enrichedFilter.value = dataObject?.[`${filter.name}`]?.[0];
+        // enrichedFilter.value = "80";
+        enrichedFilter.secondValue = dataObject?.[`${filter.name}`]?.[1];
         break;
       }
 
@@ -3684,7 +3689,7 @@ export function enrichFilters(
         break;
     }
 
-    enrichedFilter.value = value;
+    // enrichedFilter.value = value;
     return enrichedFilter;
   });
 }
@@ -3730,6 +3735,83 @@ export const isEmptyOrNull = (value: any): boolean => {
   return false;
 };
 
+// export const formatSQLIdentifier = (str: string): string => {
+//   if (!str) return '""';
+//   return `"${str.replace(/"/g, '""')}"`;
+// };
+
+// export const formatDateValue = (value: any): string => {
+//   try {
+//     const date = new Date(value);
+//     if (isNaN(date.getTime())) {
+//       throw new Error("Invalid date");
+//     }
+//     return `DATE '${date.toISOString().split("T")[0]}'`;
+//   } catch (error) {
+//     throw new Error(`Invalid date value: ${value}`);
+//   }
+// };
+
+// export const formatNumberValue = (value: any): string => {
+//   const num = Number(value);
+//   if (isNaN(num)) {
+//     throw new Error(`Invalid number value: ${value}`);
+//   }
+//   return num.toString();
+// };
+
+// export const formatBooleanValue = (value: any): string => {
+//   return Boolean(value) ? "TRUE" : "FALSE";
+// };
+
+// export const formatStringValue = (value: string): string => {
+//   return `'${value.toString().replace(/'/g, "''")}'`;
+// };
+
+export const guessValueType = (value: any): SQLValueType => {
+  if (value === null || value === undefined) return "string";
+  if (value instanceof Date) return "date";
+  if (typeof value === "number") return "number";
+  if (typeof value === "boolean") return "boolean";
+
+  const dateStr = String(value);
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    try {
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) return "date";
+    } catch (e) {}
+  }
+
+  return "string";
+};
+
+export const sanitizeFilters = (filters: any[]): SQLFilter[] => {
+  return filters
+    ?.filter(
+      (filter) => filter && typeof filter.name === "string" && filter.operator
+    )
+    ?.map((filter) => ({
+      name: filter.name.trim(),
+      operator: filter.operator.trim(),
+      value: filter.value,
+      secondValue: filter.secondValue,
+      type: filter.type || guessValueType(filter.value),
+    }));
+};
+
+// const formatSQLValue = (value: any, type?: string): string => {
+//   switch (type?.toLowerCase()) {
+//     case "date":
+//       return formatDateValue(value);
+//     case "number":
+//       return formatNumberValue(value);
+//     case "boolean":
+//       return formatBooleanValue(value);
+//     default:
+//       return formatStringValue(value);
+//   }
+// };
+
 export const formatSQLIdentifier = (str: string): string => {
   if (!str) return '""';
   return `"${str.replace(/"/g, '""')}"`;
@@ -3763,37 +3845,11 @@ export const formatStringValue = (value: string): string => {
   return `'${value.toString().replace(/'/g, "''")}'`;
 };
 
-export const guessValueType = (value: any): SQLValueType => {
-  if (value === null || value === undefined) return "string";
-  if (value instanceof Date) return "date";
-  if (typeof value === "number") return "number";
-  if (typeof value === "boolean") return "boolean";
-
-  const dateStr = String(value);
-  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
-    try {
-      const date = new Date(dateStr);
-      if (!isNaN(date.getTime())) return "date";
-    } catch (e) {}
+export const formatSQLValue = (value: any, type?: string): string => {
+  if (value === null || value === undefined) {
+    return "NULL";
   }
 
-  return "string";
-};
-
-export const sanitizeFilters = (filters: any[]): SQLFilter[] => {
-  return filters
-    ?.filter(
-      (filter) => filter && typeof filter.name === "string" && filter.operator
-    )
-    ?.map((filter) => ({
-      name: filter.name.trim(),
-      operator: filter.operator.trim(),
-      value: filter.value,
-      type: filter.type || guessValueType(filter.value),
-    }));
-};
-
-const formatSQLValue = (value: any, type?: string): string => {
   switch (type?.toLowerCase()) {
     case "date":
       return formatDateValue(value);
@@ -3806,23 +3862,62 @@ const formatSQLValue = (value: any, type?: string): string => {
   }
 };
 
+// const buildComparisonClause = (
+//   filter: SQLFilter,
+//   options: SQLTemplateOptions
+// ): string | null => {
+//   if (isEmptyOrNull(filter.value)) {
+//     return null;
+//   }
+
+//   const column = formatSQLIdentifier(filter.name);
+
+//   if (filter.operator.toUpperCase() === "LIKE") {
+//     const value = formatSQLValue(filter.value, "string");
+//     return options.caseSensitive
+//       ? `${column} LIKE ${value}`
+//       : `LOWER(${column}) LIKE LOWER(${value})`;
+//   }
+
+//   const value = formatSQLValue(filter.value, filter.type);
+//   return `${column} ${filter.operator} ${value}`;
+// };
+
 const buildComparisonClause = (
   filter: SQLFilter,
   options: SQLTemplateOptions
 ): string | null => {
-  if (isEmptyOrNull(filter.value)) {
+  const column = formatSQLIdentifier(filter.name);
+
+  // Special handling for NULL operators
+  if (filter.operator === "IS NULL" || filter.operator === "IS NOT NULL") {
+    return `${column} ${filter.operator}`;
+  }
+
+  // Return null if no value is provided (except for NULL operators)
+  if (filter.value === null || filter.value === undefined) {
     return null;
   }
 
-  const column = formatSQLIdentifier(filter.name);
-
-  if (filter.operator.toUpperCase() === "LIKE") {
-    const value = formatSQLValue(filter.value, "string");
-    return options.caseSensitive
-      ? `${column} LIKE ${value}`
-      : `LOWER(${column}) LIKE LOWER(${value})`;
+  // Handle BETWEEN operator
+  if (filter.operator === "BETWEEN") {
+    if (filter.secondValue === null || filter.secondValue === undefined) {
+      return null;
+    }
+    const value1 = formatSQLValue(filter.value, filter.type);
+    const value2 = formatSQLValue(filter.secondValue, filter.type);
+    return `${column} BETWEEN ${value1} AND ${value2}`;
   }
 
+  // Handle LIKE operators
+  if (["LIKE", "ILIKE", "NOT LIKE", "NOT ILIKE"].includes(filter.operator)) {
+    const value = formatSQLValue(filter.value, "string");
+    return options.caseSensitive
+      ? `${column} ${filter.operator} ${value}`
+      : `LOWER(${column}) ${filter.operator} LOWER(${value})`;
+  }
+
+  // Handle all other operators
   const value = formatSQLValue(filter.value, filter.type);
   return `${column} ${filter.operator} ${value}`;
 };

@@ -22,7 +22,7 @@ import { viewQueryAccordionConfig } from "./viewQueryAccordionConfig";
 import { actionInputAccordionConfig } from "./actionInputAccordionConfig";
 import { ActionInputForm } from "@components/ActionInput";
 import { titleAccordionConfig } from "./titleAccordionConfig";
-import { Tooltip, Text } from "@mantine/core";
+import { Tooltip, Text, LoadingOverlay, Box } from "@mantine/core";
 import Reveal from "@components/Reveal";
 import { useViewportSize } from "@mantine/hooks";
 import Documentation from "@components/Documentation";
@@ -184,7 +184,7 @@ export function View({ view_record }: ViewProps) {
   // }
 
   return (
-    <>
+    <div>
       {/* <MonacoEditor
         value={{
           // view_record: view_record,
@@ -200,27 +200,33 @@ export function View({ view_record }: ViewProps) {
         language="json"
         height="75vh"
       /> */}
-      {view_record && (
-        <ExecutionDataFetcher
-          view={view_record}
-          view_id={view_id}
-          task_id={task_id}
-          session_id={session_id}
-          onStepFetched={() => handleStepFetched(view_id)}
+      <Box pos="relative">
+        <LoadingOverlay
+          visible={fetchedSteps[view_record?.id] !== true}
+          zIndex={1000}
+          overlayProps={{ radius: "sm", blur: 2 }}
         />
-      )}
-      {view_record && dataItems && (
-        <DataDisplay
-          data_items={dataItems}
-          entity_type="action_step_results"
-          view_mode={activeMainCustomComponent?.name || "datagrid"}
-          view_record={view_record}
-          data_fields={view_record?.fields}
-        />
-      )}
-      {/* <div>view component</div>
+        {view_record && (
+          <ExecutionDataFetcher
+            view={view_record}
+            view_id={view_id}
+            task_id={task_id}
+            session_id={session_id}
+            onStepFetched={() => handleStepFetched(view_id)}
+          />
+        )}
+        {view_record && dataItems && (
+          <DataDisplay
+            data_items={dataItems}
+            entity_type="action_step_results"
+            view_mode={activeMainCustomComponent?.name || "datagrid"}
+            view_record={view_record}
+            data_fields={view_record?.fields}
+          />
+        )}
+        {/* <div>view component</div>
         <div>{JSON.stringify(params)}</div> */}
-      {/* {isLoading ? (
+        {/* {isLoading ? (
           <div>Loading...</div>
         ) : dataItems.length > 0 ? (
           <DataDisplay
@@ -233,6 +239,7 @@ export function View({ view_record }: ViewProps) {
         ) : (
           <div>No data available</div>
         )} */}
-    </>
+      </Box>
+    </div>
   );
 }

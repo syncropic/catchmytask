@@ -60,6 +60,7 @@ export type ComponentKey =
   | "viewJson"
   | "supplier_issues"
   | "JsonEditor"
+  | "RangeSlider"
   // | "LocalAudioPlayer"
   | "FileInput"
   | "FileHandler"
@@ -1234,6 +1235,7 @@ export interface SQLFilter {
   name: string;
   operator: string;
   value: any;
+  secondValue?: any;
   type?: SQLValueType;
 }
 

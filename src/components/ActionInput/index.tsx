@@ -1263,10 +1263,12 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         >
           {(field) => (
             <>
+              {["RangeSlider"].includes(fieldData.component) && (
+                <div>{fieldData.label || fieldData.title}</div>
+              )}
               <Component
                 schema={fieldData}
                 disabled={fieldData.readOnly}
-                label={fieldData.label || fieldData.title}
                 value={
                   fieldData.component === "DateInput" &&
                   typeof field.state.value === "string"
@@ -1287,6 +1289,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                     "MultiSelect",
                     "Select",
                     "FileInput",
+                    "RangeSlider",
                   ].includes(fieldData.component)
                     ? field.handleChange
                     : (e: any) => field.handleChange(e?.target?.value)
@@ -1295,6 +1298,9 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 isLoading={mutationIsLoading}
                 {...(fieldData.props || {})}
                 {...(fieldData.component === "DateInput" ? { dateParser } : {})}
+                {...(fieldData.component === "RangeSlider"
+                  ? { label: (value: any) => `${value}` } // Remove the extra curly braces
+                  : { label: fieldData.label || fieldData.title })}
               />
               {fieldName === "query" && <FieldInfo field={field} />}
             </>

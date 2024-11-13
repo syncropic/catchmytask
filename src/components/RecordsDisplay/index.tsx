@@ -105,7 +105,7 @@ const RecordsDisplay: React.FC<SummariesDisplayProps> = ({
         componentName="MonacoEditor"
         props={{
           value: activeRecord,
-          height: "50vh",
+          // height: "50vh",
           readOnly: true,
         }}
       />
@@ -123,8 +123,10 @@ const RecordsDisplay: React.FC<SummariesDisplayProps> = ({
                   componentName={item?.metadata?.component_name}
                   props={{
                     ...activeRecord,
+                    config: activeRecord?.display_config
+                      ? JSON.parse(activeRecord?.display_config)
+                      : {},
                     value: activeRecord,
-                    height: "50vh",
                   }}
                 />
               </React.Fragment>

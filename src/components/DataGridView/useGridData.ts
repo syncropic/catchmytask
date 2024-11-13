@@ -177,13 +177,21 @@ export function createCell(
   }
 
   // Define the date formatter
+  // const dateFormat = new Intl.DateTimeFormat("en-CA", {
+  //   year: "numeric",
+  //   month: "2-digit",
+  //   day: "2-digit",
+  //   timeZone: "UTC",
+  // });
   const dateFormat = new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true, // This will use AM/PM format
     timeZone: "UTC",
   });
-
   switch (field.data_type) {
     case "datetime":
       return {
