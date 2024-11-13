@@ -868,8 +868,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       values
     );
 
-    // console.log("enriched_search_filters");
-    // console.log(enriched_search_filters);
+    console.log("enriched_search_filters");
+    console.log(enriched_search_filters);
 
     let rendered_globalSearchQuery = buildSQLQuery(
       view_record?.query,

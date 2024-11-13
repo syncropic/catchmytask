@@ -3627,8 +3627,9 @@ export function enrichFilters(
   patternConfigs: Record<string, PatternConfig> = {}
 ) {
   return filters?.map((filter: Filter) => {
-    const enrichedFilter = { ...filter };
+    let enrichedFilter = { ...filter };
     let value = dataObject?.[filter.name];
+    let secondValue = dataObject?.[`${filter.name}`]?.[1];
     // console.log("filter");
     // console.log(filter);
 
@@ -3653,9 +3654,9 @@ export function enrichFilters(
       case "BETWEEN": {
         // console.log("between");
         // console.log(value);
-        enrichedFilter.value = dataObject?.[`${filter.name}`]?.[0];
+        value = dataObject?.[`${filter.name}`]?.[0];
         // enrichedFilter.value = "80";
-        enrichedFilter.secondValue = dataObject?.[`${filter.name}`]?.[1];
+        secondValue = dataObject?.[`${filter.name}`]?.[1];
         break;
       }
 
@@ -3686,10 +3687,23 @@ export function enrichFilters(
       // Default case handles simple comparison operators
       default:
         // No transformation needed for =, !=, >, <, >=, <=
+        // enrichedFilter.value = value;
         break;
     }
+    if (value) {
+      enrichedFilter.value = value;
+    } else {
+      const { value: _, ...rest } = enrichedFilter;
+      enrichedFilter = rest;
+    }
 
-    // enrichedFilter.value = value;
+    if (secondValue) {
+      enrichedFilter.secondValue = secondValue;
+    } else {
+      const { secondValue: _, ...rest } = enrichedFilter;
+      enrichedFilter = rest;
+    }
+
     return enrichedFilter;
   });
 }
