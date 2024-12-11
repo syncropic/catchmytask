@@ -20,7 +20,7 @@ export default {
             // Render the SearchInput component
             return (
               <SearchInput
-                placeholder="profiles"
+                placeholder="elements"
                 description={undefined}
                 // handleOptionSubmit={(item) => console.log(item)}
                 handleOptionSubmit={(selectedItem) => {
@@ -40,32 +40,32 @@ export default {
                 // ]}
                 // handleEdit={handleEdit}
                 record={{}}
-                query_name="fetch profiles"
+                query_name="fetch elements"
                 // navigateOnSelect={{ resource: "views" }}
                 // navigateOnClear={{ resource: "home" }}
-                data_items={[
-                  {
-                    name: "fetch spotify audio analysis",
-                    id: "action_steps:1pehwbyh70qsh63coc4e",
-                    author_id: "dpwanjala@gmail.com",
-                    description: "fetch spotify audio analysis",
-                  },
-                  {
-                    name: "fetch or create catchmyvibe audio analysis",
-                    id: "action_steps:95blh99lo9tgd7mbzvzi",
-                    author_id: "dpwanjala@gmail.com",
-                    description: "fetch or create catchmyvibe audio analysis",
-                  },
-                ]}
-                activeFilters={[
-                  {
-                    id: 1,
-                    name: "profiles",
-                    description: "profiles",
-                    entity_type: "profiles",
-                    is_selected: true,
-                  },
-                ]}
+                // data_items={[
+                //   {
+                //     name: "fetch spotify audio analysis",
+                //     id: "action_steps:1pehwbyh70qsh63coc4e",
+                //     author_id: "dpwanjala@gmail.com",
+                //     description: "fetch spotify audio analysis",
+                //   },
+                //   {
+                //     name: "fetch or create catchmyvibe audio analysis",
+                //     id: "action_steps:95blh99lo9tgd7mbzvzi",
+                //     author_id: "dpwanjala@gmail.com",
+                //     description: "fetch or create catchmyvibe audio analysis",
+                //   },
+                // ]}
+                // activeFilters={[
+                //   {
+                //     id: 1,
+                //     name: "executable_steps",
+                //     description: "executable_steps",
+                //     entity_type: "executable_steps",
+                //     // is_selected: true,
+                //   },
+                // ]}
               ></SearchInput>
             );
           },

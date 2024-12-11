@@ -1,36 +1,13 @@
-import AccordionComponent from "@components/AccordionComponent";
-import DataDisplay from "@components/DataDisplay";
-import ErrorComponent from "@components/ErrorComponent";
-import MonacoEditor from "@components/MonacoEditor";
-import PythonEnvironment from "@components/PythonEnvironment";
-import {
-  buildSQLQuery,
-  enrichFilters,
-  getLabel,
-  getTooltipLabel,
-  sanitizeFilters,
-  useFetchExecutionData,
-  useFetchQueryDataByState,
-  useReadByState,
-  useReadRecordByState,
-} from "@components/Utils";
-import { useParsed } from "@refinedev/core";
+import { IIdentity } from "@components/interfaces";
+import { useFetchData, useFetchExecutionData } from "@components/Utils";
+import { useGetIdentity, useParsed } from "@refinedev/core";
 import { useDuckDB } from "pages/_app";
 import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
-import { viewQueryAccordionConfig } from "./viewQueryAccordionConfig";
-import { actionInputAccordionConfig } from "./actionInputAccordionConfig";
-import { ActionInputForm } from "@components/ActionInput";
-import { titleAccordionConfig } from "./titleAccordionConfig";
-import { Tooltip, Text } from "@mantine/core";
-import Reveal from "@components/Reveal";
-import { useViewportSize } from "@mantine/hooks";
-import Documentation from "@components/Documentation";
-import { IconInfoCircle } from "@tabler/icons-react";
-import { viewItemsAccordionConfig } from "./viewItemsAccordionConfig";
 
 interface ExecutionDataFetcherProps {
   view: any;
+  view_item: any;
   view_id: string;
   task_id: string;
   session_id: string;
@@ -40,35 +17,67 @@ interface ExecutionDataFetcherProps {
 export function ExecutionDataFetcher({
   // step,
   view,
+  view_item,
   onStepFetched,
   view_id,
   task_id,
   session_id,
 }: ExecutionDataFetcherProps) {
-  const { activeApplication, activeTask } = useAppStore();
-  const { data, isLocalDBSuccess, isLoading } = useFetchExecutionData({
-    success_message_code:
-      view?.success_message_code || activeTask?.success_message_code,
-    id: view_id || activeTask?.id,
+  const {
+    activeApplication,
+    activeSession,
+    activeProfile,
+    activeView,
+    activeTask,
+  } = useAppStore();
+  const { params } = useParsed();
+  const { data: identity } = useGetIdentity<IIdentity>();
+  const { data, isLocalDBSuccess, isLoading } = useFetchData({
+    success_message_code: view?.actions?.[0]?.name || "records",
+    view_record: view,
+    // success_message_code:
+    //   view?.success_message_code || activeTask?.success_message_code,
+    id: view_item?.id,
+    items: [view_item],
+    action: {
+      name: "fetch",
+      id: "fetch",
+    },
+    input_values: {
+      // ...value,
+      // action_input_form_values:
+      //   action_input_form_values[action_input_form_values_key] ||
+      //   {},
+    },
     application: {
       id: activeApplication?.id,
       name: activeApplication?.name,
     },
     session: {
-      id: session_id,
+      id: params?.session_id || activeSession?.id,
+      name: params?.session_id || activeSession?.name,
     },
     task: {
-      id: task_id,
+      id: params?.id || activeTask?.id,
+      name: params?.id || activeTask?.name,
+    },
+    automation: {
+      // frequency: "every 20 seconds",
     },
     view: {
       id: view_id,
+      name: view_id,
     },
-    view_record: view,
-    include_action_steps:
-      view.initial_state?.action_steps ||
-      activeTask?.initial_state?.action_steps,
-    action: {
-      name: "read",
+    profile: {
+      id: params?.profile_id || activeProfile?.id || identity?.email,
+      name: params?.profile_id || activeProfile?.name || identity?.email,
+    },
+    parents: {
+      task_id: params?.id || activeTask?.id,
+      profile_id: params?.profile_id || activeProfile?.id || identity?.email,
+      view_id: params?.view_id || activeView?.id,
+      session_id: params?.session_id || activeSession?.id,
+      application_id: activeApplication?.id,
     },
   });
 

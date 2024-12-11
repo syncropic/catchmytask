@@ -17,6 +17,7 @@ import AutomationsToggle from "@components/AutomationsToggle";
 
 import { ActionIcon, Tooltip, Text } from "@mantine/core";
 import {
+  IconIconsOff,
   IconLetterB,
   IconMenu2,
   IconSettingsAutomation,
@@ -50,12 +51,25 @@ const LargeScreenHeader = ({
     activeLayout,
     setActiveLayout,
     activeTask,
+    activeSession,
     activeView,
     focused_entities,
+    activeProfile,
+    clearViews,
   } = useAppStore();
   const { updateComponentAction } = useUpdateComponentAction();
   let action = focused_entities[activeTask?.id]?.["action"];
   const { width } = useViewportSize();
+
+  const handleClearViews = () => {
+    go({
+      query: {
+        profile_id: String(activeProfile?.id),
+      },
+      type: "push",
+    });
+    clearViews({});
+  };
 
   // handle toggleDisplay
   const toggleDisplay = (section: string) => {
@@ -102,6 +116,22 @@ const LargeScreenHeader = ({
         )}
 
         {<ColorSchemeToggle />}
+        {authenticatedData?.authenticated && (
+          <Tooltip
+            withArrow
+            transitionProps={{ duration: 200 }}
+            label="clear views"
+          >
+            <ActionIcon
+              size="xs"
+              variant="default"
+              aria-label="clear view"
+              onClick={handleClearViews}
+            >
+              <IconIconsOff size={24} />
+            </ActionIcon>
+          </Tooltip>
+        )}
 
         {authenticatedData?.authenticated && (
           <div className="block lg:hidden">
@@ -185,7 +215,7 @@ const LargeScreenHeader = ({
 
       {/* {authenticatedData?.authenticated && activeTask && <AutomationsToggle />} */}
 
-      {authenticatedData?.authenticated && activeTask && (
+      {authenticatedData?.authenticated && activeSession && (
         <Reveal
           trigger="click"
           target={
@@ -194,19 +224,19 @@ const LargeScreenHeader = ({
               w={220}
               withArrow
               transitionProps={{ duration: 200 }}
-              label={getTooltipLabel(activeTask)}
+              label={getTooltipLabel(activeSession)}
             >
               <Text
                 size="sm"
                 className="text-blue-500 truncate overflow-hidden whitespace-nowrap px-3"
                 style={{ maxWidth: width < 500 ? 100 : 500 }}
               >
-                {getLabel(activeTask)}
+                {getLabel(activeSession)}
               </Text>
             </Tooltip>
           }
         >
-          <MonacoEditor value={activeTask} language="json" height="50vh" />
+          <MonacoEditor value={activeSession} language="json" height="50vh" />
         </Reveal>
       )}
       {/* {authenticatedData?.authenticated && (

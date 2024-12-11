@@ -136,7 +136,7 @@ export function DataGridView({
   };
 
   return (
-    <div className="h-[70vh] overflow-scroll">
+    <div className="h-[75vh] overflow-scroll">
       {rows.length > 0 && columns?.length > 0 && (
         <ReactGrid
           rows={rows}

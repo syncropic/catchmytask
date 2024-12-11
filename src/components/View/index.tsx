@@ -9,30 +9,39 @@ import {
   getLabel,
   getTooltipLabel,
   sanitizeFilters,
+  useFetchByState,
   useFetchExecutionData,
   useFetchQueryDataByState,
   useReadByState,
   useReadRecordByState,
 } from "@components/Utils";
-import { useParsed } from "@refinedev/core";
-import { useDuckDB } from "pages/_app";
-import { useEffect, useState } from "react";
-import { useAppStore } from "src/store";
-import { viewQueryAccordionConfig } from "./viewQueryAccordionConfig";
-import { actionInputAccordionConfig } from "./actionInputAccordionConfig";
-import { ActionInputForm } from "@components/ActionInput";
-import { titleAccordionConfig } from "./titleAccordionConfig";
-import { Tooltip, Text } from "@mantine/core";
-import Reveal from "@components/Reveal";
-import { useViewportSize } from "@mantine/hooks";
-import Documentation from "@components/Documentation";
-import { IconInfoCircle } from "@tabler/icons-react";
-import { View } from "./View";
-import { viewFooterAccordionConfig } from "./viewFooterAccordionConfig";
+import { useGetIdentity, useParsed } from "@refinedev/core";
+// import { useDuckDB } from "pages/_app";
+// import { useEffect, useState } from "react";
+import { useAppStore, useTransientStore } from "src/store";
+// import { viewQueryAccordionConfig } from "./viewQueryAccordionConfig";
+// import { actionInputAccordionConfig } from "./actionInputAccordionConfig";
+// import { ActionInputForm } from "@components/ActionInput";
+// import { titleAccordionConfig } from "./titleAccordionConfig";
+// import { Tooltip, Text } from "@mantine/core";
+// import Reveal from "@components/Reveal";
+// import { useViewportSize } from "@mantine/hooks";
+// import Documentation from "@components/Documentation";
+// import { IconInfoCircle } from "@tabler/icons-react";
+// import { View } from "./View";
+// import { viewFooterAccordionConfig } from "./viewFooterAccordionConfig";
+import { IIdentity } from "@components/interfaces";
+import LocalDBView from "./LocalDBView";
 
-const ViewWrapper = () => {
+interface ViewWrapperProps {
+  view_id_prop?: string;
+  view_item?: any;
+}
+
+const ViewWrapper = ({ view_id_prop, view_item }: ViewWrapperProps) => {
   const { params } = useParsed();
-  const { width } = useViewportSize();
+  // const { width } = useViewportSize();
+  const { data: identity } = useGetIdentity<IIdentity>();
 
   const {
     activeTask,
@@ -40,16 +49,18 @@ const ViewWrapper = () => {
     activeSession,
     activeProfile,
     activeApplication,
-    action_input_form_fields,
-    activeEvent,
+    // action_input_form_fields,
+    // activeEvent,
+    // request_response,
+    // activeMainCustomComponent,
   } = useAppStore();
 
   const action_input_form_values_key = `query_${params?.id || activeTask?.id}`;
-  const fields = action_input_form_fields[action_input_form_values_key];
+  // const fields = action_input_form_fields[action_input_form_values_key];
 
-  const view_id = params?.view_id;
-  const task_id = params?.task_id;
-  const session_id = params?.session_id;
+  const view_id = view_item?.view_id;
+  // const task_id = params?.task_id;
+  // const session_id = params?.session_id;
 
   let fetch_view_by_id_state = {
     credential: "surrealdb catchmytask dev",
@@ -67,106 +78,117 @@ const ViewWrapper = () => {
   } = useReadRecordByState(fetch_view_by_id_state);
 
   let view_record = viewData?.data?.find(
-    (item: any) => item?.message?.code === view_id
+    (item: any) =>
+      item?.message?.code ===
+      String(fetch_view_by_id_state?.success_message_code)
   )?.data[0];
+  // const { forms } = useTransientStore();
 
-  // const globalQuery =
-  //   useAppStore(
-  //     (state) =>
-  //       state.action_input_form_values[`${action_input_form_values_key}`]?.query
-  //   ) || view_record?.query; // use query as default if nothing is in the global store
+  // const query_action_input_form_values = useAppStore(
+  //   (state) => state.action_input_form_values[action_input_form_values_key]
+  // );
 
-  // let activity_state = {
-  //   id:
-  //     activeView?.id ||
-  //     activeTask?.id ||
-  //     activeSession?.id ||
-  //     activeProfile?.id,
-  //   query_name: "fetch events",
-  //   session_id: activeSession?.id,
-  //   view_id: activeView?.id,
-  //   profile_id: activeProfile?.id,
-  //   application_id: activeApplication?.id,
-  //   task_id: params?.id,
-  //   success_message_code: "events",
-  // };
+  // const globalSearchQuery = useAppStore(
+  //   (state) =>
+  //     state.action_input_form_values[`${action_input_form_values_key}`]?.query
+  // );
 
+  // fetch
+  let fetch_by_state = {
+    id: view_item?.id,
+    items: [view_item],
+    action: {
+      name: "fetch",
+      id: "fetch",
+    },
+    input_values: {
+      // ...value,
+      // action_input_form_values:
+      //   action_input_form_values[action_input_form_values_key] ||
+      //   {},
+    },
+    application: {
+      id: activeApplication?.id,
+      name: activeApplication?.name,
+    },
+    session: {
+      id: params?.session_id || activeSession?.id,
+      name: params?.session_id || activeSession?.name,
+    },
+    task: {
+      id: params?.id || activeTask?.id,
+      name: params?.id || activeTask?.name,
+    },
+    automation: {
+      // frequency: "every 20 seconds",
+    },
+    view: {
+      id: view_id,
+      name: view_id,
+    },
+    profile: {
+      id: params?.profile_id || activeProfile?.id || identity?.email,
+      name: params?.profile_id || activeProfile?.name || identity?.email,
+    },
+    parents: {
+      task_id: params?.id || activeTask?.id,
+      profile_id: params?.profile_id || activeProfile?.id || identity?.email,
+      view_id: params?.view_id || activeView?.id,
+      session_id: params?.session_id || activeSession?.id,
+      application_id: activeApplication?.id,
+    },
+  };
   // const {
-  //   data: activityData,
-  //   isLoading: activityIsLoading,
-  //   error: activityError,
-  // } = useFetchQueryDataByState(activity_state);
+  //   data: fetchData,
+  //   isLoading: fetchIsLoading,
+  //   error: fetchError,
+  // } = useFetchByState(fetch_by_state);
 
   if (viewIsLoading) return <div>Loading...</div>;
 
   if (viewError) {
-    return (
-      <ErrorComponent
-        error={viewError}
-        component={"Error loading params data"}
-      />
-    );
+    return <ErrorComponent error={viewError} component={"Error"} />;
   }
+
+  // let item_name = view_record?.actions[0]?.name;
+
+  // let dataItems = fetchData?.data?.find(
+  //   (item: any) => item?.message?.code === "wyndham_transactions"
+  // )?.data;
 
   return (
     <div className="flex flex-col">
       {/* <div>view wrapper</div> */}
       {/* <MonacoEditor
         value={{
-          activeTask: activeTask,
+          // fetch_view_by_id_state: fetch_view_by_id_state,
+          // item_name: item_name,
+          // fetchData: fetchData,
+          // viewData: viewData,
+          // activeTask: activeTask,
           view_record: view_record,
+          // view_item: view_item,
+          // fetchIsLoading: fetchIsLoading,
+          // fetchData: fetchData,
+          // fetchError: fetchError,
+          // dataItems: dataItems,
         }}
         height="25vh"
         language="json"
       ></MonacoEditor> */}
 
-      <div>
-        <AccordionComponent
-          sections={titleAccordionConfig}
-          include_items={["toolbar", "action_input"]}
-          key="view_title"
-          title={
-            <div onClick={(e) => e.stopPropagation()}>
-              <Reveal
-                trigger="click"
-                target={
-                  <Tooltip
-                    multiline
-                    w={220}
-                    withArrow
-                    transitionProps={{ duration: 200 }}
-                    label={getTooltipLabel(view_record)}
-                  >
-                    <div className="flex">
-                      <Text
-                        size="sm"
-                        className="text-blue-500 truncate overflow-hidden whitespace-nowrap px-3"
-                        style={{ maxWidth: width < 500 ? 100 : 500 }}
-                      >
-                        {getLabel(view_record)}
-                      </Text>
-                      <IconInfoCircle size={18} />
-                    </div>
-                  </Tooltip>
-                }
-              >
-                <Documentation record={view_record}></Documentation>
-              </Reveal>
-            </div>
-          }
+      {/* {view_record && dataItems && (
+        <DataDisplay
+          data_items={dataItems}
+          entity_type="action_step_results"
+          view_mode={activeMainCustomComponent?.name || "datagrid"}
+          view_record={view_record}
+          data_fields={view_record?.fields}
         />
-      </div>
-      {/* <AccordionComponent
-        sections={viewQueryAccordionConfig}
-        globalQuery={globalQuery}
-      /> */}
-      <div>
-        {view_record && activeTask && <View view_record={view_record} />}
-      </div>
-
-      {/* {globalQuery && (
-        <PythonEnvironment code={globalQuery}></PythonEnvironment>
       )} */}
+      {view_record && (
+        <LocalDBView view_record={view_record} view_item={view_item} />
+      )}
     </div>
   );
 };

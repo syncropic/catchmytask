@@ -16,6 +16,7 @@ import {
   SearchInputComponentProps,
 } from "@components/interfaces";
 import {
+  IconAffiliate,
   IconCopy,
   IconEdit,
   IconInfoCircle,
@@ -28,6 +29,7 @@ import { useGetIdentity, useGo, useParsed } from "@refinedev/core";
 import Reveal from "@components/Reveal";
 import MonacoEditor from "@components/MonacoEditor";
 import Documentation from "@components/Documentation";
+import ExternalSubmitButton from "@components/SubmitButton";
 
 function SearchInput<T extends Record<string, any>>({
   activeFilters,
@@ -88,8 +90,9 @@ function SearchInput<T extends Record<string, any>>({
     };
   }, [query]);
 
-  let selected_filters =
-    activeFilters || schema?.activeFilters || globalActiveFilters;
+  // let selected_filters =
+  //   activeFilters || schema?.activeFilters || globalActiveFilters;
+  let selected_filters = activeFilters || [];
 
   const state = {
     query_name: query_name || "search",
@@ -201,9 +204,9 @@ function SearchInput<T extends Record<string, any>>({
                 (filter: FilterItem) => filter.entity_type === item.entity_type
               );
 
-              if (!matchingFilter.metadata) return true;
+              if (!matchingFilter?.metadata) return true;
 
-              return Object.entries(matchingFilter.metadata).every(
+              return Object.entries(matchingFilter?.metadata).every(
                 ([key, value]) => item.metadata && item.metadata[key] === value
               );
             })}
@@ -226,7 +229,7 @@ function SearchInput<T extends Record<string, any>>({
             comboboxProps={{ withinPortal: withinPortal }}
             ref={ref}
             data={
-              data_items
+              data_items || selected_filters?.length < 1
                 ? autocompleteData
                 : autocompleteData.filter((item) => {
                     const entityTypeMatch = selected_filters
@@ -240,9 +243,9 @@ function SearchInput<T extends Record<string, any>>({
                         filter.entity_type === item.entity_type
                     );
 
-                    if (!matchingFilter.metadata) return true;
+                    if (!matchingFilter?.metadata) return true;
 
-                    return Object.entries(matchingFilter.metadata).every(
+                    return Object.entries(matchingFilter?.metadata).every(
                       ([key, value]) =>
                         item.metadata && item.metadata[key] === value
                     );
@@ -324,19 +327,49 @@ function SearchInput<T extends Record<string, any>>({
         </Reveal>
       )}
 
+      {include_action_icons?.includes("explore") && (
+        <Tooltip label="Explore" position="top">
+          <ActionIcon
+            size="xs"
+            variant="filled"
+            color="blue"
+            aria-label="Explore"
+            onClick={() => console.log("Explore")}
+            style={{ visibility: disabled ? "hidden" : "visible" }}
+            // disabled={true}
+          >
+            <IconAffiliate size={18} />
+          </ActionIcon>
+          {/* <ExternalSubmitButton
+            record={{}}
+            entity_type="sessions"
+            action_form_key={`query_${params?.id || activeTask?.id}`}
+            action={"dublicate"}
+            icon="copy"
+          /> */}
+        </Tooltip>
+      )}
+
       {include_action_icons?.includes("dublicate") && (
         <Tooltip label="Dublicate" position="top">
-          <ActionIcon
+          {/* <ActionIcon
             size="xs"
             variant="filled"
             color="blue"
             aria-label="Dublicate"
             onClick={() => console.log("Dublicate")}
             style={{ visibility: disabled ? "hidden" : "visible" }}
-            disabled={true}
+            // disabled={true}
           >
-            <IconCopy size={18} />
-          </ActionIcon>
+            <IconCopy size={24} />
+          </ActionIcon> */}
+          <ExternalSubmitButton
+            record={{}}
+            entity_type="sessions"
+            action_form_key={`query_${params?.id || activeTask?.id}`}
+            action={"dublicate"}
+            icon="copy"
+          />
         </Tooltip>
       )}
 

@@ -12,6 +12,8 @@ import ViewTrip from "@components/ViewTrip";
 import type { FieldApi } from "@tanstack/react-form";
 import ExcelJS from "exceljs";
 import { format, isValid, parseISO } from "date-fns";
+import Surreal, { LiveHandler, Uuid } from "surrealdb";
+import { getDb } from "src/surreal";
 
 import {
   ComponentKey,
@@ -1157,6 +1159,33 @@ export function useQueryByState(state: any) {
 //   return { data, isLoading, error, isError, refetch };
 // }
 
+export function useFetchByState(state: any) {
+  // const variables = state;
+  const { runtimeConfig: config } = useAppStore();
+
+  const { data, isLoading, error, isError, refetch } = useCustom({
+    url: `${config?.API_URL}/route`,
+    method: "post",
+    config: {
+      payload: {
+        ...state,
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `fetchByState_${JSON.stringify({
+          id: state?.id,
+          success_message_code:
+            state?.success_message_code || `fetch_${state?.id}`,
+        })}`,
+      ],
+      enabled: state?.enable_query || true,
+    },
+  });
+
+  return { data, isLoading, error, isError, refetch };
+}
+
 export function useReadByState(state: any) {
   const {
     runtimeConfig: config,
@@ -1402,6 +1431,193 @@ export function useFetchExecutionData(state: any) {
 
         // Save to DuckDB local_db
         if (data_items.length > 0 && data_fields.length > 0) {
+          // console.log("update local db here");
+          setIsLocalDBLoading(true);
+          setLocalDBError(null);
+          setIsLocalDBSuccess(false);
+          // Update the state with functional updates
+          // setLocalDB((prevLocalDB) => ({
+          //   ...prevLocalDB,
+          //   [tableName]: {
+          //     isLocalDBLoading: true,
+          //     isLocalDBSuccess: false,
+          //     localDBError: null,
+          //   },
+          // }));
+          let item = {
+            isLocalDBLoading: true,
+            isLocalDBSuccess: false,
+            localDBError: null,
+          };
+          updateLocalDB(tableName, item);
+
+          try {
+            // console.log("save to db here");
+            const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
+            await dbInstance.query(dropQuery);
+            await saveToLocalDB(data_items, tableName, data_fields, dbInstance);
+            console.log("Data saved to DuckDB successfully");
+            setIsLocalDBSuccess(true);
+            let success_item = {
+              isLocalDBLoading: false,
+              isLocalDBSuccess: true,
+              localDBError: null,
+            };
+            updateLocalDB(tableName, success_item);
+            console.log(
+              `Local DB item success item: ${tableName}`,
+              success_item
+            );
+            // setLocalDB(item);
+            // let success_merged = { ...local_db, ...success_item };
+            // console.log("Local DB item success item:", success_item);
+            // setLocalDB(local_db_item);
+            // console.log("Local DB item success:", tableName, local_db_item);
+            // success message code
+            // console.log("Data saved to Table:", tableName);
+            // console.log("Data saved to DuckDB:", data_items);
+            // console.log("Data fields:", data_fields);
+          } catch (error) {
+            console.error("Error saving data to DuckDB:", error);
+            setLocalDBError(error as any);
+            let success_item = {
+              isLocalDBLoading: false,
+              isLocalDBSuccess: false,
+              localDBError: JSON.stringify(error),
+            };
+            updateLocalDB(tableName, success_item);
+            // setLocalDB({
+            //   ...local_db,
+            //   [tableName]: {
+            //     isLocalDBLoading: false,
+            //     isLocalDBSuccess: false,
+            //     localDBError: error,
+            //   },
+            // });
+          } finally {
+            setIsLocalDBLoading(false);
+            let success_item = {
+              isLocalDBLoading: false,
+              isLocalDBSuccess: false,
+              localDBError: null,
+            };
+            updateLocalDB(tableName, success_item);
+            // setLocalDB({
+            //   ...local_db,
+            //   [tableName]: {
+            //     isLocalDBLoading: false,
+            //     isLocalDBSuccess: false,
+            //     localDBError: null,
+            //   },
+            // });
+          }
+        }
+      },
+      onError: (fetchError) => {
+        console.log("Error fetching data:", fetchError);
+      },
+    },
+  });
+
+  return {
+    data,
+    isLoading,
+    error,
+    isError,
+    refetch,
+    isLocalDBLoading,
+    isLocalDBSuccess,
+    localDBError,
+  };
+}
+
+export function useFetchData(state: any) {
+  const { runtimeConfig: config, updateLocalDB, setDataFields } = useAppStore();
+  const { view_record, ...rest } = state;
+
+  // const viewState = {
+  //   record: { id: state?.view_id },
+  //   read_record_mode: "remote",
+  // };
+
+  // let view_query_key = `readByState_${JSON.stringify({
+  //   id: viewState?.record?.id,
+  //   success_message_code: viewState?.record?.id || "record_read",
+  // })}`;
+
+  const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
+  // const queryClient = useQueryClient();
+  // // const viewData = queryClient.getQueryData([view_query_key]);
+  // const viewData = queryClient.getQueryData([view_query_key]) as {
+  //   data: any[];
+  // };
+
+  // const viewRecord = viewData?.data?.find(
+  //   (item: any) => item?.message?.code === state?.view_id
+  // )?.data[0];
+
+  // State variables for LocalDB operation statuses
+  const [isLocalDBLoading, setIsLocalDBLoading] = useState(false);
+  const [isLocalDBSuccess, setIsLocalDBSuccess] = useState(false);
+  const [localDBError, setLocalDBError] = useState(null);
+
+  const { data, isLoading, error, isError, refetch } = useCustom({
+    url: `${config?.API_URL}/route`,
+    method: "post",
+    config: {
+      payload: {
+        ...rest,
+      },
+    },
+    queryOptions: {
+      queryKey: [
+        `useFetchData_${JSON.stringify({
+          success_message_code: state?.success_message_code,
+        })}`,
+      ],
+      onSuccess: async (fetchedData) => {
+        console.log(
+          `Fetched data successfully: ${state?.success_message_code}`
+        );
+        // table name is the success message code
+        let tableName = state.success_message_code;
+
+        // Extract data_items and data_fields from the fetched data
+        const dataRecord = fetchedData?.data?.find(
+          (item: any) => item?.message?.code === state.success_message_code
+        );
+        console.log("dataRecord");
+        console.log(fetchedData);
+
+        const data_items = dataRecord?.data || [];
+        const infered_data_fields = (dataRecord?.data_fields || []).map(
+          (field: any) => ({
+            ...field,
+          })
+        );
+        console.log("data_items");
+        console.log(data_items);
+
+        // console.log(`view_record: ${view_record}`);
+
+        // // console.log("useReadByState > viewRecord", viewRecord);
+        const data_fields = view_record?.fields || infered_data_fields || [];
+        // console.log(
+        //   `${state?.success_message_code} / useReadByState > viewRecord data_fields`,
+        //   data_fields
+        // );
+
+        // // Save the data fields to the Zustand store
+        setDataFields(tableName, data_fields);
+        // const data_items = [];
+        // const data_fields = [];
+        // if (data_items.length == 0) {
+        //   console.log("data_items.length == 0");
+        //   console.log(data_fields);
+        // }
+
+        // Save to DuckDB local_db
+        if (data_items.length >= 0 && data_fields.length > 0) {
           // console.log("update local db here");
           setIsLocalDBLoading(true);
           setLocalDBError(null);
@@ -3115,6 +3331,8 @@ export const iconMap: Record<string, React.ElementType> = {
   thinking: IconAffiliate,
   reasoning: IconAffiliate,
   filters: IconFilter,
+  copy: IconCopy,
+  dublicate: IconCopy,
 };
 
 export const useDuckDBSchema = () => {
@@ -5799,3 +6017,115 @@ export const formatDate = (
     return fallback;
   }
 };
+
+type LiveQueryResult<T> = {
+  data: T[];
+  error: Error | null;
+  loading: boolean;
+};
+
+type Action = "CREATE" | "UPDATE" | "DELETE" | "CLOSE";
+type CloseResult = "killed" | "disconnected";
+
+export function useLiveQuery<T extends Record<string, any>>(
+  table: string,
+  where?: string
+): LiveQueryResult<T> {
+  const [data, setData] = useState<T[]>([]);
+  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState(true);
+  const dbRef = useRef<Surreal | null>(null);
+
+  useEffect(() => {
+    let queryUuid: Uuid;
+    let mounted = true;
+
+    const startLiveQuery = async () => {
+      try {
+        // Get DB connection
+        dbRef.current = await getDb();
+        const db = dbRef.current;
+
+        const query = where
+          ? `SELECT *
+FROM ${table} 
+WHERE ${where} ORDER BY updated_datetime ASC;`
+          : `SELECT *
+FROM ${table} ORDER BY updated_datetime ASC;`;
+
+        const [result] = await db.query<T[]>(query);
+        if (mounted) {
+          // setData(result);
+          if (Array.isArray(result)) {
+            setData(result as T[]);
+          } else {
+            setData([result as T]);
+          }
+          setLoading(false);
+        }
+
+        queryUuid = await db.live<T>(
+          table,
+          (action: Action, result: T | CloseResult) => {
+            if (!mounted) return;
+
+            switch (action) {
+              case "CREATE":
+                setData((prevData) => {
+                  const newRecord = result as T;
+                  return [...prevData, newRecord];
+                });
+                break;
+              case "UPDATE":
+                setData((prevData) => {
+                  const updatedRecord = result as T;
+                  return prevData.map((item) =>
+                    item.id === updatedRecord.id ? updatedRecord : item
+                  );
+                });
+                break;
+              case "DELETE":
+                setData((prevData) => {
+                  const deletedRecord = result as T;
+                  return prevData.filter(
+                    (item) => item.id !== deletedRecord.id
+                  );
+                });
+                break;
+              case "CLOSE":
+                console.log(`Live query ${result as CloseResult}`);
+                break;
+            }
+          }
+        );
+      } catch (err) {
+        if (mounted) {
+          setError(err instanceof Error ? err : new Error("Live query failed"));
+          setLoading(false);
+        }
+      }
+    };
+
+    startLiveQuery();
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+
+      // Kill the live query if it exists
+      const cleanup = async () => {
+        if (queryUuid && dbRef.current) {
+          try {
+            await dbRef.current.kill(queryUuid);
+          } catch (error) {
+            console.error("Error killing live query:", error);
+          }
+        }
+      };
+
+      cleanup();
+    };
+  }, [table, where]);
+
+  return { data, error, loading };
+}

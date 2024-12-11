@@ -240,6 +240,26 @@ export function DataDisplay<T extends Record<string, any>>({
   //     />
   //   );
   // }
+  if (view_mode === "actions") {
+    return (
+      // <MonacoEditor
+      //   value={{
+      //     // view_mode: "actions",
+      //     data_items: data_items,
+      //     // view_record: view_record,
+      //   }}
+      //   language="json"
+      //   height="75vh"
+      // />
+      <TableView
+        data_items={data_items}
+        data_fields={data_fields}
+        view_record={view_record}
+        title={title}
+        query_key={query_key}
+      ></TableView>
+    );
+  }
   if (view_mode === "table") {
     return (
       // <MonacoEditor

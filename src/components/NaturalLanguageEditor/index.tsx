@@ -252,7 +252,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
       <RichTextEditor.Content />
       <RichTextEditor.Toolbar>
         <RichTextEditor.ControlsGroup>
-          <SearchInput
+          {/* <SearchInput
             placeholder="templates"
             activeFilters={[
               {
@@ -263,7 +263,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
                 is_selected: true,
               },
             ]}
-          />
+          /> */}
         </RichTextEditor.ControlsGroup>
         <RichTextEditor.ControlsGroup>
           {/* {activeAgent && (
@@ -273,12 +273,12 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
               action={action || default_action}
             />
           )} */}
-          <ExternalSubmitButton
+          {/* <ExternalSubmitButton
             record={record}
             entity_type="tasks"
             action_form_key={`query_${params?.id || activeTask?.id}`}
             action={action || default_action}
-          />
+          /> */}
 
           {/* <Tooltip
             multiline

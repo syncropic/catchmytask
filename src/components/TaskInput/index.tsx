@@ -6,10 +6,7 @@ import {
 import DataDisplay from "@components/DataDisplay";
 import { useAppStore } from "src/store";
 import _ from "lodash";
-import {
-  ActionInputForm,
-  ActionStepsActionInputForm,
-} from "@components/ActionInput";
+import { ActionInputForm } from "@components/ActionInput";
 
 interface TaskInputProps {
   entity?: string;

@@ -151,6 +151,7 @@ export interface ActionStepsActionInputFormProps {
 }
 
 export interface ActionInputWrapperProps {
+  data_model?: any;
   query_name?: string;
   name?: string;
   execution_record?: any;
@@ -277,13 +278,13 @@ export interface ResultsComponentProps<T extends Record<string, any>> {
   // data_columns: ColumnDef<RowData>[];
   name?: string;
   tableInstance?: TanStackTable<T>;
-  data_items?: any[];
+  data_items?: any;
   nested_data_items?: T[];
   record?: any;
   resource_group?: string;
   execlude_components?: string[];
   view_record?: any;
-  title?: string;
+  title?: any;
   // view_data: any;
   // data_columns: T[];
   data_fields?: T[];
@@ -305,7 +306,7 @@ export interface DataDisplayComponentProps<T extends Record<string, any>> {
   // item: IView;
   // resource: string;
   // results?: any;
-  title?: string;
+  title?: any;
   display_mode?: any;
   view_mode?: string;
   query_key?: string;
@@ -1291,4 +1292,33 @@ export interface ActionComponentProps {
   disabled: boolean;
   loading: boolean;
   children?: React.ReactNode;
+}
+
+// types.ts
+export type ConnectionStatus =
+  | "connected"
+  | "disconnected"
+  | "connecting"
+  | "error";
+
+export interface Log {
+  time: string;
+  message: string;
+  type?: "error" | "info" | "success";
+}
+
+export interface AutomationCommand {
+  type: "navigate" | "click" | "type" | "screenshot";
+  url?: string;
+  selector?: string;
+  text?: string;
+}
+
+export interface AutomationResponse {
+  type: "screenshot" | "status" | "navigation" | "click" | "type";
+  data?: string;
+  screenshot?: string;
+  message?: string;
+  error?: string;
+  success?: boolean;
 }

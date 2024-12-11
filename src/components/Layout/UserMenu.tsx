@@ -184,7 +184,7 @@ export const UserMenu = () => {
                 value={activeProfile?.id || ""}
                 withinPortal={true}
                 ref={ref}
-                include_action_icons={["edit", "add_new", "record_info"]}
+                include_action_icons={["record_info", "explore"]}
                 handleEdit={handleEdit}
                 record={activeProfile}
                 query_name="fetch profiles"
@@ -216,29 +216,31 @@ export const UserMenu = () => {
           </Menu.Item> */}
           <Menu.Item
             leftSection={<IconUserScan size={14} />}
-            onClick={() =>
-              handleMenuNavigate({
-                entity_type: "account",
-                action_type: "edit",
-                id: user?.email,
-              })
-            }
+            disabled
+            // onClick={() =>
+            //   handleMenuNavigate({
+            //     entity_type: "account",
+            //     action_type: "edit",
+            //     id: user?.email,
+            //   })
+            // }
           >
             Manage Account
           </Menu.Item>
           <Menu.Item
             leftSection={<IconAdjustmentsHorizontal size={14} />}
-            onClick={() =>
-              handleMenuNavigate({
-                entity_type: "settings",
-                action_type: "edit",
-                id: user?.email,
-              })
-            }
+            disabled
+            // onClick={() =>
+            //   handleMenuNavigate({
+            //     entity_type: "settings",
+            //     action_type: "edit",
+            //     id: user?.email,
+            //   })
+            // }
           >
             Settings
           </Menu.Item>
-          <Menu.Item
+          {/* <Menu.Item
             leftSection={<IconMail size={14} />}
             onClick={() =>
               handleMenuNavigate({
@@ -249,8 +251,7 @@ export const UserMenu = () => {
             }
           >
             Tasks
-            {/* where the action happens */}
-          </Menu.Item>
+          </Menu.Item> */}
           <Menu.Item
             leftSection={<IconLogout size={14} />}
             onClick={() => handleLogout()}

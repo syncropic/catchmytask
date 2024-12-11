@@ -206,7 +206,7 @@ export function View({ view_record }: ViewProps) {
           zIndex={1000}
           overlayProps={{ radius: "sm", blur: 2 }}
         />
-        {view_record && (
+        {/* {view_record && (
           <ExecutionDataFetcher
             view={view_record}
             view_id={view_id}
@@ -214,7 +214,7 @@ export function View({ view_record }: ViewProps) {
             session_id={session_id}
             onStepFetched={() => handleStepFetched(view_id)}
           />
-        )}
+        )} */}
         {view_record && dataItems && (
           <DataDisplay
             data_items={dataItems}

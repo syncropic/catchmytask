@@ -3,6 +3,7 @@ import {
   Authenticated,
   useGo,
   useIsAuthenticated,
+  useParse,
   useParsed,
 } from "@refinedev/core";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -14,8 +15,19 @@ import ErrorComponent from "@components/ErrorComponent";
 import Breadcrumbs from "@components/Breadcrumbs";
 import AppLayout from "./AppLayout";
 import { useAppStore } from "src/store"; // Zustand store
-import { useComputedColorScheme, Highlight, Button } from "@mantine/core";
-import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react"; // Icons for scroll hints
+import {
+  useComputedColorScheme,
+  Highlight,
+  Button,
+  Tooltip,
+  ActionIcon,
+} from "@mantine/core";
+import {
+  IconArrowLeft,
+  IconArrowRight,
+  IconIconsOff,
+  IconPaperclip,
+} from "@tabler/icons-react"; // Icons for scroll hints
 import {
   getComponentByKey,
   useBulkActionSelect,
@@ -47,6 +59,9 @@ import { sessionQueryActionAccordionConfig } from "./sessionQueryActionAccordion
 import ActivityWrapper from "@components/Activity";
 import TasksWrapper from "@components/Tasks";
 import SearchInput from "@components/SearchInput";
+import SessionsWrapper from "@components/Sessions";
+import ExternalSubmitButton from "@components/SubmitButton";
+import ActionInputWrapper from "@components/ActionInput";
 
 const Layout = ({
   children,
@@ -80,8 +95,12 @@ const Layout = ({
     pinned_action_steps,
     navigationHistory,
     setActiveTask,
+    activeProfile,
+    clearViews,
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
+  const [activeInput, setActiveInput] = useState("structured_query");
+  const { params } = useParsed();
 
   const { leftSection, centerSection, rightSection } = activeLayout; // Destructure the sections for visibility checks
 
@@ -262,6 +281,16 @@ const Layout = ({
     nullIndex !== -1 ? select_or_create_to_continue_items_map[nullIndex] : null;
 
   const message = item ? `Create or select a ${item} to continue` : null;
+
+  const handleClearViews = () => {
+    go({
+      query: {
+        profile_id: String(activeProfile?.id),
+      },
+      type: "push",
+    });
+    clearViews({});
+  };
 
   return (
     <Authenticated key="home" redirectOnFail="/login">
@@ -487,7 +516,7 @@ const Layout = ({
             {/* Left Panel */}
             {leftSection.isDisplayed && (
               <Panel
-                defaultSize={20}
+                defaultSize={30}
                 minSize={0}
                 style={{ display: leftSection.isDisplayed ? "block" : "none" }}
               >
@@ -523,7 +552,7 @@ const Layout = ({
                     />
                   </div> */}
                   {/* activity wrapper search list */}
-                  <TasksWrapper
+                  {/* <TasksWrapper
                     // name={action}
                     query_name="fetch tasks"
                     view_id="views:36xo8keq9tsoyly68shk"
@@ -531,7 +560,175 @@ const Layout = ({
                     // record={record}
                     // action={action}
                     success_message_code="action_input_data_model_schema"
-                  />
+                  /> */}
+
+                  <div className="h-[85vh] flex flex-col">
+                    {" "}
+                    {/* Using 85% of viewport height */}
+                    {/* Top component */}
+                    <div className="min-h-0 flex-1 overflow-y-auto pb-6">
+                      {/* {params?.id && actions && (
+                // <EventsWrapper
+                //   task_id={params?.id}
+                //   title="events"
+                //   data_items={events || []}
+                // />
+                <ActionsWrapper
+                  task_id={params?.id}
+                  title={<ActionListHeader />}
+                  data_items={actions || []}
+                />
+              )} */}
+                      {/* Row 1: Form Display Area */}
+                      <div className="w-full">
+                        {activeInput === "natural_language_query" && (
+                          <ActionInputWrapper
+                            data_model="natural language query input"
+                            query_name="data_model"
+                            record={{
+                              id: params?.id,
+                            }}
+                            action="query"
+                            action_form_key="query_general"
+                            success_message_code="natural_language_query_input"
+                          />
+                        )}
+
+                        {activeInput === "structured_query" && (
+                          <ActionInputWrapper
+                            data_model="structured query input"
+                            query_name="data_model"
+                            record={{
+                              id: params?.id,
+                            }}
+                            action="query"
+                            action_form_key="query_general"
+                            success_message_code="structured_query_input"
+                          />
+                        )}
+                        {activeInput === "components_query" && (
+                          <ActionInputWrapper
+                            data_model="components query input"
+                            query_name="data_model"
+                            record={{
+                              id: params?.id,
+                            }}
+                            action="query"
+                            action_form_key="query_general"
+                            success_message_code="components_query_input"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    {/* Bottom component */}
+                    <div>
+                      {/* <div>
+                <AccordionComponent
+                  sections={viewSearchActionAccordionConfig}
+                  activeView={{}}
+                  activeTask={{}}
+                  defaultExpandedValues={[]}
+                  action={"filters"}
+                />
+              </div> */}
+                      {/* <ActionListHeader /> */}
+                      <div className="flex px-5">
+                        <SessionsWrapper
+                          // name={action}
+                          query_name="fetch sessions"
+                          view_id="views:36xo8keq9tsoyly68shk"
+                          title="monitor"
+                          // record={record}
+                          // action={action}
+                          display_mode="search_input"
+                          success_message_code="action_input_data_model_schema"
+                        />
+                      </div>
+
+                      {/* Row 2: Action Input Bar */}
+                      <div className="w-full flex items-center justify-center gap-4 p-4 bg-gray-50 rounded-lg">
+                        {/* Toggle Buttons */}
+                        {/* <Button
+                          size="compact-sm"
+                          variant={
+                            activeInput === "natural_language_query"
+                              ? "outline"
+                              : "default"
+                          }
+                          onClick={() =>
+                            setActiveInput("natural_language_query")
+                          }
+                          className="whitespace-nowrap"
+                        >
+                          Natural
+                        </Button> */}
+                        {/* <Button
+                          size="compact-sm"
+                          variant={
+                            activeInput === "components_query"
+                              ? "outline"
+                              : "default"
+                          }
+                          onClick={() => setActiveInput("components_query")}
+                          className="whitespace-nowrap"
+                        >
+                          Components
+                        </Button> */}
+                        {/* <Tooltip
+                          withArrow
+                          transitionProps={{ duration: 200 }}
+                          label="clear views"
+                        >
+                          <ActionIcon
+                            size="xs"
+                            variant="default"
+                            aria-label="clear view"
+                            onClick={handleClearViews}
+                          >
+                            <IconIconsOff size={24} />
+                          </ActionIcon>
+                        </Tooltip> */}
+
+                        {/* <Tooltip
+                          withArrow
+                          transitionProps={{ duration: 200 }}
+                          label="attach files"
+                        >
+                          <ActionIcon
+                            size="xs"
+                            variant="default"
+                            aria-label="attachments"
+                          >
+                            <IconPaperclip size={24} />
+                          </ActionIcon>
+                        </Tooltip> */}
+
+                        {/* <Button
+                          size="compact-sm"
+                          variant={
+                            activeInput === "structured_query"
+                              ? "outline"
+                              : "default"
+                          }
+                          onClick={() => setActiveInput("structured_query")}
+                          className="whitespace-nowrap"
+                        >
+                          Structured Language
+                        </Button> */}
+
+                        {/* Submit Button */}
+
+                        <ExternalSubmitButton
+                          record={{}}
+                          entity_type="tasks"
+                          action_form_key={`query_${
+                            params?.id || activeTask?.id
+                          }`}
+                          action={"query"}
+                        />
+                      </div>
+                    </div>
+                  </div>
                   {/* {activeView && activeTask && (
                     <AccordionComponent
                       sections={viewSearchActionAccordionConfig}

@@ -110,7 +110,40 @@ export const useAppStore = create(
         },
       },
       views: {},
-      setViews: (views) => set((state) => ({ views })),
+      clearViews: (views) => set((state) => ({ views })),
+      // setViews: (views) => set((state) => ({ views })),
+      // setViews: (key, newData) =>
+      //   set((state) => {
+      //     const existingData = state.views[key] || {};
+      //     return {
+      //       views: {
+      //         ...state.views,
+      //         [key]: {
+      //           ...existingData,
+      //           ...newData,
+      //         },
+      //       },
+      //     };
+      //   }),
+      setViews: (key, newData) =>
+        set((state) => {
+          if (newData === null) {
+            const newViews = { ...state.views };
+            delete newViews[key];
+            return { views: newViews };
+          }
+
+          const existingData = state.views[key] || {};
+          return {
+            views: {
+              ...state.views,
+              [key]: {
+                ...existingData,
+                ...newData,
+              },
+            },
+          };
+        }),
       activeMainCustomComponent: {
         id: "components:h1ttsa94g3pcfbl278jq",
         name: "datagrid",
@@ -164,6 +197,8 @@ export const useAppStore = create(
       activeAgent: null,
       setActiveAgent: (actionAgent) =>
         set((state) => ({ activeAgent: actionAgent })),
+      activeViewItem: null,
+      setActiveViewItem: (item) => set((state) => ({ activeViewItem: item })),
       setActionModes: (actionModes) =>
         set((state) => ({ action_modes: actionModes })),
       navigationHistory: null,
@@ -274,6 +309,9 @@ export const useAppStore = create(
       globalQuery: {},
       setGlobalQuery: (query) =>
         set((state) => ({ ...state, globalQuery: query })),
+      request_response: null,
+      setRequestResponse: (response) =>
+        set((state) => ({ ...state, request_response: response })),
       searchFilters: [],
       setSearchFilters: (filters) =>
         set((state) => ({ ...state, searchFilters: filters })),

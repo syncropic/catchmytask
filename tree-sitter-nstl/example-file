@@ -1,0 +1,9 @@
+define task "Analyze Pending Tracks" as:
+    fetch:
+        pending_tracks:
+            from: catchmyvibe.audio
+            where: 
+                analyzed = pending 
+                AND status = 'active'
+                ORDER BY created_datetime
+                LIMIT 100
