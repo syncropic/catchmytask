@@ -42,7 +42,6 @@ import {
   useGo,
   useParsed,
 } from "@refinedev/core";
-import config from "src/config";
 import { debounce, update } from "lodash";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
@@ -120,6 +119,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   } = useAppStore();
   const queryClient = useQueryClient();
   const go = useGo(); // Navigation function
+
+  const { runtimeConfig: config } = useAppStore();
 
   const { data: identity } = useGetIdentity<IIdentity>();
   const { setFormSubmitHandler, setFormInstance } = useTransientStore();
