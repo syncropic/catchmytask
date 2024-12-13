@@ -16,7 +16,7 @@ import {
   useSearchFilters,
 } from "@components/Utils";
 import { useAppStore, useTransientStore } from "src/store";
-import { Accordion, Button, Title } from "@mantine/core";
+import { Accordion, Box, Button, LoadingOverlay, Title } from "@mantine/core";
 import dayjs from "dayjs";
 // import { parseNSTLQuery } from "@components/Utils/ntslParser";
 import { DateInputProps } from "@mantine/dates";
@@ -350,6 +350,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         // alert(JSON.stringify(value));
         const fetchFromDuckDB = async () => {
           try {
+            let reference_item_name = activeAction?.reference_record?.name;
             // console.log(`globalQuery: ${globalQuery}`);
 
             // let active_view_query_model_data_data_model_query_filters =
@@ -383,8 +384,14 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
             // const downloadData = downloadResult.toArray();
             // console.log("downloadData", downloadData);
-            let actionItem = responseData?.data?.find
-              ? responseData?.data?.find(
+            const cachedData = queryClient.getQueryData([
+              activeAction?.reference_record?.queryKey,
+            ]) as any;
+            // console.log("cachedData");
+            // console.log(cachedData);
+
+            let actionItem = cachedData?.data?.find
+              ? cachedData?.data?.find(
                   (item: any) =>
                     item?.action_step?.id === activeAction?.reference_record?.id
                 )
@@ -432,7 +439,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
             // Step 1: Create a new workbook and worksheet
             const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet(`${value?.name}`);
+            const worksheet = workbook.addWorksheet(`${reference_item_name}`);
 
             // Step 2: Add headers and apply formatting to the headers
             // worksheet.columns = columnNames.map((col: any) => ({
@@ -639,7 +646,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
             // Step 8: Add a row to the summary sheet with the id and count of rows from the main sheet
             summarySheet.addRow({
-              id: value?.name || "Sheet Name",
+              id: reference_item_name || "Sheet Name",
               count: downloadData.length,
             });
 
@@ -653,20 +660,20 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             const blob = new Blob([buffer], {
               type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             });
-            saveAs(blob, `${value?.name}.xlsx`);
+            saveAs(blob, `${reference_item_name}.xlsx`);
 
             // Step 7: Show success notification after saving
             setTimeout(() => {
               showNotification({
                 title: "Saved successfully",
-                message: `${value?.name}.xlsx excel file created successfully.`,
+                message: `${reference_item_name}.xlsx excel file created successfully.`,
                 color: "green",
                 autoClose: 2000, // Close notification after 2 seconds
               });
             }, 500); // Small delay to ensure file save is triggered first
 
             console.log(
-              `${value?.name}.xlsx excel file created and downloaded successfully.`
+              `${reference_item_name}.xlsx excel file created and downloaded successfully.`
             );
           } catch (err) {
             let errorMessage = "";
@@ -755,7 +762,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         // console.log("value", value);
       } else {
         // clear views and on success navigate to main view?
-        handleClearViews();
+        // handleClearViews();
 
         return new Promise((resolve, reject) => {
           // let new_form_status = { ...form_status };
@@ -873,7 +880,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             },
             {
               onError: (error) => {
-                console.error("Mutation error:", error);
+                // console.error("Mutation error:", error);
                 setRequestResponse(error);
                 queryClient.setQueryData(["main_form_request"], error);
                 reject(error);
@@ -882,12 +889,14 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 setFormStatus(new_form_status);
               },
               onSuccess: (data) => {
-                console.log("Mutation success:", data);
+                // console.log("Mutation success:", data);
                 queryClient.setQueryData(["main_form_request"], data);
                 resolve(data);
                 new_form_status[action_input_form_values_key].is_submitting =
                   false;
                 setFormStatus(new_form_status);
+                // clear attachments so i don't have to send them again can just referenced uploaded items
+                form.setFieldValue("attachments", null);
               },
             }
           );
@@ -906,10 +915,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     // let query = formatPythonTemplate(query_template, values);
     // // console.log(query);
 
-    let enriched_search_filters = enrichFilters(
-      view_record?.data_model?.schema?.query_filters,
-      values
-    );
+    // let enriched_search_filters = enrichFilters(
+    //   view_record?.data_model?.schema?.query_filters,
+    //   values
+    // );
 
     // console.log("enriched_search_filters");
     // console.log(enriched_search_filters);
@@ -1049,10 +1058,10 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         )?.data[0];
 
         if (templateRecord) {
-          console.log(
-            "Fetched Template data before setting form values:",
-            templateRecord
-          );
+          // console.log(
+          //   "Fetched Template data before setting form values:",
+          //   templateRecord
+          // );
           // form.setFieldValue("name", templateRecord.name ?? "");
           // form.setFieldValue("query", templateRecord.query ?? "");
           // setTemplateUpdate((prev) => prev + 1);
@@ -1383,15 +1392,6 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   read_record_mode,
   action_form_key,
 }) => {
-  // let state = {
-  //   id: execution_record?.id,
-  //   query_name,
-  //   name,
-  //   action_type,
-  //   entity,
-  //   success_message_code,
-  // };
-
   let data_model_state = {
     id: execution_record?.id,
     query_name: "data_model",
@@ -1419,18 +1419,18 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
     error: recordError,
   } = useReadRecordByState(read_record_state);
 
-  // if (error)
-  //   return (
-  //     <MonacoEditor
-  //       value={{
-  //         data: error?.response?.data,
-  //         status: error?.response?.status,
-  //       }}
-  //       language="json"
-  //       height="25vh"
-  //     />
-  //   );
-  // if (isLoading) return <div>Loading...</div>;
+  if (dataModelError || recordError)
+    return (
+      <MonacoEditor
+        value={{
+          recordError: recordError?.response?.status,
+          dataModelError: dataModelError?.response?.status,
+        }}
+        language="json"
+        height="25vh"
+      />
+    );
+  if (dataModelIsLoading || recordIsLoading) return <div>Loading...</div>;
   let record_data = read_record_mode
     ? recordData
     : recordData?.data?.find((item: any) => item?.message?.code === record?.id)
@@ -1443,7 +1443,7 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
     : {};
 
   return (
-    <>
+    <div>
       {/* <MonacoEditor
         value={{
           // record: record,
@@ -1455,7 +1455,12 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
         language="json"
         height="25vh"
       /> */}
-      <div>
+      <Box pos="relative">
+        <LoadingOverlay
+          visible={dataModelIsLoading || recordIsLoading}
+          zIndex={1000}
+          overlayProps={{ radius: "sm", blur: 2 }}
+        />
         {/* {(!data?.data && !error && !isLoading && description) || null} */}
 
         {record_data && data_model_data && (
@@ -1469,8 +1474,8 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
             action_form_key={action_form_key}
           ></ActionInputForm>
         )}
-      </div>
-    </>
+      </Box>
+    </div>
   );
 };
 

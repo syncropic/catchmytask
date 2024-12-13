@@ -1,9 +1,13 @@
-import { useLiveQuery, useReadRecordByState } from "@components/Utils";
-import { MultiSelect, TextInput } from "@mantine/core";
+import { useReadRecordByState } from "@components/Utils";
+import { ActionIcon, MultiSelect, TextInput, Tooltip } from "@mantine/core";
 import TableView from "@components/TableView";
 import ExplorerWrapper from "@components/Explorer";
 import { useState } from "react";
-import { useParsed } from "@refinedev/core";
+import { useGo, useParsed } from "@refinedev/core";
+import { IconIconsOff } from "@tabler/icons-react";
+import { useAppStore } from "src/store";
+import MonacoEditor from "@components/MonacoEditor";
+import { useLiveQuery } from "@components/Utils/useLiveQuery";
 
 interface MonitorWrapperProps {
   display_mode?: string;
@@ -24,6 +28,13 @@ export const MonitorWrapper = ({
 }: MonitorWrapperProps) => {
   const { params } = useParsed();
   const [monitorComponents, setMonitorComponents] = useState(["monitor"]);
+  const {
+    activeProfile,
+    clearViews,
+    setShowRequestResponseView,
+    showRequestResponseView,
+    views,
+  } = useAppStore();
 
   const monitor_default_view_record_state = {
     credential: "surrealdb catchmytask dev",
@@ -46,6 +57,19 @@ export const MonitorWrapper = ({
     loading: actionsLoading,
   } = useLiveQuery<Event>("actions", `session_id = "${params?.id}"`);
 
+  let go = useGo();
+
+  const handleClearViews = () => {
+    go({
+      query: {
+        profile_id: String(activeProfile?.id),
+      },
+      type: "push",
+    });
+    setShowRequestResponseView(false);
+    clearViews({});
+  };
+
   const monitorViewRecord = monitorViewData?.data?.find(
     (item: any) =>
       item?.message?.code ===
@@ -57,13 +81,20 @@ export const MonitorWrapper = ({
   }
 
   if (actionsError || monitorViewError) {
-    const errorMessage = actionsError?.message || monitorViewError?.toString();
-    return <div>Error: {errorMessage}</div>;
+    return (
+      <MonacoEditor
+        value={{
+          actionsError: actionsError?.message,
+          monitorViewError: monitorViewError?.response?.data,
+        }}
+        height="25vh"
+      ></MonacoEditor>
+    );
   }
 
   return (
     <div className="flex flex-col p-3 gap-2 h-[75vh] overflow-y-auto">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-1">
         <MultiSelect
           size="xs"
           placeholder="view"
@@ -74,6 +105,24 @@ export const MonitorWrapper = ({
           clearable
         />
         <TextInput size="xs" placeholder="search" />
+        <Tooltip
+          withArrow
+          transitionProps={{ duration: 200 }}
+          label="clear views"
+        >
+          <ActionIcon
+            size="xs"
+            variant={
+              showRequestResponseView || Object.keys(views).length > 0
+                ? "filled"
+                : "outline"
+            }
+            aria-label="clear view"
+            onClick={handleClearViews}
+          >
+            <IconIconsOff size={24} />
+          </ActionIcon>
+        </Tooltip>
       </div>
 
       {monitorComponents?.includes("explorer") && (

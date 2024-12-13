@@ -67,20 +67,20 @@ interface customTitleHandlerProps {
 }
 
 // Create a client with default options for all queries
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // Prevent queries from automatically going stale
-      staleTime: Infinity,
-      // Prevent queries from being garbage collected
-      // gcTime: Infinity,
-      // Disable all automatic refetching
-      refetchOnMount: false,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-    },
-  },
-});
+// const queryClient = new QueryClient({
+//   defaultOptions: {
+//     queries: {
+//       // Prevent queries from automatically going stale
+//       staleTime: Infinity,
+//       // Prevent queries from being garbage collected
+//       // gcTime: Infinity,
+//       // Disable all automatic refetching
+//       refetchOnMount: false,
+//       refetchOnWindowFocus: false,
+//       refetchOnReconnect: false,
+//     },
+//   },
+// });
 
 // const customTitleHandler = ({
 //   resource,
@@ -383,27 +383,27 @@ const App = (props: React.PropsWithChildren) => {
                 syncWithLocation: true,
                 warnWhenUnsavedChanges: true,
                 projectId: "OpGcqe-gAGTnn-eW9pDg",
-                reactQuery: {
-                  clientConfig: {
-                    defaultOptions: {
-                      queries: {
-                        // Prevent queries from automatically going stale
-                        staleTime: Infinity,
-                        // Prevent queries from being garbage collected
-                        gcTime: Infinity,
-                        // Disable all automatic refetching
-                        refetchOnMount: false,
-                        refetchOnWindowFocus: false,
-                        refetchOnReconnect: false,
-                        // networkMode: "always", // Apply this to mutations as well, as shown below
-                      },
-                      mutations: {
-                        // For posting data
-                        // networkMode: "always" // It defaults to "online," preventing requests when there is no connection
-                      },
-                    },
-                  },
-                },
+                // reactQuery: {
+                //   clientConfig: {
+                //     defaultOptions: {
+                //       queries: {
+                //         // Prevent queries from automatically going stale
+                //         staleTime: Infinity,
+                //         // Prevent queries from being garbage collected
+                //         gcTime: Infinity,
+                //         // Disable all automatic refetching
+                //         refetchOnMount: false,
+                //         refetchOnWindowFocus: false,
+                //         refetchOnReconnect: false,
+                //         // networkMode: "always", // Apply this to mutations as well, as shown below
+                //       },
+                //       mutations: {
+                //         // For posting data
+                //         // networkMode: "always" // It defaults to "online," preventing requests when there is no connection
+                //       },
+                //     },
+                //   },
+                // },
               }}
             >
               {/* <div>

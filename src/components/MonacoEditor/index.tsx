@@ -24,7 +24,7 @@ const MonacoEditor: React.FC<IEditor> = ({
   value,
   setValue = () => {},
   language = "json",
-  height = "67vh",
+  height = "60vh",
   field = "query",
   id: providedId,
 }) => {

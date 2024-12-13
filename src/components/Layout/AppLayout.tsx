@@ -6,17 +6,20 @@ import {
   Anchor,
   Button,
   Menu,
+  Tooltip,
+  ActionIcon,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
 import classes from "./MobileNavbar.module.css";
 import { useAppStore } from "src/store";
 import UserMenu from "./UserMenu";
-import { useIsAuthenticated } from "@refinedev/core";
+import { useGo, useIsAuthenticated } from "@refinedev/core";
 import Footer from "@components/Footer";
 import Header from "@components/Header";
 import LayoutToggle from "./LayoutToggle";
 import { useIsMobile } from "@components/Utils";
+import { IconHttpGet, IconIconsOff } from "@tabler/icons-react";
 // export default AppLayout;
 export function AppLayout({
   children,
@@ -26,8 +29,30 @@ export function AppLayout({
   authenticatedData: any;
 }) {
   const [opened, { toggle }] = useDisclosure();
-  const { activeLayout } = useAppStore();
+  const {
+    activeLayout,
+    views,
+    showRequestResponseView,
+    setShowRequestResponseView,
+    activeProfile,
+    clearViews,
+  } = useAppStore();
+  const go = useGo();
   const isMobile = useIsMobile(); // Custom hook to check if the screen is mobile
+  const handleClearViews = () => {
+    go({
+      query: {
+        profile_id: String(activeProfile?.id),
+      },
+      type: "push",
+    });
+    setShowRequestResponseView(false);
+    clearViews({});
+  };
+
+  const toggleShowRequestResponseView = () => {
+    setShowRequestResponseView(!showRequestResponseView);
+  };
 
   return (
     <>
@@ -64,8 +89,37 @@ export function AppLayout({
           {isMobile &&
             authenticatedData?.authenticated &&
             activeLayout?.quickActionsBar?.isDisplayed && (
-              <div className="flex justify-center">
+              <div className="flex justify-center p-2 gap-3">
                 <LayoutToggle />
+                <div>
+                  <Tooltip label={`clear all views`} position="top">
+                    <ActionIcon
+                      size="sm"
+                      onClick={handleClearViews}
+                      variant={
+                        showRequestResponseView || Object.keys(views).length > 0
+                          ? "filled"
+                          : "outline"
+                      }
+                    >
+                      <IconIconsOff size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                </div>
+                <div>
+                  <Tooltip
+                    label={`toggle immediate request response view`}
+                    position="top"
+                  >
+                    <ActionIcon
+                      size="sm"
+                      variant={!showRequestResponseView ? "outline" : "filled"}
+                      onClick={toggleShowRequestResponseView}
+                    >
+                      <IconHttpGet size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                </div>
               </div>
             )}
           <Footer></Footer>

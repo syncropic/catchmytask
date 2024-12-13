@@ -17,6 +17,7 @@ import AutomationsToggle from "@components/AutomationsToggle";
 
 import { ActionIcon, Tooltip, Text } from "@mantine/core";
 import {
+  IconHttpGet,
   IconIconsOff,
   IconLetterB,
   IconMenu2,
@@ -56,6 +57,9 @@ const LargeScreenHeader = ({
     focused_entities,
     activeProfile,
     clearViews,
+    showRequestResponseView,
+    setShowRequestResponseView,
+    views,
   } = useAppStore();
   const { updateComponentAction } = useUpdateComponentAction();
   let action = focused_entities[activeTask?.id]?.["action"];
@@ -68,6 +72,7 @@ const LargeScreenHeader = ({
       },
       type: "push",
     });
+    setShowRequestResponseView(false);
     clearViews({});
   };
 
@@ -90,6 +95,10 @@ const LargeScreenHeader = ({
       }
       setSessionConfig(newSessionConfig);
     }
+  };
+
+  const toggleShowRequestResponseView = () => {
+    setShowRequestResponseView(!showRequestResponseView);
   };
 
   return (
@@ -117,20 +126,46 @@ const LargeScreenHeader = ({
 
         {<ColorSchemeToggle />}
         {authenticatedData?.authenticated && (
-          <Tooltip
-            withArrow
-            transitionProps={{ duration: 200 }}
-            label="clear views"
-          >
-            <ActionIcon
-              size="xs"
-              variant="default"
-              aria-label="clear view"
-              onClick={handleClearViews}
-            >
-              <IconIconsOff size={24} />
-            </ActionIcon>
-          </Tooltip>
+          <div className="hidden lg:block">
+            <div className="flex items-center pl-4 pr-4">
+              <div>
+                <Tooltip
+                  label={`toggle immediate request response view`}
+                  position="top"
+                >
+                  <ActionIcon
+                    size="sm"
+                    variant={!showRequestResponseView ? "outline" : "filled"}
+                    onClick={toggleShowRequestResponseView}
+                  >
+                    <IconHttpGet size={20} />
+                  </ActionIcon>
+                </Tooltip>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {authenticatedData?.authenticated && (
+          <div className="hidden lg:block">
+            <div className="flex items-center pl-4 pr-4">
+              <div>
+                <Tooltip label={`clear all views`} position="top">
+                  <ActionIcon
+                    size="sm"
+                    onClick={handleClearViews}
+                    variant={
+                      showRequestResponseView || Object.keys(views).length > 0
+                        ? "filled"
+                        : "outline"
+                    }
+                  >
+                    <IconIconsOff size={20} />
+                  </ActionIcon>
+                </Tooltip>
+              </div>
+            </div>
+          </div>
         )}
 
         {authenticatedData?.authenticated && (

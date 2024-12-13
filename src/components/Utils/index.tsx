@@ -2176,6 +2176,27 @@ export function useFetchQueryDataByState(state: any) {
   return { data, isLoading, error, isError };
 }
 
+export function useRunTask(state: any) {
+  const { runtimeConfig: config } = useAppStore();
+  // pop out frequently changing search_term or other part of state i don't want to trigger a new fetch/use in queryKey
+  // const { search_term, ...rest } = state;
+
+  const { data, isLoading, error, isError } = useCustom({
+    url: `${config?.API_URL}/run`,
+    method: "post",
+    config: {
+      payload: {
+        ...state,
+      },
+    },
+    queryOptions: {
+      queryKey: [`useRunTask_${JSON.stringify(state)}`],
+    },
+  });
+
+  return { data, isLoading, error, isError };
+}
+
 // export function useListItems(state: any) {
 //   const { runtimeConfig: config } = useAppStore();
 //   // pop out frequently changing search_term or other part of state i don't want to trigger a new fetch/use in queryKey
@@ -6018,114 +6039,126 @@ export const formatDate = (
   }
 };
 
-type LiveQueryResult<T> = {
-  data: T[];
-  error: Error | null;
-  loading: boolean;
-};
+// type LiveQueryResult<T> = {
+//   data: T[];
+//   error: Error | null;
+//   loading: boolean;
+// };
 
-type Action = "CREATE" | "UPDATE" | "DELETE" | "CLOSE";
-type CloseResult = "killed" | "disconnected";
+// type Action = "CREATE" | "UPDATE" | "DELETE" | "CLOSE";
+// type CloseResult = "killed" | "disconnected";
 
-export function useLiveQuery<T extends Record<string, any>>(
-  table: string,
-  where?: string
-): LiveQueryResult<T> {
-  const [data, setData] = useState<T[]>([]);
-  const [error, setError] = useState<Error | null>(null);
-  const [loading, setLoading] = useState(true);
-  const dbRef = useRef<Surreal | null>(null);
+// export function useLiveQuery<T extends Record<string, any>>(
+//   table: string,
+//   where?: string
+// ): LiveQueryResult<T> {
+//   const [data, setData] = useState<T[]>([]);
+//   const [error, setError] = useState<Error | null>(null);
+//   const [loading, setLoading] = useState(true);
+//   const dbRef = useRef<Surreal | null>(null);
 
-  useEffect(() => {
-    let queryUuid: Uuid;
-    let mounted = true;
+//   useEffect(() => {
+//     let queryUuid: Uuid;
+//     let mounted = true;
 
-    const startLiveQuery = async () => {
-      try {
-        // Get DB connection
-        dbRef.current = await getDb();
-        const db = dbRef.current;
+//     const startLiveQuery = async () => {
+//       try {
+//         // Get DB connection
+//         dbRef.current = await getDb();
+//         const db = dbRef.current;
 
-        const query = where
-          ? `SELECT *
-FROM ${table} 
-WHERE ${where} ORDER BY updated_datetime ASC;`
-          : `SELECT *
-FROM ${table} ORDER BY updated_datetime ASC;`;
+//         const query = where
+//           ? `SELECT *
+// FROM ${table}
+// WHERE ${where} ORDER BY updated_datetime ASC;`
+//           : `SELECT *
+// FROM ${table} ORDER BY updated_datetime ASC;`;
 
-        const [result] = await db.query<T[]>(query);
-        if (mounted) {
-          // setData(result);
-          if (Array.isArray(result)) {
-            setData(result as T[]);
-          } else {
-            setData([result as T]);
-          }
-          setLoading(false);
-        }
+//         const [result] = await db.query<T[]>(query);
+//         if (mounted) {
+//           // setData(result);
+//           if (Array.isArray(result)) {
+//             setData(result as T[]);
+//           } else {
+//             setData([result as T]);
+//           }
+//           setLoading(false);
+//         }
 
-        queryUuid = await db.live<T>(
-          table,
-          (action: Action, result: T | CloseResult) => {
-            if (!mounted) return;
+//         queryUuid = await db.live<T>(
+//           table,
+//           (action: Action, result: T | CloseResult) => {
+//             if (!mounted) return;
 
-            switch (action) {
-              case "CREATE":
-                setData((prevData) => {
-                  const newRecord = result as T;
-                  return [...prevData, newRecord];
-                });
-                break;
-              case "UPDATE":
-                setData((prevData) => {
-                  const updatedRecord = result as T;
-                  return prevData.map((item) =>
-                    item.id === updatedRecord.id ? updatedRecord : item
-                  );
-                });
-                break;
-              case "DELETE":
-                setData((prevData) => {
-                  const deletedRecord = result as T;
-                  return prevData.filter(
-                    (item) => item.id !== deletedRecord.id
-                  );
-                });
-                break;
-              case "CLOSE":
-                console.log(`Live query ${result as CloseResult}`);
-                break;
-            }
-          }
-        );
-      } catch (err) {
-        if (mounted) {
-          setError(err instanceof Error ? err : new Error("Live query failed"));
-          setLoading(false);
-        }
-      }
-    };
+//             switch (action) {
+//               case "CREATE":
+//                 setData((prevData) => {
+//                   const newRecord = result as T;
+//                   return [...prevData, newRecord];
+//                 });
+//                 break;
+//               case "UPDATE":
+//                 setData((prevData) => {
+//                   const updatedRecord = result as T;
+//                   return prevData.map((item) =>
+//                     item.id === updatedRecord.id ? updatedRecord : item
+//                   );
+//                 });
+//                 break;
+//               case "DELETE":
+//                 setData((prevData) => {
+//                   const deletedRecord = result as T;
+//                   return prevData.filter(
+//                     (item) => item.id !== deletedRecord.id
+//                   );
+//                 });
+//                 break;
+//               case "CLOSE":
+//                 console.log(`Live query ${result as CloseResult}`);
+//                 break;
+//             }
+//           }
+//         );
+//       } catch (err) {
+//         if (mounted) {
+//           setError(err instanceof Error ? err : new Error("Live query failed"));
+//           setLoading(false);
+//         }
+//       }
+//     };
 
-    startLiveQuery();
+//     startLiveQuery();
 
-    // Cleanup function
-    return () => {
-      mounted = false;
+//     // Cleanup function
+//     return () => {
+//       mounted = false;
 
-      // Kill the live query if it exists
-      const cleanup = async () => {
-        if (queryUuid && dbRef.current) {
-          try {
-            await dbRef.current.kill(queryUuid);
-          } catch (error) {
-            console.error("Error killing live query:", error);
-          }
-        }
-      };
+//       // Kill the live query if it exists
+//       const cleanup = async () => {
+//         if (queryUuid && dbRef.current) {
+//           try {
+//             await dbRef.current.kill(queryUuid);
+//           } catch (error) {
+//             console.error("Error killing live query:", error);
+//           }
+//         }
+//       };
 
-      cleanup();
-    };
-  }, [table, where]);
+//       cleanup();
+//     };
+//   }, [table, where]);
 
-  return { data, error, loading };
+//   return { data, error, loading };
+// }
+
+export function extractKeys(obj: any, keys: any, mode = "include") {
+  if (!["include", "exclude"].includes(mode)) {
+    throw new Error("Mode must be either 'include' or 'exclude'");
+  }
+
+  return Object.fromEntries(
+    Object.entries(obj).filter(([key]) =>
+      mode === "include" ? keys.includes(key) : !keys.includes(key)
+    )
+  );
 }

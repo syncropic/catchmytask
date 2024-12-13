@@ -34,7 +34,7 @@ import {
   TablerIconsProps,
 } from "@tabler/icons-react";
 import { format, isValid, parseISO } from "date-fns";
-import { MouseEvent } from "react";
+import { MouseEvent, useState } from "react";
 import {
   DataTable,
   DataTableColumn,
@@ -90,6 +90,7 @@ export function TableView<T extends Record<string, any>>({
   }
 
   const { params } = useParsed();
+  const [selectedRecords, setSelectedRecords] = useState([]);
 
   const action_input_form_values_key = `query_${params?.id || activeTask?.id}`;
   const query_action_input_form_values = useAppStore(
@@ -427,6 +428,7 @@ export function TableView<T extends Record<string, any>>({
           highlightOnHover={true}
           withColumnBorders={true}
           pinFirstColumn={true}
+          selectedRecords={selectedRecords}
           {...(view_record?.include_items?.includes("row_click")
             ? { onRowClick: handleRowClick }
             : {})}

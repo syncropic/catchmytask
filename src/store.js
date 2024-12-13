@@ -276,6 +276,12 @@ export const useAppStore = create(
         set((state) => ({ ...state, action_input_form_values: values })),
 
       action_input_form_fields: {},
+      showRequestResponseView: false,
+      setShowRequestResponseView: (showRequestResponseView) =>
+        set((state) => ({
+          ...state,
+          showRequestResponseView: showRequestResponseView,
+        })),
       setActionInputFormFields: (key, newData) =>
         set((state) => {
           const existingData = state.action_input_form_fields[key] || [];

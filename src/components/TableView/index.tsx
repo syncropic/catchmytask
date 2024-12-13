@@ -6,6 +6,7 @@ import MonacoEditor from "@components/MonacoEditor";
 import {
   buildSQLQuery,
   enrichFilters,
+  extractKeys,
   formatDate,
   formatPythonTemplate,
   sanitizeFilters,
@@ -33,9 +34,10 @@ import {
   IconServer,
   IconUser,
   TablerIconsProps,
+  IconQuestionMark,
 } from "@tabler/icons-react";
 import { format, isValid, parseISO } from "date-fns";
-import { MouseEvent } from "react";
+import { MouseEvent, useState } from "react";
 import { showNotification } from "@mantine/notifications";
 import {
   DataTable,
@@ -54,6 +56,7 @@ import { useEffect, useRef } from "react";
 import AuthorInfo, { authorInfoConfigs } from "./AuthorInfo";
 import AutomationToggle from "./AutomationToggle";
 import { useClipboard, useMediaQuery } from "@mantine/hooks";
+import { IconClock, IconCircleCheck, IconCircleX } from "@tabler/icons-react";
 
 export function TableView<T extends Record<string, any>>({
   data_items,
@@ -97,6 +100,9 @@ export function TableView<T extends Record<string, any>>({
     event: MouseEvent<Element, MouseEvent>;
   }
   const clipboard = useClipboard({ timeout: 500 });
+  const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
+
+  let view_ids = Object.keys(views);
 
   const { params } = useParsed();
   const { forms } = useTransientStore();
@@ -239,29 +245,68 @@ export function TableView<T extends Record<string, any>>({
     // Check if the item exists in views
     const existingView = currentViews[id];
 
+    const toggleItemInList = (list: any, itemId: any) => {
+      // Check if item exists in list
+      const exists = list.includes(itemId);
+
+      if (exists) {
+        // If exists, filter it out
+        return list.filter((id: string) => id !== itemId);
+      } else {
+        // If doesn't exist, add it to the list (spreading the existing list)
+        return [...list, itemId];
+      }
+    };
+
     if (existingView) {
       // Remove the view if it exists
       // const { [id]: removedView, ...remainingViews } = currentViews;
       setViews(id, null);
-    } else {
-      // Add the view if it doesn't exist
-      setViews(id, record);
+      let new_view_ids = toggleItemInList(view_ids, id);
+      const queryParams: {
+        profile_id: string;
+        [key: string]: string;
+      } = {
+        profile_id: String(activeProfile?.id),
+      };
+
+      if (new_view_ids?.length > 0) {
+        queryParams.view_items = String(new_view_ids);
+      }
       go({
         // to: {
         //   resource: "sessions",
         //   action: "show",
         //   id: record?.id,
         // },
-        query: {
-          action_id: String(record?.id),
-          session_id: String(record?.session_id),
-          profile_id: String(activeProfile?.id),
-        },
+        query: queryParams,
+        type: "push",
+      });
+    } else {
+      // Add the view if it doesn't exist
+      setViews(id, record);
+      let new_view_ids = [...view_ids, id];
+      const queryParams: {
+        profile_id: string;
+        [key: string]: string;
+      } = {
+        profile_id: String(activeProfile?.id),
+      };
+
+      if (new_view_ids?.length > 0) {
+        queryParams.view_items = String(new_view_ids);
+      }
+      go({
+        // to: {
+        //   resource: "sessions",
+        //   action: "show",
+        //   id: record?.id,
+        // },
+        query: queryParams,
         type: "push",
       });
     }
   };
-
   // Update the handler to use generic type and match Mantine's expected signature
   const handleRowClick: DataTableRowClickHandler<T> = ({
     record,
@@ -359,7 +404,11 @@ export function TableView<T extends Record<string, any>>({
   return (
     <>
       {/* <MonacoEditor
-        value={{ query_key: query_key, data_fields: data_fields }}
+        value={{
+          // query_key: query_key,
+          // data_fields: data_fields,
+          view_ids: view_ids,
+        }}
         language="json"
         height="25vh"
       /> */}
@@ -412,7 +461,12 @@ export function TableView<T extends Record<string, any>>({
                       //     />
                       //   );
                     } else if (field?.name === "name") {
-                      return <NameAndResultSummaryInfo record={record} />;
+                      return (
+                        <NameAndResultSummaryInfo
+                          record={record}
+                          isSelected={view_ids.includes(String(record.id))}
+                        />
+                      );
                     } else if (field?.name === "action_status") {
                       return <ActionStatusInfo record={record} />;
                     } else {
@@ -588,45 +642,77 @@ export function TableView<T extends Record<string, any>>({
           records={data_items}
           highlightOnHover={true}
           withColumnBorders={true}
+          rowBackgroundColor={({ id }) => {
+            if (view_ids.includes(String(id))) {
+              return {
+                light: "#ebf5ff", // Very light blue background
+                dark: "#ebf5ff", // Keep consistent in both modes
+              };
+            }
+            return undefined;
+          }}
+          rowStyle={({ id }) => {
+            if (view_ids.includes(String(id))) {
+              return {
+                borderLeft: "4px solid #3b82f6", // Medium blue border
+                fontWeight: 500,
+                "& td": {
+                  // Style all td elements within the row
+                  color: "#2563eb !important", // Blue text
+                },
+                "&:hover": {
+                  backgroundColor: "#dbeafe !important", // Slightly darker blue on hover
+                  "& td": {
+                    color: "#1e40af !important", // Darker blue text on hover
+                  },
+                },
+              };
+            }
+            return {
+              "&:hover": {
+                backgroundColor: "#f8fafc !important", // Very light gray for non-highlighted hover
+              },
+            };
+          }}
           onRowClick={handleRowClick}
-          // onRowClick={({ record, event }) =>
-          //   showContextMenu([
-          //     {
-          //       key: `copy-${record?.entity_type}-id`,
-          //       icon: <IconCopy size={16} />,
-          //       onClick: () => {
-          //         {
-          //           clipboard.copy(record?.id);
-          //           showNotification({
-          //             message: `copied ${record?.entity_type} record id ${record.id}`,
-          //             withBorder: true,
-          //           });
-          //         }
-          //       },
-          //     },
-          //     // {
-          //     //   key: 'edit-company-information',
-          //     //   icon: <IconEdit size={16} />,
-          //     //   onClick: () =>
-          //     //     showNotification({
-          //     //       message: `Clicked on edit context-menu action for ${record.name} company`,
-          //     //       withBorder: true,
-          //     //     }),
-          //     // },
-          //     // { key: 'divider' },
-          //     // {
-          //     //   key: 'delete-company',
-          //     //   icon: <IconTrash size={16} />,
-          //     //   color: 'red',
-          //     //   onClick: () =>
-          //     //     showNotification({
-          //     //       color: 'red',
-          //     //       message: `Clicked on delete context-menu action for ${record.name} company`,
-          //     //       withBorder: true,
-          //     //     }),
-          //     // },
-          //   ])(event)
-          // }
+          onRowContextMenu={({ record, event }) =>
+            showContextMenu([
+              {
+                key: `copy-${record?.entity_type}-id`,
+                icon: <IconCopy size={16} />,
+                onClick: () => {
+                  {
+                    clipboard.copy(record?.id);
+                    showNotification({
+                      message: `copied ${record?.entity_type} record id ${record.id}`,
+                      withBorder: true,
+                    });
+                  }
+                },
+              },
+              // {
+              //   key: 'edit-company-information',
+              //   icon: <IconEdit size={16} />,
+              //   onClick: () =>
+              //     showNotification({
+              //       message: `Clicked on edit context-menu action for ${record.name} company`,
+              //       withBorder: true,
+              //     }),
+              // },
+              // { key: 'divider' },
+              // {
+              //   key: 'delete-company',
+              //   icon: <IconTrash size={16} />,
+              //   color: 'red',
+              //   onClick: () =>
+              //     showNotification({
+              //       color: 'red',
+              //       message: `Clicked on delete context-menu action for ${record.name} company`,
+              //       withBorder: true,
+              //     }),
+              // },
+            ])(event)
+          }
           // 👇 make sure the context-menu is closed when the user scrolls the table
           onScroll={hideContextMenu}
           pinFirstColumn={true}
@@ -635,7 +721,9 @@ export function TableView<T extends Record<string, any>>({
           //   : {})}
           // textSelectionDisabled={isTouch} // 👈 disable text selection on touch devices
           pinLastColumn={true}
-          striped={true}
+          // striped={true}
+          // selectedRecords={selectedRecords}
+          // onSelectedRecordsChange={setSelectedRecords}
           {...(view_record?.include_items?.includes("row_expansion")
             ? {
                 rowExpansion: {
@@ -821,37 +909,196 @@ export function TableView<T extends Record<string, any>>({
 
 export default TableView;
 
-const NameAndResultSummaryInfo = ({ record }: { record: any }) => {
+const NameAndResultSummaryInfo = ({
+  record,
+  isSelected,
+}: {
+  record: any;
+  isSelected?: boolean;
+}) => {
+  let subheading_object = record?.variables
+    ? extractKeys(
+        record?.variables,
+        [
+          "application_id",
+          "profile_id",
+          "session_id",
+          "task_id",
+          "execution_mode",
+          "breakpoint",
+        ],
+        "exclude"
+      )
+    : {};
+
+  const formatObject = (obj: any) => {
+    return Object.entries(obj)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join("\n");
+  };
+
+  const formattedJSON = formatObject(subheading_object);
+
   return (
-    <div className="flex flex-col">
-      <span className="text-xs text-gray-600">{record.name}</span>
-      {record.result_summary && (
-        <span className="text-sm">{record.result_summary}</span>
-      )}
-    </div>
+    <Tooltip
+      multiline
+      w={250}
+      withArrow
+      transitionProps={{ duration: 200 }}
+      label={
+        <div className="whitespace-pre-wrap font-mono text-xs p-1">
+          <div className="font-medium mb-1">click to toggle view:</div>
+          <div className="break-all">{record?.name}</div>
+        </div>
+      }
+    >
+      <div className="flex flex-col">
+        <span
+          className={`text-sm font-medium ${
+            isSelected ? "text-blue-600" : "text-gray-700"
+          }`}
+        >
+          {record.name}
+        </span>
+        <div className="whitespace-pre-wrap font-mono text-xs text-gray-500 mt-0.5">
+          {formattedJSON}
+        </div>
+        {record.result_summary && (
+          <span
+            className={`text-sm ${isSelected ? "text-blue-600" : ""} mt-0.5`}
+          >
+            {record.result_summary}
+          </span>
+        )}
+      </div>
+    </Tooltip>
   );
 };
 
-const ActionStatusInfo = ({ record }: { record: any }) => {
+// const ActionStatusInfo = ({ record }: { record: any }) => {
+//   return (
+//     <div className="flex flex-col">
+//       <span className="text-xs text-gray-600">{record.action_status}</span>
+//       {record.updated_datetime && (
+//         <span className="text-xs">
+//           {
+//             <>
+//               <Text size="xs" c="dimmed">
+//                 {formatDate(record.updated_datetime)}
+//               </Text>
+//             </>
+//           }
+//         </span>
+//       )}
+//       <span className="text-xs text-gray-600">{record.author_id}</span>
+//     </div>
+//   );
+// };
+
+type ActionStatus = "empty" | "pending" | "running" | "failed" | "passed";
+
+interface StatusConfig {
+  icon: typeof IconQuestionMark;
+  color: string;
+  bgColor: string;
+}
+
+interface ActionStatusRecord {
+  action_status: ActionStatus;
+  updated_datetime?: string | Date;
+  author_id?: string;
+}
+
+interface ActionStatusInfoProps {
+  record: ActionStatusRecord;
+}
+
+const ActionStatusInfo: React.FC<ActionStatusInfoProps> = ({ record }) => {
+  const getStatusConfig = (status: ActionStatus): StatusConfig => {
+    const configs: Record<ActionStatus, StatusConfig> = {
+      empty: {
+        icon: IconQuestionMark,
+        color: "text-gray-400",
+        bgColor: "bg-gray-50",
+      },
+      pending: {
+        icon: IconClock,
+        color: "text-orange-500",
+        bgColor: "bg-orange-50",
+      },
+      running: {
+        icon: IconClock, // Using clock icon as a fallback, though it won't be shown
+        color: "text-blue-500",
+        bgColor: "bg-blue-50",
+      },
+      failed: {
+        icon: IconCircleX,
+        color: "text-red-500",
+        bgColor: "bg-red-50",
+      },
+      passed: {
+        icon: IconCircleCheck,
+        color: "text-green-500",
+        bgColor: "bg-green-50",
+      },
+    };
+
+    return configs[status] || configs.empty;
+  };
+
+  const config = getStatusConfig(record.action_status);
+  const StatusIcon = config.icon;
+
+  const renderContent = () => {
+    if (record.action_status === "running") {
+      return (
+        <div className="flex items-center">
+          <Tooltip label="running" position="top">
+            <span className="text-sm">
+              <Box pos="relative">
+                <LoadingOverlay
+                  visible={true}
+                  zIndex={1000}
+                  overlayProps={{ radius: "sm", blur: 8 }}
+                  loaderProps={{
+                    color: "blue",
+                    size: "xs",
+                    type: "dots",
+                  }}
+                />
+                loading
+              </Box>
+            </span>
+          </Tooltip>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center space-x-2">
+        <div className={`p-1 rounded-full ${config.bgColor}`}>
+          <StatusIcon className={`w-4 h-4 ${config.color}`} stroke={2} />
+        </div>
+        <span className={`text-sm ${config.color} font-medium`}>
+          {record.action_status || "No status"}
+        </span>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex flex-col">
-      <span className="text-xs text-gray-600">{record.action_status}</span>
+    <div className="flex flex-col space-y-1">
+      {renderContent()}
+
       {record.updated_datetime && (
-        <span className="text-xs">
-          {
-            <>
-              {/* <Text c="dimmed" className="text-sm">
-                {" "}
-                •{" "}
-              </Text> */}
-              <Text size="xs" c="dimmed">
-                {formatDate(record.updated_datetime)}
-              </Text>
-            </>
-          }
+        <span className="text-xs text-gray-500">
+          {formatDate(record.updated_datetime)}
         </span>
       )}
-      <span className="text-xs text-gray-600">{record.author_id}</span>
+
+      {record.author_id && (
+        <span className="text-xs text-gray-600">{record.author_id}</span>
+      )}
     </div>
   );
 };

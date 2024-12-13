@@ -87,7 +87,7 @@ export const ShowPage: React.FC = () => {
       {/* <Text>Task Show Page</Text>
       <Title order={2}>{activeTask?.name || "No Task Name"}</Title> */}
       <PanelGroup direction="horizontal">
-        <Panel defaultSize={50} minSize={0}>
+        <Panel defaultSize={100} minSize={0}>
           <div className="h-[85vh] flex flex-col">
             {" "}
             {/* Using 85% of viewport height */}
@@ -149,22 +149,6 @@ export const ShowPage: React.FC = () => {
               </div> */}
             </div>
           </div>
-        </Panel>
-        <PanelResizeHandle>
-          <ResizeHandle />
-        </PanelResizeHandle>
-
-        <Panel defaultSize={20} minSize={0}>
-          {/* <SessionsWrapper
-            // name={action}
-            query_name="fetch sessions"
-            view_id="views:36xo8keq9tsoyly68shk"
-            title="monitor"
-            // record={record}
-            // action={action}
-            success_message_code="action_input_data_model_schema"
-          /> */}
-          <MonitorWrapper></MonitorWrapper>
         </Panel>
 
         {/* <Panel
