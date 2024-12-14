@@ -400,43 +400,54 @@ const Layout = ({
                   <ResizeHandle />
                 </PanelResizeHandle>
                 <Panel defaultSize={50} minSize={0}>
-                  {children && children}
+                  {/* {children && children} */}
                   <div className="">
-                    {/* // to load in the page content */}
-                    {!select_or_create_to_continue_items.some(
-                      (item) => item === null
-                    ) && children}
-
-                    {select_or_create_to_continue_items.some(
-                      (item) => item === null
-                    ) &&
-                      ["/home", "/"].includes(parsed?.pathname || "") && (
-                        <div
-                          className="flex flex-col h-screen items-center justify-center p-4"
-                          // style={{
-                          //   height: "calc(100vh - 100px)",
-                          //   // paddingBottom: "60px",
-                          // }}
-                        >
-                          {/* {children} */}
-
-                          <Breadcrumbs />
-                          <p className="text-sm text-gray-600 text-center max-w-sm">
-                            <Highlight
-                              component="p"
-                              color="lime"
-                              highlight={
-                                select_or_create_to_continue_items_map[
-                                  nullIndex
-                                ] || ""
-                              }
-                            >
-                              {message || ""}
-                            </Highlight>
-                          </p>
+                    <div
+                      className={`overflow-auto h-[85vh] ${
+                        effectiveScheme === "light"
+                          ? "bg-gray-100"
+                          : "bg-gray-800"
+                      }`}
+                    >
+                      <div className="h-[85vh] flex flex-col">
+                        {" "}
+                        {/* Using 85% of viewport height */}
+                        {/* Top component */}
+                        {/* <div className="min-h-0 flex-1 overflow-y-auto pb-6"> */}
+                        {/* Row 1: Form Display Area */}
+                        <div className="w-full">
+                          {/* // to load in the page content */}
+                          {/* {!select_or_create_to_continue_items.some(
+                              (item) => item === null
+                            ) && children} */}
+                          {children && children}
+                          {select_or_create_to_continue_items.some(
+                            (item) => item === null
+                          ) &&
+                            ["/home", "/"].includes(parsed?.pathname || "") && (
+                              <div className="flex flex-col h-[75vh] items-center justify-center p-4">
+                                <Breadcrumbs />
+                                <p className="text-sm text-gray-600 text-center max-w-sm">
+                                  <Highlight
+                                    component="p"
+                                    color="lime"
+                                    highlight={"session"}
+                                    // highlight={
+                                    //   select_or_create_to_continue_items_map[
+                                    //     nullIndex
+                                    //   ] || ""
+                                    // }
+                                  >
+                                    {message || ""}
+                                  </Highlight>
+                                </p>
+                              </div>
+                            )}
                         </div>
-                      )}
+                      </div>
+                    </div>
                   </div>
+                  {/* </div> */}
                 </Panel>
               </>
             )}
