@@ -50,7 +50,7 @@ const ResponseViewWrapper = ({}: ResponseViewWrapperProps) => {
   return (
     <div className="flex flex-col">
       {!showRequestResponseView && !view_items && (
-        <div className="flex justify-center items-center h-[65vh]">views</div>
+        <div className="flex justify-center items-center h-[65vh]">Views</div>
       )}
       {showRequestResponseView && (
         <Accordion multiple defaultValue={["showRequestResponseView"]}>
