@@ -72,9 +72,12 @@ function Breadcrumbs() {
   // do not propage the click event to the parent
 
   return (
-    <div className="flex flex-col" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="flex flex-col justify-center"
+      onClick={(e) => e.stopPropagation()}
+    >
       {/* <div>State</div> */}
-      <div className="flex flex-wrap items-start py-2">
+      <div className="flex flex-wrap justify-center items-center py-2">
         <MantineBreadcrumbs
           separator="→"
           separatorMargin="md"

@@ -72,6 +72,7 @@ const Layout = ({
     activeProfile,
     clearViews,
     views,
+    showRequestResponseView,
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
   const [activeInput, setActiveInput] = useState("structured_query");
@@ -206,7 +207,9 @@ const Layout = ({
   const item =
     nullIndex !== -1 ? select_or_create_to_continue_items_map[nullIndex] : null;
 
-  const message = item ? `Create or select a session to continue` : null;
+  const message = item
+    ? `Create or select profile and then a session to continue`
+    : null;
 
   const handleClearViews = () => {
     go({
@@ -223,42 +226,45 @@ const Layout = ({
       <AppLayout authenticatedData={authenticatedData}>
         {isMobile ? (
           <div className="flex flex-col mb-24">
-            {centerSection.isDisplayed && Object.keys(views)?.length > 0 && (
-              <>
-                {children && children}
-                <div className="">
-                  {/* // to load in the page content */}
-                  {!select_or_create_to_continue_items.some(
-                    (item) => item === null
-                  ) && children}
-
-                  {select_or_create_to_continue_items.some(
-                    (item) => item === null
-                  ) &&
-                    ["/home", "/"].includes(parsed?.pathname || "") && (
-                      <div className="flex flex-col h-screen items-center justify-center p-4">
-                        {/* {children} */}
-
-                        <Breadcrumbs />
-                        <p className="text-sm text-gray-600 text-center max-w-sm">
-                          <Highlight
-                            component="p"
-                            color="lime"
-                            highlight={
-                              select_or_create_to_continue_items_map[
-                                nullIndex
-                              ] || ""
-                            }
-                          >
-                            {message || ""}
-                          </Highlight>
-                        </p>
-                      </div>
-                    )}
-                </div>
-              </>
+            {centerSection.isDisplayed &&
+              (Object.keys(views).length > 0 || showRequestResponseView) && (
+                <>
+                  <div className="w-full">
+                    {/* // to load in the page content */}
+                    {/* {!select_or_create_to_continue_items.some(
+                              (item) => item === null
+                            ) && children} */}
+                    {children && children}
+                    {select_or_create_to_continue_items.some(
+                      (item) => item === null
+                    ) &&
+                      ["/home", "/"].includes(parsed?.pathname || "") && (
+                        <div className="flex flex-col h-[75vh] items-start justify-center p-4">
+                          <div>
+                            <Breadcrumbs />
+                          </div>
+                          <p className="text-sm text-gray-600 max-w-sm">
+                            <Highlight
+                              component="p"
+                              color="lime"
+                              highlight={["session", "profile"]}
+                              // highlight={
+                              //   select_or_create_to_continue_items_map[
+                              //     nullIndex
+                              //   ] || ""
+                              // }
+                            >
+                              {message || ""}
+                            </Highlight>
+                          </p>
+                        </div>
+                      )}
+                  </div>
+                </>
+              )}
+            {rightSection.isDisplayed && params?.id && (
+              <MonitorWrapper></MonitorWrapper>
             )}
-            {rightSection.isDisplayed && <MonitorWrapper></MonitorWrapper>}
 
             {leftSection.isDisplayed && (
               <div
@@ -431,7 +437,7 @@ const Layout = ({
                                   <Highlight
                                     component="p"
                                     color="lime"
-                                    highlight={"session"}
+                                    highlight={["session", "profile"]}
                                     // highlight={
                                     //   select_or_create_to_continue_items_map[
                                     //     nullIndex

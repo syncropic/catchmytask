@@ -144,8 +144,12 @@ const ViewItemWrapper = ({ view_item_id }: { view_item_id: string }) => {
         <Accordion multiple>
           <Accordion.Item value={view_item_id} key={view_item_id}>
             <Accordion.Control>
-              <div className="flex items-center gap-2">
-                <Loader size={18} /> | {view_item_record?.name}
+              <div className="flex items-center gap-3">
+                <Loader size={18} />
+                <div>|</div>
+                <div className="text-sm font-semibold px-3 break-words max-w-xs sm:max-w-md">
+                  {view_item_record?.name}
+                </div>
               </div>
             </Accordion.Control>
             <Accordion.Panel>
@@ -281,27 +285,25 @@ const ViewItem = ({
                     // label={getTooltipLabel(view_item_record || {})}
                     label={"click for details"}
                   >
-                    <div className="flex items-center gap-2 p-2">
+                    <div className="flex items-center gap-2">
                       <div className="flex flex-col gap-1">
                         {/* Main Label - Made larger and bolder */}
-                        <div
-                          className="text-base font-semibold text-blue-600 truncate overflow-hidden whitespace-nowrap px-3"
-                          style={{ maxWidth: width < 500 ? 100 : 500 }}
-                        >
+                        <div className="text-sm font-semibold text-blue-600 px-3 break-words max-w-xs sm:max-w-md">
                           {getLabel(view_item_record || {})}
                         </div>
 
                         {/* Subheading - Smaller, lighter color and weight */}
                         <div
-                          className="text-sm font-normal text-blue-400 truncate overflow-hidden whitespace-nowrap px-3"
-                          style={{ maxWidth: width < 500 ? 100 : 500 }}
+                          className="text-xs font-normal text-blue-400 truncate overflow-hidden whitespace-nowrap px-3"
+                          // className="text-sm font-normal text-blue-400 truncate"
+                          style={{ maxWidth: width < 500 ? 300 : 500 }}
                         >
                           {subheading}
                         </div>
                       </div>
                       <IconInfoCircle
-                        className="text-blue-500 flex-shrink-0"
-                        size={18}
+                        // className="text-blue-500 flex-shrink-0"
+                        size={12}
                       />
                     </div>
                   </Tooltip>
@@ -314,7 +316,7 @@ const ViewItem = ({
               </Reveal>
             </div>
             {include_components?.includes("toolbar") && (
-              <>
+              <div className="hidden lg:block">
                 <div
                   className="flex p-3 gap-3"
                   onClick={(e) => e.stopPropagation()}
@@ -332,9 +334,30 @@ const ViewItem = ({
                     action={"save"}
                   />
                 </div>
-              </>
+              </div>
             )}
           </div>
+          {include_components?.includes("toolbar") && (
+            <div className="block lg:hidden">
+              <div
+                className="flex p-3 gap-3"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExternalSubmitButton
+                  record={{}}
+                  reference_record={{
+                    id: view_item_id,
+                    name: view_item_record?.name,
+                    queryKey: `useRunTask_${JSON.stringify(query_state)}`,
+                  }}
+                  view_item={view_record}
+                  entity_type="view"
+                  action_form_key={`query_${params?.id}`}
+                  action={"save"}
+                />
+              </div>
+            </div>
+          )}
         </Accordion.Control>
         <Accordion.Panel>
           <DataGridView
