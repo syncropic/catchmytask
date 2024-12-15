@@ -313,14 +313,18 @@ const Layout = ({
                     <div className="w-full flex items-center justify-center gap-4 p-4 bg-gray-50 rounded-lg">
                       {/* Toggle Buttons */}
 
-                      <ExternalSubmitButton
-                        record={{}}
-                        entity_type="tasks"
-                        action_form_key={`query_${
-                          params?.id || activeTask?.id
-                        }`}
-                        action={"query"}
-                      />
+                      {params?.id ? (
+                        <ExternalSubmitButton
+                          record={{}}
+                          entity_type="tasks"
+                          action_form_key={`query_${
+                            params?.id || activeTask?.id
+                          }`}
+                          action={"query"}
+                        />
+                      ) : (
+                        <div>select session to continue</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -383,14 +387,18 @@ const Layout = ({
                       <div className="w-full flex items-center justify-center gap-4 p-4 bg-gray-50 rounded-lg">
                         {/* Toggle Buttons */}
 
-                        <ExternalSubmitButton
-                          record={{}}
-                          entity_type="tasks"
-                          action_form_key={`query_${
-                            params?.id || activeTask?.id
-                          }`}
-                          action={"query"}
-                        />
+                        {params?.id ? (
+                          <ExternalSubmitButton
+                            record={{}}
+                            entity_type="tasks"
+                            action_form_key={`query_${
+                              params?.id || activeTask?.id
+                            }`}
+                            action={"query"}
+                          />
+                        ) : (
+                          <div>select session to continue</div>
+                        )}
                       </div>
                     </div>
                   </div>
