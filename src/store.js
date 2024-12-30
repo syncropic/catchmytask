@@ -164,6 +164,9 @@ export const useAppStore = create(
       // setActiveSummaryCustomComponents: (activeSummaryCustomComponents) =>
       //   set((state) => ({ activeSummaryCustomComponents })),
       activeRecordCustomComponents: {},
+      isFullWindowDisplay: false,
+      setIsFullWindowDisplay: (setting) =>
+        set((state) => ({ isFullWindowDisplay: setting })),
       setActiveRecordCustomComponents: (key, newData) =>
         set((state) => {
           const existingData = state.activeRecordCustomComponents[key] || {};

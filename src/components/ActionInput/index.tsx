@@ -195,6 +195,78 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   //   (item: any) => item?.message?.code === view_id
   // )?.data[0];
 
+  let view_ids = Object.keys(views);
+
+  const toggleView = (id: string, record: any) => {
+    // Access the current views from your zustand store
+    const currentViews = views;
+
+    // Check if the item exists in views
+    const existingView = currentViews[id];
+
+    const toggleItemInList = (list: any, itemId: any) => {
+      // Check if item exists in list
+      const exists = list.includes(itemId);
+
+      if (exists) {
+        // If exists, filter it out
+        return list.filter((id: string) => id !== itemId);
+      } else {
+        // If doesn't exist, add it to the list (spreading the existing list)
+        return [...list, itemId];
+      }
+    };
+
+    if (existingView) {
+      // Remove the view if it exists
+      // const { [id]: removedView, ...remainingViews } = currentViews;
+      setViews(id, null);
+      let new_view_ids = toggleItemInList(view_ids, id);
+      const queryParams: {
+        profile_id: string;
+        [key: string]: string;
+      } = {
+        profile_id: String(activeProfile?.id),
+      };
+
+      if (new_view_ids?.length > 0) {
+        queryParams.view_items = String(new_view_ids);
+      }
+      go({
+        // to: {
+        //   resource: "sessions",
+        //   action: "show",
+        //   id: record?.id,
+        // },
+        query: queryParams,
+        type: "push",
+      });
+    } else {
+      // Add the view if it doesn't exist
+      setViews(id, record);
+      let new_view_ids = [...view_ids, id];
+      const queryParams: {
+        profile_id: string;
+        [key: string]: string;
+      } = {
+        profile_id: String(activeProfile?.id),
+      };
+
+      if (new_view_ids?.length > 0) {
+        queryParams.view_items = String(new_view_ids);
+      }
+      go({
+        // to: {
+        //   resource: "sessions",
+        //   action: "show",
+        //   id: record?.id,
+        // },
+        query: queryParams,
+        type: "push",
+      });
+    }
+  };
+
   const view_id = activeViewItem?.view_id;
   // const task_id = params?.task_id;
   // const session_id = params?.session_id;
@@ -898,6 +970,36 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 setFormStatus(new_form_status);
                 // clear attachments so i don't have to send them again can just referenced uploaded items
                 form.setFieldValue("attachments", null);
+                // set views conditionally here depending on the execution_mode
+                // get items with code == 'task_item'
+                let taskItem = data?.data?.find
+                  ? data?.data?.filter(
+                      (item: any) => item?.message?.code === "task_item"
+                    )?.[0]?.data
+                  : {};
+                // console.log("taskItems", taskItems);
+                let taskActions = data?.data?.find
+                  ? data?.data?.filter(
+                      (item: any) => item?.message?.code === "save_actions"
+                    )?.[0]?.data
+                  : [];
+                // later account for multiple save_actions
+                // console.log("taskActions", taskActions);
+                // if (record?.entity_type === "actions") {
+                //   toggleView(String(record?.id), record);
+                // }
+                if (
+                  taskItem?.variables?.execution_mode ===
+                  "display_results_after_query"
+                ) {
+                  // console.log("display_results_after_query");
+                  taskActions.map((record: any) => {
+                    // console.log(item?.entity_type);
+                    if (record?.entity_type === "actions") {
+                      toggleView(String(record?.id), record);
+                    }
+                  });
+                }
               },
             }
           );
