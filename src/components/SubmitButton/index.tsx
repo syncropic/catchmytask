@@ -238,6 +238,7 @@ export const ExternalSubmitButton = ({
           id: action,
           name: action,
           reference_record: reference_record,
+          entity_type: entity_type,
         });
       }
       if (view_item) {

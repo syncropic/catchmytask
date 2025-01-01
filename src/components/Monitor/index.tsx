@@ -55,7 +55,7 @@ export const MonitorWrapper = ({
     data: actions,
     error: actionsError,
     loading: actionsLoading,
-  } = useLiveQuery<Event>("actions", `session_id = "${params?.id}"`);
+  } = useLiveQuery<Event>("actions", `session_id = ${params?.id}`);
 
   let go = useGo();
 

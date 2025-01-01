@@ -364,7 +364,7 @@ function SearchInput<T extends Record<string, any>>({
             <IconCopy size={24} />
           </ActionIcon> */}
           <ExternalSubmitButton
-            record={{}}
+            record={value ? value : null}
             entity_type="sessions"
             action_form_key={`query_${params?.id || activeTask?.id}`}
             action={"dublicate"}

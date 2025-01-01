@@ -353,6 +353,7 @@ const Layout = ({
                     <div className="min-h-0 flex-1 overflow-y-auto pb-6">
                       {/* Row 1: Form Display Area */}
                       <div className="w-full">
+                        {/* hello // {activeInput} */}
                         {activeInput === "structured_query" && (
                           <ActionInputWrapper
                             data_model="structured query input"

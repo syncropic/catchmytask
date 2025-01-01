@@ -860,6 +860,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           const baseData = {
             action: {
               operation: activeAction?.name,
+              ...activeAction,
             },
             input_values: {
               action_input_form_values:

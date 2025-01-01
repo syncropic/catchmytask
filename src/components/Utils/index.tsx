@@ -2182,7 +2182,7 @@ export function useRunTask(state: any) {
   // const { search_term, ...rest } = state;
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config?.API_URL}/run`,
+    url: `${config?.API_URL}/run-task`,
     method: "post",
     config: {
       payload: {
