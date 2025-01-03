@@ -208,7 +208,7 @@ const Layout = ({
     nullIndex !== -1 ? select_or_create_to_continue_items_map[nullIndex] : null;
 
   const message = item
-    ? `Create or select profile and then a session to continue`
+    ? `Create or select a profile and session to continue`
     : null;
 
   const handleClearViews = () => {
@@ -323,7 +323,7 @@ const Layout = ({
                           action={"query"}
                         />
                       ) : (
-                        <div>select session to continue</div>
+                        <div>Select profile session to continue</div>
                       )}
                     </div>
                   </div>
@@ -398,7 +398,7 @@ const Layout = ({
                             action={"query"}
                           />
                         ) : (
-                          <div>select session to continue</div>
+                          <div>Select profile session to continue</div>
                         )}
                       </div>
                     </div>

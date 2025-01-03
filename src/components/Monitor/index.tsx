@@ -27,16 +27,18 @@ export const MonitorWrapper = ({
   title,
 }: MonitorWrapperProps) => {
   const { params } = useParsed();
-  const [monitorComponents, setMonitorComponents] = useState(["monitor"]);
+  // const [monitorComponents, setMonitorComponents] = useState(["actions"]);
   const {
     activeProfile,
     clearViews,
     setShowRequestResponseView,
     showRequestResponseView,
     views,
+    monitorComponents,
+    setMonitorComponents,
   } = useAppStore();
 
-  const monitor_default_view_record_state = {
+  const actions_default_view_record_state = {
     credential: "surrealdb catchmytask dev",
     success_message_code: "views:5023b2twax164esuobo3",
     record: {
@@ -46,16 +48,75 @@ export const MonitorWrapper = ({
   };
 
   const {
-    data: monitorViewData,
-    isLoading: monitorViewIsLoading,
-    error: monitorViewError,
-  } = useReadRecordByState(monitor_default_view_record_state);
+    data: actionsViewData,
+    isLoading: actionsViewIsLoading,
+    error: actionsViewError,
+  } = useReadRecordByState(actions_default_view_record_state);
+
+  const automations_default_view_record_state = {
+    credential: "surrealdb catchmytask dev",
+    success_message_code: "views:5023b2twax164esuobo3",
+    record: {
+      id: "views:5023b2twax164esuobo3",
+    },
+    read_record_mode: "remote",
+  };
+
+  const {
+    data: automationsViewData,
+    isLoading: automationsViewIsLoading,
+    error: automationsViewError,
+  } = useReadRecordByState(automations_default_view_record_state);
 
   const {
     data: actions,
     error: actionsError,
     loading: actionsLoading,
-  } = useLiveQuery<Event>("actions", `session_id = ${params?.id}`);
+  } = useLiveQuery<Event>(
+    `SELECT * FROM actions WHERE session_id = ${params?.id} ORDER BY updated_datetime ASC`,
+    "actions"
+  );
+
+  const {
+    data: automations,
+    error: automationsError,
+    loading: automationsLoading,
+  } = useLiveQuery<Event>(
+    `SELECT * FROM automations WHERE session_id = ${params?.id} ORDER BY updated_datetime ASC`,
+    "automations"
+  );
+
+  // messages
+
+  const messages_default_view_record_state = {
+    credential: "surrealdb catchmytask dev",
+    success_message_code: "views:5023b2twax164esuobo3",
+    record: {
+      id: "views:cbhchg1orlmae045ufys",
+    },
+    read_record_mode: "remote",
+  };
+
+  const {
+    data: messagesViewData,
+    isLoading: messagesViewIsLoading,
+    error: messagesViewError,
+  } = useReadRecordByState(messages_default_view_record_state);
+
+  const messagesViewRecord = messagesViewData?.data?.find(
+    (item: any) =>
+      item?.message?.code ===
+      messages_default_view_record_state?.success_message_code
+  )?.data[0];
+
+  const {
+    data: messages,
+    error: messagesError,
+    loading: messagesLoading,
+  } = useLiveQuery<Event>(
+    `SELECT * FROM messages ORDER BY created_datetime DESC`,
+    "messages"
+  );
 
   let go = useGo();
 
@@ -70,22 +131,45 @@ export const MonitorWrapper = ({
     clearViews({});
   };
 
-  const monitorViewRecord = monitorViewData?.data?.find(
+  const actionsViewRecord = actionsViewData?.data?.find(
     (item: any) =>
       item?.message?.code ===
-      monitor_default_view_record_state?.success_message_code
+      actions_default_view_record_state?.success_message_code
   )?.data[0];
 
-  if (actionsLoading || monitorViewIsLoading) {
+  const automationsViewRecord = automationsViewData?.data?.find(
+    (item: any) =>
+      item?.message?.code ===
+      automations_default_view_record_state?.success_message_code
+  )?.data[0];
+
+  if (
+    actionsLoading ||
+    actionsViewIsLoading ||
+    automationsLoading ||
+    automationsViewIsLoading ||
+    messagesViewIsLoading
+  ) {
     return <div>Loading...</div>;
   }
 
-  if (actionsError || monitorViewError) {
+  if (
+    actionsError ||
+    actionsViewError ||
+    automationsError ||
+    automationsViewError ||
+    messagesError ||
+    messagesViewError
+  ) {
     return (
       <MonacoEditor
         value={{
           actionsError: actionsError?.message,
-          monitorViewError: monitorViewError?.response?.data,
+          actionsViewError: actionsViewError?.response?.data,
+          automationsError: automationsError?.message,
+          automationsViewError: automationsViewError?.response?.data,
+          messagesError: messagesError?.message,
+          messagesViewError: messagesViewError?.response?.data,
         }}
         height="25vh"
       ></MonacoEditor>
@@ -93,18 +177,20 @@ export const MonitorWrapper = ({
   }
 
   return (
-    <div className="flex flex-col p-3 gap-2 h-[75vh] overflow-y-auto">
+    <div className="flex flex-col p-3 gap-2 h-[80vh] overflow-y-auto">
       <div className="flex justify-between items-center gap-1">
-        <MultiSelect
-          size="xs"
-          placeholder="view"
-          value={monitorComponents}
-          data={["monitor", "explorer"]}
-          onChange={setMonitorComponents}
-          searchable
-          clearable
-        />
-        <TextInput size="xs" placeholder="search" />
+        <div className="w-full">
+          <MultiSelect
+            size="xs"
+            placeholder="view"
+            value={monitorComponents}
+            data={["actions", "profile explorer", "automations", "messages"]}
+            onChange={setMonitorComponents}
+            searchable
+            clearable
+          />
+        </div>
+        {/* <TextInput size="xs" placeholder="search" /> */}
         <Tooltip
           withArrow
           transitionProps={{ duration: 200 }}
@@ -125,7 +211,7 @@ export const MonitorWrapper = ({
         </Tooltip>
       </div>
 
-      {monitorComponents?.includes("explorer") && (
+      {monitorComponents?.includes("profile explorer") && (
         <>
           <MultiSelect
             size="xs"
@@ -141,8 +227,8 @@ export const MonitorWrapper = ({
       )}
 
       {actions &&
-        monitorViewRecord &&
-        monitorComponents?.includes("monitor") && (
+        actionsViewRecord &&
+        monitorComponents?.includes("actions") && (
           <>
             <MultiSelect
               size="xs"
@@ -154,9 +240,49 @@ export const MonitorWrapper = ({
               disabled
             />
             <TableView
-              data_fields={monitorViewRecord?.fields}
+              data_fields={actionsViewRecord?.fields}
               data_items={actions}
-              view_record={monitorViewRecord}
+              view_record={actionsViewRecord}
+            />
+          </>
+        )}
+      {messages &&
+        messagesViewRecord &&
+        monitorComponents?.includes("messages") && (
+          <>
+            <MultiSelect
+              size="xs"
+              placeholder="filter"
+              value={["messages"]}
+              data={["messages"]}
+              searchable
+              clearable
+              disabled
+            />
+            <TableView
+              data_fields={messagesViewRecord?.fields}
+              data_items={messages}
+              view_record={messagesViewRecord}
+            />
+          </>
+        )}
+      {automations &&
+        automationsViewRecord &&
+        monitorComponents?.includes("automations") && (
+          <>
+            <MultiSelect
+              size="xs"
+              placeholder="filter"
+              value={["automations"]}
+              data={["automations"]}
+              searchable
+              clearable
+              disabled
+            />
+            <TableView
+              data_fields={automationsViewRecord?.fields}
+              data_items={automations}
+              view_record={automationsViewRecord}
             />
           </>
         )}

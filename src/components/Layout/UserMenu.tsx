@@ -7,7 +7,7 @@ import {
   useParsed,
 } from "@refinedev/core";
 import { IIdentity } from "@components/interfaces";
-import { Button, Group, Menu } from "@mantine/core";
+import { ActionIcon, Button, Group, Menu, Tooltip } from "@mantine/core";
 import {
   IconAdjustmentsHorizontal,
   IconApps,
@@ -15,6 +15,7 @@ import {
   IconComponents,
   IconDatabase,
   IconFiles,
+  IconHttpGet,
   IconListCheck,
   IconLogout,
   IconMail,
@@ -48,6 +49,9 @@ export const UserMenu = () => {
     setNavigationHistory,
     setActiveProfile,
     activeProfile,
+    setMonitorComponents,
+    showRequestResponseView,
+    setShowRequestResponseView,
   } = useAppStore();
   const { resource, action, id, pathname, params } = useParsed();
   const [opened, setOpened] = useState(false);
@@ -110,7 +114,15 @@ export const UserMenu = () => {
       // query: navigationHistory?.params,
       type: "push",
     });
+
+    if (item?.id == "sessions:h5v3p5tbn363as94m248") {
+      setMonitorComponents(["messages"]);
+    }
     setOpened(!opened);
+  };
+
+  const toggleShowRequestResponseView = () => {
+    setShowRequestResponseView(!showRequestResponseView);
   };
 
   return (
@@ -184,7 +196,8 @@ export const UserMenu = () => {
                 value={activeProfile?.id || ""}
                 withinPortal={true}
                 ref={ref}
-                include_action_icons={["record_info", "explore"]}
+                // include_action_icons={["record_info", "explore"]}
+                include_action_icons={["record_info"]}
                 handleEdit={handleEdit}
                 record={activeProfile}
                 query_name="fetch profiles"
@@ -215,6 +228,26 @@ export const UserMenu = () => {
             Settings
           </Menu.Item> */}
           <Menu.Item
+            leftSection={<IconMail size={14} />}
+            // disabled
+            onClick={() =>
+              handleMenuNavigate({
+                entity_type: "sessions",
+                action_type: "show",
+                id: "sessions:h5v3p5tbn363as94m248",
+              })
+            }
+          >
+            Messages
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconHttpGet size={14} />}
+            className={`${showRequestResponseView ? "text-blue-500" : ""}`}
+            onClick={toggleShowRequestResponseView}
+          >
+            Toggle Request Response
+          </Menu.Item>
+          {/* <Menu.Item
             leftSection={<IconUserScan size={14} />}
             disabled
             // onClick={() =>
@@ -226,8 +259,8 @@ export const UserMenu = () => {
             // }
           >
             Manage Account
-          </Menu.Item>
-          <Menu.Item
+          </Menu.Item> */}
+          {/* <Menu.Item
             leftSection={<IconAdjustmentsHorizontal size={14} />}
             disabled
             // onClick={() =>
@@ -239,7 +272,7 @@ export const UserMenu = () => {
             // }
           >
             Settings
-          </Menu.Item>
+          </Menu.Item> */}
           {/* <Menu.Item
             leftSection={<IconMail size={14} />}
             onClick={() =>

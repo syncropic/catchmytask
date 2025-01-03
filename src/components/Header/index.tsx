@@ -20,6 +20,7 @@ import {
   IconHttpGet,
   IconIconsOff,
   IconLetterB,
+  IconMail,
   IconMenu2,
   IconSettingsAutomation,
 } from "@tabler/icons-react";
@@ -60,6 +61,7 @@ const LargeScreenHeader = ({
     showRequestResponseView,
     setShowRequestResponseView,
     views,
+    setMonitorComponents,
   } = useAppStore();
   const { updateComponentAction } = useUpdateComponentAction();
   let action = focused_entities[activeTask?.id]?.["action"];
@@ -101,6 +103,22 @@ const LargeScreenHeader = ({
     setShowRequestResponseView(!showRequestResponseView);
   };
 
+  const handleMenuNavigate = (item: any) => {
+    // console.log("Edit", item);
+    go({
+      to: {
+        resource: item?.entity_type,
+        action: item?.action_type,
+        id: item?.id,
+        // meta: navigationHistory?.params,
+      },
+      // query: navigationHistory?.params,
+      type: "push",
+    });
+    // setOpened(!opened);
+    setMonitorComponents(["messages"]);
+  };
+
   return (
     <div className="flex justify-between items-center h-full md:pr-72 md:pl-72">
       <div className="flex items-center">
@@ -125,7 +143,7 @@ const LargeScreenHeader = ({
         )}
 
         {<ColorSchemeToggle />}
-        {authenticatedData?.authenticated && (
+        {/* {authenticatedData?.authenticated && (
           <div className="hidden lg:block">
             <div className="flex items-center pl-4 pr-4">
               <div>
@@ -139,6 +157,36 @@ const LargeScreenHeader = ({
                     onClick={toggleShowRequestResponseView}
                   >
                     <IconHttpGet size={20} />
+                  </ActionIcon>
+                </Tooltip>
+              </div>
+            </div>
+          </div>
+        )} */}
+
+        {authenticatedData?.authenticated && (
+          <div className="hidden lg:block">
+            <div className="flex items-center pl-4 pr-4">
+              <div>
+                <Tooltip label={`messages`} position="top">
+                  <ActionIcon
+                    size="sm"
+                    // onClick={handleClearViews}
+                    onClick={() =>
+                      handleMenuNavigate({
+                        entity_type: "sessions",
+                        action_type: "show",
+                        id: "sessions:h5v3p5tbn363as94m248",
+                      })
+                    }
+                    // variant={
+                    //   showRequestResponseView || Object.keys(views).length > 0
+                    //     ? "filled"
+                    //     : "outline"
+                    // }
+                    variant="outline"
+                  >
+                    <IconMail size={20} />
                   </ActionIcon>
                 </Tooltip>
               </div>

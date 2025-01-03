@@ -9,6 +9,7 @@ import {
   extractKeys,
   getLabel,
   getTooltipLabel,
+  useQueryByState,
   useRunTask,
 } from "@components/Utils";
 import { useGetIdentity, useGo, useParsed } from "@refinedev/core";
@@ -32,6 +33,7 @@ import Documentation from "@components/Documentation";
 import { jsonify } from "surrealdb";
 import ViewDocumentation from "@components/ViewDocumentation";
 import { IIdentity } from "@components/interfaces";
+import EmbedComponent from "@components/EmbedComponent";
 
 interface ResponseViewWrapperProps {}
 
@@ -90,6 +92,30 @@ const ResponseViewWrapper = ({}: ResponseViewWrapperProps) => {
 export default ResponseViewWrapper;
 
 const ViewItemWrapper = ({ view_item_id }: { view_item_id: string }) => {
+  const { width } = useViewportSize();
+  const { views, activeProfile, activeApplication, activeSession, activeView } =
+    useAppStore();
+  const { params } = useParsed();
+  const { data: identity } = useGetIdentity<IIdentity>();
+  let view_item_record = views[view_item_id];
+  if (["actions"]?.includes(view_item_record?.entity_type)) {
+    return (
+      <ViewItemRunTaskWrapper
+        key={view_item_id}
+        view_item_id={view_item_id}
+      ></ViewItemRunTaskWrapper>
+    );
+  } else {
+    return (
+      <ViewItemViewWrapper
+        key={view_item_id}
+        view_item_id={view_item_id}
+      ></ViewItemViewWrapper>
+    );
+  }
+};
+
+const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
   const { width } = useViewportSize();
   const { views, activeProfile, activeApplication, activeSession, activeView } =
     useAppStore();
@@ -214,7 +240,6 @@ const ViewItemWrapper = ({ view_item_id }: { view_item_id: string }) => {
                   runTaskDataIsLoading: runTaskDataIsLoading,
                 }}
                 language="json"
-                height="25vh"
               ></MonacoEditor>
             </Accordion.Panel>
           </Accordion.Item>
@@ -229,6 +254,171 @@ const ViewItemWrapper = ({ view_item_id }: { view_item_id: string }) => {
           view_item_id={view_item_id}
           view_item_record={view_item_record}
           query_state={run_task_state}
+        />
+      )}
+    </div>
+  );
+};
+
+const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
+  const { width } = useViewportSize();
+  const { views, activeProfile, activeApplication, activeSession, activeView } =
+    useAppStore();
+  const { params } = useParsed();
+  const { data: identity } = useGetIdentity<IIdentity>();
+  let view_item_record = views[view_item_id];
+  // const baseData = {
+  //   // action: {
+  //   //   operation: activeAction?.name,
+  //   //   ...activeAction,
+  //   // },
+  //   // input_values: {
+  //   //   action_input_form_values:
+  //   //     action_input_form_values[action_input_form_values_key] || {},
+  //   // },
+  //   application: {
+  //     id: activeApplication?.id,
+  //     name: activeApplication?.name,
+  //   },
+  //   session: {
+  //     id: params?.session_id || activeSession?.id,
+  //     name: activeSession?.name,
+  //   },
+  //   view: {
+  //     id: params?.view_id || activeView?.id,
+  //     name: params?.view_id || activeView?.name,
+  //   },
+  //   identity: identity,
+  //   profile: {
+  //     id: params?.profile_id || activeProfile?.id || identity?.email,
+  //     name: params?.profile_id || activeProfile?.name || identity?.email,
+  //   },
+  //   parents: {
+  //     task_id: view_item_record?.task_id,
+  //     profile_id: params?.profile_id || activeProfile?.id || identity?.email,
+  //     view_id: params?.view_id || activeView?.id,
+  //     session_id: params?.id || activeSession?.id,
+  //     application_id: params?.application_id || activeApplication?.id,
+  //   },
+  // };
+
+  // let run_task_state = {
+  //   ...baseData,
+  //   task: {
+  //     id: view_item_record?.task_id,
+  //     name: view_item_record?.task_id,
+  //   },
+  // };
+  // const {
+  //   data: runTaskData,
+  //   isLoading: runTaskDataIsLoading,
+  //   error: runTaskDataError,
+  // } = useRunTask(run_task_state);
+
+  const query_state = {
+    credential: "surrealdb catchmytask dev",
+    success_message_code: view_item_record?.id,
+    query: `SELECT * FROM ${view_item_record?.entity_type} WHERE id = ${view_item_record?.id}`,
+    record: {
+      id: view_item_record?.id,
+    },
+    read_record_mode: "remote",
+  };
+
+  const {
+    data: runTaskData,
+    isLoading: runTaskDataIsLoading,
+    error: runTaskDataError,
+  } = useQueryByState(query_state);
+
+  if (runTaskDataError) {
+    return (
+      <>
+        <MonacoEditor
+          value={{
+            error: runTaskDataError,
+          }}
+          language="json"
+          height="25vh"
+        ></MonacoEditor>
+      </>
+    );
+  }
+
+  // let actionItem = runTaskData?.data?.find
+  //   ? runTaskData?.data?.find(
+  //       (item: any) => item?.action_step?.id === view_item_id
+  //     )
+  //   : {};
+
+  // return <div>{JSON.stringify(runTaskData?.data)}</div>;
+
+  let dataItems = runTaskData?.data;
+  // either read view from the response or retrieve view from external
+
+  let view_record = {};
+  let include_components = ["toolbar"];
+
+  return (
+    <div>
+      {/* <MonacoEditor
+        value={{
+          dataItems: dataItems,
+          // error: runTaskDataError,
+          // runTaskData: runTaskData,
+          // runTaskDataIsLoading: runTaskDataIsLoading,
+        }}
+        language="json"
+        height="25vh"
+      ></MonacoEditor> */}
+      {runTaskDataIsLoading && (
+        <Accordion multiple>
+          <Accordion.Item value={view_item_id} key={view_item_id}>
+            <Accordion.Control>
+              <div className="flex items-center gap-3">
+                <Loader size={18} />
+                <div>|</div>
+                <div className="text-sm font-semibold px-3 break-words max-w-xs sm:max-w-md">
+                  {view_item_record?.name}
+                </div>
+              </div>
+            </Accordion.Control>
+            <Accordion.Panel>
+              <div className="flex justify-center items-center">
+                loading content ...
+              </div>
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion>
+      )}
+
+      {!runTaskDataIsLoading && !dataItems && !view_record && (
+        <Accordion multiple defaultValue={[view_item_id]}>
+          <Accordion.Item value={view_item_id} key={view_item_id}>
+            <Accordion.Control>{view_item_record?.name}</Accordion.Control>
+            <Accordion.Panel>
+              <MonacoEditor
+                value={{
+                  error: runTaskDataError,
+                  runTaskData: runTaskData,
+                  runTaskDataIsLoading: runTaskDataIsLoading,
+                }}
+                language="json"
+                height="25vh"
+              ></MonacoEditor>
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion>
+      )}
+
+      {dataItems && view_record && (
+        <ViewItem
+          dataItems={dataItems}
+          view_record={view_record}
+          include_components={include_components}
+          view_item_id={view_item_id}
+          view_item_record={view_item_record}
+          query_state={query_state}
         />
       )}
     </div>
@@ -554,11 +744,38 @@ const ViewItem = ({
           )}
         </Accordion.Control>
         <Accordion.Panel>
-          <DataGridView
+          {dataItems && view_record?.fields?.length > 0 && (
+            <DataGridView
+              data_fields={view_record?.fields || []}
+              data_items={dataItems || []}
+              view_record={view_record}
+            ></DataGridView>
+          )}
+          {/* <DataGridView
             data_fields={view_record?.fields || []}
             data_items={dataItems || []}
             view_record={view_record}
-          ></DataGridView>
+          ></DataGridView> */}
+          {/* <div>datagrid</div> */}
+          {/* <MonacoEditor value={dataItems} /> */}
+          {!view_record?.fields?.length &&
+            dataItems?.map((item: any, index: number) => {
+              if (item?.view_id == "embed_url") {
+                return (
+                  <div key={`embed-${index}`}>
+                    <EmbedComponent
+                      embed_url={item?.content?.embed_url}
+                    ></EmbedComponent>
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={`editor-${index}`}>
+                    <MonacoEditor value={item} />
+                  </div>
+                );
+              }
+            })}
         </Accordion.Panel>
       </Accordion.Item>
     </Accordion>

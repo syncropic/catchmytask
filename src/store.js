@@ -179,6 +179,9 @@ export const useAppStore = create(
         }),
       activity: {},
       setActivity: (activity) => set((state) => ({ activity })),
+      monitorComponents: ["actions"],
+      setMonitorComponents: (item) =>
+        set((state) => ({ monitorComponents: item })),
       focused_entities: {},
       setFocusedEntities: (focused_entities) =>
         set((state) => ({ ...state, focused_entities: focused_entities })),

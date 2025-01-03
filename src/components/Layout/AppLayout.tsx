@@ -19,7 +19,7 @@ import Footer from "@components/Footer";
 import Header from "@components/Header";
 import LayoutToggle from "./LayoutToggle";
 import { useIsMobile } from "@components/Utils";
-import { IconHttpGet, IconIconsOff } from "@tabler/icons-react";
+import { IconHttpGet, IconIconsOff, IconMail } from "@tabler/icons-react";
 // export default AppLayout;
 export function AppLayout({
   children,
@@ -36,6 +36,7 @@ export function AppLayout({
     setShowRequestResponseView,
     activeProfile,
     clearViews,
+    setMonitorComponents,
   } = useAppStore();
   const go = useGo();
   const isMobile = useIsMobile(); // Custom hook to check if the screen is mobile
@@ -52,6 +53,22 @@ export function AppLayout({
 
   const toggleShowRequestResponseView = () => {
     setShowRequestResponseView(!showRequestResponseView);
+  };
+
+  const handleMenuNavigate = (item: any) => {
+    // console.log("Edit", item);
+    go({
+      to: {
+        resource: item?.entity_type,
+        action: item?.action_type,
+        id: item?.id,
+        // meta: navigationHistory?.params,
+      },
+      // query: navigationHistory?.params,
+      type: "push",
+    });
+    // setOpened(!opened);
+    setMonitorComponents(["messages"]);
   };
 
   return (
@@ -107,16 +124,25 @@ export function AppLayout({
                   </Tooltip>
                 </div>
                 <div>
-                  <Tooltip
-                    label={`toggle immediate request response view`}
-                    position="top"
-                  >
+                  <Tooltip label={`messages`} position="top">
                     <ActionIcon
                       size="sm"
-                      variant={!showRequestResponseView ? "outline" : "filled"}
-                      onClick={toggleShowRequestResponseView}
+                      // onClick={handleClearViews}
+                      onClick={() =>
+                        handleMenuNavigate({
+                          entity_type: "sessions",
+                          action_type: "show",
+                          id: "sessions:h5v3p5tbn363as94m248",
+                        })
+                      }
+                      // variant={
+                      //   showRequestResponseView || Object.keys(views).length > 0
+                      //     ? "filled"
+                      //     : "outline"
+                      // }
+                      variant="outline"
                     >
-                      <IconHttpGet size={20} />
+                      <IconMail size={20} />
                     </ActionIcon>
                   </Tooltip>
                 </div>
