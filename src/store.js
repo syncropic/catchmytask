@@ -60,6 +60,46 @@ export const useAppStore = create(
         },
       },
       setActiveLayout: (activeLayout) => set((state) => ({ activeLayout })),
+      sectionIsExpanded: null,
+      setSectionIsExpanded: (sectionName) =>
+        set((state) => {
+          // If the section is already expanded, collapse it
+          if (state.sectionIsExpanded === sectionName) {
+            return {
+              sectionIsExpanded: null,
+              activeLayout: {
+                ...state.activeLayout,
+                leftSection: { isDisplayed: true },
+                centerSection: { isDisplayed: true },
+                rightSection: { isDisplayed: true },
+                searchSession: { isDisplayed: true },
+                searchInput: { isDisplayed: true },
+                quickActionsBar: { isDisplayed: true },
+                mobileStateView: { isDisplayed: true },
+                mobileCustomComponents: { isDisplayed: false },
+              },
+            };
+          }
+
+          // If expanding a new section, hide others and show only the selected one
+          const updatedLayout = {
+            ...state.activeLayout,
+            leftSection: { isDisplayed: sectionName === "leftSection" },
+            centerSection: { isDisplayed: sectionName === "centerSection" },
+            rightSection: { isDisplayed: sectionName === "rightSection" },
+            searchSession: { isDisplayed: false },
+            searchInput: { isDisplayed: false },
+            quickActionsBar: { isDisplayed: false },
+            mobileStateView: { isDisplayed: false },
+            mobileCustomComponents: { isDisplayed: false },
+          };
+
+          return {
+            sectionIsExpanded: sectionName,
+            activeLayout: updatedLayout,
+          };
+        }),
+
       activeActionInputLayout: {
         leftSection: {
           isDisplayed: true,
@@ -182,7 +222,6 @@ export const useAppStore = create(
       monitorComponents: ["messages"],
       setMonitorComponents: (item) =>
         set((state) => ({ monitorComponents: item })),
-
       activeInput: "natural_language_query_input",
       setActiveInput: (item) => set((state) => ({ activeInput: item })),
 

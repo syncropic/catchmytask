@@ -267,53 +267,6 @@ const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
   const { params } = useParsed();
   const { data: identity } = useGetIdentity<IIdentity>();
   let view_item_record = views[view_item_id];
-  // const baseData = {
-  //   // action: {
-  //   //   operation: activeAction?.name,
-  //   //   ...activeAction,
-  //   // },
-  //   // input_values: {
-  //   //   action_input_form_values:
-  //   //     action_input_form_values[action_input_form_values_key] || {},
-  //   // },
-  //   application: {
-  //     id: activeApplication?.id,
-  //     name: activeApplication?.name,
-  //   },
-  //   session: {
-  //     id: params?.session_id || activeSession?.id,
-  //     name: activeSession?.name,
-  //   },
-  //   view: {
-  //     id: params?.view_id || activeView?.id,
-  //     name: params?.view_id || activeView?.name,
-  //   },
-  //   identity: identity,
-  //   profile: {
-  //     id: params?.profile_id || activeProfile?.id || identity?.email,
-  //     name: params?.profile_id || activeProfile?.name || identity?.email,
-  //   },
-  //   parents: {
-  //     task_id: view_item_record?.task_id,
-  //     profile_id: params?.profile_id || activeProfile?.id || identity?.email,
-  //     view_id: params?.view_id || activeView?.id,
-  //     session_id: params?.id || activeSession?.id,
-  //     application_id: params?.application_id || activeApplication?.id,
-  //   },
-  // };
-
-  // let run_task_state = {
-  //   ...baseData,
-  //   task: {
-  //     id: view_item_record?.task_id,
-  //     name: view_item_record?.task_id,
-  //   },
-  // };
-  // const {
-  //   data: runTaskData,
-  //   isLoading: runTaskDataIsLoading,
-  //   error: runTaskDataError,
-  // } = useRunTask(run_task_state);
 
   const query_state = {
     credential: "surrealdb catchmytask dev",

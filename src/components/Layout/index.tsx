@@ -39,6 +39,12 @@ import SessionsWrapper from "@components/Sessions";
 import ExternalSubmitButton from "@components/SubmitButton";
 import ActionInputWrapper from "@components/ActionInput";
 import MonitorWrapper from "@components/Monitor";
+import {
+  IconArrowsMaximize,
+  IconArrowsMinimize,
+  IconMaximize,
+  IconSquareX,
+} from "@tabler/icons-react";
 
 const Layout = ({
   children,
@@ -75,6 +81,9 @@ const Layout = ({
     showRequestResponseView,
     activeInput,
     setActiveInput,
+    setActiveLayout,
+    sectionIsExpanded,
+    setSectionIsExpanded,
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
 
@@ -223,6 +232,16 @@ const Layout = ({
     clearViews({});
   };
 
+  const closeDisplay = (section: string) => {
+    if (activeLayout) {
+      const newLayout = { ...activeLayout };
+      newLayout[section].isDisplayed = false;
+      setActiveLayout(newLayout);
+    }
+  };
+
+  let include_components = ["toolbar"];
+
   return (
     <Authenticated key="home" redirectOnFail="/login">
       <AppLayout authenticatedData={authenticatedData}>
@@ -277,9 +296,131 @@ const Layout = ({
                 <div className="h-[85vh] flex flex-col">
                   {" "}
                   {/* Using 85% of viewport height */}
-                  {/* Top component */}
+                  {/* Row 1: session switch and actions */}
+                  <div className="flex px-3 py-1">
+                    <SessionsWrapper
+                      // name={action}
+                      query_name="fetch sessions"
+                      view_id="views:36xo8keq9tsoyly68shk"
+                      title="monitor"
+                      // record={record}
+                      // action={action}
+                      display_mode="search_input"
+                      success_message_code="action_input_data_model_schema"
+                    />
+                  </div>
+                  {/* Row 2: Action Input Toggle Bar */}
+                  <div className="w-full flex items-center justify-between bg-gray-50 px-3">
+                    {/* Toggle Buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        size="compact-sm"
+                        variant={
+                          activeInput === "natural_language_query"
+                            ? "outline"
+                            : "default"
+                        }
+                        onClick={() => setActiveInput("natural_language_query")}
+                        className="whitespace-nowrap"
+                      >
+                        Describe
+                      </Button>
+                      <Button
+                        size="compact-sm"
+                        variant={
+                          activeInput === "structured_query"
+                            ? "outline"
+                            : "default"
+                        }
+                        onClick={() => setActiveInput("structured_query")}
+                        className="whitespace-nowrap"
+                      >
+                        Code
+                      </Button>
+                      <Button
+                        size="compact-sm"
+                        variant={
+                          activeInput === "structured_query"
+                            ? "outline"
+                            : "default"
+                        }
+                        disabled={true}
+                        className="whitespace-nowrap"
+                      >
+                        Split
+                      </Button>
+                      {params?.id ? (
+                        <ExternalSubmitButton
+                          record={{}}
+                          entity_type="tasks"
+                          action_form_key={`query_${
+                            params?.id || activeTask?.id
+                          }`}
+                          action={"query"}
+                        />
+                      ) : // <div>Select profile → session to continue</div>
+                      null}
+                    </div>
+                    {include_components?.includes("toolbar") && (
+                      <div>
+                        <div
+                          className="flex p-3 gap-3 items-center"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {/* <ExternalSubmitButton
+                              record={{}}
+                              reference_record={{
+                                id: view_item_id,
+                                name: view_item_record?.name,
+                                queryKey: `useRunTask_${JSON.stringify(
+                                  query_state
+                                )}`,
+                              }}
+                              view_item={view_record}
+                              entity_type="view"
+                              action_form_key={`query_${params?.id}`}
+                              action={"save"}
+                            /> */}
+                          <Tooltip
+                            label={
+                              sectionIsExpanded === "leftSection"
+                                ? "minimize"
+                                : "expand"
+                            }
+                            key="expand/minimize"
+                          >
+                            <ActionIcon
+                              variant="default"
+                              size="sm"
+                              aria-label="expand/minimize"
+                              onClick={() =>
+                                setSectionIsExpanded("leftSection")
+                              }
+                            >
+                              {sectionIsExpanded === "leftSection" ? (
+                                <IconArrowsMinimize size={16} />
+                              ) : (
+                                <IconArrowsMaximize size={16} />
+                              )}
+                            </ActionIcon>
+                          </Tooltip>
+
+                          <Tooltip label="close" key="close">
+                            <ActionIcon
+                              variant="default"
+                              size="sm"
+                              aria-label="close"
+                              onClick={() => closeDisplay("leftSection")}
+                            >
+                              <IconSquareX />
+                            </ActionIcon>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-                    {/* Row 1: Form Display Area */}
+                    {/* Row 3: Form Display Area */}
                     <div className="w-full">
                       {activeInput === "natural_language_query" && (
                         <ActionInputWrapper
@@ -308,40 +449,6 @@ const Layout = ({
                       )}
                     </div>
                   </div>
-                  {/* Bottom component */}
-                  <div>
-                    {/* <ActionListHeader /> */}
-                    <div className="flex px-5">
-                      <SessionsWrapper
-                        // name={action}
-                        query_name="fetch sessions"
-                        view_id="views:36xo8keq9tsoyly68shk"
-                        title="monitor"
-                        // record={record}
-                        // action={action}
-                        display_mode="search_input"
-                        success_message_code="action_input_data_model_schema"
-                      />
-                    </div>
-
-                    {/* Row 2: Action Input Bar */}
-                    <div className="w-full flex items-center justify-center gap-4 p-4 bg-gray-50 rounded-lg">
-                      {/* Toggle Buttons */}
-
-                      {params?.id ? (
-                        <ExternalSubmitButton
-                          record={{}}
-                          entity_type="tasks"
-                          action_form_key={`query_${
-                            params?.id || activeTask?.id
-                          }`}
-                          action={"query"}
-                        />
-                      ) : (
-                        <div>Select profile session to continue</div>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -364,80 +471,134 @@ const Layout = ({
                   <div className="h-[85vh] flex flex-col">
                     {" "}
                     {/* Using 85% of viewport height */}
-                    {/* Top component */}
-                    {/* Row 1: Action Input Toggle Bar */}
-                    <div className="w-full flex items-center justify-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    {/* Row 1: session switch and actions */}
+                    <div className="flex px-3 py-1">
+                      <SessionsWrapper
+                        // name={action}
+                        query_name="fetch sessions"
+                        view_id="views:36xo8keq9tsoyly68shk"
+                        title="monitor"
+                        // record={record}
+                        // action={action}
+                        display_mode="search_input"
+                        success_message_code="action_input_data_model_schema"
+                      />
+                    </div>
+                    {/* Row 2: Action Input Toggle Bar */}
+                    <div className="w-full flex items-center justify-between bg-gray-50 px-3">
                       {/* Toggle Buttons */}
-                      <Button
-                        size="compact-sm"
-                        variant={
-                          activeInput === "natural_language_query"
-                            ? "outline"
-                            : "default"
-                        }
-                        onClick={() => setActiveInput("natural_language_query")}
-                        className="whitespace-nowrap"
-                      >
-                        Describe
-                      </Button>
-                      {/* <Button
-                                              size="compact-sm"
-                                              variant={
-                                                activeInput === "components_query"
-                                                  ? "outline"
-                                                  : "default"
-                                              }
-                                              onClick={() => setActiveInput("components_query")}
-                                              className="whitespace-nowrap"
-                                            >
-                                              Components
-                                            </Button> */}
-                      {/* <Tooltip
-                                              withArrow
-                                              transitionProps={{ duration: 200 }}
-                                              label="clear views"
-                                            >
-                                              <ActionIcon
-                                                size="xs"
-                                                variant="default"
-                                                aria-label="clear view"
-                                                onClick={handleClearViews}
-                                              >
-                                                <IconIconsOff size={24} />
-                                              </ActionIcon>
-                                            </Tooltip> */}
+                      <div className="flex gap-2">
+                        <Button
+                          size="compact-sm"
+                          variant={
+                            activeInput === "natural_language_query"
+                              ? "outline"
+                              : "default"
+                          }
+                          onClick={() =>
+                            setActiveInput("natural_language_query")
+                          }
+                          className="whitespace-nowrap"
+                        >
+                          Describe
+                        </Button>
+                        <Button
+                          size="compact-sm"
+                          variant={
+                            activeInput === "structured_query"
+                              ? "outline"
+                              : "default"
+                          }
+                          onClick={() => setActiveInput("structured_query")}
+                          className="whitespace-nowrap"
+                        >
+                          Code
+                        </Button>
+                        <Button
+                          size="compact-sm"
+                          variant={
+                            activeInput === "structured_query"
+                              ? "outline"
+                              : "default"
+                          }
+                          disabled={true}
+                          className="whitespace-nowrap"
+                        >
+                          Split
+                        </Button>
+                        {params?.id ? (
+                          <ExternalSubmitButton
+                            record={{}}
+                            entity_type="tasks"
+                            action_form_key={`query_${
+                              params?.id || activeTask?.id
+                            }`}
+                            action={"query"}
+                          />
+                        ) : (
+                          <div>Select profile → session to continue</div>
+                        )}
+                      </div>
+                      {include_components?.includes("toolbar") && (
+                        <div>
+                          <div
+                            className="flex p-3 gap-3 items-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* <ExternalSubmitButton
+                              record={{}}
+                              reference_record={{
+                                id: view_item_id,
+                                name: view_item_record?.name,
+                                queryKey: `useRunTask_${JSON.stringify(
+                                  query_state
+                                )}`,
+                              }}
+                              view_item={view_record}
+                              entity_type="view"
+                              action_form_key={`query_${params?.id}`}
+                              action={"save"}
+                            /> */}
+                            <Tooltip
+                              label={
+                                sectionIsExpanded === "leftSection"
+                                  ? "minimize"
+                                  : "expand"
+                              }
+                              key="expand/minimize"
+                            >
+                              <ActionIcon
+                                variant="default"
+                                size="sm"
+                                aria-label="expand/minimize"
+                                onClick={() =>
+                                  setSectionIsExpanded("leftSection")
+                                }
+                              >
+                                {sectionIsExpanded === "leftSection" ? (
+                                  <IconArrowsMinimize size={16} />
+                                ) : (
+                                  <IconArrowsMaximize size={16} />
+                                )}
+                              </ActionIcon>
+                            </Tooltip>
 
-                      {/* <Tooltip
-                                              withArrow
-                                              transitionProps={{ duration: 200 }}
-                                              label="attach files"
-                                            >
-                                              <ActionIcon
-                                                size="xs"
-                                                variant="default"
-                                                aria-label="attachments"
-                                              >
-                                                <IconPaperclip size={24} />
-                                              </ActionIcon>
-                                            </Tooltip> */}
-
-                      <Button
-                        size="compact-sm"
-                        variant={
-                          activeInput === "structured_query"
-                            ? "outline"
-                            : "default"
-                        }
-                        onClick={() => setActiveInput("structured_query")}
-                        className="whitespace-nowrap"
-                      >
-                        Code
-                      </Button>
-
-                      {/* Submit Button */}
+                            <Tooltip label="close" key="close">
+                              <ActionIcon
+                                variant="default"
+                                size="sm"
+                                aria-label="close"
+                                onClick={() => closeDisplay("leftSection")}
+                              >
+                                <IconSquareX />
+                              </ActionIcon>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-                      {/* Row 1: Form Display Area */}
+                      {/* Row 3: Form Display Area */}
                       <div className="w-full">
                         {activeInput === "natural_language_query" && (
                           <ActionInputWrapper
@@ -462,40 +623,6 @@ const Layout = ({
                             action_form_key="query_general"
                             success_message_code="structured_query_input"
                           />
-                        )}
-                      </div>
-                    </div>
-                    {/* Bottom component */}
-                    <div>
-                      {/* <ActionListHeader /> */}
-                      <div className="flex px-5">
-                        <SessionsWrapper
-                          // name={action}
-                          query_name="fetch sessions"
-                          view_id="views:36xo8keq9tsoyly68shk"
-                          title="monitor"
-                          // record={record}
-                          // action={action}
-                          display_mode="search_input"
-                          success_message_code="action_input_data_model_schema"
-                        />
-                      </div>
-
-                      {/* Row 2: Action Input Bar */}
-                      <div className="w-full flex items-center justify-center gap-4 p-4 bg-gray-50 rounded-lg">
-                        {/* Toggle Buttons */}
-
-                        {params?.id ? (
-                          <ExternalSubmitButton
-                            record={{}}
-                            entity_type="tasks"
-                            action_form_key={`query_${
-                              params?.id || activeTask?.id
-                            }`}
-                            action={"query"}
-                          />
-                        ) : (
-                          <div>Select profile session to continue</div>
                         )}
                       </div>
                     </div>
