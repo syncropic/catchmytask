@@ -179,9 +179,13 @@ export const useAppStore = create(
         }),
       activity: {},
       setActivity: (activity) => set((state) => ({ activity })),
-      monitorComponents: ["actions"],
+      monitorComponents: ["messages"],
       setMonitorComponents: (item) =>
         set((state) => ({ monitorComponents: item })),
+
+      activeInput: "natural_language_query_input",
+      setActiveInput: (item) => set((state) => ({ activeInput: item })),
+
       focused_entities: {},
       setFocusedEntities: (focused_entities) =>
         set((state) => ({ ...state, focused_entities: focused_entities })),

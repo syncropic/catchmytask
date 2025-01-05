@@ -272,7 +272,11 @@ export function TableView<T extends Record<string, any>>({
                           formatDate={formatDate}
                         />
                       );
-                    } else if (field?.name === "label") {
+                    } else if (
+                      ["label", "heading", "items", "subject"].includes(
+                        field?.name
+                      )
+                    ) {
                       return <MessageLabel record={record} />;
                     } else if (field?.name === "name") {
                       return (

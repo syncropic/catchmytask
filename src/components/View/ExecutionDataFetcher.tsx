@@ -1,7 +1,5 @@
 import { IIdentity } from "@components/interfaces";
-import { useFetchData, useFetchExecutionData } from "@components/Utils";
 import { useGetIdentity, useParsed } from "@refinedev/core";
-import { useDuckDB } from "pages/_app";
 import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
 
@@ -32,54 +30,57 @@ export function ExecutionDataFetcher({
   } = useAppStore();
   const { params } = useParsed();
   const { data: identity } = useGetIdentity<IIdentity>();
-  const { data, isLocalDBSuccess, isLoading } = useFetchData({
-    success_message_code: view?.actions?.[0]?.name || "records",
-    view_record: view,
-    // success_message_code:
-    //   view?.success_message_code || activeTask?.success_message_code,
-    id: view_item?.id,
-    items: [view_item],
-    action: {
-      name: "fetch",
-      id: "fetch",
-    },
-    input_values: {
-      // ...value,
-      // action_input_form_values:
-      //   action_input_form_values[action_input_form_values_key] ||
-      //   {},
-    },
-    application: {
-      id: activeApplication?.id,
-      name: activeApplication?.name,
-    },
-    session: {
-      id: params?.session_id || activeSession?.id,
-      name: params?.session_id || activeSession?.name,
-    },
-    task: {
-      id: params?.id || activeTask?.id,
-      name: params?.id || activeTask?.name,
-    },
-    automation: {
-      // frequency: "every 20 seconds",
-    },
-    view: {
-      id: view_id,
-      name: view_id,
-    },
-    profile: {
-      id: params?.profile_id || activeProfile?.id || identity?.email,
-      name: params?.profile_id || activeProfile?.name || identity?.email,
-    },
-    parents: {
-      task_id: params?.id || activeTask?.id,
-      profile_id: params?.profile_id || activeProfile?.id || identity?.email,
-      view_id: params?.view_id || activeView?.id,
-      session_id: params?.session_id || activeSession?.id,
-      application_id: activeApplication?.id,
-    },
-  });
+  let data = [];
+  let isLocalDBSuccess = false;
+  let isLoading = false;
+  // const { data, isLocalDBSuccess, isLoading } = useFetchData({
+  //   success_message_code: view?.actions?.[0]?.name || "records",
+  //   view_record: view,
+  //   // success_message_code:
+  //   //   view?.success_message_code || activeTask?.success_message_code,
+  //   id: view_item?.id,
+  //   items: [view_item],
+  //   action: {
+  //     name: "fetch",
+  //     id: "fetch",
+  //   },
+  //   input_values: {
+  //     // ...value,
+  //     // action_input_form_values:
+  //     //   action_input_form_values[action_input_form_values_key] ||
+  //     //   {},
+  //   },
+  //   application: {
+  //     id: activeApplication?.id,
+  //     name: activeApplication?.name,
+  //   },
+  //   session: {
+  //     id: params?.session_id || activeSession?.id,
+  //     name: params?.session_id || activeSession?.name,
+  //   },
+  //   task: {
+  //     id: params?.id || activeTask?.id,
+  //     name: params?.id || activeTask?.name,
+  //   },
+  //   automation: {
+  //     // frequency: "every 20 seconds",
+  //   },
+  //   view: {
+  //     id: view_id,
+  //     name: view_id,
+  //   },
+  //   profile: {
+  //     id: params?.profile_id || activeProfile?.id || identity?.email,
+  //     name: params?.profile_id || activeProfile?.name || identity?.email,
+  //   },
+  //   parents: {
+  //     task_id: params?.id || activeTask?.id,
+  //     profile_id: params?.profile_id || activeProfile?.id || identity?.email,
+  //     view_id: params?.view_id || activeView?.id,
+  //     session_id: params?.session_id || activeSession?.id,
+  //     application_id: activeApplication?.id,
+  //   },
+  // });
 
   useEffect(() => {
     if (!isLoading && isLocalDBSuccess) {

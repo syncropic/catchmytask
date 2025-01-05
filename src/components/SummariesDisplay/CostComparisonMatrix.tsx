@@ -15,8 +15,6 @@ import {
   useReadRecordByState,
 } from "@components/Utils";
 import MonacoEditor from "@components/MonacoEditor";
-import { useDuckDB } from "pages/_app";
-import { useAppStore } from "src/store";
 import { useComponentData } from "@components/hooks/useComponentData";
 
 interface CostDataItem {

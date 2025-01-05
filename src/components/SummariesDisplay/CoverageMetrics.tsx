@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { Card, Text, Grid, Title } from "@mantine/core";
 import { toTitleCase, useReadRecordByState } from "@components/Utils";
 import MonacoEditor from "@components/MonacoEditor";
-import { useDuckDB } from "pages/_app";
 import { useSingleRowData } from "@components/hooks/useSingleRowData";
 
 interface CoverageMetric {

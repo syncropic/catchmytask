@@ -10,16 +10,13 @@ import {
   getPreferredColumn,
   getQueryFieldMetadata,
   isAllLocalDBSuccess,
-  useActionStepsData,
   useFetchQueryDataByState,
-  useReadByState,
 } from "@components/Utils";
 import { useAppStore } from "src/store";
 import { Text } from "@mantine/core";
 import { useEffect, useRef, useState } from "react";
-import { useDuckDB } from "pages/_app"; // Import the useDuckDB hook
 import { set } from "lodash";
-import nunjucks from 'nunjucks';
+import nunjucks from "nunjucks";
 
 interface AggregateActionStepResultsProps {
   action_steps?: any[];
@@ -28,14 +25,14 @@ interface AggregateActionStepResultsProps {
 export function AggregateActionStepResults({
   action_steps = [],
 }: AggregateActionStepResultsProps) {
-  const dbInstance = useDuckDB(); // Get DuckDB instance
+  // const dbInstance = useDuckDB(); // Get DuckDB instance
   const {
     dataFields,
     activeTask,
     action_input_form_values,
     setActionInputFormValues,
     views,
-    activeView
+    activeView,
   } = useAppStore(); // Zustand store access
 
   const [fetchedSteps, setFetchedSteps] = useState<Record<string, boolean>>({});
@@ -53,21 +50,22 @@ export function AggregateActionStepResults({
   );
 
   const search_action_input_form_values = useAppStore(
-    (state) => state.action_input_form_values[search_action_input_form_values_key]
+    (state) =>
+      state.action_input_form_values[search_action_input_form_values_key]
   );
-
-
 
   let active_view_search_model_state = {
     id: activeView?.id,
     query_name: "data_model",
     name: activeView?.["action_models"]?.["search"],
-    success_message_code:"action_input_data_model_schema",
+    success_message_code: "action_input_data_model_schema",
   };
- 
 
-  const { data: active_view_search_model_data, isLoading: active_view_search_model_isLoading, error: active_view_search_model_error } = useFetchQueryDataByState(active_view_search_model_state);
-
+  const {
+    data: active_view_search_model_data,
+    isLoading: active_view_search_model_isLoading,
+    error: active_view_search_model_error,
+  } = useFetchQueryDataByState(active_view_search_model_state);
 
   useEffect(() => {
     const allFetched = action_steps.every(
@@ -95,8 +93,8 @@ export function AggregateActionStepResults({
   const executeQuery = async (query: string) => {
     try {
       console.log("Executing query:\n", query);
-      const result = await dbInstance.query(query);
-      setDataItems(result.toArray());
+      // const result = await dbInstance.query(query);
+      // setDataItems(result.toArray());
       setIsLoading(false);
     } catch (error) {
       console.error("Error executing query:", error);
@@ -188,10 +186,14 @@ export function AggregateActionStepResults({
     dataFields
   );
 
-  let active_view_search_model_data_data_model_search_filters = active_view_search_model_data?.data?.find(
-    (item: any) => item?.message?.code === "action_input_data_model_schema"
-  )?.data[0]?.data_model?.schema?.search_filters
-  let enriched_search_filters = enrichFilters(active_view_search_model_data_data_model_search_filters, search_action_input_form_values)
+  let active_view_search_model_data_data_model_search_filters =
+    active_view_search_model_data?.data?.find(
+      (item: any) => item?.message?.code === "action_input_data_model_schema"
+    )?.data[0]?.data_model?.schema?.search_filters;
+  let enriched_search_filters = enrichFilters(
+    active_view_search_model_data_data_model_search_filters,
+    search_action_input_form_values
+  );
 
   /**
    * Builds a WHERE clause from filters
@@ -200,7 +202,7 @@ export function AggregateActionStepResults({
    */
   function buildWhereClause(filters: any[]) {
     if (!filters || filters.length === 0) {
-        return '';
+      return "";
     }
 
     const whereTemplate = `WHERE {% for filter in filters -%}
@@ -212,41 +214,44 @@ export function AggregateActionStepResults({
     const env = nunjucks.configure({ autoescape: false });
 
     // Add custom filters for SQL safety
-    env.addFilter('sqlIdentifier', function(str) {
-        if (!str) return '';
-        return `"${str.replace(/"/g, '""')}"`;
+    env.addFilter("sqlIdentifier", function (str) {
+      if (!str) return "";
+      return `"${str.replace(/"/g, '""')}"`;
     });
 
-    env.addFilter('sqlValue', function(value) {
-        if (value === null || value === undefined) return 'NULL';
-        if (typeof value === 'number') return value;
-        if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
-        // return `'${value.toString().replace(/'/g, "''")}'`;
-        // if value is date return the ISO string
-        if (value instanceof Date) return value.toISOString();
-        return value;
+    env.addFilter("sqlValue", function (value) {
+      if (value === null || value === undefined) return "NULL";
+      if (typeof value === "number") return value;
+      if (typeof value === "boolean") return value ? "TRUE" : "FALSE";
+      // return `'${value.toString().replace(/'/g, "''")}'`;
+      // if value is date return the ISO string
+      if (value instanceof Date) return value.toISOString();
+      return value;
     });
 
     return nunjucks.renderString(whereTemplate, { filters }).trim();
   }
 
   /**
-  * Substitutes the filters placeholder in a SQL template with the WHERE clause
-  * @param {string} sqlTemplate - SQL template with {{filters}} placeholder
-  * @param {Array} filters - Array of filter objects
-  * @returns {string} Complete SQL query
-  */
+   * Substitutes the filters placeholder in a SQL template with the WHERE clause
+   * @param {string} sqlTemplate - SQL template with {{filters}} placeholder
+   * @param {Array} filters - Array of filter objects
+   * @returns {string} Complete SQL query
+   */
   function renderSQLTemplate(sqlTemplate: string, filters: any[]) {
     const whereClause = buildWhereClause(filters);
-    
+
     // Handle the case where we have existing WHERE clause in the template
-    if (sqlTemplate.toLowerCase().includes('where') && whereClause) {
-        // If template already has WHERE, use AND instead
-        return sqlTemplate.replace('{{filters}}', whereClause.replace('WHERE', 'AND'));
+    if (sqlTemplate.toLowerCase().includes("where") && whereClause) {
+      // If template already has WHERE, use AND instead
+      return sqlTemplate.replace(
+        "{{filters}}",
+        whereClause.replace("WHERE", "AND")
+      );
     }
-    
+
     // Replace the placeholder with the WHERE clause
-    return sqlTemplate.replace('{{filters}}', whereClause);
+    return sqlTemplate.replace("{{filters}}", whereClause);
   }
 
   return (
@@ -267,17 +272,21 @@ export function AggregateActionStepResults({
           //   (item: any) => item?.message?.code === "action_input_data_model_schema"
           // )?.data[0]?.data_model?.schema?.search_filters
           enriched_search_filters: enriched_search_filters,
-          rendered_global_search_query: renderSQLTemplate(globalSearchQuery, enriched_search_filters)
+          rendered_global_search_query: renderSQLTemplate(
+            globalSearchQuery,
+            enriched_search_filters
+          ),
         }}
         language="json"
         height="25vh"
       />
       {action_steps.map((step: any) => (
-        <ActionStepFetcher
-          key={step.id}
-          step={step}
-          onStepFetched={() => handleStepFetched(step.id)}
-        />
+        // <ActionStepFetcher
+        //   key={step.id}
+        //   step={step}
+        //   onStepFetched={() => handleStepFetched(step.id)}
+        // />
+        <div>hello</div>
       ))}
       {/* <div>{JSON.stringify(fetchedSteps)}</div> */}
 
@@ -306,53 +315,51 @@ interface ActionStepFetcherProps {
   onStepFetched: () => void;
 }
 
-function ActionStepFetcher({ step, onStepFetched }: ActionStepFetcherProps) {
-  const {
-    action_input_form_values,
-    activeTask,
-    activeApplication,
-    activeSession,
-  } = useAppStore();
-  const { data, isLocalDBSuccess, isLoading } = useReadByState({
-    success_message_code: step.success_message_code,
-    id: step.id,
-    action_steps: [step],
-    application: {
-      id: activeApplication?.id,
-      name: activeApplication?.name,
-    },
-    session: {
-      id: activeSession?.id,
-      name: activeSession?.name,
-    },
-    task: {
-      id: activeTask?.id,
-      name: activeTask?.name,
-    },
-    input_values: {},
-    include_action_steps: [step?.execution_order || 0],
-  });
+// function ActionStepFetcher({ step, onStepFetched }: ActionStepFetcherProps) {
+//   const {
+//     action_input_form_values,
+//     activeTask,
+//     activeApplication,
+//     activeSession,
+//   } = useAppStore();
+//   const { data, isLocalDBSuccess, isLoading } = useReadByState({
+//     success_message_code: step.success_message_code,
+//     id: step.id,
+//     action_steps: [step],
+//     application: {
+//       id: activeApplication?.id,
+//       name: activeApplication?.name,
+//     },
+//     session: {
+//       id: activeSession?.id,
+//       name: activeSession?.name,
+//     },
+//     task: {
+//       id: activeTask?.id,
+//       name: activeTask?.name,
+//     },
+//     input_values: {},
+//     include_action_steps: [step?.execution_order || 0],
+//   });
 
-  useEffect(() => {
-    if (!isLoading && isLocalDBSuccess) {
-      onStepFetched(); // Notify parent that this step is fetched
-    }
-  }, [isLoading, isLocalDBSuccess]);
+//   useEffect(() => {
+//     if (!isLoading && isLocalDBSuccess) {
+//       onStepFetched(); // Notify parent that this step is fetched
+//     }
+//   }, [isLoading, isLocalDBSuccess]);
 
-  return null; // This component doesn't render any UI
-}
+//   return null; // This component doesn't render any UI
+// }
 
-interface UploadedWrapperProps {
-}
+interface UploadedWrapperProps {}
 
-export const UploadedWrapper = ({
-}: UploadedWrapperProps) => {
-
+export const UploadedWrapper = ({}: UploadedWrapperProps) => {
   const { uploaded, activeView } = useAppStore();
   const search_action_input_form_values_key = `search_${activeView?.id}`;
 
   const search_action_input_form_values = useAppStore(
-    (state) => state.action_input_form_values[search_action_input_form_values_key]
+    (state) =>
+      state.action_input_form_values[search_action_input_form_values_key]
   );
   const query = search_action_input_form_values?.query;
 
@@ -368,7 +375,7 @@ export const UploadedWrapper = ({
         height="75vh"
       /> */}
       {/* {query && (<QueryDataDisplay query={"SELECT DISTINCT ON (supplier_booking_ref) *, supplier_booking_ref AS id FROM uploaded_data"}/>)} */}
-      {query && (<QueryDataDisplay query={"SELECT * FROM uploaded_data"}/>)}
+      {query && <QueryDataDisplay query={"SELECT * FROM uploaded_data"} />}
       {/* <AggregateActionStepResults action_steps={filtered_action_steps} /> */}
       {/* <div>{JSON.stringify(record?.metadata?.query_run_location)}</div> */}
       {/* <AggregateAggregateActionStepResults record={record}></AggregateAggregateActionStepResults> */}
@@ -384,42 +391,39 @@ export const UploadedWrapper = ({
   );
 };
 
-
 interface QueryDataDisplayProps {
   query: string;
   // data_fields: any[];
   // table_name: string;
 }
 
-export const QueryDataDisplay = ({
-query}: QueryDataDisplayProps) => {
-
+export const QueryDataDisplay = ({ query }: QueryDataDisplayProps) => {
   const [dataItems, setDataItems] = useState<[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const dbInstance = useDuckDB(); // Get DuckDB instance
+  // const dbInstance = useDuckDB(); // Get DuckDB instance
   const { uploaded } = useAppStore();
 
   // run the query on duckdb
-  useEffect(() => {
-    const fetchData = async () => {
-      if (uploaded?.data) {
-        try {
-          console.log("Executing query:", query);
-          const result = await dbInstance.query(query);
-          console.log("Query result:", result);
-          setDataItems(result.toArray());
-          setError(null); // Clear any previous errors
-        } catch (error) {
-          console.error("Error executing query:", error);
-          setError(`Error executing query: ${JSON.stringify(error)}`);
-          // setDataItems([]); // Clear data items on error
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     if (uploaded?.data) {
+  //       try {
+  //         console.log("Executing query:", query);
+  //         const result = await dbInstance.query(query);
+  //         console.log("Query result:", result);
+  //         setDataItems(result.toArray());
+  //         setError(null); // Clear any previous errors
+  //       } catch (error) {
+  //         console.error("Error executing query:", error);
+  //         setError(`Error executing query: ${JSON.stringify(error)}`);
+  //         // setDataItems([]); // Clear data items on error
+  //       }
+  //     }
+  //   };
 
-    fetchData();
-  }, [query, uploaded?.data, dbInstance]);
+  //   fetchData();
+  // }, [query, uploaded?.data, dbInstance]);
 
   // if (error) {
   //   return <div>{error}</div>;
@@ -453,4 +457,3 @@ query}: QueryDataDisplayProps) => {
     </>
   );
 };
-

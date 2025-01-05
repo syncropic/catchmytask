@@ -3,19 +3,8 @@ import DataDisplay from "@components/DataDisplay";
 import ErrorComponent from "@components/ErrorComponent";
 import MonacoEditor from "@components/MonacoEditor";
 import PythonEnvironment from "@components/PythonEnvironment";
-import {
-  buildSQLQuery,
-  enrichFilters,
-  getLabel,
-  getTooltipLabel,
-  sanitizeFilters,
-  useFetchExecutionData,
-  useFetchQueryDataByState,
-  useReadByState,
-  useReadRecordByState,
-} from "@components/Utils";
+import { buildSQLQuery, enrichFilters } from "@components/Utils";
 import { useParsed } from "@refinedev/core";
-import { useDuckDB } from "pages/_app";
 import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
 // import { viewQueryAccordionConfig } from "./viewQueryAccordionConfig";
@@ -45,7 +34,7 @@ export function LocalDBView({ view_record, view_item }: ViewProps) {
   const task_id = params?.id;
   const session_id = params?.session_id;
 
-  const dbInstance = useDuckDB(); // Get DuckDB instance
+  // const dbInstance = useDuckDB(); // Get DuckDB instance
   const {
     activeSections,
     activeMainCustomComponent,
@@ -138,7 +127,8 @@ export function LocalDBView({ view_record, view_item }: ViewProps) {
     if (allFetched && globalQuery) {
       let rendered_globalQuery = buildSQLQuery(
         globalQuery,
-        sanitizeFilters(enriched_query_filters),
+        // sanitizeFilters(enriched_query_filters),
+        [],
         { caseSensitive: false }
       )?.query;
       console.log("rendered_globalQuery", rendered_globalQuery);
@@ -148,7 +138,8 @@ export function LocalDBView({ view_record, view_item }: ViewProps) {
     if (allFetched && view_record && !globalQuery) {
       let rendered_globalSearchQuery = buildSQLQuery(
         view_record?.query,
-        sanitizeFilters(enriched_query_filters),
+        // sanitizeFilters(enriched_query_filters),
+        [],
         { caseSensitive: false }
       )?.query;
       console.log(
@@ -163,8 +154,8 @@ export function LocalDBView({ view_record, view_item }: ViewProps) {
   const executeQuery = async (query: string) => {
     try {
       console.log("Executing query:\n", query);
-      const result = await dbInstance.query(query);
-      setDataItems(result.toArray());
+      // const result = await dbInstance.query(query);
+      // setDataItems(result.toArray());
       setIsLoading(false);
     } catch (error) {
       console.error("Error executing query:", error);

@@ -73,9 +73,11 @@ const Layout = ({
     clearViews,
     views,
     showRequestResponseView,
+    activeInput,
+    setActiveInput,
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
-  const [activeInput, setActiveInput] = useState("structured_query");
+
   const { params } = useParsed();
 
   const { leftSection, centerSection, rightSection } = activeLayout; // Destructure the sections for visibility checks
@@ -279,6 +281,19 @@ const Layout = ({
                   <div className="min-h-0 flex-1 overflow-y-auto pb-6">
                     {/* Row 1: Form Display Area */}
                     <div className="w-full">
+                      {activeInput === "natural_language_query" && (
+                        <ActionInputWrapper
+                          data_model="natural language query input"
+                          query_name="data_model"
+                          collection="data_models"
+                          record={{
+                            id: params?.id,
+                          }}
+                          action="query"
+                          action_form_key="query_general"
+                          success_message_code="natural_language_query_input"
+                        />
+                      )}
                       {activeInput === "structured_query" && (
                         <ActionInputWrapper
                           data_model="structured query input"
@@ -350,10 +365,92 @@ const Layout = ({
                     {" "}
                     {/* Using 85% of viewport height */}
                     {/* Top component */}
+                    {/* Row 1: Action Input Toggle Bar */}
+                    <div className="w-full flex items-center justify-center gap-4 p-4 bg-gray-50 rounded-lg">
+                      {/* Toggle Buttons */}
+                      <Button
+                        size="compact-sm"
+                        variant={
+                          activeInput === "natural_language_query"
+                            ? "outline"
+                            : "default"
+                        }
+                        onClick={() => setActiveInput("natural_language_query")}
+                        className="whitespace-nowrap"
+                      >
+                        Describe
+                      </Button>
+                      {/* <Button
+                                              size="compact-sm"
+                                              variant={
+                                                activeInput === "components_query"
+                                                  ? "outline"
+                                                  : "default"
+                                              }
+                                              onClick={() => setActiveInput("components_query")}
+                                              className="whitespace-nowrap"
+                                            >
+                                              Components
+                                            </Button> */}
+                      {/* <Tooltip
+                                              withArrow
+                                              transitionProps={{ duration: 200 }}
+                                              label="clear views"
+                                            >
+                                              <ActionIcon
+                                                size="xs"
+                                                variant="default"
+                                                aria-label="clear view"
+                                                onClick={handleClearViews}
+                                              >
+                                                <IconIconsOff size={24} />
+                                              </ActionIcon>
+                                            </Tooltip> */}
+
+                      {/* <Tooltip
+                                              withArrow
+                                              transitionProps={{ duration: 200 }}
+                                              label="attach files"
+                                            >
+                                              <ActionIcon
+                                                size="xs"
+                                                variant="default"
+                                                aria-label="attachments"
+                                              >
+                                                <IconPaperclip size={24} />
+                                              </ActionIcon>
+                                            </Tooltip> */}
+
+                      <Button
+                        size="compact-sm"
+                        variant={
+                          activeInput === "structured_query"
+                            ? "outline"
+                            : "default"
+                        }
+                        onClick={() => setActiveInput("structured_query")}
+                        className="whitespace-nowrap"
+                      >
+                        Code
+                      </Button>
+
+                      {/* Submit Button */}
+                    </div>
                     <div className="min-h-0 flex-1 overflow-y-auto pb-6">
                       {/* Row 1: Form Display Area */}
                       <div className="w-full">
-                        {/* hello // {activeInput} */}
+                        {activeInput === "natural_language_query" && (
+                          <ActionInputWrapper
+                            data_model="natural language query input"
+                            query_name="data_model"
+                            record={{
+                              id: params?.id,
+                            }}
+                            action="query"
+                            action_form_key="query_general"
+                            success_message_code="natural_language_query_input"
+                          />
+                        )}
                         {activeInput === "structured_query" && (
                           <ActionInputWrapper
                             data_model="structured query input"

@@ -9,13 +9,8 @@ import {
   getLabel,
   getTooltipLabel,
   sanitizeFilters,
-  useFetchExecutionData,
-  useFetchQueryDataByState,
-  useReadByState,
-  useReadRecordByState,
 } from "@components/Utils";
 import { useParsed } from "@refinedev/core";
-import { useDuckDB } from "pages/_app";
 import { useEffect, useState } from "react";
 import { useAppStore } from "src/store";
 import { viewQueryAccordionConfig } from "./viewQueryAccordionConfig";
@@ -43,7 +38,7 @@ export function View({ view_record }: ViewProps) {
   const task_id = params?.id;
   const session_id = params?.session_id;
 
-  const dbInstance = useDuckDB(); // Get DuckDB instance
+  // const dbInstance = useDuckDB(); // Get DuckDB instance
   const {
     activeSections,
     activeMainCustomComponent,
@@ -161,8 +156,8 @@ export function View({ view_record }: ViewProps) {
   const executeQuery = async (query: string) => {
     try {
       console.log("Executing query:\n", query);
-      const result = await dbInstance.query(query);
-      setDataItems(result.toArray());
+      // const result = await dbInstance.query(query);
+      // setDataItems(result.toArray());
       setIsLoading(false);
     } catch (error) {
       console.error("Error executing query:", error);

@@ -10,7 +10,6 @@ import {
   useReadRecordByState,
 } from "@components/Utils";
 import MonacoEditor from "@components/MonacoEditor";
-import { useDuckDB } from "pages/_app";
 import { useComponentData } from "@components/hooks/useComponentData";
 
 interface DataItem {

@@ -132,7 +132,6 @@
 // hooks/useComponentData.ts
 
 import { useState, useEffect, useCallback } from "react";
-import { useDuckDB } from "pages/_app";
 import { useAppStore } from "src/store";
 import {
   buildSQLQuery,
@@ -170,7 +169,7 @@ export const useComponentData = ({
     useState<UseComponentDataReturn["queryDebugInfo"]>();
   const [error, setError] = useState<any>(null);
 
-  const dbInstance = useDuckDB();
+  // const dbInstance = useDuckDB();
   const { activeView, action_input_form_values } = useAppStore();
 
   // Calculate the search form values key
@@ -240,7 +239,7 @@ export const useComponentData = ({
 
   // Memoize the query execution to prevent unnecessary reruns
   const executeQuery = useCallback(async () => {
-    if (!componentRecord?.query || !dbInstance || !rendered_globalSearchQuery) {
+    if (!componentRecord?.query || !rendered_globalSearchQuery) {
       setIsLoading(false);
       return;
     }
@@ -268,16 +267,16 @@ export const useComponentData = ({
         console.groupEnd();
       }
 
-      const result = await dbInstance.query(processedQuery);
-      const resultArray = result.toArray();
-      setDataItems(resultArray);
+      // const result = await dbInstance.query(processedQuery);
+      // const resultArray = result.toArray();
+      setDataItems([]);
     } catch (error) {
       console.error("Error executing query:", error);
       setError(error);
     } finally {
       setIsLoading(false);
     }
-  }, [componentRecord?.query, dbInstance, rendered_globalSearchQuery, debug]);
+  }, [componentRecord?.query, rendered_globalSearchQuery, debug]);
 
   // Effect to execute query when dependencies change
   useEffect(() => {

@@ -12,8 +12,8 @@ import ViewTrip from "@components/ViewTrip";
 import type { FieldApi } from "@tanstack/react-form";
 import ExcelJS from "exceljs";
 import { format, isValid, parseISO } from "date-fns";
-// import Surreal, { LiveHandler, Uuid } from "surrealdb";
-// import { getDb } from "src/surreal";
+import Surreal, { LiveHandler, Uuid } from "surrealdb";
+import { getDb } from "src/surreal";
 
 import {
   ComponentKey,
@@ -171,6 +171,17 @@ import { Checkbox } from "@components/Checkbox";
 import SearchInput from "@components/SearchInput";
 import { useClickOutside, useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { ListEditorFormInput } from "@components/ListEditor";
+// import { useDuckDB } from "pages/_app";
+// import { saveToLocalDB } from "src/local_db";
+// import MediaPlayerController from "@components/MediaPlayerController";
+// import MediaPlayerTimeline from "@components/MediaPlayerTimeline";
+
+// declare module "@tanstack/react-table" {
+//   //allows us to define custom properties for our columns
+//   interface ColumnMeta<TData extends RowData, TValue> {
+//     filterVariant?: "text" | "range" | "select";
+//   }
+// }
 
 // Adjusted createColumnDef to fit your use case
 export function createColumnDef<RowDataType extends RowData>(
@@ -179,7 +190,37 @@ export function createColumnDef<RowDataType extends RowData>(
   const isRowSelect = column.display_component === "RowSelect";
   const isRowActionsSelect = column.display_component === "RowActionsSelect";
   const isItemDetails = column.display_component === "ItemDetails";
+  // const isDateTime = column.data_type === "datetime";
+  // const isDecimal = column.data_type === "decimal";
+  // const isExternalLink = column?.display_component === "ExternalLink";
+  // const isPrimaryKey = column?.display_component === "PrimaryKey";
+  // const isFilePath = column?.display_component === "FilePath";
+  // const isReveal = column?.display_component === "Reveal";
+  // const isSessionLink = column?.display_component === "SessionLink";
+  // const isShortcutLink = column?.display_component === "ShortcutLink";
+  // const isExecutionStatus = column?.display_component === "ExecutionStatus";
+  // const isRowActions = column?.field_name === "row_actions";
+  // const conditionalFormatting = column?.conditional_formatting ?? null;
+  // const enableColumnFilterModes = column?.enable_column_filter_modes ?? false;
+  // // const isEnableColumnFilterModes = column?.enable_column_filter_modes ?? false;
 
+  // const isDisplayColumn = [
+  //   "mrt-row-select",
+  //   "mrt-row-expand",
+  //   "mrt-row-actions",
+  // ].includes(column?.field_name);
+  // // default is when it is not a datetime or decimal
+  // const isDefault =
+  //   !isDateTime &&
+  //   !isDecimal &&
+  //   !isExternalLink &&
+  //   !isPrimaryKey &&
+  //   !isFilePath &&
+  //   !isDisplayColumn &&
+  //   !isReveal &&
+  //   !isSessionLink &&
+  //   !isExecutionStatus &&
+  //   !isRowActions;
   const isOther = !isRowSelect && !isRowActionsSelect;
   return {
     id: column?.name,
@@ -254,8 +295,312 @@ export function createColumnDef<RowDataType extends RowData>(
     ...(column?.filter_variant && {
       filterFn: column.filter_fn,
     }),
+    // ...(isDefault && {
+    //   accessorKey: column?.field_name,
+    // }),
+    // ...(column?.aggregation_fn && {
+    //   aggregationFn: column?.aggregation_fn,
+    //   AggregatedCell: ({ cell }) => {
+    //     if (isDateTime) {
+    //       return (
+    //         <DateTime
+    //           {...column}
+    //           value={cell.getValue()}
+    //           display_format={column.display_format ?? "yyyy-MM-dd"}
+    //           record={cell.row.original}
+    //         />
+    //       );
+    //     } else {
+    //       return <div>{JSON.stringify(cell.getValue())}</div>;
+    //     }
+    //   },
+    // }),
+    // ...(isDisplayColumn && {
+    //   columnDefType: "display",
+    // }),
+    // ...(isRowActions && {
+    //   columnDefType: "display", //turns off data column features like sorting, filtering, etc.
+    //   enableColumnOrdering: true, //but you can turn back any of those features on if you want like this
+    //   Cell: ({ row }) => <RowActions record={row.original}></RowActions>,
+    // }),
+    // ...(isDateTime && {
+    //   accessorFn: (row) => new Date(row[column.field_name] ?? ""),
+    //   Cell: ({ row }) => (
+    //     <DateTime
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       record={row.original}
+    //       display_format={column.display_format ?? "yyyy-MM-dd"}
+    //     />
+    //   ),
+    // }),
+    // ...(isDecimal && {
+    //   // Convert strings to numbers and replace null or undefined with 0
+    //   accessorFn: (row) => {
+    //     const value = row[column.field_name];
+    //     return value ? Number(value) : 0;
+    //   },
+    //   Cell: ({ row }) => (
+    //     <Decimal
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       display_format={column.display_format ?? ""}
+    //       record={row.original}
+    //     />
+    //   ),
+    // }),
+    // ...(isExternalLink && {
+    //   Cell: ({ row }) => (
+    //     <ExternalLink
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       display_format={column.display_format ?? ""}
+    //       display_component_content={column.display_component_content}
+    //       record={row.original}
+    //     />
+    //   ),
+    // }),
+
+    // ...(isSessionLink && {
+    //   Cell: ({ row }) => (
+    //     <SessionLink
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       record={row.original}
+    //       display_component_content={column.display_component_content ?? null}
+    //     />
+    //   ),
+    // }),
+    // ...(isShortcutLink && {
+    //   Cell: ({ row }) => (
+    //     <ShortcutLink
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       record={row.original}
+    //       display_component_content={column.display_component_content ?? null}
+    //     />
+    //   ),
+    // }),
+    // ...(isPrimaryKey && {
+    //   Cell: ({ row }) => (
+    //     <PrimaryKey
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       record={row.original}
+    //       display_component_content={column.display_component_content ?? null}
+    //     />
+    //   ),
+    // }),
+    // ...(isFilePath && {
+    //   Cell: ({ row }) => (
+    //     <FilePath
+    //       {...column}
+    //       value={row.original[column.field_name]}
+    //       record={row.original}
+    //       display_component_content={column.display_component_content ?? null}
+    //     />
+    //   ),
+    // }),
+    // ...(isReveal && {
+    //   Cell: ({ row }) => (
+    //     <Reveal
+    //       resource={JSON.stringify(row.original[column.field_name])}
+    //       value={row.original[column.field_name]}
+    //     >
+    //       {/* <MonacoEditor value={row.original[column.field_name]}></MonacoEditor> */}
+    //       <Text>{JSON.stringify(row.original[column.field_name])}</Text>
+    //     </Reveal>
+    //   ),
+    // }),
+    // enableColumnFilterModes: enableColumnFilterModes,
+    // ...(column?.max_size && {
+    //   maxSize: column.max_size,
+    // }),
   };
 }
+
+// // Adjusted createColumnDef to fit your use case
+// export function createColumnDef<RowDataType extends RowData>(
+//   column: FieldConfiguration
+// ): MRT_ColumnDef<RowDataType> {
+//   const isDateTime = column.data_type === "datetime";
+//   const isDecimal = column.data_type === "decimal";
+//   const isExternalLink = column?.display_component === "ExternalLink";
+//   const isPrimaryKey = column?.display_component === "PrimaryKey";
+//   const isFilePath = column?.display_component === "FilePath";
+//   const isReveal = column?.display_component === "Reveal";
+//   const isSessionLink = column?.display_component === "SessionLink";
+//   const isShortcutLink = column?.display_component === "ShortcutLink";
+//   const isExecutionStatus = column?.display_component === "ExecutionStatus";
+//   const isRowActions = column?.field_name === "row_actions";
+//   const conditionalFormatting = column?.conditional_formatting ?? null;
+//   const enableColumnFilterModes = column?.enable_column_filter_modes ?? false;
+//   // const isEnableColumnFilterModes = column?.enable_column_filter_modes ?? false;
+
+//   const isDisplayColumn = [
+//     "mrt-row-select",
+//     "mrt-row-expand",
+//     "mrt-row-actions",
+//   ].includes(column?.field_name);
+//   // default is when it is not a datetime or decimal
+//   const isDefault =
+//     !isDateTime &&
+//     !isDecimal &&
+//     !isExternalLink &&
+//     !isPrimaryKey &&
+//     !isFilePath &&
+//     !isDisplayColumn &&
+//     !isReveal &&
+//     !isSessionLink &&
+//     !isExecutionStatus &&
+//     !isRowActions;
+//   return {
+//     id: column?.field_name,
+//     header: column?.field_name,
+//     ...(conditionalFormatting && {
+//       Cell: ({ row }) => {
+//         const style = getCellStyleInline(
+//           row.original[column?.conditional_formatting?.field_name],
+//           column
+//         );
+//         return <div style={style}>{row.original[column.field_name] ?? ""}</div>;
+//       },
+//     }),
+//     ...(column?.filter_variant && {
+//       filterVariant: column.filter_variant,
+//       filterFn: column.filter_fn,
+//     }),
+//     ...(isDefault && {
+//       accessorKey: column?.field_name,
+//     }),
+//     ...(column?.aggregation_fn && {
+//       aggregationFn: column?.aggregation_fn,
+//       AggregatedCell: ({ cell }) => {
+//         if (isDateTime) {
+//           return (
+//             <DateTime
+//               {...column}
+//               value={cell.getValue()}
+//               display_format={column.display_format ?? "yyyy-MM-dd"}
+//               record={cell.row.original}
+//             />
+//           );
+//         } else {
+//           return <div>{JSON.stringify(cell.getValue())}</div>;
+//         }
+//       },
+//     }),
+//     ...(isDisplayColumn && {
+//       columnDefType: "display",
+//     }),
+//     ...(isRowActions && {
+//       columnDefType: "display", //turns off data column features like sorting, filtering, etc.
+//       enableColumnOrdering: true, //but you can turn back any of those features on if you want like this
+//       Cell: ({ row }) => <RowActions record={row.original}></RowActions>,
+//     }),
+//     ...(isDateTime && {
+//       accessorFn: (row) => new Date(row[column.field_name] ?? ""),
+//       Cell: ({ row }) => (
+//         <DateTime
+//           {...column}
+//           value={row.original[column.field_name]}
+//           record={row.original}
+//           display_format={column.display_format ?? "yyyy-MM-dd"}
+//         />
+//       ),
+//     }),
+//     ...(isDecimal && {
+//       // Convert strings to numbers and replace null or undefined with 0
+//       accessorFn: (row) => {
+//         const value = row[column.field_name];
+//         return value ? Number(value) : 0;
+//       },
+//       Cell: ({ row }) => (
+//         <Decimal
+//           {...column}
+//           value={row.original[column.field_name]}
+//           display_format={column.display_format ?? ""}
+//           record={row.original}
+//         />
+//       ),
+//     }),
+//     ...(isExternalLink && {
+//       Cell: ({ row }) => (
+//         <ExternalLink
+//           {...column}
+//           value={row.original[column.field_name]}
+//           display_format={column.display_format ?? ""}
+//           display_component_content={column.display_component_content}
+//           record={row.original}
+//         />
+//       ),
+//     }),
+
+//     ...(isSessionLink && {
+//       Cell: ({ row }) => (
+//         <SessionLink
+//           {...column}
+//           value={row.original[column.field_name]}
+//           record={row.original}
+//           display_component_content={column.display_component_content ?? null}
+//         />
+//       ),
+//     }),
+//     ...(isShortcutLink && {
+//       Cell: ({ row }) => (
+//         <ShortcutLink
+//           {...column}
+//           value={row.original[column.field_name]}
+//           record={row.original}
+//           display_component_content={column.display_component_content ?? null}
+//         />
+//       ),
+//     }),
+//     ...(isPrimaryKey && {
+//       Cell: ({ row }) => (
+//         <PrimaryKey
+//           {...column}
+//           value={row.original[column.field_name]}
+//           record={row.original}
+//           display_component_content={column.display_component_content ?? null}
+//         />
+//       ),
+//     }),
+//     ...(isFilePath && {
+//       Cell: ({ row }) => (
+//         <FilePath
+//           {...column}
+//           value={row.original[column.field_name]}
+//           record={row.original}
+//           display_component_content={column.display_component_content ?? null}
+//         />
+//       ),
+//     }),
+//     ...(isReveal && {
+//       Cell: ({ row }) => (
+//         <Reveal
+//           resource={JSON.stringify(row.original[column.field_name])}
+//           value={row.original[column.field_name]}
+//         >
+//           {/* <MonacoEditor value={row.original[column.field_name]}></MonacoEditor> */}
+//           <Text>{JSON.stringify(row.original[column.field_name])}</Text>
+//         </Reveal>
+//       ),
+//     }),
+//     enableColumnFilterModes: enableColumnFilterModes,
+//     ...(column?.max_size && {
+//       maxSize: column.max_size,
+//     }),
+//   };
+// }
+
+// export function useDataColumns(columns: FieldConfiguration[]) {
+//   return useMemo(() => {
+//     return columns
+//       .filter((column) => column?.visible)
+//       .map((column) => createColumnDef<RowData>(column));
+//   }, [columns]);
+// }
 
 export function useDataColumns(columns: FieldConfiguration[], tableId: string) {
   return useMemo(() => {
@@ -461,6 +806,57 @@ export function getResourceName(
   return idString.substring(0, splitIndex);
 }
 
+// export function useAuthToken() {
+//   const { data: identity } = useGetIdentity<IIdentity>();
+//   const [token, setToken] = useState<string | null>(null);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<Error | null>(null);
+//   const { runtimeConfig: config } = useAppStore();
+
+//   useEffect(() => {
+//     const fetchAuthToken = async () => {
+//       setLoading(true);
+//       const auth_token = localStorage.getItem("cmt_auth_token");
+//       if (auth_token) {
+//         console.log("Data already in localStorage", JSON.parse(auth_token));
+//         setToken(auth_token);
+//         setLoading(false);
+//         return;
+//       }
+//       try {
+//         const formData = new URLSearchParams();
+//         formData.append("username", identity?.email);
+//         formData.append("password", identity?.email);
+
+//         const response = await fetch(`${config?.API_URL}/token`, {
+//           method: "POST",
+//           headers: {
+//             "Content-Type": "application/x-www-form-urlencoded",
+//           },
+//           body: formData,
+//         });
+
+//         if (!response.ok) throw new Error("Failed to fetch auth token");
+
+//         const data = await response.json();
+//         localStorage.setItem("cmt_auth_token", JSON.stringify(data));
+//         setToken(JSON.stringify(data));
+//       } catch (error) {
+//         console.error("Error fetching data:", error);
+//         setError(error as Error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     if (identity) {
+//       fetchAuthToken();
+//     }
+//   }, [identity]); // Re-run when `identity` changes
+
+//   return { token, loading, error };
+// }
+
 type RecordIdentifier = {
   id: string;
   name: string;
@@ -664,6 +1060,29 @@ export function useFetchActionStepDataByState(state: any) {
     config: {
       payload: {
         ...state,
+        // task_variables: {},
+        // global_variables: {},
+        // include_action_steps: [1],
+        // action_steps: [
+        //   {
+        //     id: "1",
+        //     execution_order: 1,
+        //     description: "get recommendation data",
+        //     name: "recommendation_data",
+        //     job: "get recommendation data",
+        //     action_step_query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //       state
+        //     )}')`,
+        //     method: "get",
+        //     type: "main",
+        //     select: {
+        //       query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //         state
+        //       )}')`,
+        //       credential: "surrealdb_catchmytask",
+        //     },
+        //   },
+        // ],
       },
     },
     queryOptions: {
@@ -710,6 +1129,36 @@ export function useQueryByState(state: any) {
   return { data, isLoading, error, isError };
 }
 
+// export function useReadByState(state: any) {
+//   // const variables = state;
+//   const { runtimeConfig: config } = useAppStore();
+
+//   const { data, isLoading, error, isError, refetch } = useCustom({
+//     url: `${config?.API_URL}/read`,
+//     method: "post",
+//     config: {
+//       payload: {
+//         ...state,
+//       },
+//     },
+//     queryOptions: {
+//       queryKey: [
+//         `readByState_${JSON.stringify({
+//           success_message_code: state?.success_message_code,
+//         })}`,
+//       ],
+//       onSuccess: (data) => {
+//         console.log("success data", data);
+//       },
+//       onError: (error) => {
+//         console.log("error", error);
+//       },
+//     },
+//   });
+
+//   return { data, isLoading, error, isError, refetch };
+// }
+
 export function useFetchByState(state: any) {
   // const variables = state;
   const { runtimeConfig: config } = useAppStore();
@@ -736,6 +1185,538 @@ export function useFetchByState(state: any) {
 
   return { data, isLoading, error, isError, refetch };
 }
+
+// export function useReadByState(state: any) {
+//   const {
+//     runtimeConfig: config,
+//     local_db,
+//     setLocalDB,
+//     updateLocalDB,
+//     setDataFields,
+//     activeView,
+//   } = useAppStore();
+
+//   const viewState = {
+//     record: { id: activeView?.id },
+//     read_record_mode: "remote",
+//   };
+
+//   let view_query_key = `readByState_${JSON.stringify({
+//     id: viewState?.record?.id,
+//     success_message_code: viewState?.record?.id || "record_read",
+//   })}`;
+
+//   const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
+//   const queryClient = useQueryClient();
+//   // const viewData = queryClient.getQueryData([view_query_key]);
+//   const viewData = queryClient.getQueryData([view_query_key]) as {
+//     data: any[];
+//   };
+
+//   const viewRecord = viewData?.data?.find(
+//     (item: any) => item?.message?.code === activeView?.id
+//   )?.data[0];
+
+//   // State variables for LocalDB operation statuses
+//   const [isLocalDBLoading, setIsLocalDBLoading] = useState(false);
+//   const [isLocalDBSuccess, setIsLocalDBSuccess] = useState(false);
+//   const [localDBError, setLocalDBError] = useState(null);
+
+//   const { data, isLoading, error, isError, refetch } = useCustom({
+//     url: `${config?.API_URL}/read`,
+//     method: "post",
+//     config: {
+//       payload: { ...state },
+//     },
+//     queryOptions: {
+//       queryKey: [
+//         `readByState_${JSON.stringify({
+//           success_message_code: state?.success_message_code,
+//         })}`,
+//       ],
+//       onSuccess: async (fetchedData) => {
+//         // console.log("Fetched data successfully:", fetchedData);
+//         // table name is the success message code
+//         let tableName = state.success_message_code;
+
+//         // Extract data_items and data_fields from the fetched data
+//         const dataRecord = fetchedData?.data?.find(
+//           (item: any) => item?.message?.code === state.success_message_code
+//         );
+
+//         const data_items = dataRecord?.data || [];
+//         const infered_data_fields = (dataRecord?.data_fields || []).map(
+//           (field: any) => ({
+//             ...field,
+//           })
+//         );
+
+//         // console.log("useReadByState > viewRecord", viewRecord);
+//         const data_fields = viewRecord?.fields || infered_data_fields || [];
+//         console.log(
+//           `${state?.success_message_code} / useReadByState > viewRecord data_fields`,
+//           data_fields
+//         );
+
+//         // Save the data fields to the Zustand store
+//         setDataFields(tableName, data_fields);
+
+//         // Save to DuckDB local_db
+//         if (data_items.length > 0 && data_fields.length > 0) {
+//           setIsLocalDBLoading(true);
+//           setLocalDBError(null);
+//           setIsLocalDBSuccess(false);
+//           // Update the state with functional updates
+//           // setLocalDB((prevLocalDB) => ({
+//           //   ...prevLocalDB,
+//           //   [tableName]: {
+//           //     isLocalDBLoading: true,
+//           //     isLocalDBSuccess: false,
+//           //     localDBError: null,
+//           //   },
+//           // }));
+//           let item = {
+//             isLocalDBLoading: true,
+//             isLocalDBSuccess: false,
+//             localDBError: null,
+//           };
+//           updateLocalDB(tableName, item);
+//           // console.log("Local DB item init:", item);
+
+//           try {
+//             const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
+//             await dbInstance.query(dropQuery);
+//             await saveToLocalDB(data_items, tableName, data_fields, dbInstance);
+//             console.log("Data saved to DuckDB successfully");
+//             setIsLocalDBSuccess(true);
+//             let success_item = {
+//               isLocalDBLoading: false,
+//               isLocalDBSuccess: true,
+//               localDBError: null,
+//             };
+//             updateLocalDB(tableName, success_item);
+//             // console.log(
+//             //   `Local DB item success item: ${tableName}`,
+//             //   success_item
+//             // );
+//             // setLocalDB(item);
+//             // let success_merged = { ...local_db, ...success_item };
+//             // console.log("Local DB item success item:", success_item);
+//             // setLocalDB(local_db_item);
+//             // console.log("Local DB item success:", tableName, local_db_item);
+//             // success message code
+//             // console.log("Data saved to Table:", tableName);
+//             // console.log("Data saved to DuckDB:", data_items);
+//             // console.log("Data fields:", data_fields);
+//           } catch (error) {
+//             console.error("Error saving data to DuckDB:", error);
+//             setLocalDBError(error as any);
+//             // setLocalDB({
+//             //   ...local_db,
+//             //   [tableName]: {
+//             //     isLocalDBLoading: false,
+//             //     isLocalDBSuccess: false,
+//             //     localDBError: error,
+//             //   },
+//             // });
+//           } finally {
+//             setIsLocalDBLoading(false);
+//             // setLocalDB({
+//             //   ...local_db,
+//             //   [tableName]: {
+//             //     isLocalDBLoading: false,
+//             //     isLocalDBSuccess: false,
+//             //     localDBError: null,
+//             //   },
+//             // });
+//           }
+//         }
+//       },
+//       onError: (fetchError) => {
+//         console.log("Error fetching data:", fetchError);
+//       },
+//     },
+//   });
+
+//   return {
+//     data,
+//     isLoading,
+//     error,
+//     isError,
+//     refetch,
+//     isLocalDBLoading,
+//     isLocalDBSuccess,
+//     localDBError,
+//   };
+// }
+
+// export function useFetchExecutionData(state: any) {
+//   const { runtimeConfig: config, updateLocalDB, setDataFields } = useAppStore();
+//   const { view_record, ...rest } = state;
+
+//   // const viewState = {
+//   //   record: { id: state?.view_id },
+//   //   read_record_mode: "remote",
+//   // };
+
+//   // let view_query_key = `readByState_${JSON.stringify({
+//   //   id: viewState?.record?.id,
+//   //   success_message_code: viewState?.record?.id || "record_read",
+//   // })}`;
+
+//   const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
+//   // const queryClient = useQueryClient();
+//   // // const viewData = queryClient.getQueryData([view_query_key]);
+//   // const viewData = queryClient.getQueryData([view_query_key]) as {
+//   //   data: any[];
+//   // };
+
+//   // const viewRecord = viewData?.data?.find(
+//   //   (item: any) => item?.message?.code === state?.view_id
+//   // )?.data[0];
+
+//   // State variables for LocalDB operation statuses
+//   const [isLocalDBLoading, setIsLocalDBLoading] = useState(false);
+//   const [isLocalDBSuccess, setIsLocalDBSuccess] = useState(false);
+//   const [localDBError, setLocalDBError] = useState(null);
+
+//   const { data, isLoading, error, isError, refetch } = useCustom({
+//     url: `${config?.API_URL}/execute?task_id=${state?.task.id}`,
+//     method: "post",
+//     config: {
+//       payload: {
+//         ...rest,
+//       },
+//     },
+//     queryOptions: {
+//       queryKey: [
+//         `readByState_${JSON.stringify({
+//           success_message_code: state?.success_message_code,
+//         })}`,
+//       ],
+//       onSuccess: async (fetchedData) => {
+//         console.log(
+//           `Fetched data successfully: ${state?.success_message_code}`
+//         );
+//         // table name is the success message code
+//         let tableName = state.success_message_code;
+
+//         // Extract data_items and data_fields from the fetched data
+//         const dataRecord = fetchedData?.data?.find(
+//           (item: any) => item?.message?.code === state.success_message_code
+//         );
+//         console.log("dataRecord");
+//         console.log(fetchedData);
+
+//         const data_items = dataRecord?.data || [];
+//         const infered_data_fields = (dataRecord?.data_fields || []).map(
+//           (field: any) => ({
+//             ...field,
+//           })
+//         );
+//         console.log("data_items");
+//         console.log(data_items);
+
+//         // // console.log("useReadByState > viewRecord", viewRecord);
+//         const data_fields = view_record?.fields || infered_data_fields || [];
+//         // console.log(
+//         //   `${state?.success_message_code} / useReadByState > viewRecord data_fields`,
+//         //   data_fields
+//         // );
+
+//         // // Save the data fields to the Zustand store
+//         setDataFields(tableName, data_fields);
+//         // const data_items = [];
+//         // const data_fields = [];
+
+//         // Save to DuckDB local_db
+//         if (data_items.length > 0 && data_fields.length > 0) {
+//           // console.log("update local db here");
+//           setIsLocalDBLoading(true);
+//           setLocalDBError(null);
+//           setIsLocalDBSuccess(false);
+//           // Update the state with functional updates
+//           // setLocalDB((prevLocalDB) => ({
+//           //   ...prevLocalDB,
+//           //   [tableName]: {
+//           //     isLocalDBLoading: true,
+//           //     isLocalDBSuccess: false,
+//           //     localDBError: null,
+//           //   },
+//           // }));
+//           let item = {
+//             isLocalDBLoading: true,
+//             isLocalDBSuccess: false,
+//             localDBError: null,
+//           };
+//           updateLocalDB(tableName, item);
+
+//           try {
+//             // console.log("save to db here");
+//             const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
+//             await dbInstance.query(dropQuery);
+//             await saveToLocalDB(data_items, tableName, data_fields, dbInstance);
+//             console.log("Data saved to DuckDB successfully");
+//             setIsLocalDBSuccess(true);
+//             let success_item = {
+//               isLocalDBLoading: false,
+//               isLocalDBSuccess: true,
+//               localDBError: null,
+//             };
+//             updateLocalDB(tableName, success_item);
+//             console.log(
+//               `Local DB item success item: ${tableName}`,
+//               success_item
+//             );
+//             // setLocalDB(item);
+//             // let success_merged = { ...local_db, ...success_item };
+//             // console.log("Local DB item success item:", success_item);
+//             // setLocalDB(local_db_item);
+//             // console.log("Local DB item success:", tableName, local_db_item);
+//             // success message code
+//             // console.log("Data saved to Table:", tableName);
+//             // console.log("Data saved to DuckDB:", data_items);
+//             // console.log("Data fields:", data_fields);
+//           } catch (error) {
+//             console.error("Error saving data to DuckDB:", error);
+//             setLocalDBError(error as any);
+//             let success_item = {
+//               isLocalDBLoading: false,
+//               isLocalDBSuccess: false,
+//               localDBError: JSON.stringify(error),
+//             };
+//             updateLocalDB(tableName, success_item);
+//             // setLocalDB({
+//             //   ...local_db,
+//             //   [tableName]: {
+//             //     isLocalDBLoading: false,
+//             //     isLocalDBSuccess: false,
+//             //     localDBError: error,
+//             //   },
+//             // });
+//           } finally {
+//             setIsLocalDBLoading(false);
+//             let success_item = {
+//               isLocalDBLoading: false,
+//               isLocalDBSuccess: false,
+//               localDBError: null,
+//             };
+//             updateLocalDB(tableName, success_item);
+//             // setLocalDB({
+//             //   ...local_db,
+//             //   [tableName]: {
+//             //     isLocalDBLoading: false,
+//             //     isLocalDBSuccess: false,
+//             //     localDBError: null,
+//             //   },
+//             // });
+//           }
+//         }
+//       },
+//       onError: (fetchError) => {
+//         console.log("Error fetching data:", fetchError);
+//       },
+//     },
+//   });
+
+//   return {
+//     data,
+//     isLoading,
+//     error,
+//     isError,
+//     refetch,
+//     isLocalDBLoading,
+//     isLocalDBSuccess,
+//     localDBError,
+//   };
+// }
+
+// export function useFetchData(state: any) {
+//   const { runtimeConfig: config, updateLocalDB, setDataFields } = useAppStore();
+//   const { view_record, ...rest } = state;
+
+//   // const viewState = {
+//   //   record: { id: state?.view_id },
+//   //   read_record_mode: "remote",
+//   // };
+
+//   // let view_query_key = `readByState_${JSON.stringify({
+//   //   id: viewState?.record?.id,
+//   //   success_message_code: viewState?.record?.id || "record_read",
+//   // })}`;
+
+//   const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
+//   // const queryClient = useQueryClient();
+//   // // const viewData = queryClient.getQueryData([view_query_key]);
+//   // const viewData = queryClient.getQueryData([view_query_key]) as {
+//   //   data: any[];
+//   // };
+
+//   // const viewRecord = viewData?.data?.find(
+//   //   (item: any) => item?.message?.code === state?.view_id
+//   // )?.data[0];
+
+//   // State variables for LocalDB operation statuses
+//   const [isLocalDBLoading, setIsLocalDBLoading] = useState(false);
+//   const [isLocalDBSuccess, setIsLocalDBSuccess] = useState(false);
+//   const [localDBError, setLocalDBError] = useState(null);
+
+//   const { data, isLoading, error, isError, refetch } = useCustom({
+//     url: `${config?.API_URL}/route`,
+//     method: "post",
+//     config: {
+//       payload: {
+//         ...rest,
+//       },
+//     },
+//     queryOptions: {
+//       queryKey: [
+//         `useFetchData_${JSON.stringify({
+//           success_message_code: state?.success_message_code,
+//         })}`,
+//       ],
+//       onSuccess: async (fetchedData) => {
+//         console.log(
+//           `Fetched data successfully: ${state?.success_message_code}`
+//         );
+//         // table name is the success message code
+//         let tableName = state.success_message_code;
+
+//         // Extract data_items and data_fields from the fetched data
+//         const dataRecord = fetchedData?.data?.find(
+//           (item: any) => item?.message?.code === state.success_message_code
+//         );
+//         console.log("dataRecord");
+//         console.log(fetchedData);
+
+//         const data_items = dataRecord?.data || [];
+//         const infered_data_fields = (dataRecord?.data_fields || []).map(
+//           (field: any) => ({
+//             ...field,
+//           })
+//         );
+//         console.log("data_items");
+//         console.log(data_items);
+
+//         // console.log(`view_record: ${view_record}`);
+
+//         // // console.log("useReadByState > viewRecord", viewRecord);
+//         const data_fields = view_record?.fields || infered_data_fields || [];
+//         // console.log(
+//         //   `${state?.success_message_code} / useReadByState > viewRecord data_fields`,
+//         //   data_fields
+//         // );
+
+//         // // Save the data fields to the Zustand store
+//         setDataFields(tableName, data_fields);
+//         // const data_items = [];
+//         // const data_fields = [];
+//         // if (data_items.length == 0) {
+//         //   console.log("data_items.length == 0");
+//         //   console.log(data_fields);
+//         // }
+
+//         // Save to DuckDB local_db
+//         if (data_items.length >= 0 && data_fields.length > 0) {
+//           // console.log("update local db here");
+//           setIsLocalDBLoading(true);
+//           setLocalDBError(null);
+//           setIsLocalDBSuccess(false);
+//           // Update the state with functional updates
+//           // setLocalDB((prevLocalDB) => ({
+//           //   ...prevLocalDB,
+//           //   [tableName]: {
+//           //     isLocalDBLoading: true,
+//           //     isLocalDBSuccess: false,
+//           //     localDBError: null,
+//           //   },
+//           // }));
+//           let item = {
+//             isLocalDBLoading: true,
+//             isLocalDBSuccess: false,
+//             localDBError: null,
+//           };
+//           updateLocalDB(tableName, item);
+
+//           try {
+//             // console.log("save to db here");
+//             const dropQuery = `DROP TABLE IF EXISTS ${tableName};`;
+//             await dbInstance.query(dropQuery);
+//             await saveToLocalDB(data_items, tableName, data_fields, dbInstance);
+//             console.log("Data saved to DuckDB successfully");
+//             setIsLocalDBSuccess(true);
+//             let success_item = {
+//               isLocalDBLoading: false,
+//               isLocalDBSuccess: true,
+//               localDBError: null,
+//             };
+//             updateLocalDB(tableName, success_item);
+//             console.log(
+//               `Local DB item success item: ${tableName}`,
+//               success_item
+//             );
+//             // setLocalDB(item);
+//             // let success_merged = { ...local_db, ...success_item };
+//             // console.log("Local DB item success item:", success_item);
+//             // setLocalDB(local_db_item);
+//             // console.log("Local DB item success:", tableName, local_db_item);
+//             // success message code
+//             // console.log("Data saved to Table:", tableName);
+//             // console.log("Data saved to DuckDB:", data_items);
+//             // console.log("Data fields:", data_fields);
+//           } catch (error) {
+//             console.error("Error saving data to DuckDB:", error);
+//             setLocalDBError(error as any);
+//             let success_item = {
+//               isLocalDBLoading: false,
+//               isLocalDBSuccess: false,
+//               localDBError: JSON.stringify(error),
+//             };
+//             updateLocalDB(tableName, success_item);
+//             // setLocalDB({
+//             //   ...local_db,
+//             //   [tableName]: {
+//             //     isLocalDBLoading: false,
+//             //     isLocalDBSuccess: false,
+//             //     localDBError: error,
+//             //   },
+//             // });
+//           } finally {
+//             setIsLocalDBLoading(false);
+//             let success_item = {
+//               isLocalDBLoading: false,
+//               isLocalDBSuccess: false,
+//               localDBError: null,
+//             };
+//             updateLocalDB(tableName, success_item);
+//             // setLocalDB({
+//             //   ...local_db,
+//             //   [tableName]: {
+//             //     isLocalDBLoading: false,
+//             //     isLocalDBSuccess: false,
+//             //     localDBError: null,
+//             //   },
+//             // });
+//           }
+//         }
+//       },
+//       onError: (fetchError) => {
+//         console.log("Error fetching data:", fetchError);
+//       },
+//     },
+//   });
+
+//   return {
+//     data,
+//     isLoading,
+//     error,
+//     isError,
+//     refetch,
+//     isLocalDBLoading,
+//     isLocalDBSuccess,
+//     localDBError,
+//   };
+// }
 
 export function useReadRecordByState(state: any) {
   // const variables = state;
@@ -847,6 +1828,29 @@ export function useFetchActionPlanDataByState(state: any) {
     config: {
       payload: {
         ...state,
+        // task_variables: {},
+        // global_variables: {},
+        // include_action_steps: [1],
+        // action_steps: [
+        //   {
+        //     id: "1",
+        //     execution_order: 1,
+        //     description: "get recommendation data",
+        //     name: "recommendation_data",
+        //     job: "get recommendation data",
+        //     action_step_query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //       state
+        //     )}')`,
+        //     method: "get",
+        //     type: "main",
+        //     select: {
+        //       query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //         state
+        //       )}')`,
+        //       credential: "surrealdb_catchmytask",
+        //     },
+        //   },
+        // ],
       },
     },
     queryOptions: {
@@ -877,6 +1881,29 @@ export function useFetchActionStepsDataByState(state: any) {
     config: {
       payload: {
         ...state,
+        // task_variables: {},
+        // global_variables: {},
+        // include_action_steps: [1],
+        // action_steps: [
+        //   {
+        //     id: "1",
+        //     execution_order: 1,
+        //     description: "get recommendation data",
+        //     name: "recommendation_data",
+        //     job: "get recommendation data",
+        //     action_step_query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //       state
+        //     )}')`,
+        //     method: "get",
+        //     type: "main",
+        //     select: {
+        //       query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
+        //         state
+        //       )}')`,
+        //       credential: "surrealdb_catchmytask",
+        //     },
+        //   },
+        // ],
       },
     },
     queryOptions: {
@@ -3382,6 +4409,1081 @@ export interface PaymentSupplierEntry
   extends SupplierEntryWithBreakdown<PaymentBreakdown>,
     HasPaymentAmounts {}
 
+// Create type guard helpers
+// const hasPaymentAmounts = (obj: any): obj is HasPaymentAmounts => {
+//   return "totalExpectedAmount" in obj && "totalCapturedAmount" in obj;
+// };
+
+// const isPaymentSupplierEntry = (
+//   supplier: SupplierEntryWithBreakdown<StandardBreakdown> | PaymentSupplierEntry
+// ): supplier is PaymentSupplierEntry => {
+//   return hasPaymentAmounts(supplier);
+// };
+
+// Update the matrix type guard
+// const isPaymentMatrix = (
+//   matrix: StandardMatrix | PaymentMatrix,
+//   type: "payment" | "status"
+// ): matrix is PaymentMatrix => {
+//   if (type !== "payment") return false;
+
+//   // Check if all suppliers have payment amounts
+//   return matrix.suppliers.every(isPaymentSupplierEntry);
+// };
+
+// const processReconciliationData = (bookings: any[]): ReconciliationResult => {
+//   // Initialize the data structure
+//   const supplierStats: { [key: string]: SupplierStats } = {};
+//   let totalStats = {
+//     cost: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     status: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//   };
+
+//   // Process each booking
+//   bookings.forEach((booking: BookingData) => {
+//     const supplierName = booking.sst_supplier_name;
+
+//     // Initialize supplier if not exists
+//     if (!supplierStats[supplierName]) {
+//       supplierStats[supplierName] = {
+//         cost: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//         status: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//       };
+//     }
+
+//     // Process Cost Comparison
+//     supplierStats[supplierName].cost.total++;
+//     totalStats.cost.total++;
+
+//     if (booking.supplier_cost_comparison === null) {
+//       supplierStats[supplierName].cost.missing++;
+//       supplierStats[supplierName].cost.breakdown.missing++;
+//       totalStats.cost.missing++;
+//     } else if (booking.supplier_cost_comparison === "match") {
+//       supplierStats[supplierName].cost.matches++;
+//       supplierStats[supplierName].cost.breakdown.match++;
+//       totalStats.cost.matches++;
+//     } else {
+//       supplierStats[supplierName].cost.mismatches++;
+//       supplierStats[supplierName].cost.breakdown.mismatch++;
+//       totalStats.cost.mismatches++;
+//     }
+
+//     // Process Status Comparison
+//     supplierStats[supplierName].status.total++;
+//     totalStats.status.total++;
+
+//     if (booking.supplier_status_comparison === null) {
+//       supplierStats[supplierName].status.missing++;
+//       supplierStats[supplierName].status.breakdown.missing++;
+//       totalStats.status.missing++;
+//     } else if (booking.supplier_status_comparison === "match") {
+//       supplierStats[supplierName].status.matches++;
+//       supplierStats[supplierName].status.breakdown.match++;
+//       totalStats.status.matches++;
+//     } else {
+//       supplierStats[supplierName].status.mismatches++;
+//       supplierStats[supplierName].status.breakdown.mismatch++;
+//       totalStats.status.mismatches++;
+//     }
+//   });
+
+//   // Transform into final format
+//   const result: ReconciliationResult = {
+//     costMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.cost.matches,
+//         total: stats.cost.total,
+//         missing: stats.cost.missing,
+//         breakdown: stats.cost.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.cost.matches,
+//         total: totalStats.cost.total,
+//         missing: totalStats.cost.missing,
+//         breakdown: {
+//           match: totalStats.cost.matches,
+//           mismatch: totalStats.cost.mismatches,
+//           missing: totalStats.cost.missing,
+//         },
+//       },
+//     },
+//     statusMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.status.matches,
+//         total: stats.status.total,
+//         missing: stats.status.missing,
+//         breakdown: stats.status.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.status.matches,
+//         total: totalStats.status.total,
+//         missing: totalStats.status.missing,
+//         breakdown: {
+//           match: totalStats.status.matches,
+//           mismatch: totalStats.status.mismatches,
+//           missing: totalStats.status.missing,
+//         },
+//       },
+//     },
+//   };
+
+//   return result;
+// };
+
+// export default processReconciliationData;
+
+// // Minimal booking interface for type checking
+// // interface BookingData {
+// //   // sst_supplier_name: string;
+// //   // payment_amount_usd_comparison: string | null;
+// //   // payment_status_comparison: string | null;
+// //   // individual_costs_and_final_usd_comparison: string | null;
+// //   // sst_final_selling_price_usd?: number;
+// //   // payment_amount_captured_usd_total?: number;
+// //   [key: string]: any; // Allow any additional properties
+// // }
+
+// export const processPaymentReconciliationData = (
+//   bookings: any[]
+// ): ReconciliationResult => {
+//   // Initialize the data structure
+//   const supplierStats: { [key: string]: SupplierStats } = {};
+//   let totalStats = {
+//     payment: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     status: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     individualCosts: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//   };
+
+//   // Process each booking
+//   bookings.forEach((booking: any) => {
+//     const supplierName = booking.sst_supplier_name;
+
+//     // Initialize supplier if not exists
+//     if (!supplierStats[supplierName]) {
+//       supplierStats[supplierName] = {
+//         payment: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: {
+//             match: 0,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//           totalExpectedAmount: 0,
+//           totalCapturedAmount: 0,
+//         },
+//         status: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//         individualCosts: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: {
+//             match: 0,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//         },
+//       };
+//     }
+
+//     // Process Payment Amount Comparison
+//     supplierStats[supplierName].payment.total++;
+//     totalStats.payment.total++;
+//     supplierStats[supplierName].payment.totalExpectedAmount +=
+//       booking.sst_final_selling_price_usd || 0;
+//     supplierStats[supplierName].payment.totalCapturedAmount +=
+//       booking.payment_amount_captured_usd_total || 0;
+
+//     if (!booking.payment_amount_usd_comparison) {
+//       supplierStats[supplierName].payment.missing++;
+//       totalStats.payment.missing++;
+//     } else if (booking.payment_amount_usd_comparison === "match") {
+//       supplierStats[supplierName].payment.matches++;
+//       supplierStats[supplierName].payment.breakdown.match++;
+//       totalStats.payment.matches++;
+//     } else {
+//       supplierStats[supplierName].payment.mismatches++;
+//       supplierStats[supplierName].payment.breakdown[
+//         booking.payment_amount_usd_comparison as keyof PaymentBreakdown
+//       ]++;
+//       totalStats.payment.mismatches++;
+//     }
+
+//     // Process Payment Status Comparison
+//     supplierStats[supplierName].status.total++;
+//     totalStats.status.total++;
+
+//     if (!booking.payment_status_comparison) {
+//       supplierStats[supplierName].status.missing++;
+//       supplierStats[supplierName].status.breakdown.missing++;
+//       totalStats.status.missing++;
+//     } else if (booking.payment_status_comparison === "match") {
+//       supplierStats[supplierName].status.matches++;
+//       supplierStats[supplierName].status.breakdown.match++;
+//       totalStats.status.matches++;
+//     } else {
+//       supplierStats[supplierName].status.mismatches++;
+//       supplierStats[supplierName].status.breakdown.mismatch++;
+//       totalStats.status.mismatches++;
+//     }
+
+//     // Process Individual Costs Comparison
+//     supplierStats[supplierName].individualCosts.total++;
+//     totalStats.individualCosts.total++;
+
+//     if (!booking.individual_costs_and_final_usd_comparison) {
+//       supplierStats[supplierName].individualCosts.missing++;
+//       totalStats.individualCosts.missing++;
+//     } else if (booking.individual_costs_and_final_usd_comparison === "match") {
+//       supplierStats[supplierName].individualCosts.matches++;
+//       supplierStats[supplierName].individualCosts.breakdown.match++;
+//       totalStats.individualCosts.matches++;
+//     } else {
+//       supplierStats[supplierName].individualCosts.mismatches++;
+//       supplierStats[supplierName].individualCosts.breakdown[
+//         booking.individual_costs_and_final_usd_comparison as keyof PaymentBreakdown
+//       ]++;
+//       totalStats.individualCosts.mismatches++;
+//     }
+//   });
+
+//   // Transform into final format
+//   const result: ReconciliationResult = {
+//     paymentMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.payment.matches,
+//         total: stats.payment.total,
+//         missing: stats.payment.missing,
+//         breakdown: stats.payment.breakdown,
+//         totalExpectedAmount: stats.payment.totalExpectedAmount,
+//         totalCapturedAmount: stats.payment.totalCapturedAmount,
+//       })),
+//       totals: {
+//         matches: totalStats.payment.matches,
+//         total: totalStats.payment.total,
+//         missing: totalStats.payment.missing,
+//         breakdown: {
+//           match: totalStats.payment.matches,
+//           high_negative_difference: 0,
+//           low_negative_difference: 0,
+//           low_positive_difference: 0,
+//           high_positive_difference: 0,
+//         },
+//       },
+//     },
+//     statusMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.status.matches,
+//         total: stats.status.total,
+//         missing: stats.status.missing,
+//         breakdown: stats.status.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.status.matches,
+//         total: totalStats.status.total,
+//         missing: totalStats.status.missing,
+//         breakdown: {
+//           match: totalStats.status.matches,
+//           mismatch: totalStats.status.mismatches,
+//           missing: totalStats.status.missing,
+//         },
+//       },
+//     },
+//     individualCostsMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.individualCosts.matches,
+//         total: stats.individualCosts.total,
+//         missing: stats.individualCosts.missing,
+//         breakdown: stats.individualCosts.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.individualCosts.matches,
+//         total: totalStats.individualCosts.total,
+//         missing: totalStats.individualCosts.missing,
+//         breakdown: {
+//           match: totalStats.individualCosts.matches,
+//           high_negative_difference: 0,
+//           low_negative_difference: 0,
+//           low_positive_difference: 0,
+//           high_positive_difference: 0,
+//         },
+//       },
+//     },
+//   };
+
+//   return result;
+// };
+
+// export const processSupplierReconciliationData: ProcessReconciliationData = (
+//   bookings: any[]
+// ): StandardReconciliationResult => {
+//   // Initialize the data structure
+//   const supplierStats: Record<string, StandardSupplierStats> = {};
+//   const totalStats = {
+//     cost: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     status: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//   };
+
+//   // Process each booking
+//   bookings.forEach((booking) => {
+//     const supplierName = booking.sst_supplier_name;
+
+//     // Initialize supplier if not exists
+//     if (!supplierStats[supplierName]) {
+//       supplierStats[supplierName] = {
+//         cost: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//         status: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//       };
+//     }
+
+//     // Process Cost Comparison
+//     supplierStats[supplierName].cost.total++;
+//     totalStats.cost.total++;
+
+//     if (booking.supplier_cost_comparison === null) {
+//       supplierStats[supplierName].cost.missing++;
+//       supplierStats[supplierName].cost.breakdown.missing++;
+//       totalStats.cost.missing++;
+//     } else if (booking.supplier_cost_comparison === "match") {
+//       supplierStats[supplierName].cost.matches++;
+//       supplierStats[supplierName].cost.breakdown.match++;
+//       totalStats.cost.matches++;
+//     } else {
+//       supplierStats[supplierName].cost.mismatches++;
+//       supplierStats[supplierName].cost.breakdown.mismatch++;
+//       totalStats.cost.mismatches++;
+//     }
+
+//     // Process Status Comparison
+//     supplierStats[supplierName].status.total++;
+//     totalStats.status.total++;
+
+//     if (booking.supplier_status_comparison === null) {
+//       supplierStats[supplierName].status.missing++;
+//       supplierStats[supplierName].status.breakdown.missing++;
+//       totalStats.status.missing++;
+//     } else if (booking.supplier_status_comparison === "match") {
+//       supplierStats[supplierName].status.matches++;
+//       supplierStats[supplierName].status.breakdown.match++;
+//       totalStats.status.matches++;
+//     } else {
+//       supplierStats[supplierName].status.mismatches++;
+//       supplierStats[supplierName].status.breakdown.mismatch++;
+//       totalStats.status.mismatches++;
+//     }
+//   });
+
+//   return {
+//     costMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.cost.matches,
+//         total: stats.cost.total,
+//         missing: stats.cost.missing,
+//         breakdown: stats.cost.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.cost.matches,
+//         total: totalStats.cost.total,
+//         missing: totalStats.cost.missing,
+//         breakdown: {
+//           match: totalStats.cost.matches,
+//           mismatch: totalStats.cost.mismatches,
+//           missing: totalStats.cost.missing,
+//         },
+//       },
+//     },
+//     statusMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.status.matches,
+//         total: stats.status.total,
+//         missing: stats.status.missing,
+//         breakdown: stats.status.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.status.matches,
+//         total: totalStats.status.total,
+//         missing: totalStats.status.missing,
+//         breakdown: {
+//           match: totalStats.status.matches,
+//           mismatch: totalStats.status.mismatches,
+//           missing: totalStats.status.missing,
+//         },
+//       },
+//     },
+//   };
+// };
+
+// interface CostBreakdown {
+//   match: number;
+//   high_negative_difference: number;
+//   medium_negative_difference: number;
+//   low_positive_difference: number;
+//   low_negative_difference: number;
+//   missing: number;
+// }
+
+// interface StatusBreakdown {
+//   match: number;
+//   mismatch: number;
+//   missing: number;
+// }
+
+// interface SupplierStats {
+//   cost: {
+//     total: number;
+//     matches: number;
+//     differences: number;
+//     missing: number;
+//     breakdown: CostBreakdown;
+//   };
+//   status: {
+//     total: number;
+//     matches: number;
+//     mismatches: number;
+//     missing: number;
+//     breakdown: StatusBreakdown;
+//   };
+// }
+
+// interface TotalStats {
+//   cost: {
+//     total: number;
+//     matches: number;
+//     differences: number;
+//     missing: number;
+//     breakdown: CostBreakdown;
+//   };
+//   status: {
+//     total: number;
+//     matches: number;
+//     mismatches: number;
+//     missing: number;
+//     breakdown: StatusBreakdown;
+//   };
+// }
+
+// export interface StandardReconciliationResult {
+//   costMatrix: {
+//     suppliers: Array<{
+//       name: string;
+//       matches: number;
+//       total: number;
+//       missing: number;
+//       breakdown: CostBreakdown;
+//     }>;
+//     totals: {
+//       matches: number;
+//       total: number;
+//       missing: number;
+//       breakdown: CostBreakdown;
+//     };
+//   };
+//   statusMatrix: {
+//     suppliers: Array<{
+//       name: string;
+//       matches: number;
+//       total: number;
+//       missing: number;
+//       breakdown: StatusBreakdown;
+//     }>;
+//     totals: {
+//       matches: number;
+//       total: number;
+//       missing: number;
+//       breakdown: StatusBreakdown;
+//     };
+//   };
+// }
+
+// // export type ProcessReconciliationData = (bookings: any[]) => StandardReconciliationResult;
+
+// export const processSupplierReconciliationData: ProcessReconciliationData = (
+//   bookings: any[]
+// ): StandardReconciliationResult => {
+//   // Initialize the data structure
+//   const supplierStats: Record<string, SupplierStats> = {};
+//   const totalStats: TotalStats = {
+//     cost: {
+//       total: 0,
+//       matches: 0,
+//       differences: 0,
+//       missing: 0,
+//       breakdown: {
+//         match: 0,
+//         high_negative_difference: 0,
+//         medium_negative_difference: 0,
+//         low_positive_difference: 0,
+//         low_negative_difference: 0,
+//         missing: 0,
+//       },
+//     },
+//     status: {
+//       total: 0,
+//       matches: 0,
+//       mismatches: 0,
+//       missing: 0,
+//       breakdown: { match: 0, mismatch: 0, missing: 0 },
+//     },
+//   };
+
+//   // Process each booking
+//   bookings.forEach((booking) => {
+//     const supplierName = booking.sst_supplier_name;
+
+//     // Initialize supplier if not exists
+//     if (!supplierStats[supplierName]) {
+//       supplierStats[supplierName] = {
+//         cost: {
+//           total: 0,
+//           matches: 0,
+//           differences: 0,
+//           missing: 0,
+//           breakdown: {
+//             match: 0,
+//             high_negative_difference: 0,
+//             medium_negative_difference: 0,
+//             low_positive_difference: 0,
+//             low_negative_difference: 0,
+//             missing: 0,
+//           },
+//         },
+//         status: {
+//           total: 0,
+//           matches: 0,
+//           mismatches: 0,
+//           missing: 0,
+//           breakdown: { match: 0, mismatch: 0, missing: 0 },
+//         },
+//       };
+//     }
+
+//     // Process Cost Comparison
+//     supplierStats[supplierName].cost.total++;
+//     totalStats.cost.total++;
+
+//     if (booking.supplier_cost_comparison === null) {
+//       supplierStats[supplierName].cost.missing++;
+//       supplierStats[supplierName].cost.breakdown.missing++;
+//       totalStats.cost.missing++;
+//       totalStats.cost.breakdown.missing++;
+//     } else if (booking.supplier_cost_comparison === "match") {
+//       supplierStats[supplierName].cost.matches++;
+//       supplierStats[supplierName].cost.breakdown.match++;
+//       totalStats.cost.matches++;
+//       totalStats.cost.breakdown.match++;
+//     } else {
+//       // Handle different types of cost differences
+//       supplierStats[supplierName].cost.differences++;
+//       totalStats.cost.differences++;
+
+//       // Update specific difference breakdowns
+//       supplierStats[supplierName].cost.breakdown[
+//         booking.supplier_cost_comparison
+//       ]++;
+//       totalStats.cost.breakdown[booking.supplier_cost_comparison]++;
+//     }
+
+//     // Process Status Comparison (unchanged)
+//     supplierStats[supplierName].status.total++;
+//     totalStats.status.total++;
+
+//     if (booking.supplier_status_comparison === null) {
+//       supplierStats[supplierName].status.missing++;
+//       supplierStats[supplierName].status.breakdown.missing++;
+//       totalStats.status.missing++;
+//       totalStats.status.breakdown.missing++;
+//     } else if (booking.supplier_status_comparison === "match") {
+//       supplierStats[supplierName].status.matches++;
+//       supplierStats[supplierName].status.breakdown.match++;
+//       totalStats.status.matches++;
+//       totalStats.status.breakdown.match++;
+//     } else {
+//       supplierStats[supplierName].status.mismatches++;
+//       supplierStats[supplierName].status.breakdown.mismatch++;
+//       totalStats.status.mismatches++;
+//       totalStats.status.breakdown.mismatch++;
+//     }
+//   });
+
+//   return {
+//     costMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.cost.matches,
+//         total: stats.cost.total,
+//         missing: stats.cost.missing,
+//         breakdown: stats.cost.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.cost.matches,
+//         total: totalStats.cost.total,
+//         missing: totalStats.cost.missing,
+//         breakdown: totalStats.cost.breakdown,
+//       },
+//     },
+//     statusMatrix: {
+//       suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//         name,
+//         matches: stats.status.matches,
+//         total: stats.status.total,
+//         missing: stats.status.missing,
+//         breakdown: stats.status.breakdown,
+//       })),
+//       totals: {
+//         matches: totalStats.status.matches,
+//         total: totalStats.status.total,
+//         missing: totalStats.status.missing,
+//         breakdown: totalStats.status.breakdown,
+//       },
+//     },
+//   };
+// };
+
+// export const processPaymentReconciliationData: ProcessPaymentReconciliationData =
+//   (bookings: any[]): PaymentReconciliationResult => {
+//     // Initialize the data structure
+//     const supplierStats: Record<string, PaymentSupplierStats> = {};
+//     const totalStats = {
+//       payment: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//       status: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//       individualCosts: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     };
+
+//     // Process each booking
+//     bookings.forEach((booking) => {
+//       const supplierName = booking.sst_supplier_name;
+
+//       // Initialize supplier if not exists
+//       if (!supplierStats[supplierName]) {
+//         supplierStats[supplierName] = {
+//           payment: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: {
+//               match: 0,
+//               high_negative_difference: 0,
+//               low_negative_difference: 0,
+//               low_positive_difference: 0,
+//               high_positive_difference: 0,
+//             },
+//             totalExpectedAmount: 0,
+//             totalCapturedAmount: 0,
+//           },
+//           status: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: { match: 0, mismatch: 0, missing: 0 },
+//           },
+//           individualCosts: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: {
+//               match: 0,
+//               high_negative_difference: 0,
+//               low_negative_difference: 0,
+//               low_positive_difference: 0,
+//               high_positive_difference: 0,
+//             },
+//           },
+//         };
+//       }
+
+//       // Process Payment Amount Comparison
+//       const payment = supplierStats[supplierName].payment;
+//       payment.total++;
+//       totalStats.payment.total++;
+//       payment.totalExpectedAmount += booking.sst_final_selling_price_usd || 0;
+//       payment.totalCapturedAmount +=
+//         booking.payment_amount_captured_usd_total || 0;
+
+//       if (!booking.payment_amount_usd_comparison) {
+//         payment.missing++;
+//         totalStats.payment.missing++;
+//       } else if (booking.payment_amount_usd_comparison === "match") {
+//         payment.matches++;
+//         payment.breakdown.match++;
+//         totalStats.payment.matches++;
+//       } else {
+//         payment.mismatches++;
+//         payment.breakdown[
+//           booking.payment_amount_usd_comparison as keyof PaymentBreakdown
+//         ]++;
+//         totalStats.payment.mismatches++;
+//       }
+
+//       // Process Payment Status Comparison
+//       const status = supplierStats[supplierName].status;
+//       status.total++;
+//       totalStats.status.total++;
+
+//       if (!booking.payment_status_comparison) {
+//         status.missing++;
+//         status.breakdown.missing++;
+//         totalStats.status.missing++;
+//       } else if (booking.payment_status_comparison === "match") {
+//         status.matches++;
+//         status.breakdown.match++;
+//         totalStats.status.matches++;
+//       } else {
+//         status.mismatches++;
+//         status.breakdown.mismatch++;
+//         totalStats.status.mismatches++;
+//       }
+
+//       // Process Individual Costs Comparison
+//       const costs = supplierStats[supplierName].individualCosts;
+//       costs.total++;
+//       totalStats.individualCosts.total++;
+
+//       if (!booking.individual_costs_and_final_usd_comparison) {
+//         costs.missing++;
+//         totalStats.individualCosts.missing++;
+//       } else if (
+//         booking.individual_costs_and_final_usd_comparison === "match"
+//       ) {
+//         costs.matches++;
+//         costs.breakdown.match++;
+//         totalStats.individualCosts.matches++;
+//       } else {
+//         costs.mismatches++;
+//         costs.breakdown[
+//           booking.individual_costs_and_final_usd_comparison as keyof PaymentBreakdown
+//         ]++;
+//         totalStats.individualCosts.mismatches++;
+//       }
+//     });
+
+//     return {
+//       paymentMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.payment.matches,
+//           total: stats.payment.total,
+//           missing: stats.payment.missing,
+//           breakdown: stats.payment.breakdown,
+//           totalExpectedAmount: stats.payment.totalExpectedAmount,
+//           totalCapturedAmount: stats.payment.totalCapturedAmount,
+//         })),
+//         totals: {
+//           matches: totalStats.payment.matches,
+//           total: totalStats.payment.total,
+//           missing: totalStats.payment.missing,
+//           breakdown: {
+//             match: totalStats.payment.matches,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//         },
+//       },
+//       statusMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.status.matches,
+//           total: stats.status.total,
+//           missing: stats.status.missing,
+//           breakdown: stats.status.breakdown,
+//         })),
+//         totals: {
+//           matches: totalStats.status.matches,
+//           total: totalStats.status.total,
+//           missing: totalStats.status.missing,
+//           breakdown: {
+//             match: totalStats.status.matches,
+//             mismatch: totalStats.status.mismatches,
+//             missing: totalStats.status.missing,
+//           },
+//         },
+//       },
+//       individualCostsMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.individualCosts.matches,
+//           total: stats.individualCosts.total,
+//           missing: stats.individualCosts.missing,
+//           breakdown: stats.individualCosts.breakdown,
+//         })),
+//         totals: {
+//           matches: totalStats.individualCosts.matches,
+//           total: totalStats.individualCosts.total,
+//           missing: totalStats.individualCosts.missing,
+//           breakdown: {
+//             match: totalStats.individualCosts.matches,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//         },
+//       },
+//     };
+//   };
+
+// export const processPaymentReconciliationData: ProcessPaymentReconciliationData =
+//   (bookings: any[]): PaymentReconciliationResult => {
+//     const supplierStats: Record<string, PaymentSupplierStats> = {};
+//     const totalStats = {
+//       payment: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//       status: {
+//         total: 0,
+//         matches: 0,
+//         mismatches: 0,
+//         missing: 0,
+//         cancelled_succeeded: 0,
+//       },
+//       individualCosts: { total: 0, matches: 0, mismatches: 0, missing: 0 },
+//     };
+
+//     bookings.forEach((booking) => {
+//       const supplierName = booking.sst_supplier_name;
+
+//       // Initialize supplier if not exists
+//       if (!supplierStats[supplierName]) {
+//         supplierStats[supplierName] = {
+//           payment: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: {
+//               match: 0,
+//               high_negative_difference: 0,
+//               low_negative_difference: 0,
+//               low_positive_difference: 0,
+//               high_positive_difference: 0,
+//             },
+//             totalExpectedAmount: 0,
+//             totalCapturedAmount: 0,
+//           },
+//           status: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: {
+//               match: 0,
+//               mismatch: 0,
+//               missing: 0,
+//               cancelled_succeeded: 0, // Add the new status type
+//             },
+//           },
+//           individualCosts: {
+//             total: 0,
+//             matches: 0,
+//             mismatches: 0,
+//             missing: 0,
+//             breakdown: {
+//               match: 0,
+//               high_negative_difference: 0,
+//               low_negative_difference: 0,
+//               low_positive_difference: 0,
+//               high_positive_difference: 0,
+//             },
+//           },
+//         };
+//       }
+
+//       // Process Payment Amount Comparison (unchanged)
+//       const payment = supplierStats[supplierName].payment;
+//       payment.total++;
+//       totalStats.payment.total++;
+//       payment.totalExpectedAmount += booking.sst_final_selling_price_usd || 0;
+//       payment.totalCapturedAmount +=
+//         booking.payment_amount_captured_usd_total || 0;
+
+//       if (!booking.payment_amount_usd_comparison) {
+//         payment.missing++;
+//         totalStats.payment.missing++;
+//       } else if (booking.payment_amount_usd_comparison === "match") {
+//         payment.matches++;
+//         payment.breakdown.match++;
+//         totalStats.payment.matches++;
+//       } else {
+//         payment.mismatches++;
+//         payment.breakdown[
+//           booking.payment_amount_usd_comparison as keyof PaymentBreakdown
+//         ]++;
+//         totalStats.payment.mismatches++;
+//       }
+
+//       // Enhanced Payment Status Comparison
+//       const status = supplierStats[supplierName].status;
+//       status.total++;
+//       totalStats.status.total++;
+
+//       if (!booking.payment_status_comparison) {
+//         status.missing++;
+//         status.breakdown.missing++;
+//         totalStats.status.missing++;
+//       } else if (booking.payment_status_comparison === "match") {
+//         status.matches++;
+//         status.breakdown.match++;
+//         totalStats.status.matches++;
+//       } else if (booking.payment_status_comparison === "cancelled_succeeded") {
+//         // Special handling for cancelled_succeeded status
+//         status.breakdown.cancelled_succeeded =
+//           (status.breakdown.cancelled_succeeded || 0) + 1;
+//         totalStats.status.cancelled_succeeded++;
+//         // We still count this as a mismatch for total counts
+//         status.mismatches++;
+//         totalStats.status.mismatches++;
+//       } else {
+//         status.mismatches++;
+//         status.breakdown.mismatch++;
+//         totalStats.status.mismatches++;
+//       }
+
+//       // Process Individual Costs Comparison (unchanged)
+//       const costs = supplierStats[supplierName].individualCosts;
+//       costs.total++;
+//       totalStats.individualCosts.total++;
+
+//       if (!booking.individual_costs_and_final_usd_comparison) {
+//         costs.missing++;
+//         totalStats.individualCosts.missing++;
+//       } else if (
+//         booking.individual_costs_and_final_usd_comparison === "match"
+//       ) {
+//         costs.matches++;
+//         costs.breakdown.match++;
+//         totalStats.individualCosts.matches++;
+//       } else {
+//         costs.mismatches++;
+//         costs.breakdown[
+//           booking.individual_costs_and_final_usd_comparison as keyof PaymentBreakdown
+//         ]++;
+//         totalStats.individualCosts.mismatches++;
+//       }
+//     });
+
+//     return {
+//       paymentMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.payment.matches,
+//           total: stats.payment.total,
+//           missing: stats.payment.missing,
+//           breakdown: stats.payment.breakdown,
+//           totalExpectedAmount: stats.payment.totalExpectedAmount,
+//           totalCapturedAmount: stats.payment.totalCapturedAmount,
+//         })),
+//         totals: {
+//           matches: totalStats.payment.matches,
+//           total: totalStats.payment.total,
+//           missing: totalStats.payment.missing,
+//           breakdown: {
+//             match: totalStats.payment.matches,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//         },
+//       },
+//       statusMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.status.matches,
+//           total: stats.status.total,
+//           missing: stats.status.missing,
+//           breakdown: {
+//             match: stats.status.breakdown.match,
+//             mismatch: stats.status.breakdown.mismatch,
+//             missing: stats.status.breakdown.missing,
+//             cancelled_succeeded:
+//               stats.status.breakdown.cancelled_succeeded || 0,
+//           },
+//         })),
+//         totals: {
+//           matches: totalStats.status.matches,
+//           total: totalStats.status.total,
+//           missing: totalStats.status.missing,
+//           breakdown: {
+//             match: totalStats.status.matches,
+//             mismatch:
+//               totalStats.status.mismatches -
+//               totalStats.status.cancelled_succeeded,
+//             missing: totalStats.status.missing,
+//             cancelled_succeeded: totalStats.status.cancelled_succeeded,
+//           },
+//         },
+//       },
+//       individualCostsMatrix: {
+//         suppliers: Object.entries(supplierStats).map(([name, stats]) => ({
+//           name,
+//           matches: stats.individualCosts.matches,
+//           total: stats.individualCosts.total,
+//           missing: stats.individualCosts.missing,
+//           breakdown: stats.individualCosts.breakdown,
+//         })),
+//         totals: {
+//           matches: totalStats.individualCosts.matches,
+//           total: totalStats.individualCosts.total,
+//           missing: totalStats.individualCosts.missing,
+//           breakdown: {
+//             match: totalStats.individualCosts.matches,
+//             high_negative_difference: 0,
+//             low_negative_difference: 0,
+//             low_positive_difference: 0,
+//             high_positive_difference: 0,
+//           },
+//         },
+//       },
+//     };
+//   };
+
 export function inferDataTypes(
   jsonData: any[]
 ): { name: string; data_type: string }[] {
@@ -3792,6 +5894,22 @@ export function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
   );
 }
 
+// Function to map class names to ExcelJS ARGB colors
+// export const getExcelJSStyleFromClass = (className: string) => {
+//   switch (className) {
+//     case "bg-green-500":
+//       return { fgColor: { argb: "FF4CAF50" } }; // Green background
+//     case "bg-red-500":
+//       return { fgColor: { argb: "FFFF0000" } }; // Red background
+//     case "bg-gray-500":
+//       return { fgColor: { argb: "FF9E9E9E" } }; // Gray background
+//     case "bg-orange-500":
+//       return { fgColor: { argb: "FFFFA500" } }; // Orange background
+//     default:
+//       return null;
+//   }
+// };
+
 // Utility function to calculate column width based on header length
 export const calculateColumnWidth = (header: any) => {
   return Math.max(header.length + 8, 15); // Add padding and set a minimum width
@@ -3920,6 +6038,118 @@ export const formatDate = (
     return fallback;
   }
 };
+
+// type LiveQueryResult<T> = {
+//   data: T[];
+//   error: Error | null;
+//   loading: boolean;
+// };
+
+// type Action = "CREATE" | "UPDATE" | "DELETE" | "CLOSE";
+// type CloseResult = "killed" | "disconnected";
+
+// export function useLiveQuery<T extends Record<string, any>>(
+//   table: string,
+//   where?: string
+// ): LiveQueryResult<T> {
+//   const [data, setData] = useState<T[]>([]);
+//   const [error, setError] = useState<Error | null>(null);
+//   const [loading, setLoading] = useState(true);
+//   const dbRef = useRef<Surreal | null>(null);
+
+//   useEffect(() => {
+//     let queryUuid: Uuid;
+//     let mounted = true;
+
+//     const startLiveQuery = async () => {
+//       try {
+//         // Get DB connection
+//         dbRef.current = await getDb();
+//         const db = dbRef.current;
+
+//         const query = where
+//           ? `SELECT *
+// FROM ${table}
+// WHERE ${where} ORDER BY updated_datetime ASC;`
+//           : `SELECT *
+// FROM ${table} ORDER BY updated_datetime ASC;`;
+
+//         const [result] = await db.query<T[]>(query);
+//         if (mounted) {
+//           // setData(result);
+//           if (Array.isArray(result)) {
+//             setData(result as T[]);
+//           } else {
+//             setData([result as T]);
+//           }
+//           setLoading(false);
+//         }
+
+//         queryUuid = await db.live<T>(
+//           table,
+//           (action: Action, result: T | CloseResult) => {
+//             if (!mounted) return;
+
+//             switch (action) {
+//               case "CREATE":
+//                 setData((prevData) => {
+//                   const newRecord = result as T;
+//                   return [...prevData, newRecord];
+//                 });
+//                 break;
+//               case "UPDATE":
+//                 setData((prevData) => {
+//                   const updatedRecord = result as T;
+//                   return prevData.map((item) =>
+//                     item.id === updatedRecord.id ? updatedRecord : item
+//                   );
+//                 });
+//                 break;
+//               case "DELETE":
+//                 setData((prevData) => {
+//                   const deletedRecord = result as T;
+//                   return prevData.filter(
+//                     (item) => item.id !== deletedRecord.id
+//                   );
+//                 });
+//                 break;
+//               case "CLOSE":
+//                 console.log(`Live query ${result as CloseResult}`);
+//                 break;
+//             }
+//           }
+//         );
+//       } catch (err) {
+//         if (mounted) {
+//           setError(err instanceof Error ? err : new Error("Live query failed"));
+//           setLoading(false);
+//         }
+//       }
+//     };
+
+//     startLiveQuery();
+
+//     // Cleanup function
+//     return () => {
+//       mounted = false;
+
+//       // Kill the live query if it exists
+//       const cleanup = async () => {
+//         if (queryUuid && dbRef.current) {
+//           try {
+//             await dbRef.current.kill(queryUuid);
+//           } catch (error) {
+//             console.error("Error killing live query:", error);
+//           }
+//         }
+//       };
+
+//       cleanup();
+//     };
+//   }, [table, where]);
+
+//   return { data, error, loading };
+// }
 
 export function extractKeys(obj: any, keys: any, mode = "include") {
   if (!["include", "exclude"].includes(mode)) {

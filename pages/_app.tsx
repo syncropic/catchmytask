@@ -127,10 +127,10 @@ type ExtendedAppProps = AppProps & {
 };
 
 // Create a context for the DuckDB instance
-const DuckDBContext = createContext<any>(null);
+// const DuckDBContext = createContext<any>(null);
 
 // Custom hook to use the DuckDB context
-export const useDuckDB = () => useContext(DuckDBContext);
+// export const useDuckDB = () => useContext(DuckDBContext);
 
 const App = (props: React.PropsWithChildren) => {
   const { data: session, status } = useSession();
@@ -154,23 +154,23 @@ const App = (props: React.PropsWithChildren) => {
   //   initParser().catch((error) => console.error("Parser error:", error));
   // }, []);
 
-  useEffect(() => {
-    // Initialize DuckDB instance once
-    const initializeDB = async () => {
-      const db = await initializeLocalDB();
-      setDbInstance(db);
-    };
+  // useEffect(() => {
+  //   // Initialize DuckDB instance once
+  //   const initializeDB = async () => {
+  //     const db = await initializeLocalDB();
+  //     setDbInstance(db);
+  //   };
 
-    initializeDB();
+  //   initializeDB();
 
-    // Save the database state to local storage on page unload
-    window.addEventListener("beforeunload", saveDatabaseToLocalStorage);
+  //   // Save the database state to local storage on page unload
+  //   window.addEventListener("beforeunload", saveDatabaseToLocalStorage);
 
-    // Clean up event listener on component unmount
-    return () => {
-      window.removeEventListener("beforeunload", saveDatabaseToLocalStorage);
-    };
-  }, []);
+  //   // Clean up event listener on component unmount
+  //   return () => {
+  //     window.removeEventListener("beforeunload", saveDatabaseToLocalStorage);
+  //   };
+  // }, []);
 
   useEffect(() => {
     fetchRuntimeConfig();
@@ -291,126 +291,125 @@ const App = (props: React.PropsWithChildren) => {
 
   return (
     <>
-      <DuckDBContext.Provider value={dbInstance}>
-        <MantineProvider
-          theme={theme}
-          defaultColorScheme={colorScheme?.scheme || "auto"}
-        >
-          <ContextMenuProvider>
-            <Notifications position="top-right" />
-            <Refine
-              routerProvider={routerProvider}
-              dataProvider={{
-                default: defaultApiDataProvider(API_URL, getToken, getStateIds),
-              }}
-              notificationProvider={useNotificationProvider}
-              authProvider={authProvider}
-              accessControlProvider={accessControlProvider}
-              resources={[
-                {
-                  name: "home",
-                  list: "/home",
-                  show: "/home",
-                },
-                {
-                  name: "profile",
-                  list: "/profile",
-                },
-                // {
-                //   name: "applications",
-                //   list: "/applications",
-                //   create: "/applications/create",
-                //   edit: "/applications/edit/:id",
-                //   show: "/applications/show/:id",
-                // },
-                // {
-                //   name: "sessions",
-                //   list: "/sessions",
-                //   create: "/:applicationId/sessions/create",
-                //   edit: "/:applicationId/sessions/:id/edit",
-                //   show: "/:applicationId/sessions/:sessionId/tasks/:taskId",
-                // },
-                {
-                  name: "sessions",
-                  list: "/sessions",
-                  show: "/sessions/show/:id",
-                },
-                {
-                  name: "results",
-                  list: "/results",
-                  show: "/results/show/:id",
-                },
-                // {
-                //   name: "tasks",
-                //   list: "/tasks",
-                //   show: "/tasks/show/:id",
-                // },
-                {
-                  name: "profiles",
-                  list: "/profiles",
-                  show: "/profiles/show/:id",
-                  edit: "/profiles/edit/:id",
-                },
-                {
-                  name: "account",
-                  list: "/account",
-                  edit: "/account/edit/:id",
-                },
-                {
-                  name: "settings",
-                  list: "/settings",
-                  edit: "/settings/edit/:id",
-                },
-                {
-                  name: "messages",
-                  list: "/messages",
-                  edit: "/messages/edit/:id",
-                  show: "/messages/show/:id",
-                },
-                // {
-                //   name: "activities",
-                //   list: "/activities",
-                //   edit: "/activities/edit/:id",
-                //   show: "/activities/show/:id",
-                // },
-                // {
-                //   name: "views",
-                //   list: "/tasks",
-                //   show: "/tasks/show/:id",
-                // },
-              ]}
-              options={{
-                syncWithLocation: true,
-                warnWhenUnsavedChanges: true,
-                projectId: "OpGcqe-gAGTnn-eW9pDg",
-                // reactQuery: {
-                //   clientConfig: {
-                //     defaultOptions: {
-                //       queries: {
-                //         // Prevent queries from automatically going stale
-                //         staleTime: Infinity,
-                //         // Prevent queries from being garbage collected
-                //         gcTime: Infinity,
-                //         // Disable all automatic refetching
-                //         refetchOnMount: false,
-                //         refetchOnWindowFocus: false,
-                //         refetchOnReconnect: false,
-                //         // networkMode: "always", // Apply this to mutations as well, as shown below
-                //       },
-                //       mutations: {
-                //         // For posting data
-                //         // networkMode: "always" // It defaults to "online," preventing requests when there is no connection
-                //       },
-                //     },
-                //   },
-                // },
-              }}
-            >
-              {/* <div>
+      <MantineProvider
+        theme={theme}
+        defaultColorScheme={colorScheme?.scheme || "auto"}
+      >
+        <ContextMenuProvider>
+          <Notifications position="top-right" />
+          <Refine
+            routerProvider={routerProvider}
+            dataProvider={{
+              default: defaultApiDataProvider(API_URL, getToken, getStateIds),
+            }}
+            notificationProvider={useNotificationProvider}
+            authProvider={authProvider}
+            accessControlProvider={accessControlProvider}
+            resources={[
+              {
+                name: "home",
+                list: "/home",
+                show: "/home",
+              },
+              {
+                name: "profile",
+                list: "/profile",
+              },
+              // {
+              //   name: "applications",
+              //   list: "/applications",
+              //   create: "/applications/create",
+              //   edit: "/applications/edit/:id",
+              //   show: "/applications/show/:id",
+              // },
+              // {
+              //   name: "sessions",
+              //   list: "/sessions",
+              //   create: "/:applicationId/sessions/create",
+              //   edit: "/:applicationId/sessions/:id/edit",
+              //   show: "/:applicationId/sessions/:sessionId/tasks/:taskId",
+              // },
+              {
+                name: "sessions",
+                list: "/sessions",
+                show: "/sessions/show/:id",
+              },
+              {
+                name: "results",
+                list: "/results",
+                show: "/results/show/:id",
+              },
+              // {
+              //   name: "tasks",
+              //   list: "/tasks",
+              //   show: "/tasks/show/:id",
+              // },
+              {
+                name: "profiles",
+                list: "/profiles",
+                show: "/profiles/show/:id",
+                edit: "/profiles/edit/:id",
+              },
+              {
+                name: "account",
+                list: "/account",
+                edit: "/account/edit/:id",
+              },
+              {
+                name: "settings",
+                list: "/settings",
+                edit: "/settings/edit/:id",
+              },
+              {
+                name: "messages",
+                list: "/messages",
+                edit: "/messages/edit/:id",
+                show: "/messages/show/:id",
+              },
+              // {
+              //   name: "activities",
+              //   list: "/activities",
+              //   edit: "/activities/edit/:id",
+              //   show: "/activities/show/:id",
+              // },
+              // {
+              //   name: "views",
+              //   list: "/tasks",
+              //   show: "/tasks/show/:id",
+              // },
+            ]}
+            options={{
+              syncWithLocation: true,
+              warnWhenUnsavedChanges: true,
+              projectId: "OpGcqe-gAGTnn-eW9pDg",
+              // reactQuery: {
+              //   clientConfig: {
+              //     defaultOptions: {
+              //       queries: {
+              //         // Prevent queries from automatically going stale
+              //         staleTime: Infinity,
+              //         // Prevent queries from being garbage collected
+              //         gcTime: Infinity,
+              //         // Disable all automatic refetching
+              //         refetchOnMount: false,
+              //         refetchOnWindowFocus: false,
+              //         refetchOnReconnect: false,
+              //         // networkMode: "always", // Apply this to mutations as well, as shown below
+              //       },
+              //       mutations: {
+              //         // For posting data
+              //         // networkMode: "always" // It defaults to "online," preventing requests when there is no connection
+              //       },
+              //     },
+              //   },
+              // },
+            }}
+          >
+            {/* <div>
             MYAPP //{" "}
             {JSON.stringify(session?.token?.account?.providerAccountId)}
           </div> */}
-              {/* <button
+            {/* <button
             onClick={() =>
               signOut({
                 redirect: true,
@@ -420,17 +419,16 @@ const App = (props: React.PropsWithChildren) => {
           >
             logout
           </button> */}
-              {router.pathname === "/login" && <div>{props.children}</div>}
-              {router.pathname !== "/login" && (
-                <BaseLayout>{props.children}</BaseLayout>
-              )}
+            {router.pathname === "/login" && <div>{props.children}</div>}
+            {router.pathname !== "/login" && (
+              <BaseLayout>{props.children}</BaseLayout>
+            )}
 
-              {/* <DocumentTitleHandler handler={customTitleHandler} /> */}
-              <ReactQueryDevtools initialIsOpen={false} />
-            </Refine>
-          </ContextMenuProvider>
-        </MantineProvider>
-      </DuckDBContext.Provider>
+            {/* <DocumentTitleHandler handler={customTitleHandler} /> */}
+            <ReactQueryDevtools initialIsOpen={false} />
+          </Refine>
+        </ContextMenuProvider>
+      </MantineProvider>
     </>
   );
 };

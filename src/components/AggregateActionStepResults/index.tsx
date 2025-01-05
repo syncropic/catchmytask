@@ -12,15 +12,12 @@ import {
   getQueryFieldMetadata,
   isAllLocalDBSuccess,
   sanitizeFilters,
-  useActionStepsData,
   useFetchQueryDataByState,
-  useReadByState,
   useReadRecordByState,
 } from "@components/Utils";
 import { useAppStore } from "src/store";
 import { Text } from "@mantine/core";
 import { useEffect, useRef, useState } from "react";
-import { useDuckDB } from "pages/_app"; // Import the useDuckDB hook
 import { set } from "lodash";
 import nunjucks from "nunjucks";
 import SummariesDisplay from "@components/SummariesDisplay";
@@ -33,224 +30,224 @@ interface AggregateActionStepResultsProps {
 export function AggregateActionStepResults({
   action_steps = [],
 }: AggregateActionStepResultsProps) {
-  const dbInstance = useDuckDB(); // Get DuckDB instance
-  const {
-    activeSections,
-    activeView,
-    activeMainCustomComponent,
-    activeSummaryCustomComponents,
-    activeRecordCustomComponents,
-  } = useAppStore(); // Zustand store access
+  // const dbInstance = useDuckDB(); // Get DuckDB instance
+  // const {
+  //   activeSections,
+  //   activeView,
+  //   activeMainCustomComponent,
+  //   activeSummaryCustomComponents,
+  //   activeRecordCustomComponents,
+  // } = useAppStore(); // Zustand store access
 
-  const [fetchedSteps, setFetchedSteps] = useState<Record<string, boolean>>({});
-  const [dataItems, setDataItems] = useState<[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isJoinInProgress, setIsJoinInProgress] = useState(false);
-  const previousActionSteps = useRef(action_steps);
+  // const [fetchedSteps, setFetchedSteps] = useState<Record<string, boolean>>({});
+  // const [dataItems, setDataItems] = useState<[]>([]);
+  // const [isLoading, setIsLoading] = useState(true);
+  // const [isJoinInProgress, setIsJoinInProgress] = useState(false);
+  // const previousActionSteps = useRef(action_steps);
 
-  const search_action_input_form_values_key = `query_${activeView?.id}`;
+  // const search_action_input_form_values_key = `query_${activeView?.id}`;
 
-  const globalSearchQuery = useAppStore(
-    (state) =>
-      state.action_input_form_values[`${search_action_input_form_values_key}`]
-        ?.query
-  );
+  // const globalSearchQuery = useAppStore(
+  //   (state) =>
+  //     state.action_input_form_values[`${search_action_input_form_values_key}`]
+  //       ?.query
+  // );
 
-  const search_action_input_form_values = useAppStore(
-    (state) =>
-      state.action_input_form_values[search_action_input_form_values_key]
-  );
+  // const search_action_input_form_values = useAppStore(
+  //   (state) =>
+  //     state.action_input_form_values[search_action_input_form_values_key]
+  // );
 
-  const view_modes_action_input_form_values_key = `view_modes_${activeView?.id}`;
+  // const view_modes_action_input_form_values_key = `view_modes_${activeView?.id}`;
 
-  const view_modes_action_input_form_values = useAppStore(
-    (state) =>
-      state.action_input_form_values[view_modes_action_input_form_values_key]
-  );
+  // const view_modes_action_input_form_values = useAppStore(
+  //   (state) =>
+  //     state.action_input_form_values[view_modes_action_input_form_values_key]
+  // );
 
-  let active_view_search_model_state = {
-    id: activeView?.id,
-    query_name: "data_model",
-    name: activeView?.["action_models"]?.["search"],
-    success_message_code: "action_input_data_model_schema",
-  };
+  // let active_view_search_model_state = {
+  //   id: activeView?.id,
+  //   query_name: "data_model",
+  //   name: activeView?.["action_models"]?.["search"],
+  //   success_message_code: "action_input_data_model_schema",
+  // };
 
-  const {
-    data: active_view_search_model_data,
-    isLoading: active_view_search_model_isLoading,
-    error: active_view_search_model_error,
-  } = useFetchQueryDataByState(active_view_search_model_state);
+  // const {
+  //   data: active_view_search_model_data,
+  //   isLoading: active_view_search_model_isLoading,
+  //   error: active_view_search_model_error,
+  // } = useFetchQueryDataByState(active_view_search_model_state);
 
-  const handleStepFetched = (stepId: string) => {
-    setFetchedSteps((prev) => ({ ...prev, [stepId]: true }));
-  };
+  // const handleStepFetched = (stepId: string) => {
+  //   setFetchedSteps((prev) => ({ ...prev, [stepId]: true }));
+  // };
 
-  const executeQuery = async (query: string) => {
-    try {
-      console.log("Executing query:\n", query);
-      const result = await dbInstance.query(query);
-      setDataItems(result.toArray());
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error executing query:", error);
-      setIsLoading(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // const executeDynamicOuterJoin = async () => {
+  // const executeQuery = async (query: string) => {
   //   try {
-  //     let query;
-  //     if (action_steps.length === 1) {
-  //       const step = action_steps[0];
-  //       const alias = generateTableAlias(step.success_message_code);
-  //       const fields = dataFields[step.success_message_code] || [];
-
-  //       const fieldSelections = fields
-  //         .map(
-  //           (field: any) => `${alias}.${field.name} AS ${alias}_${field.name}`
-  //         )
-  //         .join(",\n    ");
-
-  //       query = `
-  //         SELECT
-  //           ${fieldSelections}
-  //         FROM
-  //           ${step.success_message_code} ${alias};
-  //       `.trim();
-  //     } else {
-  //       const fieldSelections = action_steps.flatMap((step) => {
-  //         const alias = generateTableAlias(step.success_message_code);
-  //         const fields = dataFields[step.success_message_code] || [];
-  //         const relationType =
-  //           step.primary_step_relation?.cardinality || "one-to-one";
-
-  //         if (relationType === "one-to-many") {
-  //           const preferredColumn = getPreferredColumn(fields);
-  //           return [
-  //             `COUNT(${alias}.id) AS ${alias}_count`,
-  //             `GROUP_CONCAT(${alias}.${preferredColumn}) AS ${alias}_${preferredColumn}`,
-  //           ];
-  //         } else {
-  //           return fields.map(
-  //             (field: any) => `${alias}.${field.name} AS ${alias}_${field.name}`
-  //           );
-  //         }
-  //       });
-
-  //       const joinClauses = action_steps.reduce((acc, step, index) => {
-  //         const alias = generateTableAlias(step.success_message_code);
-  //         if (index === 0) return `${step.success_message_code} ${alias}`;
-  //         return `${acc} FULL OUTER JOIN ${step.success_message_code} ${alias} USING (issue_id)`;
-  //       }, "");
-
-  //       const groupByFields = action_steps.flatMap((step) => {
-  //         const alias = generateTableAlias(step.success_message_code);
-  //         const fields = dataFields[step.success_message_code] || [];
-  //         const relationType =
-  //           step.primary_step_relation?.cardinality || "one-to-one";
-
-  //         if (relationType === "one-to-many") {
-  //           return [`${alias}.issue_id`];
-  //         } else {
-  //           return fields.map((field: any) => `${alias}.${field.name}`);
-  //         }
-  //       });
-
-  //       query = `
-  //         SELECT
-  //           ${fieldSelections.join(",\n    ")}
-  //         FROM
-  //           ${joinClauses}
-  //         GROUP BY
-  //           ${groupByFields.join(",\n    ")};
-  //       `.trim();
-  //     }
-
-  //     executeQuery(query);
+  //     console.log("Executing query:\n", query);
+  //     const result = await dbInstance.query(query);
+  //     setDataItems(result.toArray());
+  //     setIsLoading(false);
   //   } catch (error) {
   //     console.error("Error executing query:", error);
+  //     setIsLoading(false);
+  //   } finally {
+  //     setIsLoading(false);
   //   }
   // };
 
-  let read_record_state = {
-    credential: "surrealdb catchmytask dev",
-    success_message_code: activeView?.id,
-    record: activeView,
-    read_record_mode: "remote",
-  };
+  // // const executeDynamicOuterJoin = async () => {
+  // //   try {
+  // //     let query;
+  // //     if (action_steps.length === 1) {
+  // //       const step = action_steps[0];
+  // //       const alias = generateTableAlias(step.success_message_code);
+  // //       const fields = dataFields[step.success_message_code] || [];
 
-  const {
-    data: viewData,
-    isLoading: viewIsLoading,
-    error: viewError,
-  } = useReadRecordByState(read_record_state);
+  // //       const fieldSelections = fields
+  // //         .map(
+  // //           (field: any) => `${alias}.${field.name} AS ${alias}_${field.name}`
+  // //         )
+  // //         .join(",\n    ");
 
-  let view_record = viewData?.data?.find(
-    (item: any) => item?.message?.code === activeView?.id
-  )?.data[0];
+  // //       query = `
+  // //         SELECT
+  // //           ${fieldSelections}
+  // //         FROM
+  // //           ${step.success_message_code} ${alias};
+  // //       `.trim();
+  // //     } else {
+  // //       const fieldSelections = action_steps.flatMap((step) => {
+  // //         const alias = generateTableAlias(step.success_message_code);
+  // //         const fields = dataFields[step.success_message_code] || [];
+  // //         const relationType =
+  // //           step.primary_step_relation?.cardinality || "one-to-one";
 
-  // const fieldMetadataList = getQueryFieldMetadata(action_steps, dataFields);
-  // const filteredDataFields = concatenateAliasedDataFields(
-  //   fieldMetadataList,
-  //   action_steps,
-  //   dataFields
+  // //         if (relationType === "one-to-many") {
+  // //           const preferredColumn = getPreferredColumn(fields);
+  // //           return [
+  // //             `COUNT(${alias}.id) AS ${alias}_count`,
+  // //             `GROUP_CONCAT(${alias}.${preferredColumn}) AS ${alias}_${preferredColumn}`,
+  // //           ];
+  // //         } else {
+  // //           return fields.map(
+  // //             (field: any) => `${alias}.${field.name} AS ${alias}_${field.name}`
+  // //           );
+  // //         }
+  // //       });
+
+  // //       const joinClauses = action_steps.reduce((acc, step, index) => {
+  // //         const alias = generateTableAlias(step.success_message_code);
+  // //         if (index === 0) return `${step.success_message_code} ${alias}`;
+  // //         return `${acc} FULL OUTER JOIN ${step.success_message_code} ${alias} USING (issue_id)`;
+  // //       }, "");
+
+  // //       const groupByFields = action_steps.flatMap((step) => {
+  // //         const alias = generateTableAlias(step.success_message_code);
+  // //         const fields = dataFields[step.success_message_code] || [];
+  // //         const relationType =
+  // //           step.primary_step_relation?.cardinality || "one-to-one";
+
+  // //         if (relationType === "one-to-many") {
+  // //           return [`${alias}.issue_id`];
+  // //         } else {
+  // //           return fields.map((field: any) => `${alias}.${field.name}`);
+  // //         }
+  // //       });
+
+  // //       query = `
+  // //         SELECT
+  // //           ${fieldSelections.join(",\n    ")}
+  // //         FROM
+  // //           ${joinClauses}
+  // //         GROUP BY
+  // //           ${groupByFields.join(",\n    ")};
+  // //       `.trim();
+  // //     }
+
+  // //     executeQuery(query);
+  // //   } catch (error) {
+  // //     console.error("Error executing query:", error);
+  // //   }
+  // // };
+
+  // let read_record_state = {
+  //   credential: "surrealdb catchmytask dev",
+  //   success_message_code: activeView?.id,
+  //   record: activeView,
+  //   read_record_mode: "remote",
+  // };
+
+  // const {
+  //   data: viewData,
+  //   isLoading: viewIsLoading,
+  //   error: viewError,
+  // } = useReadRecordByState(read_record_state);
+
+  // let view_record = viewData?.data?.find(
+  //   (item: any) => item?.message?.code === activeView?.id
+  // )?.data[0];
+
+  // // const fieldMetadataList = getQueryFieldMetadata(action_steps, dataFields);
+  // // const filteredDataFields = concatenateAliasedDataFields(
+  // //   fieldMetadataList,
+  // //   action_steps,
+  // //   dataFields
+  // // );
+
+  // let active_view_search_model_data_data_model_search_filters =
+  //   active_view_search_model_data?.data?.find(
+  //     (item: any) => item?.message?.code === "action_input_data_model_schema"
+  //   )?.data[0]?.data_model?.schema?.search_filters;
+  // let enriched_search_filters = enrichFilters(
+  //   active_view_search_model_data_data_model_search_filters,
+  //   search_action_input_form_values
   // );
 
-  let active_view_search_model_data_data_model_search_filters =
-    active_view_search_model_data?.data?.find(
-      (item: any) => item?.message?.code === "action_input_data_model_schema"
-    )?.data[0]?.data_model?.schema?.search_filters;
-  let enriched_search_filters = enrichFilters(
-    active_view_search_model_data_data_model_search_filters,
-    search_action_input_form_values
-  );
+  // useEffect(() => {
+  //   const allFetched = action_steps.every(
+  //     (step) => fetchedSteps[step.id] === true
+  //   );
+  //   console.log("All fetched:", allFetched);
 
-  useEffect(() => {
-    const allFetched = action_steps.every(
-      (step) => fetchedSteps[step.id] === true
-    );
-    console.log("All fetched:", allFetched);
-
-    // if (allFetched && !isJoinInProgress && !globalSearchQuery) {
-    //   console.log("All steps fetched, executing join query...");
-    //   setIsJoinInProgress(true);
-    //   executeDynamicOuterJoin();
-    // }
-    // if (allFetched && !isJoinInProgress && globalSearchQuery) {
-    //   console.log("All steps fetched, executing globalSearchQuery query...");
-    //   // setIsJoinInProgress(true);
-    //   // executeDynamicOuterJoin();
-    //   let rendered_globalSearchQuery = buildSQLQuery(globalSearchQuery, sanitizeFilters(enriched_search_filters), { caseSensitive: false })?.query
-    //   console.log("rendered_globalSearchQuery", rendered_globalSearchQuery)
-    //   // executeQuery(globalSearchQuery);
-    //   executeQuery(rendered_globalSearchQuery);
-    // }
-    if (allFetched && globalSearchQuery) {
-      let rendered_globalSearchQuery = buildSQLQuery(
-        globalSearchQuery,
-        sanitizeFilters(enriched_search_filters),
-        { caseSensitive: false }
-      )?.query;
-      console.log("rendered_globalSearchQuery", rendered_globalSearchQuery);
-      // executeQuery(globalSearchQuery);
-      executeQuery(rendered_globalSearchQuery);
-    }
-    if (allFetched && view_record && !globalSearchQuery) {
-      let rendered_globalSearchQuery = buildSQLQuery(
-        view_record?.query,
-        sanitizeFilters(enriched_search_filters),
-        { caseSensitive: false }
-      )?.query;
-      console.log(
-        "rendered_globalSearchQuery view_record",
-        rendered_globalSearchQuery
-      );
-      // executeQuery(globalSearchQuery);
-      executeQuery(rendered_globalSearchQuery);
-    }
-  }, [fetchedSteps, action_steps, globalSearchQuery, view_record]);
+  //   // if (allFetched && !isJoinInProgress && !globalSearchQuery) {
+  //   //   console.log("All steps fetched, executing join query...");
+  //   //   setIsJoinInProgress(true);
+  //   //   executeDynamicOuterJoin();
+  //   // }
+  //   // if (allFetched && !isJoinInProgress && globalSearchQuery) {
+  //   //   console.log("All steps fetched, executing globalSearchQuery query...");
+  //   //   // setIsJoinInProgress(true);
+  //   //   // executeDynamicOuterJoin();
+  //   //   let rendered_globalSearchQuery = buildSQLQuery(globalSearchQuery, sanitizeFilters(enriched_search_filters), { caseSensitive: false })?.query
+  //   //   console.log("rendered_globalSearchQuery", rendered_globalSearchQuery)
+  //   //   // executeQuery(globalSearchQuery);
+  //   //   executeQuery(rendered_globalSearchQuery);
+  //   // }
+  //   if (allFetched && globalSearchQuery) {
+  //     let rendered_globalSearchQuery = buildSQLQuery(
+  //       globalSearchQuery,
+  //       sanitizeFilters(enriched_search_filters),
+  //       { caseSensitive: false }
+  //     )?.query;
+  //     console.log("rendered_globalSearchQuery", rendered_globalSearchQuery);
+  //     // executeQuery(globalSearchQuery);
+  //     executeQuery(rendered_globalSearchQuery);
+  //   }
+  //   if (allFetched && view_record && !globalSearchQuery) {
+  //     let rendered_globalSearchQuery = buildSQLQuery(
+  //       view_record?.query,
+  //       sanitizeFilters(enriched_search_filters),
+  //       { caseSensitive: false }
+  //     )?.query;
+  //     console.log(
+  //       "rendered_globalSearchQuery view_record",
+  //       rendered_globalSearchQuery
+  //     );
+  //     // executeQuery(globalSearchQuery);
+  //     executeQuery(rendered_globalSearchQuery);
+  //   }
+  // }, [fetchedSteps, action_steps, globalSearchQuery, view_record]);
 
   return (
     <>
@@ -285,14 +282,13 @@ export function AggregateActionStepResults({
         language="json"
         height="25vh"
       /> */}
-      {action_steps.map((step: any) => (
+      {/* {action_steps.map((step: any) => (
         <ActionStepFetcher
           key={step.id}
           step={step}
           onStepFetched={() => handleStepFetched(step.id)}
         />
       ))}
-      {/* <div>{JSON.stringify(fetchedSteps)}</div> */}
 
       {isLoading && <div>Loading...</div>}
       {!isLoading && view_record?.fields && dataItems && (
@@ -304,7 +300,6 @@ export function AggregateActionStepResults({
         activeSections["summary"]?.isDisplayed && (
           <SummariesDisplay
             data_items={dataItems}
-            // data_fields={view_record?.fields}
           />
         )}
       {!isLoading && view_record?.fields && dataItems && (
@@ -314,7 +309,7 @@ export function AggregateActionStepResults({
           view_mode={activeMainCustomComponent?.name || "datagrid"}
           data_fields={view_record?.fields}
         />
-      )}
+      )} */}
 
       {/* {isLoading ? (
         <div>Loading...</div>
@@ -341,41 +336,41 @@ interface ActionStepFetcherProps {
   onStepFetched: () => void;
 }
 
-function ActionStepFetcher({ step, onStepFetched }: ActionStepFetcherProps) {
-  const {
-    action_input_form_values,
-    activeTask,
-    activeApplication,
-    activeSession,
-  } = useAppStore();
-  const { data, isLocalDBSuccess, isLoading } = useReadByState({
-    success_message_code: step.success_message_code,
-    id: step.id,
-    action_steps: [step],
-    application: {
-      id: activeApplication?.id,
-      name: activeApplication?.name,
-    },
-    session: {
-      id: activeSession?.id,
-      name: activeSession?.name,
-    },
-    task: {
-      id: activeTask?.id,
-      name: activeTask?.name,
-    },
-    input_values: {},
-    include_action_steps: [step?.execution_order || 0],
-  });
+// function ActionStepFetcher({ step, onStepFetched }: ActionStepFetcherProps) {
+//   const {
+//     action_input_form_values,
+//     activeTask,
+//     activeApplication,
+//     activeSession,
+//   } = useAppStore();
+//   const { data, isLocalDBSuccess, isLoading } = useReadByState({
+//     success_message_code: step.success_message_code,
+//     id: step.id,
+//     action_steps: [step],
+//     application: {
+//       id: activeApplication?.id,
+//       name: activeApplication?.name,
+//     },
+//     session: {
+//       id: activeSession?.id,
+//       name: activeSession?.name,
+//     },
+//     task: {
+//       id: activeTask?.id,
+//       name: activeTask?.name,
+//     },
+//     input_values: {},
+//     include_action_steps: [step?.execution_order || 0],
+//   });
 
-  useEffect(() => {
-    if (!isLoading && isLocalDBSuccess) {
-      onStepFetched(); // Notify parent that this step is fetched
-    }
-  }, [isLoading, isLocalDBSuccess]);
+//   useEffect(() => {
+//     if (!isLoading && isLocalDBSuccess) {
+//       onStepFetched(); // Notify parent that this step is fetched
+//     }
+//   }, [isLoading, isLocalDBSuccess]);
 
-  return null; // This component doesn't render any UI
-}
+//   return null; // This component doesn't render any UI
+// }
 
 interface AggregateActionStepResultsProps {
   // record?: any;

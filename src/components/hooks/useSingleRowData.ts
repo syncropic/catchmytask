@@ -1,7 +1,6 @@
 // hooks/useSingleRowData.ts
 
 import { useState, useEffect, useCallback } from "react";
-import { useDuckDB } from "pages/_app";
 import { useAppStore } from "src/store";
 import {
   buildSQLQuery,
@@ -41,7 +40,7 @@ export const useSingleRowData = <T = any>({
   const [queryDebugInfo, setQueryDebugInfo] =
     useState<UseSingleRowDataReturn<T>["queryDebugInfo"]>();
 
-  const dbInstance = useDuckDB();
+  // const dbInstance = useDuckDB();
   const { activeView, action_input_form_values } = useAppStore();
 
   // Calculate the search form values key
@@ -104,7 +103,7 @@ export const useSingleRowData = <T = any>({
 
   // Memoize the query execution
   const executeQuery = useCallback(async () => {
-    if (!componentRecord?.query || !dbInstance) {
+    if (!componentRecord?.query) {
       setIsLoading(false);
       return;
     }
@@ -137,8 +136,9 @@ export const useSingleRowData = <T = any>({
         console.groupEnd();
       }
 
-      const result = await dbInstance.query(processedQuery);
-      const rows = result.toArray();
+      // const result = await dbInstance.query(processedQuery);
+      // const rows = result.toArray();
+      const rows = [] as any;
 
       // Find the specific row or take the first one
       const targetRow = rowIdentifier
@@ -158,7 +158,6 @@ export const useSingleRowData = <T = any>({
     }
   }, [
     componentRecord?.query,
-    dbInstance,
     rendered_globalSearchQuery,
     rowIdentifier,
     debug,

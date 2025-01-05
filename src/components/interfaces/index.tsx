@@ -153,6 +153,7 @@ export interface ActionStepsActionInputFormProps {
 export interface ActionInputWrapperProps {
   data_model?: any;
   query_name?: string;
+  collection?: string;
   name?: string;
   execution_record?: any;
   action?: any;

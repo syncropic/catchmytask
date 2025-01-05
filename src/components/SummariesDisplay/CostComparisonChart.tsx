@@ -3,7 +3,7 @@
 import { useComponentData } from "@components/hooks/useComponentData";
 import MonacoEditor from "@components/MonacoEditor";
 import { toTitleCase, useReadRecordByState } from "@components/Utils";
-import { useDuckDB } from "pages/_app";
+// import { useDuckDB } from "pages/_app";
 import React, { useEffect, useState } from "react";
 import {
   BarChart,

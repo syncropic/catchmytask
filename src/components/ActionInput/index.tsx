@@ -12,6 +12,7 @@ import {
   inferDataTypes,
   sanitizeFilters,
   useFetchQueryDataByState,
+  useQueryByState,
   useReadRecordByState,
   useSearchFilters,
 } from "@components/Utils";
@@ -51,7 +52,6 @@ import ExternalSubmitButton from "@components/SubmitButton";
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { useDuckDB } from "pages/_app";
 import { showNotification } from "@mantine/notifications";
 import { saveToLocalDB } from "src/local_db";
 import React from "react";
@@ -124,7 +124,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
   const { data: identity } = useGetIdentity<IIdentity>();
   const { setFormSubmitHandler, setFormInstance } = useTransientStore();
-  const dbInstance = useDuckDB(); // Get the DuckDB instance from the context
   const { searchFilters } = useSearchFilters();
   const { params } = useParsed();
   let actionInputId = record?.id || params?.id;
@@ -759,79 +758,79 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         fetchFromDuckDB();
       } else if (action === "upload") {
         console.log("upload action");
-        let spreadsheet_type = [
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        ];
-        let file = value?.file;
-        let file_type = file?.type;
-        if (spreadsheet_type.includes(file_type)) {
-          try {
-            const jsonData = await excelToStandardizedJson(
-              file,
-              value?.section
-            );
-            console.log("Standardized JSON data:", jsonData);
+        // let spreadsheet_type = [
+        //   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        // ];
+        // let file = value?.file;
+        // let file_type = file?.type;
+        // if (spreadsheet_type.includes(file_type)) {
+        //   try {
+        //     const jsonData = await excelToStandardizedJson(
+        //       file,
+        //       value?.section
+        //     );
+        //     console.log("Standardized JSON data:", jsonData);
 
-            if (jsonData.length === 0) {
-              throw new Error("No data found in the Excel file");
-            }
+        //     if (jsonData.length === 0) {
+        //       throw new Error("No data found in the Excel file");
+        //     }
 
-            let init_new_uploaded = {
-              ...uploaded,
-              data: null,
-            };
-            setUploaded(init_new_uploaded);
+        //     let init_new_uploaded = {
+        //       ...uploaded,
+        //       data: null,
+        //     };
+        //     setUploaded(init_new_uploaded);
 
-            // Infer data types
-            const dataFields = inferDataTypes(jsonData);
-            // console.log("Inferred data fields:", dataFields);
-            // set inferred data fields in the store
-            // Set the updated state after a delay
-            setTimeout(() => {
-              let new_uploaded = {
-                ...uploaded,
-                data_fields: dataFields,
-                data: jsonData.length > 0 ? jsonData.length : null,
-              };
-              setUploaded(new_uploaded);
-            }, 1000); // 500ms delay, adjust as needed
+        //     // Infer data types
+        //     const dataFields = inferDataTypes(jsonData);
+        //     // console.log("Inferred data fields:", dataFields);
+        //     // set inferred data fields in the store
+        //     // Set the updated state after a delay
+        //     setTimeout(() => {
+        //       let new_uploaded = {
+        //         ...uploaded,
+        //         data_fields: dataFields,
+        //         data: jsonData.length > 0 ? jsonData.length : null,
+        //       };
+        //       setUploaded(new_uploaded);
+        //     }, 1000); // 500ms delay, adjust as needed
 
-            // Insert the JSON data into a DuckDB table
-            const tableName = "uploaded_data"; // Use the provided name or a default
-            // await insertJsonIntoDuckDB(dbInstance, jsonData, tableName);
-            await saveToLocalDB(jsonData, tableName, dataFields, dbInstance);
+        //     // Insert the JSON data into a DuckDB table
+        //     const tableName = "uploaded_data"; // Use the provided name or a default
+        //     // await insertJsonIntoDuckDB(dbInstance, jsonData, tableName);
+        //     await saveToLocalDB(jsonData, tableName, dataFields, dbInstance);
 
-            // Optionally, you can query the data to verify it was inserted correctly
-            // const result = await dbInstance.query(`SELECT * FROM "${tableName}" LIMIT 5`);
-            // console.log("Sample data from DuckDB table:", result);
+        //     // Optionally, you can query the data to verify it was inserted correctly
+        //     // const result = await dbInstance.query(`SELECT * FROM "${tableName}" LIMIT 5`);
+        //     // console.log("Sample data from DuckDB table:", result);
 
-            // Show success notification
-            showNotification({
-              title: "Upload successful",
-              message: `Data from ${file.name} has been uploaded and inserted into table: ${tableName}`,
-              color: "green",
-              autoClose: 5000,
-            });
-          } catch (error) {
-            console.error(
-              "Error processing Excel file or inserting into DuckDB:",
-              error
-            );
-            showNotification({
-              title: "Upload failed",
-              message: `Error: ${JSON.stringify(error)}`,
-              color: "red",
-              autoClose: 5000,
-            });
-          }
-        } else {
-          showNotification({
-            title: "Invalid file type",
-            message: "Please upload an Excel file (.xlsx)",
-            color: "red",
-            autoClose: 5000,
-          });
-        }
+        //     // Show success notification
+        //     showNotification({
+        //       title: "Upload successful",
+        //       message: `Data from ${file.name} has been uploaded and inserted into table: ${tableName}`,
+        //       color: "green",
+        //       autoClose: 5000,
+        //     });
+        //   } catch (error) {
+        //     console.error(
+        //       "Error processing Excel file or inserting into DuckDB:",
+        //       error
+        //     );
+        //     showNotification({
+        //       title: "Upload failed",
+        //       message: `Error: ${JSON.stringify(error)}`,
+        //       color: "red",
+        //       autoClose: 5000,
+        //     });
+        //   }
+        // } else {
+        //   showNotification({
+        //     title: "Invalid file type",
+        //     message: "Please upload an Excel file (.xlsx)",
+        //     color: "red",
+        //     autoClose: 5000,
+        //   });
+        // }
         // console.log("value", value);
       } else {
         // clear views and on success navigate to main view?
@@ -1115,31 +1114,29 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const debouncedValidation = debounce((value, resolve, reject) => {
     // const dbInstance = useDuckDB();
     // const { setTables } = useTableStore.getState();
-
-    dbInstance
-      .query(`EXPLAIN ${value}`) // Validate the query
-      .then((result: any) => {
-        // Query is valid, resolve with no error
-        resolve(undefined);
-        // use simple regex to extract table names from the query value
-        const tableRegex = /(?:FROM|JOIN)\s+([a-zA-Z0-9_]+)/gi;
-        const tables = [...value.matchAll(tableRegex)].map((match) => match[1]);
-        console.log("Extracted tables:", tables);
-
-        if (tables) {
-          let new_global_query = { ...globalQuery };
-          new_global_query["tables"] = tables;
-          setGlobalQuery(new_global_query);
-          // alert(`Extracted tables:, ${tables}`);
-        }
-        // // Store extracted table names in Zustand
-        // setTables(tables);
-        // console.log("Extracted tables:", tables);
-      })
-      .catch((error: any) => {
-        const detailedErrorMessage = error.message || "Invalid SQL syntax"; // Detailed error message
-        resolve(detailedErrorMessage); // Resolve with error message
-      });
+    // dbInstance
+    //   .query(`EXPLAIN ${value}`) // Validate the query
+    //   .then((result: any) => {
+    //     // Query is valid, resolve with no error
+    //     resolve(undefined);
+    //     // use simple regex to extract table names from the query value
+    //     const tableRegex = /(?:FROM|JOIN)\s+([a-zA-Z0-9_]+)/gi;
+    //     const tables = [...value.matchAll(tableRegex)].map((match) => match[1]);
+    //     console.log("Extracted tables:", tables);
+    //     if (tables) {
+    //       let new_global_query = { ...globalQuery };
+    //       new_global_query["tables"] = tables;
+    //       setGlobalQuery(new_global_query);
+    //       // alert(`Extracted tables:, ${tables}`);
+    //     }
+    //     // // Store extracted table names in Zustand
+    //     // setTables(tables);
+    //     // console.log("Extracted tables:", tables);
+    //   })
+    //   .catch((error: any) => {
+    //     const detailedErrorMessage = error.message || "Invalid SQL syntax"; // Detailed error message
+    //     resolve(detailedErrorMessage); // Resolve with error message
+    //   });
   }, 300);
 
   // Create a function that wraps debounced validation in a Promise
@@ -1372,21 +1369,21 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       <div key={fieldData.key || fieldData.title} className="mb-4">
         <form.Field
           name={fieldName}
-          validators={
-            fieldName === "query"
-              ? {
-                  onChangeAsync: async ({ value }) => {
-                    if (value) {
-                      const error = await debouncedValidationPromise(value);
-                      if (error) {
-                        return error as ValidationError;
-                      }
-                    }
-                    return undefined;
-                  },
-                }
-              : undefined
-          }
+          // validators={
+          //   fieldName === "query"
+          //     ? {
+          //         onChangeAsync: async ({ value }) => {
+          //           if (value) {
+          //             const error = await debouncedValidationPromise(value);
+          //             if (error) {
+          //               return error as ValidationError;
+          //             }
+          //           }
+          //           return undefined;
+          //         },
+          //       }
+          //     : undefined
+          // }
         >
           {(field) => (
             <>
@@ -1477,6 +1474,7 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   action_type,
   entity,
   record,
+  collection,
   record_query,
   exclude_components = [],
   children,
@@ -1496,15 +1494,16 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   read_record_mode,
   action_form_key,
 }) => {
-  let data_model_state = {
-    id: execution_record?.id,
-    query_name: "data_model",
-    name: data_model,
-    action_type,
-    entity,
-    success_message_code,
-  };
+  // let data_model_state = {
+  //   id: execution_record?.id,
+  //   query_name: "data_model",
+  //   name: data_model,
+  //   action_type,
+  //   entity,
+  //   success_message_code,
+  // };
 
+  // record_data
   let read_record_state = {
     credential: "surrealdb catchmytask dev",
     success_message_code: record?.id,
@@ -1513,46 +1512,65 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   };
 
   const {
-    data: dataModelData,
-    isLoading: dataModelIsLoading,
-    error: dataModelError,
-  } = useFetchQueryDataByState(data_model_state);
-  const {
     data: recordData,
     isLoading: recordIsLoading,
     error: recordError,
   } = useReadRecordByState(read_record_state);
 
-  if (dataModelError || recordError)
-    return (
-      <MonacoEditor
-        value={{
-          recordError: recordError?.response?.status,
-          dataModelError: dataModelError?.response?.status,
-        }}
-        language="json"
-        height="25vh"
-      />
-    );
-  if (dataModelIsLoading || recordIsLoading) return <div>Loading...</div>;
+  // data_model_data
+  const data_model_query_state = {
+    credential: "surrealdb catchmytask dev",
+    success_message_code: data_model,
+    name: data_model,
+    id: data_model,
+    query: `SELECT * FROM data_models WHERE name = '${data_model}'`,
+    record: {
+      name: data_model,
+    },
+    read_record_mode: "remote",
+  };
+
+  const {
+    data: dataModelData,
+    isLoading: dataModelIsLoading,
+    error: dataModelError,
+  } = useQueryByState(data_model_query_state);
+
+  // if (dataModelError || recordError)
+  //   return (
+  //     <MonacoEditor
+  //       value={{
+  //         recordError: recordError?.response?.status,
+  //         dataModelError: dataModelError?.response?.status,
+  //       }}
+  //       language="json"
+  //       height="25vh"
+  //     />
+  //   );
+  // if (dataModelIsLoading || recordIsLoading) return <div>Loading...</div>;
   let record_data = read_record_mode
     ? recordData
     : recordData?.data?.find((item: any) => item?.message?.code === record?.id)
         ?.data[0];
-  let data_model_data = dataModelData
-    ? dataModelData?.data?.find(
-        (item: any) =>
-          item?.message?.code === data_model_state?.success_message_code
-      )?.data[0]?.["data_model"]
-    : {};
+  // let data_model_data = dataModelData
+  //   ? dataModelData?.data?.find(
+  //       (item: any) =>
+  //         item?.message?.code === data_model_state?.success_message_code
+  //     )?.data[0]?.["data_model"]
+  //   : {};
 
+  if (recordIsLoading) {
+    return <>Loading...</> || null;
+  }
+  let data_model_data = dataModelData?.data[0] || {};
   return (
     <div>
       {/* <MonacoEditor
         value={{
           // record: record,
+          // recordData: recordData,
           // record_data: record_data,
-          data_model: data_model_data,
+          data_model_data: data_model_data,
           // data: error?.response?.data,
           // status: error?.response?.status,
         }}
@@ -1561,11 +1579,11 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
       /> */}
       <Box pos="relative">
         <LoadingOverlay
-          visible={dataModelIsLoading || recordIsLoading}
+          // visible={dataModelIsLoading || recordIsLoading}
+          visible={false}
           zIndex={1000}
           overlayProps={{ radius: "sm", blur: 2 }}
         />
-        {/* {(!data?.data && !error && !isLoading && description) || null} */}
 
         {record_data && data_model_data && (
           <ActionInputForm
