@@ -407,7 +407,7 @@ const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
         <Accordion multiple>
           <Accordion.Item value={view_item_id} key={view_item_id}>
             <Accordion.Control>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <Loader size={18} />
                 <div>|</div>
                 <div className="text-sm font-semibold px-3 break-words max-w-xs sm:max-w-md">
