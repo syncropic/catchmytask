@@ -33,6 +33,7 @@ import { signIn } from "next-auth/react";
 import SearchInput from "@components/SearchInput";
 import { useState } from "react";
 import { useClickOutside } from "@mantine/hooks";
+import { handleLogout } from "@components/Utils/auth";
 // import MonacoEditor from "@components/MonacoEditor";
 
 export const UserMenu = () => {
@@ -60,14 +61,14 @@ export const UserMenu = () => {
   });
 
   // handle logout
-  const handleLogout = () => {
-    // get the current full url
-    setNavigationHistory({
-      pathname: pathname,
-      params: params,
-    });
-    logout();
-  };
+  // const handleLogout = () => {
+  //   // get the current full url
+  //   setNavigationHistory({
+  //     pathname: pathname,
+  //     params: params,
+  //   });
+  //   logout();
+  // };
   if (!user) {
     return (
       <div className="pr-3">
@@ -123,6 +124,23 @@ export const UserMenu = () => {
 
   const toggleShowRequestResponseView = () => {
     setShowRequestResponseView(!showRequestResponseView);
+  };
+
+  // In your UserMenu component:
+  const handleLogoutClick = async () => {
+    setNavigationHistory({
+      pathname: pathname,
+      params: params,
+    });
+
+    // // Clear any app-specific state
+    // setActiveProfile(null);
+    // setActiveFloatingWindow(null);
+    // setIsFloatingWindowOpen(false);
+    // setMonitorComponents([]);
+
+    // Call the utility function to handle complete logout
+    await handleLogout();
   };
 
   return (
@@ -287,7 +305,7 @@ export const UserMenu = () => {
           </Menu.Item> */}
           <Menu.Item
             leftSection={<IconLogout size={14} />}
-            onClick={() => handleLogout()}
+            onClick={() => handleLogoutClick()}
           >
             Logout
           </Menu.Item>
