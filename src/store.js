@@ -219,7 +219,7 @@ export const useAppStore = create(
         }),
       activity: {},
       setActivity: (activity) => set((state) => ({ activity })),
-      monitorComponents: ["messages"],
+      monitorComponents: ["actions"],
       setMonitorComponents: (item) =>
         set((state) => ({ monitorComponents: item })),
       activeInput: "natural_language_query",
