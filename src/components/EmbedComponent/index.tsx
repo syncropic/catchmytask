@@ -21,8 +21,8 @@ interface EmbedComponentProps {
 
 const defaultConfig: EmbedConfig = {
   width: "100%",
-  height: "600px",
-  // height: "100%",
+  // height: "600px",
+  height: "100%",
   allowFullscreen: true,
   allowScripts: true,
   sandboxRules: [
@@ -101,21 +101,43 @@ const EmbedComponent: React.FC<EmbedComponentProps> = ({
     ...customAttributes,
   };
 
+  // return (
+  //   <Paper shadow="sm" radius="md" className="w-full p-4">
+  //     <div className="relative w-full" style={{ minHeight: height }}>
+  //       {isLoading && showLoader && (
+  //         <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+  //           <Loader size="lg" variant="dots" />
+  //         </div>
+  //       )}
+
+  //       {error && errorFallback ? (
+  //         <Alert color="red" title="Error" className="mb-4">
+  //           {error}
+  //         </Alert>
+  //       ) : (
+  //         <iframe {...iframeProps} />
+  //       )}
+  //     </div>
+  //   </Paper>
+  // );
   return (
-    <Paper shadow="sm" radius="md" className="w-full p-4">
-      <div className="relative w-full" style={{ minHeight: height }}>
+    <Paper shadow="sm" radius="md" className="w-full h-full p-4">
+      {" "}
+      {/* Add h-full */}
+      <div className="relative w-full h-full">
+        {" "}
+        {/* Add h-full */}
         {isLoading && showLoader && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
             <Loader size="lg" variant="dots" />
           </div>
         )}
-
         {error && errorFallback ? (
           <Alert color="red" title="Error" className="mb-4">
             {error}
           </Alert>
         ) : (
-          <iframe {...iframeProps} />
+          <iframe {...iframeProps} className="w-full h-full border-0" />
         )}
       </div>
     </Paper>
