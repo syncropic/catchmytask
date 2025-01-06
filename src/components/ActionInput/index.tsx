@@ -55,7 +55,7 @@ import { saveAs } from "file-saver";
 import { showNotification } from "@mantine/notifications";
 import { saveToLocalDB } from "src/local_db";
 import React from "react";
-import { IconFilter } from "@tabler/icons-react";
+import { IconFilter, IconX } from "@tabler/icons-react";
 
 // Function to map class names to ExcelJS ARGB colors
 const getExcelJSStyleFromClass = (className: string) => {
@@ -375,9 +375,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
   // Create a ref to store previous default values for comparison
   const previousDefaultValuesRef = useRef(defaultValues);
-
-  console.log("defaultValues");
-  console.log(defaultValues);
 
   const form = useForm({
     defaultValues: defaultValues,
@@ -899,6 +896,31 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 setFormStatus(new_form_status);
               },
               onSuccess: (data) => {
+                // success with error message i.e exit_code = 1 *object or list
+                let response_data = data?.data;
+                // console.log("response_data");
+                // console.log(response_data);
+                // First, let's ensure we have an array to work with
+                const items = Array.isArray(response_data)
+                  ? response_data
+                  : [response_data];
+
+                // Check if any item has exit_code = 1
+                const errorItems = items.filter((item) => item.exit_code === 1);
+
+                // Show error notification for each error item
+                errorItems.forEach((item) => {
+                  showNotification({
+                    title: item?.message?.code,
+                    message: item?.message?.details,
+                    color: "red",
+                    autoClose: 10000, // Giving more time to read error messages
+                    // icon: <X size={18} />, // Optional: adds an X icon for errors
+                    withCloseButton: true,
+                    icon: <IconX size={18} />,
+                    position: "top-center",
+                  });
+                });
                 // console.log("Mutation success:", data);
                 queryClient.setQueryData(["main_form_request"], data);
                 resolve(data);
