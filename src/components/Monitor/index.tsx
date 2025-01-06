@@ -2,7 +2,7 @@ import { useReadRecordByState } from "@components/Utils";
 import { ActionIcon, MultiSelect, TextInput, Tooltip } from "@mantine/core";
 import TableView from "@components/TableView";
 import ExplorerWrapper from "@components/Explorer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGo, useParsed } from "@refinedev/core";
 import { IconIconsOff } from "@tabler/icons-react";
 import { useAppStore } from "src/store";
@@ -77,6 +77,12 @@ export const MonitorWrapper = ({
     "actions"
   );
 
+  // const {
+  //   data: actions,
+  //   error: actionsError,
+  //   loading: actionsLoading,
+  // } = useLiveQuery<Event>(`actions`, `session_id = ${params?.id}`);
+
   const {
     data: automations,
     error: automationsError,
@@ -142,6 +148,16 @@ export const MonitorWrapper = ({
       item?.message?.code ===
       automations_default_view_record_state?.success_message_code
   )?.data[0];
+
+  // // Add useEffect for debugging
+  // useEffect(() => {
+  //   console.log("Actions LiveQuery Update:", {
+  //     actions,
+  //     loading: actionsLoading,
+  //     error: actionsError,
+  //     sessionId: params?.id,
+  //   });
+  // }, [actions, actionsLoading, actionsError, params?.id]);
 
   if (
     actionsLoading ||

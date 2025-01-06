@@ -262,8 +262,14 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
 
 const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
   const { width } = useViewportSize();
-  const { views, activeProfile, activeApplication, activeSession, activeView } =
-    useAppStore();
+  const {
+    views,
+    activeProfile,
+    activeApplication,
+    activeSession,
+    activeView,
+    setViews,
+  } = useAppStore();
   const { params } = useParsed();
   const { data: identity } = useGetIdentity<IIdentity>();
   let view_item_record = views[view_item_id];
@@ -312,6 +318,79 @@ const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
   let view_record = {};
   let include_components = ["toolbar"];
 
+  const go = useGo();
+  let view_ids = Object.keys(views);
+
+  const toggleView = (id: string, record: any) => {
+    // Access the current views from your zustand store
+    const currentViews = views;
+
+    // Check if the item exists in views
+    const existingView = currentViews[id];
+
+    const toggleItemInList = (list: any, itemId: any) => {
+      // Check if item exists in list
+      const exists = list.includes(itemId);
+
+      if (exists) {
+        // If exists, filter it out
+        return list.filter((id: string) => id !== itemId);
+      } else {
+        // If doesn't exist, add it to the list (spreading the existing list)
+        return [...list, itemId];
+      }
+    };
+
+    if (existingView) {
+      // Remove the view if it exists
+      // const { [id]: removedView, ...remainingViews } = currentViews;
+      setViews(id, null);
+      let new_view_ids = toggleItemInList(view_ids, id);
+      const queryParams: {
+        profile_id: string;
+        [key: string]: string;
+      } = {
+        profile_id: String(activeProfile?.id),
+      };
+
+      if (new_view_ids?.length > 0) {
+        queryParams.view_items = String(new_view_ids);
+      }
+      go({
+        // to: {
+        //   resource: "sessions",
+        //   action: "show",
+        //   id: record?.id,
+        // },
+        query: queryParams,
+        type: "push",
+      });
+    } else {
+      // Add the view if it doesn't exist
+      setViews(id, record);
+      let new_view_ids = [...view_ids, id];
+      const queryParams: {
+        profile_id: string;
+        [key: string]: string;
+      } = {
+        profile_id: String(activeProfile?.id),
+      };
+
+      if (new_view_ids?.length > 0) {
+        queryParams.view_items = String(new_view_ids);
+      }
+      go({
+        // to: {
+        //   resource: "sessions",
+        //   action: "show",
+        //   id: record?.id,
+        // },
+        query: queryParams,
+        type: "push",
+      });
+    }
+  };
+
   return (
     <div>
       {/* <MonacoEditor
@@ -334,6 +413,18 @@ const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
                 <div className="text-sm font-semibold px-3 break-words max-w-xs sm:max-w-md">
                   {view_item_record?.name}
                 </div>
+                <Tooltip label="close" key="close">
+                  <ActionIcon
+                    variant="default"
+                    size="sm"
+                    aria-label="close"
+                    onClick={() =>
+                      toggleView(String(view_item_record?.id), view_item_record)
+                    }
+                  >
+                    <IconSquareX />
+                  </ActionIcon>
+                </Tooltip>
               </div>
             </Accordion.Control>
             <Accordion.Panel>
