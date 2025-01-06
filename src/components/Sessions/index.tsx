@@ -34,6 +34,7 @@ export const SessionsWrapper = ({
     activeProfile,
     activeApplication,
     setActiveSession,
+    clearViews,
   } = useAppStore();
   const { data: identity } = useGetIdentity<IIdentity>();
 
@@ -130,6 +131,8 @@ export const SessionsWrapper = ({
   const handleSessionSelect = (record: any) => {
     if (record?.entity_type === "sessions") {
       setActiveSession(record);
+      // clearViews
+      clearViews({});
     }
     go({
       to: {

@@ -376,9 +376,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   // Create a ref to store previous default values for comparison
   const previousDefaultValuesRef = useRef(defaultValues);
 
-  console.log("defaultValues");
-  console.log(defaultValues);
-
   const form = useForm({
     defaultValues: defaultValues,
     onSubmit: async ({ value }) => {
@@ -766,6 +763,80 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         fetchFromDuckDB();
       } else if (action === "upload") {
         console.log("upload action");
+        // let spreadsheet_type = [
+        //   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        // ];
+        // let file = value?.file;
+        // let file_type = file?.type;
+        // if (spreadsheet_type.includes(file_type)) {
+        //   try {
+        //     const jsonData = await excelToStandardizedJson(
+        //       file,
+        //       value?.section
+        //     );
+        //     console.log("Standardized JSON data:", jsonData);
+
+        //     if (jsonData.length === 0) {
+        //       throw new Error("No data found in the Excel file");
+        //     }
+
+        //     let init_new_uploaded = {
+        //       ...uploaded,
+        //       data: null,
+        //     };
+        //     setUploaded(init_new_uploaded);
+
+        //     // Infer data types
+        //     const dataFields = inferDataTypes(jsonData);
+        //     // console.log("Inferred data fields:", dataFields);
+        //     // set inferred data fields in the store
+        //     // Set the updated state after a delay
+        //     setTimeout(() => {
+        //       let new_uploaded = {
+        //         ...uploaded,
+        //         data_fields: dataFields,
+        //         data: jsonData.length > 0 ? jsonData.length : null,
+        //       };
+        //       setUploaded(new_uploaded);
+        //     }, 1000); // 500ms delay, adjust as needed
+
+        //     // Insert the JSON data into a DuckDB table
+        //     const tableName = "uploaded_data"; // Use the provided name or a default
+        //     // await insertJsonIntoDuckDB(dbInstance, jsonData, tableName);
+        //     await saveToLocalDB(jsonData, tableName, dataFields, dbInstance);
+
+        //     // Optionally, you can query the data to verify it was inserted correctly
+        //     // const result = await dbInstance.query(`SELECT * FROM "${tableName}" LIMIT 5`);
+        //     // console.log("Sample data from DuckDB table:", result);
+
+        //     // Show success notification
+        //     showNotification({
+        //       title: "Upload successful",
+        //       message: `Data from ${file.name} has been uploaded and inserted into table: ${tableName}`,
+        //       color: "green",
+        //       autoClose: 5000,
+        //     });
+        //   } catch (error) {
+        //     console.error(
+        //       "Error processing Excel file or inserting into DuckDB:",
+        //       error
+        //     );
+        //     showNotification({
+        //       title: "Upload failed",
+        //       message: `Error: ${JSON.stringify(error)}`,
+        //       color: "red",
+        //       autoClose: 5000,
+        //     });
+        //   }
+        // } else {
+        //   showNotification({
+        //     title: "Invalid file type",
+        //     message: "Please upload an Excel file (.xlsx)",
+        //     color: "red",
+        //     autoClose: 5000,
+        //   });
+        // }
+        // console.log("value", value);
       } else {
         // clear views and on success navigate to main view?
         // handleClearViews();
@@ -795,12 +866,9 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               operation: activeAction?.name,
               ...activeAction,
             },
-
             input_values: {
-              action_input_form_values: {
-                ...action_input_form_values[action_input_form_values_key],
-                ...form.store.state.values, // Include current form values
-              },
+              action_input_form_values:
+                action_input_form_values[action_input_form_values_key] || {},
             },
             application: {
               id: activeApplication?.id,
@@ -1019,59 +1087,26 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   // Store the previous validity state
   const previousIsValid = useRef(false);
 
-  // useEffect(() => {
-  //   const unsubscribe = form.store.subscribe(() => {
-  //     const currentValues = form.store.state.values;
-  //     const isValid = form.store.state.isValid;
-
-  //     // If form is valid, and the previous state was not valid or hasn't logged yet, log the values
-  //     // if (isValid && !previousIsValid.current) {
-  //     //   debouncedLog(currentValues);
-  //     // }
-  //     debouncedLog(currentValues);
-
-  //     // Update the ref to track the current validity status for future reference
-  //     previousIsValid.current = isValid;
-  //   });
-
-  //   return () => {
-  //     unsubscribe();
-  //     debouncedLog.cancel(); // Cancel any pending debounced calls on unmount
-  //   };
-  // }, [form.store, debouncedLog]);
-
   useEffect(() => {
     const unsubscribe = form.store.subscribe(() => {
       const currentValues = form.store.state.values;
       const isValid = form.store.state.isValid;
 
-      // Only update if values actually changed
-      if (
-        !_.isEqual(
-          action_input_form_values[action_input_form_values_key],
-          currentValues
-        )
-      ) {
-        const new_action_input_form_values = {
-          ...action_input_form_values,
-          [action_input_form_values_key]: currentValues, // Simplified update
-        };
-        setActionInputFormValues(new_action_input_form_values);
-      }
+      // If form is valid, and the previous state was not valid or hasn't logged yet, log the values
+      // if (isValid && !previousIsValid.current) {
+      //   debouncedLog(currentValues);
+      // }
+      debouncedLog(currentValues);
 
+      // Update the ref to track the current validity status for future reference
       previousIsValid.current = isValid;
     });
 
     return () => {
       unsubscribe();
-      debouncedLog.cancel();
+      debouncedLog.cancel(); // Cancel any pending debounced calls on unmount
     };
-  }, [
-    form.store,
-    action_input_form_values,
-    action_input_form_values_key,
-    setActionInputFormValues,
-  ]);
+  }, [form.store, debouncedLog]);
 
   // if a template field value changes, read the record from the server and update the form values
   // Fetch the template using the existing hook
