@@ -746,19 +746,6 @@ const ActionStatusInfo: React.FC<ActionStatusInfoProps> = ({ record }) => {
           </Tooltip>
         </div>
       );
-    } else if (record.action_status === "stopped") {
-      return (
-        <Tooltip label="paused -> click to start" position="top">
-          <div className="flex items-center space-x-2">
-            <div className={`p-1 rounded-full ${config.bgColor}`}>
-              <StatusIcon className={`w-4 h-4 ${config.color}`} stroke={2} />
-            </div>
-            <span className={`text-sm ${config.color} font-medium`}>
-              {record.action_status || "No status"}
-            </span>
-          </div>
-        </Tooltip>
-      );
     }
 
     return (
