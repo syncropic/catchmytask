@@ -19,6 +19,7 @@ import {
   LoadingOverlay,
   Tooltip,
   Text,
+  Button,
 } from "@mantine/core";
 import {
   IconCopy,
@@ -284,6 +285,22 @@ export function TableView<T extends Record<string, any>>({
                           record={record}
                           isSelected={view_ids.includes(String(record.id))}
                         />
+                      );
+                    } else if (field?.name === "action") {
+                      return (
+                        // <NameAndResultSummaryInfo
+                        //   record={record}
+                        //   isSelected={view_ids.includes(String(record.id))}
+                        // />
+                        <div className="flex flex-col gap-1">
+                          {/* {record?.action_status == "running" ? (
+                            <Button size="compact-xs" color="red">
+                              pause
+                            </Button>
+                          ) : (
+                            <Button size="compact-xs">play</Button>
+                          )} */}
+                        </div>
                       );
                     } else if (field?.name === "action_status") {
                       return <ActionStatusInfo record={record} />;
@@ -710,7 +727,7 @@ const ActionStatusInfo: React.FC<ActionStatusInfoProps> = ({ record }) => {
     if (record.action_status === "running") {
       return (
         <div className="flex items-center">
-          <Tooltip label="running" position="top">
+          <Tooltip label="running -> click to pause" position="top">
             <span className="text-sm">
               <Box pos="relative">
                 <LoadingOverlay
@@ -728,6 +745,19 @@ const ActionStatusInfo: React.FC<ActionStatusInfoProps> = ({ record }) => {
             </span>
           </Tooltip>
         </div>
+      );
+    } else if (record.action_status === "stopped") {
+      return (
+        <Tooltip label="paused -> click to start" position="top">
+          <div className="flex items-center space-x-2">
+            <div className={`p-1 rounded-full ${config.bgColor}`}>
+              <StatusIcon className={`w-4 h-4 ${config.color}`} stroke={2} />
+            </div>
+            <span className={`text-sm ${config.color} font-medium`}>
+              {record.action_status || "No status"}
+            </span>
+          </div>
+        </Tooltip>
       );
     }
 

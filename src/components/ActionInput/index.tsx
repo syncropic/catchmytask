@@ -56,6 +56,7 @@ import { showNotification } from "@mantine/notifications";
 import { saveToLocalDB } from "src/local_db";
 import React from "react";
 import { IconFilter, IconX } from "@tabler/icons-react";
+import { ConsoleLogger } from "@duckdb/duckdb-wasm";
 
 // Function to map class names to ExcelJS ARGB colors
 const getExcelJSStyleFromClass = (className: string) => {
@@ -116,6 +117,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     setRequestResponse,
     activeViewItem,
     clearViews,
+    activeInput,
   } = useAppStore();
   const queryClient = useQueryClient();
   const go = useGo(); // Navigation function
@@ -788,6 +790,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
           // Create the base mutation data
           const baseData = {
+            activeInput: activeInput,
             action: {
               operation: activeAction?.name,
               ...activeAction,
@@ -898,21 +901,23 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               onSuccess: (data) => {
                 // success with error message i.e exit_code = 1 *object or list
                 let response_data = data?.data;
-                // console.log("response_data");
-                // console.log(response_data);
+
                 // First, let's ensure we have an array to work with
                 const items = Array.isArray(response_data)
                   ? response_data
                   : [response_data];
 
-                // Check if any item has exit_code = 1
+                // console.log(items);
+
+                // // Check if any item has exit_code = 1
                 const errorItems = items.filter((item) => item.exit_code === 1);
+                // console.log(errorItems);
 
                 // Show error notification for each error item
                 errorItems.forEach((item) => {
                   showNotification({
                     title: item?.message?.code,
-                    message: item?.message?.details,
+                    message: JSON.stringify(item?.message?.details),
                     color: "red",
                     autoClose: 10000, // Giving more time to read error messages
                     // icon: <X size={18} />, // Optional: adds an X icon for errors
@@ -926,6 +931,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 resolve(data);
                 new_form_status[action_input_form_values_key].is_submitting =
                   false;
+                console.log("hello");
                 setFormStatus(new_form_status);
                 // clear attachments so i don't have to send them again can just referenced uploaded items
                 form.setFieldValue("attachments", null);

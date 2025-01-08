@@ -340,6 +340,18 @@ const Layout = ({
                       <Button
                         size="compact-sm"
                         variant={
+                          activeInput === "terminal_query"
+                            ? "outline"
+                            : "default"
+                        }
+                        onClick={() => setActiveInput("terminal_query")}
+                        className="whitespace-nowrap"
+                      >
+                        Terminal
+                      </Button>
+                      <Button
+                        size="compact-sm"
+                        variant={
                           activeInput === "structured_query"
                             ? "outline"
                             : "default"
@@ -517,6 +529,18 @@ const Layout = ({
                         <Button
                           size="compact-sm"
                           variant={
+                            activeInput === "terminal_query"
+                              ? "outline"
+                              : "default"
+                          }
+                          onClick={() => setActiveInput("terminal_query")}
+                          className="whitespace-nowrap"
+                        >
+                          Terminal
+                        </Button>
+                        <Button
+                          size="compact-sm"
+                          variant={
                             activeInput === "structured_query"
                               ? "outline"
                               : "default"
@@ -622,6 +646,18 @@ const Layout = ({
                             action="query"
                             action_form_key="query_general"
                             success_message_code="structured_query_input"
+                          />
+                        )}
+                        {activeInput === "terminal_query" && (
+                          <ActionInputWrapper
+                            data_model="terminal query input"
+                            query_name="data_model"
+                            record={{
+                              id: params?.id,
+                            }}
+                            action="query"
+                            action_form_key="query_general"
+                            success_message_code="terminal_query_input"
                           />
                         )}
                       </div>

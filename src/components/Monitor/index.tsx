@@ -38,6 +38,8 @@ export const MonitorWrapper = ({
     setMonitorComponents,
   } = useAppStore();
 
+  // actions
+
   const actions_default_view_record_state = {
     credential: "surrealdb catchmytask dev",
     success_message_code: "views:5023b2twax164esuobo3",
@@ -53,6 +55,16 @@ export const MonitorWrapper = ({
     error: actionsViewError,
   } = useReadRecordByState(actions_default_view_record_state);
 
+  const {
+    data: actions,
+    error: actionsError,
+    loading: actionsLoading,
+  } = useLiveQuery<Event>(
+    `SELECT * FROM actions WHERE session_id = ${params?.id} ORDER BY updated_datetime ASC`,
+    "actions"
+  );
+
+  // automations
   const automations_default_view_record_state = {
     credential: "surrealdb catchmytask dev",
     success_message_code: "views:5023b2twax164esuobo3",
@@ -69,26 +81,11 @@ export const MonitorWrapper = ({
   } = useReadRecordByState(automations_default_view_record_state);
 
   const {
-    data: actions,
-    error: actionsError,
-    loading: actionsLoading,
-  } = useLiveQuery<Event>(
-    `SELECT * FROM actions WHERE session_id = ${params?.id} ORDER BY updated_datetime ASC`,
-    "actions"
-  );
-
-  // const {
-  //   data: actions,
-  //   error: actionsError,
-  //   loading: actionsLoading,
-  // } = useLiveQuery<Event>(`actions`, `session_id = ${params?.id}`);
-
-  const {
     data: automations,
     error: automationsError,
     loading: automationsLoading,
   } = useLiveQuery<Event>(
-    `SELECT * FROM automations WHERE session_id = ${params?.id} ORDER BY updated_datetime ASC`,
+    `SELECT * FROM automations WHERE session_id = '${params?.id}' ORDER BY updated_datetime ASC`,
     "automations"
   );
 
@@ -120,7 +117,7 @@ export const MonitorWrapper = ({
     error: messagesError,
     loading: messagesLoading,
   } = useLiveQuery<Event>(
-    `SELECT * FROM messages ORDER BY created_datetime DESC`,
+    `SELECT * FROM messages WHERE session_id = ${params?.id} ORDER BY created_datetime DESC`,
     "messages"
   );
 
