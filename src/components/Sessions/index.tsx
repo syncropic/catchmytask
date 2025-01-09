@@ -9,6 +9,7 @@ import MonacoEditor from "@components/MonacoEditor";
 import { useGetIdentity, useGo } from "@refinedev/core";
 import { IIdentity } from "@components/interfaces";
 import SearchInput from "@components/SearchInput";
+import { useSession } from "next-auth/react";
 
 interface ActionProps {
   success_message_code?: string;
@@ -37,6 +38,7 @@ export const SessionsWrapper = ({
     clearViews,
   } = useAppStore();
   const { data: identity } = useGetIdentity<IIdentity>();
+  const { data: user_session } = useSession();
 
   let query_state = {
     id:
@@ -174,7 +176,9 @@ export const SessionsWrapper = ({
           placeholder="sessions"
           handleOptionSubmit={handleSessionSelect}
           data_items={dataItems?.[0]?.items}
-          include_action_icons={["dublicate"]}
+          include_action_icons={
+            user_session?.userProfile?.session_actions || []
+          }
           activeFilters={[
             {
               id: 1,

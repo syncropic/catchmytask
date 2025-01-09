@@ -609,6 +609,8 @@ const NameAndResultSummaryInfo = ({
           "task_id",
           "execution_mode",
           "breakpoint",
+          "summary_message_code",
+          "task_name",
         ],
         "exclude"
       )

@@ -429,7 +429,9 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         // alert(JSON.stringify(value));
         const fetchFromDuckDB = async () => {
           try {
-            let reference_item_name = activeAction?.reference_record?.name;
+            let reference_item_name = sanitizeSheetName(
+              activeAction?.reference_record?.name
+            );
             // console.log(`globalQuery: ${globalQuery}`);
 
             // let active_view_query_model_data_data_model_query_filters =
@@ -468,11 +470,14 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             ]) as any;
             // console.log("cachedData");
             // console.log(cachedData);
+            // console.log("activeAction?.reference_record");
+            // console.log(activeAction?.reference_record);
 
             let actionItem = cachedData?.data?.find
               ? cachedData?.data?.find(
                   (item: any) =>
-                    item?.action_step?.id === activeAction?.reference_record?.id
+                    item?.message?.code ===
+                    activeAction?.reference_record?.summary_message_code
                 )
               : {};
 
@@ -942,25 +947,58 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                       (item: any) => item?.message?.code === "task_item"
                     )?.[0]?.data
                   : {};
-                // console.log("taskItems", taskItems);
+                // console.log("taskItem", taskItem);
                 let taskActions = data?.data?.find
                   ? data?.data?.filter(
                       (item: any) => item?.message?.code === "save_actions"
                     )?.[0]?.data
                   : [];
-                // later account for multiple save_actions
-                // console.log("taskActions", taskActions);
+                let messages = data?.data?.find
+                  ? data?.data?.filter(
+                      (item: any) => item?.message?.code === "messages"
+                    )?.[0]?.data
+                  : [];
+                let initialize_message = data?.data?.find
+                  ? data?.data?.filter(
+                      (item: any) =>
+                        item?.message?.code === "initialize_message"
+                    )?.[0]?.data
+                  : [];
+
+                let display_items = [
+                  ...(taskActions || []),
+                  ...(messages || []),
+                  ...(initialize_message || []),
+                ];
+                // console.log("taskActions");
+                // console.log(taskActions);
+                // console.log("messages");
+                // console.log(messages);
+                // console.log("initialize_message");
+                // console.log(initialize_message);
+                // console.log("display_items");
+                // console.log(display_items);
+                // // later account for multiple save_actions
+                // console.log("display_items", display_items);
                 // if (record?.entity_type === "actions") {
                 //   toggleView(String(record?.id), record);
                 // }
+
                 if (
-                  taskItem?.variables?.execution_mode ===
-                  "display_results_after_query"
+                  [
+                    "display_message_after_query",
+                    "display_results_after_query",
+                    "display_message_after_queue",
+                    "display_results_after_queue",
+                  ].includes(taskItem?.variables?.execution_mode)
                 ) {
-                  // console.log("display_results_after_query");
-                  taskActions.map((record: any) => {
+                  // console.log(
+                  //   "taskItem?.variables?.execution_mode",
+                  //   taskItem?.variables?.execution_mode
+                  // );
+                  display_items.map((record: any) => {
                     // console.log(item?.entity_type);
-                    if (record?.entity_type === "actions") {
+                    if (["messages"].includes(record?.entity_type)) {
                       toggleView(String(record?.id), record);
                     }
                   });
@@ -1618,3 +1656,25 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
 };
 
 export default ActionInputWrapper;
+
+const sanitizeSheetName = (name: any) => {
+  return (
+    name
+      // Convert to string in case of numbers or other types
+      .toString()
+      // Trim whitespace
+      .trim()
+      // Replace problematic Excel/Sheet special characters
+      .replace(/[\*\?\:\/\\\[\]]/g, "")
+      // Replace multiple spaces with single space
+      .replace(/\s+/g, " ")
+      // Replace spaces with underscores
+      .replace(/\s/g, "_")
+      // Replace any remaining non-alphanumeric characters except underscores
+      .replace(/[^a-zA-Z0-9_]/g, "")
+      // Convert to lowercase for consistency
+      .toLowerCase() ||
+    // Handle case where string might be empty after sanitization
+    "sheet"
+  );
+};

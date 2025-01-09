@@ -6,6 +6,7 @@ declare module "next-auth" {
     token?: any; // Extend the session object to include a token field of type `any`
     accessToken?: string; // You can keep this or other custom properties as needed
     error?: string;
+    userProfile?: any;
   }
 
   interface JWT {

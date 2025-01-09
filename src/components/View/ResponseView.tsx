@@ -98,7 +98,10 @@ const ViewItemWrapper = ({ view_item_id }: { view_item_id: string }) => {
   const { params } = useParsed();
   const { data: identity } = useGetIdentity<IIdentity>();
   let view_item_record = views[view_item_id];
-  if (["actions"]?.includes(view_item_record?.entity_type)) {
+  if (
+    ["actions"]?.includes(view_item_record?.entity_type) ||
+    ["execute_task_id"]?.includes(view_item_record?.message_type)
+  ) {
     return (
       <ViewItemRunTaskWrapper
         key={view_item_id}
@@ -192,7 +195,8 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
 
   let actionItem = runTaskData?.data?.find
     ? runTaskData?.data?.find(
-        (item: any) => item?.action_step?.id === view_item_id
+        (item: any) =>
+          item?.message?.code === view_item_record?.summary_message_code
       )
     : {};
 
@@ -629,6 +633,8 @@ const ViewItem = ({
           "task_id",
           "execution_mode",
           "breakpoint",
+          "summary_message_code",
+          "task_name",
         ],
         "exclude"
       )
@@ -794,8 +800,8 @@ const ViewItem = ({
                   <ExternalSubmitButton
                     record={{}}
                     reference_record={{
+                      ...view_item_record,
                       id: view_item_id,
-                      name: view_item_record?.name,
                       queryKey: `useRunTask_${JSON.stringify(query_state)}`,
                     }}
                     view_item={view_record}
@@ -842,8 +848,8 @@ const ViewItem = ({
                 <ExternalSubmitButton
                   record={{}}
                   reference_record={{
+                    ...view_item_record,
                     id: view_item_id,
-                    name: view_item_record?.name,
                     queryKey: `useRunTask_${JSON.stringify(query_state)}`,
                   }}
                   view_item={view_record}

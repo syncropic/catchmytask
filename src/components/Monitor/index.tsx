@@ -8,6 +8,7 @@ import { IconIconsOff } from "@tabler/icons-react";
 import { useAppStore } from "src/store";
 import MonacoEditor from "@components/MonacoEditor";
 import { useLiveQuery } from "@components/Utils/useLiveQuery";
+import { useSession } from "next-auth/react";
 
 interface MonitorWrapperProps {
   display_mode?: string;
@@ -27,6 +28,7 @@ export const MonitorWrapper = ({
   title,
 }: MonitorWrapperProps) => {
   const { params } = useParsed();
+  const { data: user_session } = useSession();
   // const [monitorComponents, setMonitorComponents] = useState(["actions"]);
   const {
     activeProfile,
@@ -197,7 +199,7 @@ export const MonitorWrapper = ({
             size="xs"
             placeholder="view"
             value={monitorComponents}
-            data={["actions", "profile explorer", "automations", "messages"]}
+            data={user_session?.userProfile?.monitor_options || []}
             onChange={setMonitorComponents}
             searchable
             clearable

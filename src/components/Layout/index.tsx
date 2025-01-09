@@ -14,6 +14,7 @@ import AccordionComponent from "@components/AccordionComponent";
 import Breadcrumbs from "@components/Breadcrumbs";
 import AppLayout from "./AppLayout";
 import { useAppStore } from "src/store"; // Zustand store
+import { useSession } from "next-auth/react";
 import {
   useComputedColorScheme,
   Highlight,
@@ -86,6 +87,7 @@ const Layout = ({
     setSectionIsExpanded,
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
+  const { data: user_session } = useSession();
 
   const { params } = useParsed();
 
@@ -372,6 +374,17 @@ const Layout = ({
                         />
                       ) : // <div>Select profile → session to continue</div>
                       null}
+                      {params?.id ? (
+                        <ExternalSubmitButton
+                          record={{}}
+                          entity_type="tasks"
+                          action_form_key={`query_${
+                            params?.id || activeTask?.id
+                          }`}
+                          action={"queue"}
+                        />
+                      ) : // <div>Select profile → session to continue</div>
+                      null}
                     </div>
                     {include_components?.includes("toolbar") && (
                       <div>
@@ -500,66 +513,106 @@ const Layout = ({
                     <div className="w-full flex items-center justify-between bg-gray-50 px-3">
                       {/* Toggle Buttons */}
                       <div className="flex gap-2">
-                        <Button
-                          size="compact-sm"
-                          variant={
-                            activeInput === "natural_language_query"
-                              ? "outline"
-                              : "default"
-                          }
-                          onClick={() =>
-                            setActiveInput("natural_language_query")
-                          }
-                          className="whitespace-nowrap"
-                        >
-                          Describe
-                        </Button>
-                        <Button
-                          size="compact-sm"
-                          variant={
-                            activeInput === "structured_query"
-                              ? "outline"
-                              : "default"
-                          }
-                          onClick={() => setActiveInput("structured_query")}
-                          className="whitespace-nowrap"
-                        >
-                          Code
-                        </Button>
-                        <Button
-                          size="compact-sm"
-                          variant={
-                            activeInput === "terminal_query"
-                              ? "outline"
-                              : "default"
-                          }
-                          onClick={() => setActiveInput("terminal_query")}
-                          className="whitespace-nowrap"
-                        >
-                          Terminal
-                        </Button>
-                        <Button
-                          size="compact-sm"
-                          variant={
-                            activeInput === "structured_query"
-                              ? "outline"
-                              : "default"
-                          }
-                          disabled={true}
-                          className="whitespace-nowrap"
-                        >
-                          Split
-                        </Button>
-                        {params?.id ? (
-                          <ExternalSubmitButton
-                            record={{}}
-                            entity_type="tasks"
-                            action_form_key={`query_${
-                              params?.id || activeTask?.id
-                            }`}
-                            action={"query"}
-                          />
-                        ) : (
+                        {params?.id &&
+                          user_session?.userProfile?.permissions?.includes(
+                            "describe_action_input"
+                          ) && (
+                            <Button
+                              size="compact-sm"
+                              variant={
+                                activeInput === "natural_language_query"
+                                  ? "outline"
+                                  : "default"
+                              }
+                              onClick={() =>
+                                setActiveInput("natural_language_query")
+                              }
+                              className="whitespace-nowrap"
+                            >
+                              Describe
+                            </Button>
+                          )}
+
+                        {params?.id &&
+                          user_session?.userProfile?.permissions?.includes(
+                            "code_action_input"
+                          ) && (
+                            <Button
+                              size="compact-sm"
+                              variant={
+                                activeInput === "structured_query"
+                                  ? "outline"
+                                  : "default"
+                              }
+                              onClick={() => setActiveInput("structured_query")}
+                              className="whitespace-nowrap"
+                            >
+                              Code
+                            </Button>
+                          )}
+
+                        {params?.id &&
+                          user_session?.userProfile?.permissions?.includes(
+                            "terminal_action_input"
+                          ) && (
+                            <Button
+                              size="compact-sm"
+                              variant={
+                                activeInput === "terminal_query"
+                                  ? "outline"
+                                  : "default"
+                              }
+                              onClick={() => setActiveInput("terminal_query")}
+                              className="whitespace-nowrap"
+                            >
+                              Terminal
+                            </Button>
+                          )}
+                        {params?.id &&
+                          user_session?.userProfile?.permissions?.includes(
+                            "split_action_input"
+                          ) && (
+                            <Button
+                              size="compact-sm"
+                              variant={
+                                activeInput === "structured_query"
+                                  ? "outline"
+                                  : "default"
+                              }
+                              disabled={true}
+                              className="whitespace-nowrap"
+                            >
+                              Split
+                            </Button>
+                          )}
+
+                        {params?.id &&
+                          user_session?.userProfile?.permissions?.includes(
+                            "query_action_input"
+                          ) && (
+                            <ExternalSubmitButton
+                              record={{}}
+                              entity_type="tasks"
+                              action_form_key={`query_${
+                                params?.id || activeTask?.id
+                              }`}
+                              action={"query"}
+                            />
+                          )}
+                        {params?.id &&
+                          user_session?.userProfile?.permissions?.includes(
+                            "queue_action_input"
+                          ) && (
+                            <ExternalSubmitButton
+                              record={{}}
+                              entity_type="tasks"
+                              action_form_key={`query_${
+                                params?.id || activeTask?.id
+                              }`}
+                              action={"queue"}
+                            />
+                          )}
+                        {!params?.id && (
                           <div>Select profile → session to continue</div>
                         )}
                       </div>

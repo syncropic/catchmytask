@@ -33,6 +33,7 @@ import ComponentsToolbar from "@components/ComponentsToolbar";
 import ExternalSubmitButton from "@components/SubmitButton";
 import { useViewportSize } from "@mantine/hooks";
 import SectionsToggle from "@components/SectionsToggle";
+import { useSession } from "next-auth/react";
 
 interface HeaderComponentProps {
   authenticatedData?: any;
@@ -66,6 +67,7 @@ const LargeScreenHeader = ({
   const { updateComponentAction } = useUpdateComponentAction();
   let action = focused_entities[activeTask?.id]?.["action"];
   const { width } = useViewportSize();
+  const { data: user_session } = useSession();
 
   const handleClearViews = () => {
     go({
@@ -143,28 +145,31 @@ const LargeScreenHeader = ({
         )}
 
         {<ColorSchemeToggle />}
-        {/* {authenticatedData?.authenticated && (
-          <div className="hidden lg:block">
-            <div className="flex items-center pl-4 pr-4">
-              <div>
-                <Tooltip
-                  label={`toggle immediate request response view`}
-                  position="top"
-                >
-                  <ActionIcon
-                    size="sm"
-                    variant={!showRequestResponseView ? "outline" : "filled"}
-                    onClick={toggleShowRequestResponseView}
+        {authenticatedData?.authenticated &&
+          user_session?.userProfile?.quick_action_options?.includes(
+            "toggle_immediate_request_response"
+          ) && (
+            <div className="hidden lg:block">
+              <div className="flex items-center pl-4 pr-4">
+                <div>
+                  <Tooltip
+                    label={`toggle immediate request response view`}
+                    position="top"
                   >
-                    <IconHttpGet size={20} />
-                  </ActionIcon>
-                </Tooltip>
+                    <ActionIcon
+                      size="sm"
+                      variant={!showRequestResponseView ? "outline" : "filled"}
+                      onClick={toggleShowRequestResponseView}
+                    >
+                      <IconHttpGet size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                </div>
               </div>
             </div>
-          </div>
-        )} */}
+          )}
 
-        {authenticatedData?.authenticated && (
+        {/* {authenticatedData?.authenticated && (
           <div className="hidden lg:block">
             <div className="flex items-center pl-4 pr-4">
               <div>
@@ -179,11 +184,6 @@ const LargeScreenHeader = ({
                         id: "sessions:h5v3p5tbn363as94m248",
                       })
                     }
-                    // variant={
-                    //   showRequestResponseView || Object.keys(views).length > 0
-                    //     ? "filled"
-                    //     : "outline"
-                    // }
                     variant="outline"
                   >
                     <IconMail size={20} />
@@ -192,7 +192,7 @@ const LargeScreenHeader = ({
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {authenticatedData?.authenticated && (
           <div className="hidden lg:block">

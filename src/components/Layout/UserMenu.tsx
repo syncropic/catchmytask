@@ -245,7 +245,7 @@ export const UserMenu = () => {
           >
             Settings
           </Menu.Item> */}
-          <Menu.Item
+          {/* <Menu.Item
             leftSection={<IconMail size={14} />}
             // disabled
             onClick={() =>
@@ -257,14 +257,14 @@ export const UserMenu = () => {
             }
           >
             Messages
-          </Menu.Item>
-          <Menu.Item
+          </Menu.Item> */}
+          {/* <Menu.Item
             leftSection={<IconHttpGet size={14} />}
             className={`${showRequestResponseView ? "text-blue-500" : ""}`}
             onClick={toggleShowRequestResponseView}
           >
             Toggle Request Response
-          </Menu.Item>
+          </Menu.Item> */}
           {/* <Menu.Item
             leftSection={<IconUserScan size={14} />}
             disabled
