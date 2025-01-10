@@ -278,7 +278,12 @@ export function TableView<T extends Record<string, any>>({
                         field?.name
                       )
                     ) {
-                      return <MessageLabel record={record} />;
+                      return (
+                        <MessageLabel
+                          record={record}
+                          onRerun={(record) => console.log("Rerun:", record)}
+                        />
+                      );
                     } else if (field?.name === "name") {
                       return (
                         <NameAndResultSummaryInfo
@@ -405,7 +410,7 @@ export function TableView<T extends Record<string, any>>({
             "data-row-index": `${title} - ${recordIndex}`,
           })}
           scrollViewportRef={viewportRef}
-          height="65vh"
+          height="80vh"
           records={data_items}
           highlightOnHover={true}
           withColumnBorders={true}

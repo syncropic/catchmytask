@@ -108,6 +108,18 @@ const ViewItemWrapper = ({ view_item_id }: { view_item_id: string }) => {
         view_item_id={view_item_id}
       ></ViewItemRunTaskWrapper>
     );
+  } else if (["content_embed_url"]?.includes(view_item_record?.message_type)) {
+    return (
+      <>
+        <ViewItem
+          dataItems={[view_item_record]}
+          view_item_id={view_item_id}
+          include_components={["toolbar"]}
+          view_item_record={view_item_record}
+          query_state={{}}
+        />
+      </>
+    );
   } else {
     return (
       <ViewItemViewWrapper
@@ -132,14 +144,6 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
   const { data: identity } = useGetIdentity<IIdentity>();
   let view_item_record = views[view_item_id];
   const baseData = {
-    // action: {
-    //   operation: activeAction?.name,
-    //   ...activeAction,
-    // },
-    // input_values: {
-    //   action_input_form_values:
-    //     action_input_form_values[action_input_form_values_key] || {},
-    // },
     application: {
       id: activeApplication?.id,
       name: activeApplication?.name,
@@ -573,10 +577,10 @@ const ViewItem = ({
   query_state,
 }: {
   dataItems: any;
-  view_record: any;
+  view_record?: any;
   view_item_id: string;
   view_item_record: any;
-  include_components: any;
+  include_components?: any;
   query_state: any;
 }) => {
   const { width } = useViewportSize();
@@ -901,7 +905,10 @@ const ViewItem = ({
           {/* <MonacoEditor value={dataItems} /> */}
           {!view_record?.fields?.length &&
             dataItems?.map((item: any, index: number) => {
-              if (item?.view_id == "embed_url") {
+              if (
+                item?.view_id == "embed_url" ||
+                item?.message_type == "content_embed_url"
+              ) {
                 return (
                   <div key={`embed-${index}`} className="h-[75vh]">
                     <EmbedComponent

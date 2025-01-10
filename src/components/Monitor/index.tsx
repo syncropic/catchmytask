@@ -192,39 +192,41 @@ export const MonitorWrapper = ({
   }
 
   return (
-    <div className="flex flex-col p-3 gap-2 h-[80vh] overflow-y-auto">
-      <div className="flex justify-between items-center gap-1">
-        <div className="w-full">
-          <MultiSelect
-            size="xs"
-            placeholder="view"
-            value={monitorComponents}
-            data={user_session?.userProfile?.monitor_options || []}
-            onChange={setMonitorComponents}
-            searchable
-            clearable
-          />
-        </div>
-        {/* <TextInput size="xs" placeholder="search" /> */}
-        <Tooltip
-          withArrow
-          transitionProps={{ duration: 200 }}
-          label="clear views"
-        >
-          <ActionIcon
-            size="xs"
-            variant={
-              showRequestResponseView || Object.keys(views).length > 0
-                ? "filled"
-                : "outline"
-            }
-            aria-label="clear view"
-            onClick={handleClearViews}
+    <div className="flex flex-col p-3 gap-2 h-[85vh] overflow-y-auto">
+      {user_session?.userProfile?.monitor_options?.length > 1 && (
+        <div className="flex justify-between items-center gap-1">
+          <div className="w-full">
+            <MultiSelect
+              size="xs"
+              placeholder="view"
+              value={monitorComponents}
+              data={user_session?.userProfile?.monitor_options || []}
+              onChange={setMonitorComponents}
+              searchable
+              clearable
+            />
+          </div>
+          {/* <TextInput size="xs" placeholder="search" /> */}
+          <Tooltip
+            withArrow
+            transitionProps={{ duration: 200 }}
+            label="clear views"
           >
-            <IconIconsOff size={24} />
-          </ActionIcon>
-        </Tooltip>
-      </div>
+            <ActionIcon
+              size="xs"
+              variant={
+                showRequestResponseView || Object.keys(views).length > 0
+                  ? "filled"
+                  : "outline"
+              }
+              aria-label="clear view"
+              onClick={handleClearViews}
+            >
+              <IconIconsOff size={24} />
+            </ActionIcon>
+          </Tooltip>
+        </div>
+      )}
 
       {monitorComponents?.includes("profile explorer") && (
         <>

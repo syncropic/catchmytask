@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
   format,
   isValid,
@@ -7,14 +7,19 @@ import {
   isYesterday,
   differenceInYears,
 } from "date-fns";
-import { Tooltip, Text, Box, LoadingOverlay } from "@mantine/core";
+import { Tooltip, Text, Box, LoadingOverlay, Button } from "@mantine/core";
 import {
   IconCircle,
   IconClock,
   IconCircleX,
   IconCircleCheck,
   IconQuestionMark,
+  IconPlayerPlay,
+  IconX,
 } from "@tabler/icons-react";
+import { useCustomMutation, useGetIdentity, useParsed } from "@refinedev/core";
+import { useAppStore } from "src/store";
+import { IIdentity } from "@components/interfaces";
 
 type ActionStatus =
   | "empty"
@@ -38,12 +43,15 @@ interface MessageLabelRecord {
   excerpt?: string;
   description?: string;
   author_id?: string;
+  task_id?: string;
   action_status?: ActionStatus;
   variables?: Record<string, any>;
 }
 
 interface MessageLabelProps {
   record: MessageLabelRecord;
+  onRerun?: (record: MessageLabelRecord) => void;
+  onCancel?: (record: MessageLabelRecord) => void;
 }
 
 const extractKeys = (
@@ -64,9 +72,12 @@ const extractKeys = (
   }, {} as Record<string, any>);
 };
 
-const ActionStatusInfo: React.FC<{ record: MessageLabelRecord }> = ({
-  record,
-}) => {
+const ActionStatusInfo: React.FC<{
+  record: MessageLabelRecord;
+  onRerun?: (record: MessageLabelRecord) => void;
+  onCancel?: (record: MessageLabelRecord) => void;
+  isRerunning?: boolean;
+}> = ({ record, onRerun, onCancel, isRerunning }) => {
   const getStatusConfig = (status?: ActionStatus): StatusConfig => {
     const configs: Record<ActionStatus, StatusConfig> = {
       empty: {
@@ -144,10 +155,107 @@ const ActionStatusInfo: React.FC<{ record: MessageLabelRecord }> = ({
     );
   };
 
-  return <div className="flex flex-col space-y-1">{renderContent()}</div>;
+  return (
+    <div className="flex flex-col space-y-2">
+      <div className="flex items-center space-x-2">{renderContent()}</div>
+      <div className="flex items-center space-x-2">
+        {!["running", "pending"].includes(record.action_status || "") &&
+          !isRerunning && (
+            <Button
+              size="xs"
+              variant="light"
+              color="blue"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRerun?.(record);
+              }}
+              className="flex-1"
+            >
+              Re-run
+            </Button>
+          )}
+      </div>
+    </div>
+  );
 };
 
-const MessageLabel: React.FC<MessageLabelProps> = ({ record }) => {
+const MessageLabel: React.FC<MessageLabelProps> = ({
+  record,
+  onRerun,
+  onCancel,
+}) => {
+  const { runtimeConfig: config } = useAppStore();
+  const { mutate, isLoading: isRerunning } = useCustomMutation();
+
+  const { params } = useParsed();
+  const { data: identity } = useGetIdentity<IIdentity>();
+
+  const {
+    views,
+    activeProfile,
+    activeApplication,
+    activeSession,
+    activeView,
+    setViews,
+  } = useAppStore();
+
+  const baseData = {
+    application: {
+      id: activeApplication?.id,
+      name: activeApplication?.name,
+    },
+    session: {
+      id: params?.session_id || activeSession?.id,
+      name: activeSession?.name,
+    },
+    view: {
+      id: params?.view_id || activeView?.id,
+      name: params?.view_id || activeView?.name,
+    },
+    identity: identity,
+    profile: {
+      id: params?.profile_id || activeProfile?.id || identity?.email,
+      name: params?.profile_id || activeProfile?.name || identity?.email,
+    },
+    parents: {
+      task_id: record?.task_id,
+      profile_id: params?.profile_id || activeProfile?.id || identity?.email,
+      view_id: params?.view_id || activeView?.id,
+      session_id: params?.id || activeSession?.id,
+      application_id: params?.application_id || activeApplication?.id,
+    },
+  };
+
+  let run_task_state = {
+    ...baseData,
+    task: {
+      id: record?.task_id,
+      name: record?.task_id,
+    },
+  };
+
+  const handleRerun = useCallback(() => {
+    if (record.variables) {
+      mutate({
+        url: `${config?.API_URL}/re-run`,
+        method: "post",
+        values: run_task_state,
+        // successNotification: {
+        //   message: "Task started successfully",
+        //   type: "success",
+        // },
+        // errorNotification: {
+        //   message: "Failed to start task",
+        //   type: "error",
+        // },
+      });
+
+      if (onRerun) {
+        onRerun(record);
+      }
+    }
+  }, [record, mutate, config?.API_URL, onRerun]);
+
   const getFirstValid = (...options: (string | undefined)[]): string => {
     return (
       options.find((opt) => typeof opt === "string" && opt.trim().length > 0) ||
@@ -201,12 +309,6 @@ const MessageLabel: React.FC<MessageLabelProps> = ({ record }) => {
     record.description?.slice(0, 40)
   );
 
-  const truncateText = (text: string | undefined, length: number): string => {
-    if (!text) return "";
-    return text.length > length ? `${text.slice(0, length)}...` : text;
-  };
-
-  // Filter out specific keys from variables
   const filteredVariables = record.variables
     ? extractKeys(
         record.variables,
@@ -252,7 +354,6 @@ const MessageLabel: React.FC<MessageLabelProps> = ({ record }) => {
       }
     >
       <div className="w-full flex flex-col py-2 px-3 gap-1 cursor-pointer hover:bg-gray-50">
-        {/* Row 1: Author and Date */}
         <div className="flex items-center justify-between gap-4 min-w-0">
           <Text size="sm" className="text-gray-600 font-medium truncate flex-1">
             {record.author_id || ""}
@@ -261,31 +362,33 @@ const MessageLabel: React.FC<MessageLabelProps> = ({ record }) => {
             <Text size="sm" className="text-gray-500 whitespace-nowrap">
               {formattedTime}
             </Text>
-            {record.action_status && <ActionStatusInfo record={record} />}
+            {record.action_status && (
+              <ActionStatusInfo
+                record={record}
+                onRerun={handleRerun}
+                onCancel={onCancel}
+                isRerunning={isRerunning}
+              />
+            )}
           </div>
         </div>
 
-        {/* Row 2: Heading */}
         <Text
           size="sm"
-          className="font-medium text-gray-900 truncate w-full"
-          lineClamp={1}
+          className="font-medium text-gray-900 break-words whitespace-pre-wrap w-full"
         >
-          {truncateText(heading, 40)}
+          {heading}
         </Text>
 
-        {/* Row 3: Subheading */}
         {subheading && (
           <Text
             size="sm"
-            className="text-gray-600 truncate w-full"
-            lineClamp={1}
+            className="text-gray-600 break-words whitespace-pre-wrap w-full"
           >
-            {truncateText(subheading, 40)}
+            {subheading}
           </Text>
         )}
 
-        {/* Row 4: Variables */}
         {Object.keys(filteredVariables).length > 0 && (
           <div className="whitespace-pre-wrap font-mono text-xs text-gray-500 mt-0.5">
             {formatVariables(filteredVariables)}
