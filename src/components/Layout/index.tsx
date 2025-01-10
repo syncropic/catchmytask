@@ -46,6 +46,7 @@ import {
   IconMaximize,
   IconSquareX,
 } from "@tabler/icons-react";
+import DynamicFilter from "@components/DynamicFilter";
 
 const Layout = ({
   children,
@@ -509,6 +510,9 @@ const Layout = ({
                         success_message_code="action_input_data_model_schema"
                       />
                     </div>
+                    {/* <DynamicFilter
+                      onFilterChange={(item) => console.log(item)}
+                    /> */}
                     {/* Row 2: Action Input Toggle Bar */}
                     <div className="w-full flex items-center justify-between bg-gray-50 px-3">
                       {/* Toggle Buttons */}

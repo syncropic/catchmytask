@@ -57,6 +57,7 @@ import { saveToLocalDB } from "src/local_db";
 import React from "react";
 import { IconFilter, IconX } from "@tabler/icons-react";
 import { ConsoleLogger } from "@duckdb/duckdb-wasm";
+import DynamicFilter, { Variable } from "@components/DynamicFilter";
 
 // Function to map class names to ExcelJS ARGB colors
 const getExcelJSStyleFromClass = (className: string) => {
@@ -936,7 +937,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 resolve(data);
                 new_form_status[action_input_form_values_key].is_submitting =
                   false;
-                console.log("hello");
+                // console.log("hello");
                 setFormStatus(new_form_status);
                 // clear attachments so i don't have to send them again can just referenced uploaded items
                 form.setFieldValue("attachments", null);
@@ -984,13 +985,23 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 //   toggleView(String(record?.id), record);
                 // }
 
+                let display_variables = [
+                  taskItem?.variables?.execution_mode,
+                  ...(taskItem?.variables?.on_queue || []),
+                  ...(taskItem?.variables?.on_query || []),
+                ];
+                // console.log("display_variables");
+                // console.log(display_variables);
+
                 if (
-                  [
-                    "display_message_after_query",
-                    "display_results_after_query",
-                    "display_message_after_queue",
-                    "display_results_after_queue",
-                  ].includes(taskItem?.variables?.execution_mode)
+                  display_variables.some((variable) =>
+                    [
+                      "display_message_after_query",
+                      "display_results_after_query",
+                      "display_message_after_queue",
+                      "display_results_after_queue",
+                    ].includes(variable)
+                  )
                 ) {
                   // console.log(
                   //   "taskItem?.variables?.execution_mode",
@@ -1413,6 +1424,17 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     [filteredFields]
   );
 
+  // let variables = [
+  //   {
+  //     label: "date",
+  //     value: "date",
+  //   },
+  //   {
+  //     label: "success_criteria",
+  //     value: "success_criteria",
+  //   },
+  // ];
+
   // Render a single field
   const renderField = (fieldData: Field) => {
     const Component = getComponentByResourceType(fieldData.component);
@@ -1447,12 +1469,12 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               <Component
                 schema={fieldData}
                 disabled={fieldData.readOnly}
-                value={
-                  fieldData.component === "DateInput" &&
-                  typeof field.state.value === "string"
-                    ? new Date(field.state.value)
-                    : field.state.value
-                }
+                // value={
+                //   fieldData.component === "DateInput" &&
+                //   typeof field.state.value === "string"
+                //     ? new Date(field.state.value)
+                //     : field.state.value
+                // }
                 onBlur={field.handleBlur}
                 action_input_form_values_key={action_input_form_values_key}
                 form_id={formId}
@@ -1475,12 +1497,28 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 form={form}
                 isLoading={mutationIsLoading}
                 {...(fieldData.props || {})}
+                {...(!["MultiSelect", "DateInput"].includes(fieldData.component)
+                  ? { value: field.state.value }
+                  : {})}
+                {...(["DateInput"].includes(fieldData.component) &&
+                typeof field.state.value === "string"
+                  ? { value: new Date(field.state.value) }
+                  : {})}
+                {...(fieldData.component === "MultiSelect"
+                  ? {
+                      data: Array.isArray(record[`${fieldData.title}_options`])
+                        ? record[`${fieldData.title}_options`]
+                        : [],
+                      value: field.state.value || [],
+                    }
+                  : {})}
                 {...(fieldData.component === "DateInput" ? { dateParser } : {})}
                 {...(fieldData.component === "RangeSlider"
                   ? { label: (value: any) => `${value}` } // Remove the extra curly braces
                   : { label: fieldData.label || fieldData.title })}
               />
               {fieldName === "query" && <FieldInfo field={field} />}
+              {/* {JSON.stringify(field.state.value)} */}
             </>
           )}
         </form.Field>
@@ -1495,6 +1533,17 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
   if (!hasRequiredFields) return null;
 
+  // const variables: Variable[] = [
+  //   { value: "name", label: "Full Name", type: "string" },
+  //   { value: "age", label: "Age", type: "number" },
+  //   { value: "created_at", label: "Created Date", type: "datetime" },
+  //   { value: "is_active", label: "Is Active", type: "boolean" },
+  // ];
+
+  const handleFilterChange = (whereClause: string) => {
+    console.log("Generated where clause:", whereClause);
+    // Do something with the where clause
+  };
   return (
     <form
       onSubmit={(e) => {
@@ -1509,6 +1558,15 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           return field ? renderField(field) : null;
         })()} */}
       <div className="flex flex-col gap-2 p-3 h-[55vh]">
+        <DynamicFilter
+          variables={record?.variables_options.filter((item: any) =>
+            (
+              action_input_form_values[action_input_form_values_key]
+                ?.variables || []
+            ).includes(item.value)
+          )}
+          onFilterChange={handleFilterChange}
+        />
         {hasRequiredFields &&
           data_model?.schema?.required.map((fieldName: string) => {
             const field = data_model?.schema?.properties?.[fieldName];
@@ -1624,7 +1682,8 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
           // record: record,
           // recordData: recordData,
           // record_data: record_data,
-          data_model_data: data_model_data,
+          // data_model_data: data_model_data,
+          record_data: record_data?.variables,
           // data: error?.response?.data,
           // status: error?.response?.status,
         }}
