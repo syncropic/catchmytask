@@ -320,6 +320,7 @@ export function TableView<T extends Record<string, any>>({
                     accessor: "actions",
                     title: <Box mr={6}>actions</Box>,
                     textAlign: "right",
+                    width: 120, // Fixed width for actions
                     render: (record: any) => (
                       <Group gap={4} justify="right" wrap="nowrap">
                         {["user"]?.includes(record?.author_type) && (

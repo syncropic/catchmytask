@@ -263,6 +263,7 @@ export function TableView<T extends Record<string, any>>({
                   accessor: field?.name,
                   ellipsis: true,
                   title: field?.name,
+                  width: 120,
                   render: (record: any) => {
                     if (field?.name === "author_id") {
                       return (

@@ -17,7 +17,14 @@ import {
   useSearchFilters,
 } from "@components/Utils";
 import { useAppStore, useTransientStore } from "src/store";
-import { Accordion, Box, Button, LoadingOverlay, Title } from "@mantine/core";
+import {
+  Accordion,
+  Box,
+  Button,
+  LoadingOverlay,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 import dayjs from "dayjs";
 // import { parseNSTLQuery } from "@components/Utils/ntslParser";
 import { DateInputProps } from "@mantine/dates";
@@ -55,9 +62,13 @@ import { saveAs } from "file-saver";
 import { showNotification } from "@mantine/notifications";
 import { saveToLocalDB } from "src/local_db";
 import React from "react";
-import { IconFilter, IconX } from "@tabler/icons-react";
+import { IconAdjustments, IconFilter, IconX } from "@tabler/icons-react";
 import { ConsoleLogger } from "@duckdb/duckdb-wasm";
-import DynamicFilter, { Variable } from "@components/DynamicFilter";
+import DynamicFilter, {
+  FilterOutput,
+  Variable,
+} from "@components/DynamicFilter";
+import { useSession } from "next-auth/react";
 
 // Function to map class names to ExcelJS ARGB colors
 const getExcelJSStyleFromClass = (className: string) => {
@@ -124,7 +135,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const go = useGo(); // Navigation function
 
   const { runtimeConfig: config } = useAppStore();
-
+  const { data: user_session } = useSession();
   const { data: identity } = useGetIdentity<IIdentity>();
   const { setFormSubmitHandler, setFormInstance } = useTransientStore();
   const { searchFilters } = useSearchFilters();
@@ -294,11 +305,17 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       String(fetch_view_by_id_state?.success_message_code)
   )?.data[0];
 
-  const globalQuery =
-    useAppStore(
-      (state) =>
-        state.action_input_form_values[`${action_input_form_values_key}`]?.query
-    ) || view_record?.query; // use query as default if nothing is in the global store
+  const [showVariables, setShowVariables] = useState(false);
+
+  const toggleVariables = () => {
+    setShowVariables((prev) => !prev);
+  };
+
+  // const globalQuery =
+  //   useAppStore(
+  //     (state) =>
+  //       state.action_input_form_values[`${action_input_form_values_key}`]?.query
+  //   ) || view_record?.query; // use query as default if nothing is in the global store
 
   const identity_object = {
     author_id: identity?.email,
@@ -1540,8 +1557,12 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   //   { value: "is_active", label: "Is Active", type: "boolean" },
   // ];
 
-  const handleFilterChange = (whereClause: string) => {
-    console.log("Generated where clause:", whereClause);
+  const handleFilterChange = (output: FilterOutput) => {
+    // console.log("Generated where clause:", whereClause);
+    // if(whereClause){
+    // }
+    form.setFieldValue("variables_value", output.whereClause);
+    form.setFieldValue("variables_output", output);
     // Do something with the where clause
   };
   return (
@@ -1558,18 +1579,49 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           return field ? renderField(field) : null;
         })()} */}
       <div className="flex flex-col gap-2 p-3 h-[55vh]">
-        <DynamicFilter
-          variables={record?.variables_options.filter((item: any) =>
-            (
-              action_input_form_values[action_input_form_values_key]
-                ?.variables || []
-            ).includes(item.value)
-          )}
-          onFilterChange={handleFilterChange}
-        />
+        {record?.variables_options?.length > 0 && (
+          <div>
+            {params?.id &&
+              user_session?.userProfile?.permissions?.includes(
+                "filter_action_input"
+              ) && (
+                <Tooltip
+                  label={`${showVariables ? "hide" : "provide"} variables`}
+                  key="variables"
+                >
+                  <Button
+                    size="compact-sm"
+                    leftSection={<IconAdjustments size={20} />}
+                    variant={showVariables ? "filled" : "outline"}
+                    onClick={toggleVariables}
+                  >
+                    Variables
+                  </Button>
+                </Tooltip>
+              )}
+            {showVariables && (
+              <DynamicFilter
+                variables={record?.variables_options?.filter((item: any) =>
+                  (
+                    action_input_form_values[action_input_form_values_key]
+                      ?.variables || []
+                  ).includes(item.value)
+                )}
+                onFilterChange={handleFilterChange}
+              />
+            )}
+          </div>
+        )}
+
         {hasRequiredFields &&
           data_model?.schema?.required.map((fieldName: string) => {
             const field = data_model?.schema?.properties?.[fieldName];
+            if (
+              ["variables", "variables_value"].includes(fieldName) &&
+              !showVariables
+            ) {
+              return null;
+            }
             return field ? renderField(field) : null;
           })}
       </div>

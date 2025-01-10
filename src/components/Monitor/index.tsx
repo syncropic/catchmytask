@@ -269,7 +269,7 @@ export const MonitorWrapper = ({
           <>
             <MultiSelect
               size="xs"
-              placeholder="filter"
+              // placeholder="filter"
               value={["messages"]}
               data={["messages"]}
               searchable
