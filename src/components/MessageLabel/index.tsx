@@ -428,6 +428,7 @@ import {
 import { useCustomMutation, useGetIdentity, useParsed } from "@refinedev/core";
 import { useAppStore } from "src/store";
 import { IIdentity } from "@components/interfaces";
+import { useSession } from "next-auth/react";
 
 type ActionStatus =
   | "empty"
@@ -486,6 +487,8 @@ const ActionStatusInfo: React.FC<{
   onCancel?: (record: MessageLabelRecord) => void;
   isRerunning?: boolean;
 }> = ({ record, onRerun, onCancel, isRerunning }) => {
+  const { data: user_session } = useSession();
+
   const getStatusConfig = (status?: ActionStatus): StatusConfig => {
     const configs: Record<ActionStatus, StatusConfig> = {
       empty: {
@@ -570,7 +573,10 @@ const ActionStatusInfo: React.FC<{
       </div>
       <div className="flex items-center space-x-2 min-w-0">
         {!["running", "pending"].includes(record.action_status || "") &&
-          !isRerunning && (
+          !isRerunning &&
+          user_session?.userProfile?.permissions?.includes(
+            "execute_action_re_run"
+          ) && (
             <Button
               size="xs"
               variant="light"
@@ -723,6 +729,8 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
           "breakpoint",
           "summary_message_code",
           "task_name",
+          "variables_output",
+          "variables",
         ],
         "exclude"
       )

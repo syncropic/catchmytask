@@ -639,6 +639,8 @@ const ViewItem = ({
           "breakpoint",
           "summary_message_code",
           "task_name",
+          "variables_output",
+          "variables",
         ],
         "exclude"
       )
