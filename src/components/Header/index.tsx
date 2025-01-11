@@ -145,7 +145,11 @@ const LargeScreenHeader = ({
           </div>
         )}
 
-        {<ColorSchemeToggle />}
+        {
+          <div className="hidden lg:block">
+            <ColorSchemeToggle />
+          </div>
+        }
         {authenticatedData?.authenticated &&
           user_session?.userProfile?.quick_action_options?.includes(
             "toggle_immediate_request_response"

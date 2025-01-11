@@ -21,6 +21,7 @@ import {
   Button,
   Tooltip,
   ActionIcon,
+  Accordion,
 } from "@mantine/core";
 
 import {
@@ -47,6 +48,7 @@ import {
   IconSquareX,
 } from "@tabler/icons-react";
 import DynamicFilter from "@components/DynamicFilter";
+import ActionToolbar from "@components/ActionToolbar";
 
 const Layout = ({
   children,
@@ -254,234 +256,132 @@ const Layout = ({
       <AppLayout authenticatedData={authenticatedData}>
         {isMobile ? (
           <div className="flex flex-col mb-24">
-            {centerSection.isDisplayed &&
-              (Object.keys(views).length > 0 || showRequestResponseView) && (
-                <>
-                  <div className="w-full">
-                    {/* // to load in the page content */}
-                    {/* {!select_or_create_to_continue_items.some(
-                              (item) => item === null
-                            ) && children} */}
-                    {children && children}
-                    {select_or_create_to_continue_items.some(
-                      (item) => item === null
-                    ) &&
-                      ["/home", "/"].includes(parsed?.pathname || "") && (
-                        <div className="flex flex-col h-[75vh] items-start justify-center p-4">
-                          <div>
-                            <Breadcrumbs />
-                          </div>
-                          <p className="text-sm text-gray-600 max-w-sm">
-                            <Highlight
-                              component="p"
-                              color="lime"
-                              highlight={["session", "profile"]}
-                              // highlight={
-                              //   select_or_create_to_continue_items_map[
-                              //     nullIndex
-                              //   ] || ""
-                              // }
-                            >
-                              {message || ""}
-                            </Highlight>
-                          </p>
+            <Accordion
+              multiple
+              defaultValue={["action_input", "messages", "views"]}
+            >
+              {leftSection.isDisplayed && (
+                <Accordion.Item value={"action_input"} key={"action_input"}>
+                  <Accordion.Control icon={null}>input</Accordion.Control>
+                  <Accordion.Panel>
+                    <div
+                      className={`overflow-auto h-[85vh] ${
+                        effectiveScheme === "light"
+                          ? "bg-gray-100"
+                          : "bg-gray-800"
+                      }`}
+                    >
+                      <div className="h-[85vh] flex flex-col">
+                        {" "}
+                        {/* Using 85% of viewport height */}
+                        {/* Row 1: session switch and actions */}
+                        <div className="flex px-3 py-1">
+                          <SessionsWrapper
+                            // name={action}
+                            query_name="fetch sessions"
+                            view_id="views:36xo8keq9tsoyly68shk"
+                            title="monitor"
+                            // record={record}
+                            // action={action}
+                            display_mode="search_input"
+                            success_message_code="action_input_data_model_schema"
+                          />
                         </div>
-                      )}
-                  </div>
-                </>
-              )}
-            {rightSection.isDisplayed && params?.id && (
-              <MonitorWrapper></MonitorWrapper>
-            )}
-
-            {leftSection.isDisplayed && (
-              <div
-                className={`overflow-auto h-[85vh] ${
-                  effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
-                }`}
-              >
-                <div className="h-[85vh] flex flex-col">
-                  {" "}
-                  {/* Using 85% of viewport height */}
-                  {/* Row 1: session switch and actions */}
-                  <div className="flex px-3 py-1">
-                    <SessionsWrapper
-                      // name={action}
-                      query_name="fetch sessions"
-                      view_id="views:36xo8keq9tsoyly68shk"
-                      title="monitor"
-                      // record={record}
-                      // action={action}
-                      display_mode="search_input"
-                      success_message_code="action_input_data_model_schema"
-                    />
-                  </div>
-                  {/* Row 2: Action Input Toggle Bar */}
-                  <div className="w-full flex items-center justify-between bg-gray-50 px-3">
-                    {/* Toggle Buttons */}
-                    <div className="flex gap-2">
-                      <Button
-                        size="compact-sm"
-                        variant={
-                          activeInput === "natural_language_query"
-                            ? "outline"
-                            : "default"
-                        }
-                        onClick={() => setActiveInput("natural_language_query")}
-                        className="whitespace-nowrap"
-                      >
-                        Describe
-                      </Button>
-                      <Button
-                        size="compact-sm"
-                        variant={
-                          activeInput === "structured_query"
-                            ? "outline"
-                            : "default"
-                        }
-                        onClick={() => setActiveInput("structured_query")}
-                        className="whitespace-nowrap"
-                      >
-                        Code
-                      </Button>
-                      <Button
-                        size="compact-sm"
-                        variant={
-                          activeInput === "terminal_query"
-                            ? "outline"
-                            : "default"
-                        }
-                        onClick={() => setActiveInput("terminal_query")}
-                        className="whitespace-nowrap"
-                      >
-                        Terminal
-                      </Button>
-                      <Button
-                        size="compact-sm"
-                        variant={
-                          activeInput === "structured_query"
-                            ? "outline"
-                            : "default"
-                        }
-                        disabled={true}
-                        className="whitespace-nowrap"
-                      >
-                        Split
-                      </Button>
-                      {params?.id ? (
-                        <ExternalSubmitButton
-                          record={{}}
-                          entity_type="tasks"
-                          action_form_key={`query_${
-                            params?.id || activeTask?.id
-                          }`}
-                          action={"query"}
+                        {/* Row 2: Action Input Toggle Bar */}
+                        <ActionToolbar
+                          params={params}
+                          userSession={user_session}
+                          activeInput={activeInput}
+                          setActiveInput={setActiveInput}
+                          sectionIsExpanded={sectionIsExpanded}
+                          setSectionIsExpanded={setSectionIsExpanded}
+                          closeDisplay={closeDisplay}
+                          includeComponents={["toolbar"]}
+                          ExternalSubmitButton={ExternalSubmitButton}
                         />
-                      ) : // <div>Select profile → session to continue</div>
-                      null}
-                      {params?.id ? (
-                        <ExternalSubmitButton
-                          record={{}}
-                          entity_type="tasks"
-                          action_form_key={`query_${
-                            params?.id || activeTask?.id
-                          }`}
-                          action={"queue"}
-                        />
-                      ) : // <div>Select profile → session to continue</div>
-                      null}
-                    </div>
-                    {include_components?.includes("toolbar") && (
-                      <div>
-                        <div
-                          className="flex p-3 gap-3 items-center"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {/* <ExternalSubmitButton
-                              record={{}}
-                              reference_record={{
-                                id: view_item_id,
-                                name: view_item_record?.name,
-                                queryKey: `useRunTask_${JSON.stringify(
-                                  query_state
-                                )}`,
-                              }}
-                              view_item={view_record}
-                              entity_type="view"
-                              action_form_key={`query_${params?.id}`}
-                              action={"save"}
-                            /> */}
-                          <Tooltip
-                            label={
-                              sectionIsExpanded === "leftSection"
-                                ? "minimize"
-                                : "expand"
-                            }
-                            key="expand/minimize"
-                          >
-                            <ActionIcon
-                              variant="default"
-                              size="sm"
-                              aria-label="expand/minimize"
-                              onClick={() =>
-                                setSectionIsExpanded("leftSection")
-                              }
-                            >
-                              {sectionIsExpanded === "leftSection" ? (
-                                <IconArrowsMinimize size={16} />
-                              ) : (
-                                <IconArrowsMaximize size={16} />
-                              )}
-                            </ActionIcon>
-                          </Tooltip>
-
-                          <Tooltip label="close" key="close">
-                            <ActionIcon
-                              variant="default"
-                              size="sm"
-                              aria-label="close"
-                              onClick={() => closeDisplay("leftSection")}
-                            >
-                              <IconSquareX />
-                            </ActionIcon>
-                          </Tooltip>
+                        <div className="min-h-0 flex-1 overflow-y-auto pb-6">
+                          {/* Row 3: Form Display Area */}
+                          <div className="w-full">
+                            {activeInput === "natural_language_query" && (
+                              <ActionInputWrapper
+                                data_model="natural language query input"
+                                query_name="data_model"
+                                collection="data_models"
+                                record={{
+                                  id: params?.id,
+                                }}
+                                action="query"
+                                action_form_key="query_general"
+                                success_message_code="natural_language_query_input"
+                              />
+                            )}
+                            {activeInput === "structured_query" && (
+                              <ActionInputWrapper
+                                data_model="structured query input"
+                                query_name="data_model"
+                                record={{
+                                  id: params?.id,
+                                }}
+                                action="query"
+                                action_form_key="query_general"
+                                success_message_code="structured_query_input"
+                              />
+                            )}
+                          </div>
                         </div>
                       </div>
-                    )}
-                  </div>
-                  <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-                    {/* Row 3: Form Display Area */}
-                    <div className="w-full">
-                      {activeInput === "natural_language_query" && (
-                        <ActionInputWrapper
-                          data_model="natural language query input"
-                          query_name="data_model"
-                          collection="data_models"
-                          record={{
-                            id: params?.id,
-                          }}
-                          action="query"
-                          action_form_key="query_general"
-                          success_message_code="natural_language_query_input"
-                        />
-                      )}
-                      {activeInput === "structured_query" && (
-                        <ActionInputWrapper
-                          data_model="structured query input"
-                          query_name="data_model"
-                          record={{
-                            id: params?.id,
-                          }}
-                          action="query"
-                          action_form_key="query_general"
-                          success_message_code="structured_query_input"
-                        />
-                      )}
                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
+                  </Accordion.Panel>
+                </Accordion.Item>
+              )}
+
+              {rightSection.isDisplayed && params?.id && (
+                <Accordion.Item value={"messages"} key={"messages"}>
+                  <Accordion.Control icon={null}>messages</Accordion.Control>
+                  <Accordion.Panel>
+                    <MonitorWrapper></MonitorWrapper>
+                  </Accordion.Panel>
+                </Accordion.Item>
+              )}
+              {centerSection.isDisplayed && params?.id && (
+                <Accordion.Item value={"views"} key={"views"}>
+                  <Accordion.Control icon={null}>views</Accordion.Control>
+                  <Accordion.Panel>
+                    <div className="w-full">
+                      {/* // to load in the page content */}
+                      {/* {!select_or_create_to_continue_items.some(
+                              (item) => item === null
+                            ) && children} */}
+                      {children && children}
+                      {select_or_create_to_continue_items.some(
+                        (item) => item === null
+                      ) &&
+                        ["/home", "/"].includes(parsed?.pathname || "") && (
+                          <div className="flex flex-col h-[75vh] items-start justify-center p-4">
+                            <div>
+                              <Breadcrumbs />
+                            </div>
+                            <p className="text-sm text-gray-600 max-w-sm">
+                              <Highlight
+                                component="p"
+                                color="lime"
+                                highlight={["session", "profile"]}
+                                // highlight={
+                                //   select_or_create_to_continue_items_map[
+                                //     nullIndex
+                                //   ] || ""
+                                // }
+                              >
+                                {message || ""}
+                              </Highlight>
+                            </p>
+                          </div>
+                        )}
+                    </div>
+                  </Accordion.Panel>
+                </Accordion.Item>
+              )}
+            </Accordion>
           </div>
         ) : (
           // Desktop layout with left, center, and right sections
