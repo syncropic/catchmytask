@@ -34,6 +34,7 @@ import ExternalSubmitButton from "@components/SubmitButton";
 import { useViewportSize } from "@mantine/hooks";
 import SectionsToggle from "@components/SectionsToggle";
 import { useSession } from "next-auth/react";
+import { useDomainData } from "@components/Utils/useDomainData";
 
 interface HeaderComponentProps {
   authenticatedData?: any;
@@ -352,7 +353,10 @@ const LargeScreenHeader = ({
         <SectionsToggle />
       )} */}
 
-      {<UserMenu />}
+      {applicationData?.disabled_sections &&
+      applicationData?.disabled_sections?.includes("user_menu") ? null : (
+        <UserMenu />
+      )}
     </div>
   );
 };
@@ -360,16 +364,22 @@ const LargeScreenHeader = ({
 export function Header({ authenticatedData }: HeaderComponentProps) {
   const go = useGo();
   const runtimeConfig = useAppStore((state) => state.runtimeConfig);
+  const {
+    domainData,
+    isLoading: domainDataIsLoading,
+    error: domainDataError,
+    domainRecord,
+  } = useDomainData();
 
   let state = {
     domain_url: runtimeConfig?.DOMAIN_URL,
   };
   const { activeApplication } = useAppStore();
-  const {
-    data: domainData,
-    isLoading: domainDataIsLoading,
-    error: domainDataError,
-  } = useFetchDomainDataByDomain(state);
+  // const {
+  //   data: domainData,
+  //   isLoading: domainDataIsLoading,
+  //   error: domainDataError,
+  // } = useFetchDomainDataByDomain(state);
 
   const applicationData =
     domainData?.data?.find(

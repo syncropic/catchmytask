@@ -172,11 +172,15 @@ const Layout = ({
                   const Component = getComponentByKey(section as ComponentKey);
                   return (
                     <Component
-                      title={application["titles"]?.find(
-                        (title: any) =>
-                          title["metadata"]["section"] === `${section}`
-                      )}
-                      items={application[section]}
+                      title={
+                        application?.titles?.length > 1
+                          ? application["titles"]?.find(
+                              (title: any) =>
+                                title["metadata"]["section"] === `${section}`
+                            )
+                          : ""
+                      }
+                      items={application[section] || []}
                       entity_type={section}
                       key={section}
                     ></Component>

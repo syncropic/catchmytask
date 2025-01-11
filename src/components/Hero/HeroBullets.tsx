@@ -22,13 +22,13 @@ export function HeroBullets({ title, items }: ContentBlockProps) {
           <Title className={classes.title}>
             {/* A <span className={classes.highlight}>modern</span> React <br />{" "}
             components library */}
-            {title.name}
+            {title?.name}
           </Title>
           <Text c="dimmed" mt="md">
             {/* Build fully functional accessible web applications faster than ever
             – Mantine includes more than 120 customizable components and hooks
             to cover you in any situation */}
-            {title.description}
+            {title?.description}
           </Text>
 
           <List
@@ -44,11 +44,13 @@ export function HeroBullets({ title, items }: ContentBlockProps) {
               </ThemeIcon>
             }
           >
-            {items?.map((feature, index) => (
-              <List.Item key={index}>
-                <b>{feature.name}</b> – {feature.description}
-              </List.Item>
-            ))}
+            {items?.length > 0
+              ? items?.map((feature, index) => (
+                  <List.Item key={index}>
+                    <b>{feature.name}</b> – {feature.description}
+                  </List.Item>
+                ))
+              : null}
             {/* <List.Item>
               <b>TypeScript based</b> – build type safe applications, all
               components and hooks export types
@@ -79,19 +81,25 @@ export function HeroBullets({ title, items }: ContentBlockProps) {
           </Group>
         </div>
         {/* <Image src={image.src} className={classes.image} /> */}
-        <img
-          className="object-contain max-w-sm hidden md:block"
-          // className={classes.image}
-          src={title.metadata.illustration}
-          alt="catchmyvibe hero"
-        ></img>
+        {title?.metadata?.illustration && (
+          <>
+            <img
+              className="object-contain max-w-sm hidden md:block"
+              // className={classes.image}
+              src={title?.metadata?.illustration}
+              alt="catchmyvibe hero"
+            ></img>
+          </>
+        )}
       </div>
-      <img
-        className="object-contain max-w-sm md:hidden"
-        // className={classes.image}
-        src={title.metadata.illustration}
-        // alt="catchmyvibe hero"
-      ></img>
+      {title?.metadata?.illustration && (
+        <img
+          className="object-contain max-w-sm md:hidden"
+          // className={classes.image}
+          src={title?.metadata?.illustration}
+          // alt="catchmyvibe hero"
+        ></img>
+      )}
     </Container>
   );
 }
