@@ -94,7 +94,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   success_message_code = "query_success_results",
   fields,
   title,
-  action_form_key,
+  action_form_key = "general",
 }) => {
   const {
     activeSession,
@@ -140,11 +140,12 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const { setFormSubmitHandler, setFormInstance } = useTransientStore();
   const { searchFilters } = useSearchFilters();
   const { params } = useParsed();
-  let actionInputId = record?.id || params?.id;
+  // let actionInputId = record?.id || params?.id;
   // let action_input_form_values_key =
   //   action_form_key || `${action || "query"}_${actionInputId}`;
 
-  let action_input_form_values_key = `query_${params?.id || activeTask?.id}`;
+  const action_input_form_values_key = action_form_key;
+  // action_input_form_values = action_form_key;
   // let action_input_form_fields_key = `${action || "query"}_${actionInputId}`;
   const [activeTemplateRecord, setActiveTemplateRecord] = useState<any>(null);
 

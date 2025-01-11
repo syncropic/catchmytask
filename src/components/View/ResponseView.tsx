@@ -34,6 +34,7 @@ import { jsonify } from "surrealdb";
 import ViewDocumentation from "@components/ViewDocumentation";
 import { IIdentity } from "@components/interfaces";
 import EmbedComponent from "@components/EmbedComponent";
+import ViewItemForm from "@components/ViewItemForm";
 
 interface ResponseViewWrapperProps {}
 
@@ -803,44 +804,12 @@ const ViewItem = ({
                   className="flex p-3 gap-3"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <ExternalSubmitButton
-                    record={{}}
-                    reference_record={{
-                      ...view_item_record,
-                      id: view_item_id,
-                      queryKey: `useRunTask_${JSON.stringify(query_state)}`,
-                    }}
-                    view_item={view_record}
-                    entity_type="view"
-                    action_form_key={`query_${params?.id}`}
-                    action={"save"}
-                  />
-                  <Tooltip label="expand/minimize" key="expand/minimize">
-                    <ActionIcon
-                      variant="default"
-                      size="sm"
-                      aria-label="expand/minimize"
-                      onClick={toggleItemFullWindowDisplay}
-                    >
-                      <IconMaximize />
-                    </ActionIcon>
-                  </Tooltip>
-
-                  <Tooltip label="close" key="close">
-                    <ActionIcon
-                      variant="default"
-                      size="sm"
-                      aria-label="close"
-                      onClick={() =>
-                        toggleView(
-                          String(view_item_record?.id),
-                          view_item_record
-                        )
-                      }
-                    >
-                      <IconSquareX />
-                    </ActionIcon>
-                  </Tooltip>
+                  <ViewItemForm
+                    view_item_record={view_item_record}
+                    action_form_key={`form_${params?.id}_${view_item_id}`}
+                    view_item_id={view_item_id}
+                    query_state={query_state}
+                  ></ViewItemForm>
                 </div>
               </div>
             )}
@@ -860,7 +829,7 @@ const ViewItem = ({
                   }}
                   view_item={view_record}
                   entity_type="view"
-                  action_form_key={`query_${params?.id}`}
+                  action_form_key={`form_${params?.id}_${view_item_id}`}
                   action={"save"}
                 />
                 <Tooltip label="expand/minimize" key="expand/minimize">

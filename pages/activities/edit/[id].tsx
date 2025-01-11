@@ -30,6 +30,7 @@ export const ShowPage: React.FC = () => {
         <ActionInputWrapper
           name="settings"
           query_name="data_model"
+          action_form_key="activities"
           record={identity}
           action={"edit"}
           read_record_mode="local"

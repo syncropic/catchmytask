@@ -211,7 +211,7 @@ export const ShowPage: React.FC = () => {
                   <ExternalSubmitButton
                     record={{}}
                     entity_type="tasks"
-                    action_form_key={`query_${params?.id || activeTask?.id}`}
+                    action_form_key={`form_${params?.id}`}
                     action={"query"}
                   />
                 </div>

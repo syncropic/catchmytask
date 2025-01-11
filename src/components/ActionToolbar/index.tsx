@@ -114,7 +114,7 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
               <ExternalSubmitButton
                 record={{}}
                 entity_type="tasks"
-                action_form_key={`query_${params.id}`}
+                action_form_key={`form_${params.id}`}
                 action="query"
               />
             )}
@@ -123,7 +123,7 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
               <ExternalSubmitButton
                 record={{}}
                 entity_type="tasks"
-                action_form_key={`query_${params.id}`}
+                action_form_key={`form_${params.id}`}
                 action="queue"
               />
             )}

@@ -311,7 +311,7 @@ const Layout = ({
                                   id: params?.id,
                                 }}
                                 action="query"
-                                action_form_key="query_general"
+                                action_form_key={`form_${params?.id}`}
                                 success_message_code="natural_language_query_input"
                               />
                             )}
@@ -323,7 +323,7 @@ const Layout = ({
                                   id: params?.id,
                                 }}
                                 action="query"
-                                action_form_key="query_general"
+                                action_form_key={`form_${params?.id}`}
                                 success_message_code="structured_query_input"
                               />
                             )}
@@ -418,170 +418,17 @@ const Layout = ({
                       onFilterChange={(item) => console.log(item)}
                     /> */}
                     {/* Row 2: Action Input Toggle Bar */}
-                    <div className="w-full flex items-center justify-between bg-gray-50 px-3">
-                      {/* Toggle Buttons */}
-                      <div className="flex gap-2">
-                        {params?.id &&
-                          user_session?.userProfile?.permissions?.includes(
-                            "describe_action_input"
-                          ) && (
-                            <Button
-                              size="compact-sm"
-                              variant={
-                                activeInput === "natural_language_query"
-                                  ? "outline"
-                                  : "default"
-                              }
-                              onClick={() =>
-                                setActiveInput("natural_language_query")
-                              }
-                              className="whitespace-nowrap"
-                            >
-                              Describe
-                            </Button>
-                          )}
-
-                        {params?.id &&
-                          user_session?.userProfile?.permissions?.includes(
-                            "code_action_input"
-                          ) && (
-                            <Button
-                              size="compact-sm"
-                              variant={
-                                activeInput === "structured_query"
-                                  ? "outline"
-                                  : "default"
-                              }
-                              onClick={() => setActiveInput("structured_query")}
-                              className="whitespace-nowrap"
-                            >
-                              Code
-                            </Button>
-                          )}
-
-                        {params?.id &&
-                          user_session?.userProfile?.permissions?.includes(
-                            "terminal_action_input"
-                          ) && (
-                            <Button
-                              size="compact-sm"
-                              variant={
-                                activeInput === "terminal_query"
-                                  ? "outline"
-                                  : "default"
-                              }
-                              onClick={() => setActiveInput("terminal_query")}
-                              className="whitespace-nowrap"
-                            >
-                              Terminal
-                            </Button>
-                          )}
-                        {params?.id &&
-                          user_session?.userProfile?.permissions?.includes(
-                            "split_action_input"
-                          ) && (
-                            <Button
-                              size="compact-sm"
-                              variant={
-                                activeInput === "structured_query"
-                                  ? "outline"
-                                  : "default"
-                              }
-                              disabled={true}
-                              className="whitespace-nowrap"
-                            >
-                              Split
-                            </Button>
-                          )}
-
-                        {params?.id &&
-                          user_session?.userProfile?.permissions?.includes(
-                            "query_action_input"
-                          ) && (
-                            <ExternalSubmitButton
-                              record={{}}
-                              entity_type="tasks"
-                              action_form_key={`query_${
-                                params?.id || activeTask?.id
-                              }`}
-                              action={"query"}
-                            />
-                          )}
-                        {params?.id &&
-                          user_session?.userProfile?.permissions?.includes(
-                            "queue_action_input"
-                          ) && (
-                            <ExternalSubmitButton
-                              record={{}}
-                              entity_type="tasks"
-                              action_form_key={`query_${
-                                params?.id || activeTask?.id
-                              }`}
-                              action={"queue"}
-                            />
-                          )}
-                        {!params?.id && (
-                          <div>Select profile → session to continue</div>
-                        )}
-                      </div>
-                      {include_components?.includes("toolbar") && (
-                        <div>
-                          <div
-                            className="flex p-3 gap-3 items-center"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {/* <ExternalSubmitButton
-                              record={{}}
-                              reference_record={{
-                                id: view_item_id,
-                                name: view_item_record?.name,
-                                queryKey: `useRunTask_${JSON.stringify(
-                                  query_state
-                                )}`,
-                              }}
-                              view_item={view_record}
-                              entity_type="view"
-                              action_form_key={`query_${params?.id}`}
-                              action={"save"}
-                            /> */}
-                            <Tooltip
-                              label={
-                                sectionIsExpanded === "leftSection"
-                                  ? "minimize"
-                                  : "expand"
-                              }
-                              key="expand/minimize"
-                            >
-                              <ActionIcon
-                                variant="default"
-                                size="sm"
-                                aria-label="expand/minimize"
-                                onClick={() =>
-                                  setSectionIsExpanded("leftSection")
-                                }
-                              >
-                                {sectionIsExpanded === "leftSection" ? (
-                                  <IconArrowsMinimize size={16} />
-                                ) : (
-                                  <IconArrowsMaximize size={16} />
-                                )}
-                              </ActionIcon>
-                            </Tooltip>
-
-                            <Tooltip label="close" key="close">
-                              <ActionIcon
-                                variant="default"
-                                size="sm"
-                                aria-label="close"
-                                onClick={() => closeDisplay("leftSection")}
-                              >
-                                <IconSquareX />
-                              </ActionIcon>
-                            </Tooltip>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <ActionToolbar
+                      params={params}
+                      userSession={user_session}
+                      activeInput={activeInput}
+                      setActiveInput={setActiveInput}
+                      sectionIsExpanded={sectionIsExpanded}
+                      setSectionIsExpanded={setSectionIsExpanded}
+                      closeDisplay={closeDisplay}
+                      includeComponents={["toolbar"]}
+                      ExternalSubmitButton={ExternalSubmitButton}
+                    />
                     <div className="min-h-0 flex-1 overflow-y-auto pb-6">
                       {/* Row 3: Form Display Area */}
                       <div className="w-full">
@@ -593,7 +440,7 @@ const Layout = ({
                               id: params?.id,
                             }}
                             action="query"
-                            action_form_key="query_general"
+                            action_form_key={`form_${params?.id}`}
                             success_message_code="natural_language_query_input"
                           />
                         )}
@@ -605,7 +452,7 @@ const Layout = ({
                               id: params?.id,
                             }}
                             action="query"
-                            action_form_key="query_general"
+                            action_form_key={`form_${params?.id}`}
                             success_message_code="structured_query_input"
                           />
                         )}
@@ -617,7 +464,7 @@ const Layout = ({
                               id: params?.id,
                             }}
                             action="query"
-                            action_form_key="query_general"
+                            action_form_key={`form_${params?.id}`}
                             success_message_code="terminal_query_input"
                           />
                         )}

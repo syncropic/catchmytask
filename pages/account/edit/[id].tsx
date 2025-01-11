@@ -31,6 +31,7 @@ export const ShowPage: React.FC = () => {
           name="account"
           query_name="data_model"
           record={identity}
+          action_form_key="account"
           action={"edit"}
           read_record_mode="local"
           success_message_code="action_input_data_model_schema"

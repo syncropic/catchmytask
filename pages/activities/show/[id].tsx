@@ -204,6 +204,7 @@ export const ShowPage: React.FC = () => {
                 name={"query"}
                 query_name="data_model"
                 record={{}}
+                action_form_key="activities"
                 action={"query"}
                 success_message_code="action_input_data_model_schema"
               />

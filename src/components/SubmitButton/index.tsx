@@ -207,8 +207,9 @@ export const ExternalSubmitButton = ({
     setFormStatus, // Add this if not already in useAppStore
   } = useAppStore();
 
-  const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
-  const formId = action_form_key || `${action}_${actionInputId}`;
+  // const actionInputId = record?.id || "b79aaba2-a0d1-4fa7-9b68-0baebbd1b321";
+  // const formId = action_form_key || `${action}_${actionInputId}`;
+  let formId = action_form_key || "general";
   const formInstance = forms[formId]?.formInstance;
 
   if (!formInstance) {

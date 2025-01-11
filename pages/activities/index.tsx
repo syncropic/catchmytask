@@ -34,6 +34,7 @@ export const PageList: React.FC = () => {
         <ActionInputWrapper
           name={"query"}
           query_name="data_model"
+          action_form_key="activities"
           record={{}}
           action={"query"}
           success_message_code="action_input_data_model_schema"
