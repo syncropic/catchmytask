@@ -116,22 +116,23 @@ const App = (props: React.PropsWithChildren) => {
     return session?.token?.account?.access_token || ""; // Adjust this based on your session structure
   };
   const getStateIds = () => {
-    let stateIds: { [key: string]: any } = {};
+    // let stateIds: { [key: string]: any } = {};
 
-    if (activeSession?.id) {
-      stateIds["session_id"] = activeSession.id;
-    }
-    if (activeApplication?.id) {
-      stateIds["application_id"] = activeApplication.id;
-    }
-    if (activeTask?.id) {
-      stateIds["task_id"] = activeTask.id;
-    }
-    if (session?.token?.account?.providerAccountId) {
-      stateIds["user_id"] = session.token.account.providerAccountId;
-    }
+    // if (activeSession?.id) {
+    //   stateIds["session_id"] = activeSession.id;
+    // }
+    // if (activeApplication?.id) {
+    //   stateIds["application_id"] = activeApplication.id;
+    // }
+    // if (activeTask?.id) {
+    //   stateIds["task_id"] = activeTask.id;
+    // }
+    // if (session?.token?.account?.providerAccountId) {
+    //   stateIds["user_id"] = session.token.account.providerAccountId;
+    // }
 
-    return stateIds;
+    // return stateIds;
+    return {};
   };
 
   const authProvider: AuthBindings = {
