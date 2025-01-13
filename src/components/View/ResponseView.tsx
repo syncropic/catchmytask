@@ -288,7 +288,7 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
 
   return (
     <div>
-      <MonacoEditor
+      {/* <MonacoEditor
         value={{
           // error: runTaskDataError,
           // runTaskData: runTaskData,
@@ -298,7 +298,7 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
         }}
         language="json"
         height="25vh"
-      ></MonacoEditor>
+      ></MonacoEditor> */}
       {runTaskDataIsLoading && (
         <Accordion multiple>
           <Accordion.Item value={view_item_id} key={view_item_id}>
