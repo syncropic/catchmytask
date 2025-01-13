@@ -730,6 +730,7 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
           "summary_message_code",
           "task_name",
           "variables_output",
+          "message_type",
           "variables",
         ],
         "exclude"
