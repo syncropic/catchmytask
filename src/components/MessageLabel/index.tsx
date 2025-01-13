@@ -481,7 +481,7 @@ const extractKeys = (
   }, {} as Record<string, any>);
 };
 
-const ActionStatusInfo: React.FC<{
+export const ActionStatusInfo: React.FC<{
   record: MessageLabelRecord;
   onRerun?: (record: MessageLabelRecord) => void;
   onCancel?: (record: MessageLabelRecord) => void;

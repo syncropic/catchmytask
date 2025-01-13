@@ -302,6 +302,20 @@ const Layout = ({
                         <div className="min-h-0 flex-1 overflow-y-auto pb-6">
                           {/* Row 3: Form Display Area */}
                           <div className="w-full">
+                            {activeInput === "info" && (
+                              <ActionInputWrapper
+                                data_model="info query input"
+                                query_name="data_model"
+                                collection="data_models"
+                                record={{
+                                  id: params?.id,
+                                }}
+                                action="query"
+                                action_form_key={`form_${params?.id}`}
+                                success_message_code="info_query_input"
+                              />
+                            )}
+
                             {activeInput === "natural_language_query" && (
                               <ActionInputWrapper
                                 data_model="natural language query input"
@@ -431,6 +445,19 @@ const Layout = ({
                     />
                     <div className="min-h-0 flex-1 overflow-y-auto pb-6">
                       {/* Row 3: Form Display Area */}
+                      {activeInput === "info" && (
+                        <ActionInputWrapper
+                          data_model="info query input"
+                          query_name="data_model"
+                          collection="data_models"
+                          record={{
+                            id: params?.id,
+                          }}
+                          action="query"
+                          action_form_key={`form_${params?.id}`}
+                          success_message_code="info_query_input"
+                        />
+                      )}
                       <div className="w-full">
                         {activeInput === "natural_language_query" && (
                           <ActionInputWrapper

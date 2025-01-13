@@ -35,6 +35,8 @@ import ViewDocumentation from "@components/ViewDocumentation";
 import { IIdentity } from "@components/interfaces";
 import EmbedComponent from "@components/EmbedComponent";
 import ViewItemForm from "@components/ViewItemForm";
+import { useLiveQuery } from "@components/Utils/useLiveQuery";
+import { ActionStatusInfo } from "@components/MessageLabel";
 
 interface ResponseViewWrapperProps {}
 
@@ -112,8 +114,8 @@ const ViewItemWrapper = ({ view_item_id }: { view_item_id: string }) => {
   } else if (["content_embed_url"]?.includes(view_item_record?.message_type)) {
     return (
       <>
-        <ViewItem
-          dataItems={[view_item_record]}
+        <ViewItemContentEmbed
+          // dataItems={view_item_record}
           view_item_id={view_item_id}
           include_components={["toolbar"]}
           view_item_record={view_item_record}
@@ -569,6 +571,216 @@ const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
   );
 };
 
+const ViewItemContentEmbed = ({
+  dataItems,
+  view_record,
+  view_item_id,
+  view_item_record,
+  include_components,
+  query_state,
+}: {
+  dataItems?: any;
+  view_record?: any;
+  view_item_id: string;
+  view_item_record: any;
+  include_components?: any;
+  query_state: any;
+}) => {
+  let query = `SELECT * FROM messages WHERE id = ${view_item_id}`;
+  const {
+    data: messages,
+    error: messagesError,
+    loading: messagesLoading,
+  } = useLiveQuery<Event>(query, "messages");
+
+  let dataItemsRetrieved = dataItems || messages;
+
+  // const { width } = useViewportSize();
+  // const { params } = useParsed();
+  // const {
+  //   activeLayout,
+  //   setActiveLayout,
+  //   isFullWindowDisplay,
+  //   setIsFullWindowDisplay,
+  //   views,
+  //   setViews,
+  //   activeProfile,
+  // } = useAppStore();
+
+  // let view_documentation_record = {
+  //   action: {
+  //     id: view_item_record?.id,
+  //     name: view_item_record?.name,
+  //     function: view_item_record?.func_name,
+  //   },
+  //   session: {
+  //     id: view_item_record?.session_id,
+  //   },
+  //   credential: {
+  //     id: view_item_record?.credential_id,
+  //   },
+  //   task: {
+  //     id: view_item_record?.task_id,
+  //     variables: view_item_record?.variables,
+  //   },
+  //   author: {
+  //     id: view_item_record?.author_id,
+  //   },
+  //   timestamp: {
+  //     created_datetime: view_item_record?.created_datetime,
+  //     updated_datetime: view_item_record?.updated_datetime,
+  //   },
+  //   view: {
+  //     id: view_item_record?.view_id,
+  //     fields: view_record?.fields || [],
+  //   },
+  //   status: {
+  //     action_status: view_item_record?.action_status,
+  //   },
+  // };
+
+  // let subheading_object = view_item_record?.variables
+  //   ? extractKeys(
+  //       view_item_record?.variables,
+  //       [
+  //         "application_id",
+  //         "profile_id",
+  //         "session_id",
+  //         "task_id",
+  //         "execution_mode",
+  //         "breakpoint",
+  //         "summary_message_code",
+  //         "task_name",
+  //         "variables_output",
+  //         "variables",
+  //       ],
+  //       "exclude"
+  //     )
+  //   : {};
+
+  // // Format the JSON string on a single line
+  // const formatObject = (obj: any) => {
+  //   return Object.entries(obj)
+  //     .map(([key, value]) => `${key}: ${value}`)
+  //     .join("  •  "); // Using bullet point as separator for better readability
+  // };
+
+  // const subheading = formatObject(subheading_object);
+
+  // const toggleFullWindowDisplay = () => {
+  //   setIsFullWindowDisplay(!isFullWindowDisplay);
+  // };
+
+  // const toggleItemFullWindowDisplay = () => {
+  //   toggleFullWindowDisplay();
+  //   if (!isFullWindowDisplay) {
+  //     if (activeLayout) {
+  //       const newLayout = { ...activeLayout };
+  //       newLayout.leftSection.isDisplayed = false;
+  //       newLayout.rightSection.isDisplayed = false;
+  //       setActiveLayout(newLayout);
+  //     }
+  //   } else {
+  //     if (activeLayout) {
+  //       const newLayout = { ...activeLayout };
+  //       newLayout.leftSection.isDisplayed = true;
+  //       newLayout.rightSection.isDisplayed = true;
+  //       setActiveLayout(newLayout);
+  //     }
+  //   }
+  // };
+  // const go = useGo();
+  // let view_ids = Object.keys(views);
+
+  // const toggleView = (id: string, record: any) => {
+  //   // Access the current views from your zustand store
+  //   const currentViews = views;
+
+  //   // Check if the item exists in views
+  //   const existingView = currentViews[id];
+
+  //   const toggleItemInList = (list: any, itemId: any) => {
+  //     // Check if item exists in list
+  //     const exists = list.includes(itemId);
+
+  //     if (exists) {
+  //       // If exists, filter it out
+  //       return list.filter((id: string) => id !== itemId);
+  //     } else {
+  //       // If doesn't exist, add it to the list (spreading the existing list)
+  //       return [...list, itemId];
+  //     }
+  //   };
+
+  //   if (existingView) {
+  //     // Remove the view if it exists
+  //     // const { [id]: removedView, ...remainingViews } = currentViews;
+  //     setViews(id, null);
+  //     let new_view_ids = toggleItemInList(view_ids, id);
+  //     const queryParams: {
+  //       profile_id: string;
+  //       [key: string]: string;
+  //     } = {
+  //       profile_id: String(activeProfile?.id),
+  //     };
+
+  //     if (new_view_ids?.length > 0) {
+  //       queryParams.view_items = String(new_view_ids);
+  //     }
+  //     go({
+  //       // to: {
+  //       //   resource: "sessions",
+  //       //   action: "show",
+  //       //   id: record?.id,
+  //       // },
+  //       query: queryParams,
+  //       type: "push",
+  //     });
+  //   } else {
+  //     // Add the view if it doesn't exist
+  //     setViews(id, record);
+  //     let new_view_ids = [...view_ids, id];
+  //     const queryParams: {
+  //       profile_id: string;
+  //       [key: string]: string;
+  //     } = {
+  //       profile_id: String(activeProfile?.id),
+  //     };
+
+  //     if (new_view_ids?.length > 0) {
+  //       queryParams.view_items = String(new_view_ids);
+  //     }
+  //     go({
+  //       // to: {
+  //       //   resource: "sessions",
+  //       //   action: "show",
+  //       //   id: record?.id,
+  //       // },
+  //       query: queryParams,
+  //       type: "push",
+  //     });
+  //   }
+  // };
+
+  return (
+    // <>
+    //   <MonacoEditor
+    //     value={{
+    //       query: query,
+    //       dataItemsRetrieved: dataItemsRetrieved,
+    //     }}
+    //   ></MonacoEditor>
+    // </>
+    <ViewItem
+      dataItems={dataItemsRetrieved}
+      view_item_id={view_item_id}
+      include_components={["toolbar"]}
+      view_item_record={view_item_record}
+      query_state={{}}
+    />
+  );
+};
+
 const ViewItem = ({
   dataItems,
   view_record,
@@ -882,9 +1094,22 @@ const ViewItem = ({
               ) {
                 return (
                   <div key={`embed-${index}`} className="h-[75vh]">
-                    <EmbedComponent
-                      embed_url={item?.content?.embed_url}
-                    ></EmbedComponent>
+                    {item?.content?.embed_url
+                      ?.toLowerCase()
+                      .startsWith("http") ? (
+                      <EmbedComponent
+                        embed_url={item?.content?.embed_url}
+                      ></EmbedComponent>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="flex flex-col gap-1 items-center">
+                          <ActionStatusInfo record={item} isRerunning={true} />
+                          <Text c="blue" size="lg">
+                            {item?.content?.execution_message}
+                          </Text>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               } else {

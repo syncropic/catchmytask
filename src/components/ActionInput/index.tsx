@@ -1724,8 +1724,19 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   //     )?.data[0]?.["data_model"]
   //   : {};
 
-  if (recordIsLoading) {
-    return <>Loading...</> || null;
+  // if (recordIsLoading || dataModelIsLoading) {
+  //   return <>Loading...</> || null;
+  // }
+  if (dataModelError || recordError) {
+    return (
+      <MonacoEditor
+        value={{
+          recordError: recordError,
+          dataModelError: dataModelError,
+        }}
+        height="25vh"
+      ></MonacoEditor>
+    );
   }
   let data_model_data = dataModelData?.data[0] || {};
   return (
@@ -1745,12 +1756,14 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
       /> */}
       <Box pos="relative">
         <LoadingOverlay
-          // visible={dataModelIsLoading || recordIsLoading}
-          visible={false}
+          visible={recordIsLoading || dataModelIsLoading}
+          // visible={true}
           zIndex={1000}
           overlayProps={{ radius: "sm", blur: 2 }}
         />
-
+        {(recordIsLoading || dataModelIsLoading) && (
+          <div className="h-[75vh] flex items-center justify-center"></div>
+        )}
         {record_data && data_model_data && (
           <ActionInputForm
             data_model={data_model_data}

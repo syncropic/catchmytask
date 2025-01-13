@@ -222,7 +222,7 @@ export const useAppStore = create(
       monitorComponents: ["messages"],
       setMonitorComponents: (item) =>
         set((state) => ({ monitorComponents: item })),
-      activeInput: "natural_language_query",
+      activeInput: "info",
       setActiveInput: (item) => set((state) => ({ activeInput: item })),
 
       focused_entities: {},

@@ -24,9 +24,17 @@ interface ExternalSubmitButtonProps {
 interface ActionToolbarProps {
   params?: any;
   userSession?: any;
-  activeInput: "natural_language_query" | "structured_query" | "terminal_query";
+  activeInput:
+    | "info"
+    | "natural_language_query"
+    | "structured_query"
+    | "terminal_query";
   setActiveInput: (
-    input: "natural_language_query" | "structured_query" | "terminal_query"
+    input:
+      | "info"
+      | "natural_language_query"
+      | "structured_query"
+      | "terminal_query"
   ) => void;
   sectionIsExpanded: string;
   setSectionIsExpanded: (section: string) => void;
@@ -56,6 +64,19 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
       <div className="flex gap-2">
         {params?.id ? (
           <>
+            {true && (
+              <Tooltip label="session info">
+                <Button
+                  size="compact-sm"
+                  variant={activeInput === "info" ? "outline" : "default"}
+                  onClick={() => setActiveInput("info")}
+                  className="whitespace-nowrap"
+                >
+                  Info
+                </Button>
+              </Tooltip>
+            )}
+
             {hasPermission("describe_action_input") && (
               <Button
                 size="compact-sm"
