@@ -720,20 +720,21 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
   const filteredVariables = record.variables
     ? extractKeys(
         record.variables,
-        [
-          "application_id",
-          "profile_id",
-          "session_id",
-          "task_id",
-          "execution_mode",
-          "breakpoint",
-          "summary_message_code",
-          "task_name",
-          "variables_output",
-          "message_type",
-          "variables",
-        ],
-        "exclude"
+        // [
+        //   "application_id",
+        //   "profile_id",
+        //   "session_id",
+        //   "task_id",
+        //   "execution_mode",
+        //   "breakpoint",
+        //   "summary_message_code",
+        //   "task_name",
+        //   "variables_output",
+        //   "message_type",
+        //   "variables",
+        // ],
+        ["variables_value"],
+        "include"
       )
     : {};
 

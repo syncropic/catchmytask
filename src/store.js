@@ -2,7 +2,36 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-export const useTransientStore = create((set) => ({
+/**
+ * @typedef {Object} CommentRange
+ * @property {number} from - Starting position of comment
+ * @property {number} to - Ending position of comment
+ */
+
+/**
+ * @typedef {Object} CommentAuthor
+ * @property {string} id - Author identifier
+ * @property {string} name - Author name
+ */
+
+/**
+ * @typedef {Object} Comment
+ * @property {string} id - Unique identifier
+ * @property {string} formId - Form identifier
+ * @property {string} content - Comment content
+ * @property {CommentRange} range - Comment range in the document
+ * @property {CommentAuthor} author - Comment author
+ * @property {Date} createdAt - Creation timestamp
+ * @property {boolean} resolved - Resolution status
+ * @property {'comment'|'suggestion'|'ai_recommendation'} type - Comment type
+ * @property {'active'|'resolved'|'deleted'} status - Comment status
+ */
+
+/**
+ * @typedef {Object.<string, Object.<string, Comment>>} CommentsState
+ */
+
+export const useTransientStore = create((set, get) => ({
   forms: {}, // This will store form instances and their submit functions
 
   // Set the submit handler for a specific form
@@ -32,7 +61,7 @@ export const useTransientStore = create((set) => ({
 
 export const useAppStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       activeLayout: {
         leftSection: {
           isDisplayed: true,
@@ -148,6 +177,136 @@ export const useAppStore = create(
         action_steps: {
           inputMode: "display",
         },
+      },
+      /** @type {CommentsState} */
+      comments: {},
+
+      /**
+       * Add a new comment
+       * @param {string} formId - Form identifier
+       * @param {Comment} comment - Comment object
+       */
+      addComment: (formId, comment) =>
+        set((state) => ({
+          comments: {
+            ...state.comments,
+            [formId]: {
+              ...(state.comments[formId] || {}),
+              [comment.id]: comment,
+            },
+          },
+        })),
+
+      /**
+       * Update an existing comment
+       * @param {string} formId - Form identifier
+       * @param {string} commentId - Comment identifier
+       * @param {Partial<Comment>} updates - Comment updates
+       */
+      updateComment: (formId, commentId, updates) =>
+        set((state) => ({
+          comments: {
+            ...state.comments,
+            [formId]: {
+              ...(state.comments[formId] || {}),
+              [commentId]: {
+                ...(state.comments[formId]?.[commentId] || {}),
+                ...updates,
+              },
+            },
+          },
+        })),
+
+      /**
+       * Delete a comment
+       * @param {string} formId - Form identifier
+       * @param {string} commentId - Comment identifier
+       */
+      deleteComment: (formId, commentId) =>
+        set((state) => {
+          const newComments = { ...state.comments };
+          const formComments = { ...newComments[formId] };
+          delete formComments[commentId];
+          newComments[formId] = formComments;
+          return { comments: newComments };
+        }),
+
+      /**
+       * Resolve a comment
+       * @param {string} formId - Form identifier
+       * @param {string} commentId - Comment identifier
+       */
+      resolveComment: (formId, commentId) =>
+        set((state) => ({
+          comments: {
+            ...state.comments,
+            [formId]: {
+              ...(state.comments[formId] || {}),
+              [commentId]: {
+                ...state.comments[formId][commentId],
+                resolved: true,
+                status: "resolved",
+              },
+            },
+          },
+        })),
+
+      /**
+       * Get all comments for a form
+       * @param {string} formId - Form identifier
+       * @returns {Object.<string, Comment>} Comments for the form
+       */
+      getCommentsForForm: (formId) => {
+        const state = get();
+        return state.comments[formId] || {};
+      },
+
+      /**
+       * Clear all comments for a form
+       * @param {string} formId - Form identifier
+       */
+      clearFormComments: (formId) =>
+        set((state) => {
+          const newComments = { ...state.comments };
+          delete newComments[formId];
+          return { comments: newComments };
+        }),
+      // Add this new state for locked sections
+      lockedSections: {},
+
+      // Add a locked section
+      addLockedSection: (formId, section) => {
+        set((state) => ({
+          lockedSections: {
+            ...state.lockedSections,
+            [formId]: {
+              ...state.lockedSections[formId],
+              [section.id]: section,
+            },
+          },
+        }));
+      },
+
+      // Remove a locked section
+      removeLockedSection: (formId, sectionId) => {
+        set((state) => {
+          const formSections = { ...state.lockedSections[formId] };
+          delete formSections[sectionId];
+
+          return {
+            lockedSections: {
+              ...state.lockedSections,
+              [formId]: formSections,
+            },
+          };
+        });
+      },
+
+      // Get all locked sections for a form
+      getLockedSections: (formId) => {
+        const state = get();
+        const formSections = state.lockedSections[formId] || {};
+        return Object.values(formSections);
       },
       views: {},
       clearViews: (views) => set((state) => ({ views })),
@@ -316,6 +475,19 @@ export const useAppStore = create(
       setDataFields: (code, fields) =>
         set((state) => ({
           dataFields: { ...state.dataFields, [code]: fields },
+        })),
+      filter_form_values: {},
+      setFilterFormValues: (values) =>
+        set((state) => ({ ...state, filter_form_values: values })),
+
+      filter_form_fields: {},
+      setFilterFormFields: (key, newData) =>
+        set((state) => ({
+          ...state,
+          filter_form_fields: {
+            ...state.filter_form_fields,
+            [key]: newData,
+          },
         })),
       activeApplication: null,
       setActiveApplication: (application) =>

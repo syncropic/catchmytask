@@ -145,12 +145,12 @@ const LargeScreenHeader = ({
           </div>
         )}
 
-        {
+        {/* {
           <div className="hidden lg:block">
             <ColorSchemeToggle />
           </div>
-        }
-        {authenticatedData?.authenticated &&
+        } */}
+        {/* {authenticatedData?.authenticated &&
           user_session?.userProfile?.quick_action_options?.includes(
             "toggle_immediate_request_response"
           ) && (
@@ -172,7 +172,7 @@ const LargeScreenHeader = ({
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
         {/* {authenticatedData?.authenticated && (
           <div className="hidden lg:block">
@@ -221,7 +221,7 @@ const LargeScreenHeader = ({
           </div>
         )}
 
-        {authenticatedData?.authenticated && (
+        {/* {authenticatedData?.authenticated && (
           <div className="block lg:hidden">
             <Tooltip label="Toggle quick actions" position="top">
               <ActionIcon
@@ -235,12 +235,11 @@ const LargeScreenHeader = ({
                   toggleDisplay("quickActionsBar");
                 }}
               >
-                {/* right */}
                 <IconMenu2 />
               </ActionIcon>
             </Tooltip>
           </div>
-        )}
+        )} */}
 
         {/* {authenticatedData?.authenticated && (
           <div className="hidden lg:block">
@@ -290,7 +289,7 @@ const LargeScreenHeader = ({
           />
         </div>
       )} */}
-      {authenticatedData?.authenticated &&
+      {/* {authenticatedData?.authenticated &&
         activeTask &&
         activeView &&
         action && (
@@ -299,34 +298,10 @@ const LargeScreenHeader = ({
             entity_type="tasks"
             action={action}
           />
-        )}
+        )} */}
 
       {/* {authenticatedData?.authenticated && activeTask && <AutomationsToggle />} */}
 
-      {authenticatedData?.authenticated && activeSession && (
-        <Reveal
-          trigger="click"
-          target={
-            <Tooltip
-              multiline
-              w={220}
-              withArrow
-              transitionProps={{ duration: 200 }}
-              label={getTooltipLabel(activeSession)}
-            >
-              <Text
-                size="sm"
-                className="text-blue-500 truncate overflow-hidden whitespace-nowrap px-3"
-                style={{ maxWidth: width < 500 ? 100 : 500 }}
-              >
-                {getLabel(activeSession)}
-              </Text>
-            </Tooltip>
-          }
-        >
-          <MonacoEditor value={activeSession} language="json" height="50vh" />
-        </Reveal>
-      )}
       {/* {authenticatedData?.authenticated && (
         <div className="max-w-xl">
           <SearchInput
@@ -356,6 +331,30 @@ const LargeScreenHeader = ({
       {/* {authenticatedData?.authenticated && activeTask && activeView && (
         <SectionsToggle />
       )} */}
+
+      {authenticatedData?.authenticated && activeSession && (
+        <div className="w-full overflow-hidden ">
+          <Reveal
+            trigger="click"
+            target={
+              <Tooltip
+                multiline
+                withArrow
+                transitionProps={{ duration: 200 }}
+                label={getTooltipLabel(activeSession)}
+              >
+                <div className="flex max-w-full overflow-hidden justify-center">
+                  <Text size="sm" className="text-blue-500 truncate block px-3">
+                    {getLabel(activeSession)}
+                  </Text>
+                </div>
+              </Tooltip>
+            }
+          >
+            <MonacoEditor value={activeSession} language="json" height="50vh" />
+          </Reveal>
+        </div>
+      )}
 
       {applicationData?.disabled_sections &&
       applicationData?.disabled_sections?.includes("user_menu") ? null : (

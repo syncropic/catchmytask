@@ -1,282 +1,27 @@
-// import React, { useState, useEffect } from "react";
-// import { TextInput, NumberInput, Select, Checkbox } from "@mantine/core";
-// import { DateInput } from "@mantine/dates";
-
-// export interface Variable {
-//   value: string;
-//   label: string;
-//   type: "string" | "number" | "datetime" | "boolean";
-// }
-
-// export interface Filter {
-//   id: number;
-//   field: string;
-//   operator: Operator;
-//   value: string | number | boolean | Date | null;
-//   value2?: string | number | Date | null;
-// }
-
-// type Operator =
-//   | "equals"
-//   | "notEquals"
-//   | "contains"
-//   | "startsWith"
-//   | "endsWith"
-//   | "gt"
-//   | "lt"
-//   | "between"
-//   | "before"
-//   | "after";
-
-// interface DynamicFilterProps {
-//   variables: Variable[];
-//   onFilterChange: (whereClause: string) => void;
-// }
-
-// const OPERATOR_MAP: Record<string, Operator[]> = {
-//   string: ["equals", "notEquals", "contains", "startsWith", "endsWith"],
-//   number: ["equals", "notEquals", "gt", "lt", "between"],
-//   datetime: ["equals", "before", "after", "between"],
-//   boolean: ["equals"],
-// };
-
-// const OPERATOR_LABELS: Record<Operator, string> = {
-//   equals: "=",
-//   notEquals: "!=",
-//   contains: "LIKE",
-//   startsWith: "LIKE",
-//   endsWith: "LIKE",
-//   gt: ">",
-//   lt: "<",
-//   between: "BETWEEN",
-//   before: "<",
-//   after: ">",
-// };
-
-// const DynamicFilter: React.FC<DynamicFilterProps> = ({
-//   variables,
-//   onFilterChange,
-// }) => {
-//   const [filters, setFilters] = useState<Filter[]>([]);
-
-//   // Update filters when variables change
-//   useEffect(() => {
-//     const currentFields = new Set(filters.map((f) => f.field));
-//     const variableFields = new Set(variables.map((v) => v.value));
-
-//     // Remove filters for variables that no longer exist
-//     const updatedFilters = filters.filter((filter) =>
-//       variableFields.has(filter.field)
-//     );
-
-//     // Add new filters for new variables
-//     variables.forEach((variable) => {
-//       if (!currentFields.has(variable.value)) {
-//         updatedFilters.push({
-//           id: Date.now() + Math.random(), // Ensure unique ID
-//           field: variable.value,
-//           operator: OPERATOR_MAP[variable.type][0], // Default to first operator
-//           value: null,
-//         });
-//       }
-//     });
-
-//     setFilters(updatedFilters);
-//   }, [variables]);
-
-//   const updateFilter = (filterId: number, updates: Partial<Filter>) => {
-//     setFilters(
-//       filters.map((filter) => {
-//         if (filter.id === filterId) {
-//           const updatedFilter = { ...filter, ...updates };
-//           // Reset value when operator changes
-//           if (updates.operator && updates.operator !== filter.operator) {
-//             updatedFilter.value = null;
-//             updatedFilter.value2 = null;
-//           }
-//           return updatedFilter;
-//         }
-//         return filter;
-//       })
-//     );
-//   };
-
-//   const getOperatorsForField = (fieldName: string): Operator[] => {
-//     const variable = variables.find((v) => v.value === fieldName);
-//     return variable ? OPERATOR_MAP[variable.type] : [];
-//   };
-
-//   const renderValueInput = (filter: Filter) => {
-//     const variable = variables.find((v) => v.value === filter.field);
-//     if (!variable) return null;
-
-//     switch (variable.type) {
-//       case "string":
-//         return (
-//           <TextInput
-//             value={(filter.value as string) || ""}
-//             onChange={(e) => updateFilter(filter.id, { value: e.target.value })}
-//             placeholder="Enter value"
-//             className="w-full"
-//           />
-//         );
-
-//       case "number":
-//         return (
-//           <div className="flex gap-2">
-//             <NumberInput
-//               value={(filter.value as number) || undefined}
-//               onChange={(value) => updateFilter(filter.id, { value })}
-//               placeholder="Enter value"
-//               className="w-full"
-//             />
-//             {filter.operator === "between" && (
-//               <NumberInput
-//                 value={(filter.value2 as number) || undefined}
-//                 onChange={(value) => updateFilter(filter.id, { value2: value })}
-//                 placeholder="End value"
-//                 className="w-full"
-//               />
-//             )}
-//           </div>
-//         );
-
-//       case "datetime":
-//         return (
-//           <div className="flex gap-2">
-//             <DateInput
-//               value={(filter.value as Date) || null}
-//               onChange={(date) => updateFilter(filter.id, { value: date })}
-//               placeholder="Select date"
-//               className="w-full"
-//             />
-//             {filter.operator === "between" && (
-//               <DateInput
-//                 value={(filter.value2 as Date) || null}
-//                 onChange={(date) => updateFilter(filter.id, { value2: date })}
-//                 placeholder="End date"
-//                 className="w-full"
-//               />
-//             )}
-//           </div>
-//         );
-
-//       case "boolean":
-//         return (
-//           <Checkbox
-//             checked={(filter.value as boolean) || false}
-//             onChange={(e) =>
-//               updateFilter(filter.id, { value: e.target.checked })
-//             }
-//           />
-//         );
-
-//       default:
-//         return null;
-//     }
-//   };
-
-//   const formatValue = (
-//     value: Filter["value"],
-//     type: Variable["type"]
-//   ): string => {
-//     if (value === null) return "";
-
-//     if (type === "datetime") {
-//       return value instanceof Date
-//         ? value.toISOString().split("T")[0]
-//         : String(value);
-//     }
-
-//     return String(value);
-//   };
-
-//   const generateWhereClause = () => {
-//     const conditions = filters
-//       .map((filter) => {
-//         if (!filter.field || !filter.operator || filter.value === null)
-//           return null;
-
-//         const variable = variables.find((v) => v.value === filter.field);
-//         if (!variable) return null;
-
-//         const operator = OPERATOR_LABELS[filter.operator];
-//         const formattedValue = formatValue(filter.value, variable.type);
-
-//         switch (filter.operator) {
-//           case "contains":
-//             return `${filter.field} ${operator} '%${formattedValue}%'`;
-//           case "startsWith":
-//             return `${filter.field} ${operator} '${formattedValue}%'`;
-//           case "endsWith":
-//             return `${filter.field} ${operator} '%${formattedValue}'`;
-//           case "between":
-//             if (filter.value2 === null) return null;
-//             const formattedValue2 = formatValue(
-//               filter.value2 || "",
-//               variable.type
-//             );
-//             return `${filter.field} ${operator} ${
-//               variable.type === "string" || variable.type === "datetime"
-//                 ? `'${formattedValue}' AND '${formattedValue2}'`
-//                 : `${formattedValue} AND ${formattedValue2}`
-//             }`;
-//           default:
-//             if (variable.type === "string" || variable.type === "datetime") {
-//               return `${filter.field} ${operator} '${formattedValue}'`;
-//             }
-//             return `${filter.field} ${operator} ${formattedValue}`;
-//         }
-//       })
-//       .filter(Boolean);
-
-//     return conditions.length ? conditions.join(" AND ") : "";
-//   };
-
-//   useEffect(() => {
-//     const whereClause = generateWhereClause();
-//     onFilterChange(whereClause);
-//   }, [filters]);
-
-//   return (
-//     <div className="space-y-4">
-//       {filters.map((filter) => (
-//         <div key={filter.id} className="flex gap-4 items-start">
-//           <div className="w-48 py-2">
-//             {variables.find((v) => v.value === filter.field)?.label ||
-//               filter.field}
-//           </div>
-
-//           <Select
-//             value={filter.operator}
-//             onChange={(value) =>
-//               updateFilter(filter.id, { operator: value as Operator })
-//             }
-//             data={getOperatorsForField(filter.field).map((op) => ({
-//               value: op,
-//               label: OPERATOR_LABELS[op],
-//             }))}
-//             placeholder="Select operator"
-//             className="w-32"
-//           />
-
-//           <div className="flex-1">{renderValueInput(filter)}</div>
-//         </div>
-//       ))}
-//     </div>
-//   );
-// };
-
-// export default DynamicFilter;
-
-import React, { useState, useEffect } from "react";
-import { TextInput, NumberInput, Select, Checkbox } from "@mantine/core";
-import { DateInput } from "@mantine/dates";
+import React, { useState, useEffect, useRef } from "react";
+import { Box, Button, Select, ActionIcon } from "@mantine/core";
+import { useForm } from "@tanstack/react-form";
+import { getComponentByResourceType } from "@components/Utils";
+import { IconX } from "@tabler/icons-react";
+import { useAppStore } from "src/store";
+import _ from "lodash";
+import { debounce } from "lodash";
+import dayjs from "dayjs";
+import { DateInputProps } from "@mantine/dates";
 
 export interface Variable {
   value: string;
   label: string;
-  type: "string" | "number" | "datetime" | "boolean";
+  props?: any;
+  type:
+    | "string"
+    | "number"
+    | "datetime"
+    | "boolean"
+    | "select"
+    | "multiselect"
+    | "search"
+    | "multisearch";
 }
 
 export interface Filter {
@@ -287,16 +32,22 @@ export interface Filter {
   value2?: string | number | Date | null;
 }
 
-// New interface for structured filter condition
 export interface FilterCondition {
   field: string;
   operator: string;
   value: string | number | boolean | Date | null;
   value2?: string | number | Date | null;
-  fieldType: "string" | "number" | "datetime" | "boolean";
+  fieldType:
+    | "string"
+    | "number"
+    | "datetime"
+    | "boolean"
+    | "select"
+    | "multiselect"
+    | "search"
+    | "multisearch";
 }
 
-// New interface for filter output
 export interface FilterOutput {
   whereClause: string;
   conditions: FilterCondition[];
@@ -318,6 +69,7 @@ type Operator =
 interface DynamicFilterProps {
   variables: Variable[];
   onFilterChange: (output: FilterOutput) => void;
+  action_form_key?: string;
 }
 
 const OPERATOR_MAP: Record<string, Operator[]> = {
@@ -325,6 +77,10 @@ const OPERATOR_MAP: Record<string, Operator[]> = {
   number: ["equals", "notEquals", "gt", "lt", "between"],
   datetime: ["equals", "before", "after", "between"],
   boolean: ["equals"],
+  select: ["equals"],
+  multiselect: ["equals"],
+  search: ["equals"],
+  multisearch: ["equals"],
 };
 
 const OPERATOR_LABELS: Record<Operator, string> = {
@@ -343,127 +99,228 @@ const OPERATOR_LABELS: Record<Operator, string> = {
 const DynamicFilter: React.FC<DynamicFilterProps> = ({
   variables,
   onFilterChange,
+  action_form_key = "default",
 }) => {
-  const [filters, setFilters] = useState<Filter[]>([]);
+  const filter_form_key = `${action_form_key}_filter`;
+  const {
+    filter_form_values,
+    setFilterFormValues,
+    filter_form_fields,
+    setFilterFormFields,
+  } = useAppStore();
+  const previousIsValid = useRef(false);
 
-  // Update filters when variables change
+  const createFieldSchema = (variable: Variable) => {
+    let component = "TextInput";
+    switch (variable.type) {
+      case "number":
+        component = "NumberInput";
+        break;
+      case "datetime":
+        component = "DateInput";
+        break;
+      case "select":
+        component = "Select";
+        break;
+      case "boolean":
+        component = "Checkbox";
+        break;
+      case "search":
+        component = "SearchInput";
+        break;
+      case "multisearch":
+        component = "MultiSearchInput";
+        break;
+    }
+
+    return {
+      title: variable.label,
+      key: variable.value,
+      type: variable.type,
+      component,
+      props: {
+        placeholder: `Enter ${variable.label}`,
+        label: variable.label,
+        ...variable?.props,
+      },
+    };
+  };
+
+  const dateParser: DateInputProps["dateParser"] = (input) => {
+    if (input === "WW2") {
+      return new Date(1939, 8, 1);
+    }
+
+    return dayjs(input, "DD/MM/YYYY").toDate();
+  };
+
+  const form = useForm({
+    defaultValues: {
+      ...variables.reduce((acc, variable) => {
+        acc[variable.value] = null;
+        acc[`${variable.value}_operator`] = OPERATOR_MAP[variable.type][0];
+        acc[`${variable.value}_value2`] = null;
+        return acc;
+      }, {} as Record<string, any>),
+      ...(filter_form_values[filter_form_key] || {}),
+    },
+    onSubmit: async ({ value }) => {
+      const output = generateFilterOutput(value);
+      onFilterChange(output);
+    },
+  });
+
+  const debouncedLog = debounce((values) => {
+    const new_filter_form_values = {
+      ...filter_form_values,
+      [filter_form_key]: values,
+    };
+    setFilterFormValues(new_filter_form_values);
+
+    const fields = variables.map(createFieldSchema);
+    setFilterFormFields(filter_form_key, fields);
+  }, 300);
+
   useEffect(() => {
-    const currentFields = new Set(filters.map((f) => f.field));
-    const variableFields = new Set(variables.map((v) => v.value));
+    const unsubscribe = form.store.subscribe(() => {
+      const currentValues = form.store.state.values;
+      const isValid = form.store.state.isValid;
 
-    const updatedFilters = filters.filter((filter) =>
-      variableFields.has(filter.field)
-    );
-
-    variables.forEach((variable) => {
-      if (!currentFields.has(variable.value)) {
-        updatedFilters.push({
-          id: Date.now() + Math.random(),
-          field: variable.value,
-          operator: OPERATOR_MAP[variable.type][0],
-          value: null,
-        });
+      if (!_.isEqual(filter_form_values[filter_form_key], currentValues)) {
+        debouncedLog(currentValues);
       }
+
+      previousIsValid.current = isValid;
     });
 
-    setFilters(updatedFilters);
-  }, [variables]);
+    return () => {
+      unsubscribe();
+      debouncedLog.cancel();
+    };
+  }, [form.store, filter_form_values, filter_form_key, setFilterFormValues]);
 
-  const updateFilter = (filterId: number, updates: Partial<Filter>) => {
-    setFilters(
-      filters.map((filter) => {
-        if (filter.id === filterId) {
-          const updatedFilter = { ...filter, ...updates };
-          if (updates.operator && updates.operator !== filter.operator) {
-            updatedFilter.value = null;
-            updatedFilter.value2 = null;
+  const clearFilterValues = (fieldName: string) => {
+    form.setFieldValue(fieldName, null);
+    form.setFieldValue(`${fieldName}_value2`, null);
+  };
+
+  const renderField = (fieldSchema: any) => {
+    const Component = getComponentByResourceType(fieldSchema.component);
+    const fieldName = fieldSchema.key;
+
+    return (
+      <div key={fieldName} className="flex gap-4 items-end py-1">
+        <div>{fieldSchema.title}</div>
+
+        <form.Field name={`${fieldName}_operator`}>
+          {(operatorField) => (
+            <div className="flex flex-col">
+              <Select
+                value={operatorField.state.value}
+                onChange={(value) => operatorField.handleChange(value)}
+                data={OPERATOR_MAP[fieldSchema.type].map((op) => ({
+                  value: op,
+                  label: OPERATOR_LABELS[op],
+                }))}
+                placeholder="Select operator"
+                className="w-32"
+              />
+            </div>
+          )}
+        </form.Field>
+
+        <div className="flex-1">
+          {/* {JSON.stringify(fieldSchema)} */}
+
+          <form.Field name={fieldName}>
+            {(field) => (
+              <Component
+                onBlur={field.handleBlur}
+                label={null}
+                // {...fieldSchema.props}
+                // value={valueField.state.value}
+                // onChange={(e: any) => {
+                //   const value = e?.target?.value ?? e;
+                //   valueField.handleChange(value);
+                // }}
+                onChange={
+                  [
+                    "NumberInput",
+                    "MonacoEditorFormInput",
+                    "NaturalLanguageEditorFormInput",
+                    "SearchInput",
+                    "DateInput",
+                    "MultiSelect",
+                    "Select",
+                    "FileInput",
+                    "RangeSlider",
+                  ].includes(fieldSchema.component)
+                    ? field.handleChange
+                    : (e: any) => field.handleChange(e?.target?.value)
+                }
+                {...(fieldSchema.props || {})}
+                // {...(fieldSchema.props || {})}
+                {...(!["MultiSelect", "DateInput"].includes(
+                  fieldSchema.component
+                )
+                  ? { value: field.state.value }
+                  : {})}
+                {...(["DateInput"].includes(fieldSchema.component) &&
+                typeof field.state.value === "string"
+                  ? { value: new Date(field.state.value) }
+                  : {})}
+                {...(fieldSchema.component === "DateInput"
+                  ? { dateParser }
+                  : {})}
+                action_form_key={`${action_form_key}_filter`}
+              />
+            )}
+          </form.Field>
+        </div>
+
+        <form.Field name={`${fieldName}_operator`}>
+          {(operatorField) =>
+            operatorField.state.value === "between" ? (
+              <div className="flex-1">
+                <form.Field name={`${fieldName}_value2`}>
+                  {(value2Field) => (
+                    <Component
+                      {...fieldSchema.props}
+                      value={value2Field.state.value}
+                      onChange={(e: any) => {
+                        const value = e?.target?.value ?? e;
+                        value2Field.handleChange(value);
+                      }}
+                      onBlur={value2Field.handleBlur}
+                      placeholder="end value"
+                      label={null}
+                    />
+                  )}
+                </form.Field>
+              </div>
+            ) : null
           }
-          return updatedFilter;
-        }
-        return filter;
-      })
+        </form.Field>
+
+        <form.Field name={fieldName}>
+          {(valueField) =>
+            valueField.state.value !== null && valueField.state.value !== "" ? (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => clearFilterValues(fieldName)}
+                size="sm"
+              >
+                <IconX size={16} />
+              </ActionIcon>
+            ) : null
+          }
+        </form.Field>
+      </div>
     );
   };
 
-  const getOperatorsForField = (fieldName: string): Operator[] => {
-    const variable = variables.find((v) => v.value === fieldName);
-    return variable ? OPERATOR_MAP[variable.type] : [];
-  };
-
-  const renderValueInput = (filter: Filter) => {
-    const variable = variables.find((v) => v.value === filter.field);
-    if (!variable) return null;
-
-    switch (variable.type) {
-      case "string":
-        return (
-          <TextInput
-            value={(filter.value as string) || ""}
-            onChange={(e) => updateFilter(filter.id, { value: e.target.value })}
-            placeholder="Enter value"
-            className="w-full"
-          />
-        );
-
-      case "number":
-        return (
-          <div className="flex gap-2">
-            <NumberInput
-              value={(filter.value as number) || undefined}
-              onChange={(value) => updateFilter(filter.id, { value })}
-              placeholder="Enter value"
-              className="w-full"
-            />
-            {filter.operator === "between" && (
-              <NumberInput
-                value={(filter.value2 as number) || undefined}
-                onChange={(value) => updateFilter(filter.id, { value2: value })}
-                placeholder="End value"
-                className="w-full"
-              />
-            )}
-          </div>
-        );
-
-      case "datetime":
-        return (
-          <div className="flex gap-2">
-            <DateInput
-              value={(filter.value as Date) || null}
-              onChange={(date) => updateFilter(filter.id, { value: date })}
-              placeholder="Select date"
-              className="w-full"
-            />
-            {filter.operator === "between" && (
-              <DateInput
-                value={(filter.value2 as Date) || null}
-                onChange={(date) => updateFilter(filter.id, { value2: date })}
-                placeholder="End date"
-                className="w-full"
-              />
-            )}
-          </div>
-        );
-
-      case "boolean":
-        return (
-          <Checkbox
-            checked={(filter.value as boolean) || false}
-            onChange={(e) =>
-              updateFilter(filter.id, { value: e.target.checked })
-            }
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  const formatValue = (
-    value: Filter["value"],
-    type: Variable["type"]
-  ): string => {
+  const formatValue = (value: any, type: string): string => {
     if (value === null) return "";
 
     if (type === "datetime") {
@@ -475,59 +332,56 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
     return String(value);
   };
 
-  const generateFilterOutput = (): FilterOutput => {
+  const generateFilterOutput = (formValues: any): FilterOutput => {
     const conditions: FilterCondition[] = [];
     const sqlConditions: string[] = [];
 
-    filters.forEach((filter) => {
-      if (!filter.field || !filter.operator || filter.value === null) return;
+    variables.forEach((variable) => {
+      const value = formValues[variable.value];
+      const operator = formValues[`${variable.value}_operator`] as Operator;
+      const value2 = formValues[`${variable.value}_value2`];
 
-      const variable = variables.find((v) => v.value === filter.field);
-      if (!variable) return;
+      if (value === null || !operator) return;
 
-      const operator = OPERATOR_LABELS[filter.operator];
-      const formattedValue = formatValue(filter.value, variable.type);
-
-      // Create structured condition
       const condition: FilterCondition = {
-        field: filter.field,
-        operator: filter.operator,
-        value: filter.value,
+        field: variable.value,
+        operator,
+        value,
         fieldType: variable.type,
       };
 
-      if (filter.operator === "between" && filter.value2 !== null) {
-        condition.value2 = filter.value2;
+      if (operator === "between" && value2 !== null) {
+        condition.value2 = value2;
       }
 
       conditions.push(condition);
 
-      // Generate SQL condition
       let sqlCondition: string;
-      switch (filter.operator) {
+      const formattedValue = formatValue(value, variable.type);
+
+      switch (operator) {
         case "contains":
-          sqlCondition = `${filter.field} ${operator} '%${formattedValue}%'`;
+          sqlCondition = `${variable.value} ${OPERATOR_LABELS[operator]} '%${formattedValue}%'`;
           break;
         case "startsWith":
-          sqlCondition = `${filter.field} ${operator} '${formattedValue}%'`;
+          sqlCondition = `${variable.value} ${OPERATOR_LABELS[operator]} '${formattedValue}%'`;
           break;
         case "endsWith":
-          sqlCondition = `${filter.field} ${operator} '%${formattedValue}'`;
+          sqlCondition = `${variable.value} ${OPERATOR_LABELS[operator]} '%${formattedValue}'`;
           break;
         case "between":
-          if (filter.value2 === null) return;
-          const formattedValue2 = formatValue(
-            filter.value2 || "",
-            variable.type
-          );
-          sqlCondition = `${filter.field} ${operator} ${
+          if (value2 === null) return;
+          const formattedValue2 = formatValue(value2, variable.type);
+          sqlCondition = `${variable.value} ${OPERATOR_LABELS["between"]} ${
             variable.type === "string" || variable.type === "datetime"
               ? `'${formattedValue}' AND '${formattedValue2}'`
               : `${formattedValue} AND ${formattedValue2}`
           }`;
           break;
         default:
-          sqlCondition = `${filter.field} ${operator} ${
+          sqlCondition = `${variable.value} ${
+            OPERATOR_LABELS[operator as keyof typeof OPERATOR_LABELS]
+          } ${
             variable.type === "string" || variable.type === "datetime"
               ? `'${formattedValue}'`
               : formattedValue
@@ -545,36 +399,25 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
   };
 
   useEffect(() => {
-    const output = generateFilterOutput();
-    onFilterChange(output);
-  }, [filters]);
+    const unsubscribe = form.store.subscribe(() => {
+      const output = generateFilterOutput(form.store.state.values);
+      onFilterChange(output);
+    });
+
+    return () => unsubscribe();
+  }, [form.store, onFilterChange]);
 
   return (
-    <div className="space-y-4">
-      {filters.map((filter) => (
-        <div key={filter.id} className="flex gap-4 items-start">
-          <div className="w-48 py-2">
-            {variables.find((v) => v.value === filter.field)?.label ||
-              filter.field}
-          </div>
-
-          <Select
-            value={filter.operator}
-            onChange={(value) =>
-              updateFilter(filter.id, { operator: value as Operator })
-            }
-            data={getOperatorsForField(filter.field).map((op) => ({
-              value: op,
-              label: OPERATOR_LABELS[op],
-            }))}
-            placeholder="Select operator"
-            className="w-32"
-          />
-
-          <div className="flex-1">{renderValueInput(filter)}</div>
-        </div>
-      ))}
-    </div>
+    <Box className="mt-3 gap-2 space-y-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+      >
+        {variables.map((variable) => renderField(createFieldSchema(variable)))}
+      </form>
+    </Box>
   );
 };
 

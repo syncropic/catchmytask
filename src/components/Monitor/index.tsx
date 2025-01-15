@@ -1,5 +1,12 @@
 import { useReadRecordByState } from "@components/Utils";
-import { ActionIcon, MultiSelect, TextInput, Tooltip } from "@mantine/core";
+import {
+  Accordion,
+  ActionIcon,
+  MultiSelect,
+  TextInput,
+  Tooltip,
+  Text,
+} from "@mantine/core";
 import TableView from "@components/TableView";
 import ExplorerWrapper from "@components/Explorer";
 import { useEffect, useState } from "react";
@@ -9,6 +16,9 @@ import { useAppStore } from "src/store";
 import MonacoEditor from "@components/MonacoEditor";
 import { useLiveQuery } from "@components/Utils/useLiveQuery";
 import { useSession } from "next-auth/react";
+import AccordionComponent from "@components/AccordionComponent";
+import { viewSearchActionAccordionConfig } from "@components/Layout/viewSearchActionAccordionConfig";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface MonitorWrapperProps {
   display_mode?: string;
@@ -122,6 +132,13 @@ export const MonitorWrapper = ({
     `SELECT * FROM messages WHERE session_id = ${params?.id} ORDER BY created_datetime DESC`,
     "messages"
   );
+
+  const queryClient = useQueryClient();
+  // const viewData = queryClient.getQueryData([view_query_key]);
+  const responseData = queryClient.getQueryData(["main_form_request"]) as {
+    data: any;
+    response: any;
+  };
 
   let go = useGo();
 
@@ -303,6 +320,35 @@ export const MonitorWrapper = ({
             />
           </>
         )}
+      {user_session?.userProfile?.monitor_options?.includes("memory") && (
+        <div>
+          <div>
+            <Accordion multiple defaultValue={[]}>
+              <Accordion.Item value={"memory"} key={"memory"}>
+                <Accordion.Control icon={null}>
+                  <Text fw={600}>memory</Text>
+                </Accordion.Control>
+                <Accordion.Panel>
+                  <MonacoEditor
+                    value={{
+                      responseData: responseData,
+                    }}
+                    height="35vh"
+                    language="json"
+                  ></MonacoEditor>
+                </Accordion.Panel>
+              </Accordion.Item>
+            </Accordion>
+            {/* <AccordionComponent
+            sections={viewSearchActionAccordionConfig}
+            activeView={{}}
+            activeTask={{}}
+            defaultExpandedValues={[]}
+            action={"filters"}
+          /> */}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

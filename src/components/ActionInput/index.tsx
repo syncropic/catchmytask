@@ -21,6 +21,7 @@ import {
   Accordion,
   Box,
   Button,
+  Indicator,
   LoadingOverlay,
   Title,
   Tooltip,
@@ -130,6 +131,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     activeViewItem,
     clearViews,
     activeInput,
+    filter_form_values,
   } = useAppStore();
   const queryClient = useQueryClient();
   const go = useGo(); // Navigation function
@@ -1227,6 +1229,26 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     });
   };
 
+  // Function to count active filters for the current form
+  const getActiveFiltersCount = (formKey: string) => {
+    const filterKey = `${formKey}_filter`;
+    const formValues = filter_form_values[filterKey] || {};
+
+    // Count fields that have a value and aren't null
+    return Object.entries(formValues).reduce((count, [key, value]) => {
+      // Only count main values, not operators or value2
+      if (
+        !key.includes("_operator") &&
+        !key.includes("_value2") &&
+        value !== null &&
+        value !== ""
+      ) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+  };
+
   // Effect to handle template changes
   useEffect(() => {
     if (
@@ -1590,14 +1612,23 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   label={`${showVariables ? "hide" : "provide"} variables`}
                   key="variables"
                 >
-                  <Button
-                    size="compact-sm"
-                    leftSection={<IconAdjustments size={20} />}
-                    variant={showVariables ? "filled" : "outline"}
-                    onClick={toggleVariables}
+                  <Indicator
+                    inline
+                    label={getActiveFiltersCount(action_form_key)}
+                    size={16}
+                    disabled={getActiveFiltersCount(action_form_key) === 0}
+                    color="blue"
+                    offset={4}
                   >
-                    Variables
-                  </Button>
+                    <Button
+                      size="compact-sm"
+                      leftSection={<IconAdjustments size={20} />}
+                      variant={showVariables ? "filled" : "outline"}
+                      onClick={toggleVariables}
+                    >
+                      Variables
+                    </Button>
+                  </Indicator>
                 </Tooltip>
               )}
             {showVariables && (
@@ -1608,6 +1639,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                       ?.variables || []
                   ).includes(item.value)
                 )}
+                action_form_key={action_form_key}
                 onFilterChange={handleFilterChange}
               />
             )}

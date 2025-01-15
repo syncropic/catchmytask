@@ -7,10 +7,18 @@ import {
   useParsed,
 } from "@refinedev/core";
 import { IIdentity } from "@components/interfaces";
-import { ActionIcon, Button, Group, Menu, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Group,
+  Menu,
+  Tooltip,
+  useMantineColorScheme,
+} from "@mantine/core";
 import {
   IconAdjustmentsHorizontal,
   IconApps,
+  IconBrightnessUp,
   IconClipboard,
   IconComponents,
   IconDatabase,
@@ -19,6 +27,8 @@ import {
   IconListCheck,
   IconLogout,
   IconMail,
+  IconMenu2,
+  IconMoon,
   IconPuzzle,
   IconSearch,
   IconSettings,
@@ -34,6 +44,7 @@ import SearchInput from "@components/SearchInput";
 import { useState } from "react";
 import { useClickOutside } from "@mantine/hooks";
 import { handleLogout } from "@components/Utils/auth";
+import ColorSchemeToggle from "@components/ColorSchemeToggle";
 // import MonacoEditor from "@components/MonacoEditor";
 
 export const UserMenu = () => {
@@ -53,12 +64,28 @@ export const UserMenu = () => {
     setMonitorComponents,
     showRequestResponseView,
     setShowRequestResponseView,
+    colorScheme,
+    setColorScheme,
+    activeLayout,
+    setActiveLayout,
   } = useAppStore();
   const { resource, action, id, pathname, params } = useParsed();
   const [opened, setOpened] = useState(false);
   const ref = useClickOutside(() => {
     return setOpened(false);
   });
+  const { setColorScheme: setColorSchemeMantine } = useMantineColorScheme();
+
+  // handle toggleDisplay
+  const toggleColorScheme = () => {
+    const newScheme = colorScheme.scheme === "light" ? "dark" : "light";
+
+    // Update global state
+    setColorScheme({ scheme: newScheme });
+
+    // Update Mantine's color scheme
+    setColorSchemeMantine(newScheme);
+  };
 
   // handle logout
   // const handleLogout = () => {
@@ -141,6 +168,15 @@ export const UserMenu = () => {
 
     // Call the utility function to handle complete logout
     await handleLogout();
+  };
+
+  // handle toggleDisplay
+  const toggleDisplay = (section: string) => {
+    if (activeLayout) {
+      const newLayout = { ...activeLayout };
+      newLayout[section].isDisplayed = !newLayout[section].isDisplayed;
+      setActiveLayout(newLayout);
+    }
   };
 
   return (
@@ -265,6 +301,78 @@ export const UserMenu = () => {
           >
             Toggle Request Response
           </Menu.Item> */}
+          <Menu.Item
+            leftSection={
+              colorScheme.scheme === "light" ? (
+                <IconMoon size={14} /> // Use IconMoon for light mode
+              ) : (
+                <IconBrightnessUp size={14} /> // Use IconBrightnessUp for dark mode
+              )
+            }
+            // className={`${
+            //   colorScheme.scheme === "light" ? "text-blue-500" : ""
+            // }`}
+            onClick={toggleColorScheme}
+          >
+            {colorScheme.scheme === "light" ? "Dark Mode" : "Light Mode"}
+          </Menu.Item>
+          <div className="block lg:hidden">
+            <Menu.Item
+              // leftSection={
+              //   colorScheme.scheme === "light" ? (
+              //     <IconMoon size={14} /> // Use IconMoon for light mode
+              //   ) : (
+              //     <IconBrightnessUp size={14} /> // Use IconBrightnessUp for dark mode
+              //   )
+              // }
+              leftSection={<IconMenu2 size={14} />}
+              // className={`${
+              //   colorScheme.scheme === "light" ? "text-blue-500" : ""
+              // }`}
+              // onClick={toggleColorScheme}
+              onClick={() => {
+                toggleDisplay("quickActionsBar");
+              }}
+            >
+              Quick Actions Bar
+            </Menu.Item>
+          </div>
+
+          {/* <Tooltip label="Toggle quick actions" position="top">
+              <ActionIcon
+                size="sm"
+                variant={
+                  activeLayout?.quickActionsBar?.isDisplayed
+                    ? "filled"
+                    : "outline"
+                }
+                onClick={() => {
+                  toggleDisplay("quickActionsBar");
+                }}
+              >
+                <IconMenu2 />
+              </ActionIcon>
+            </Tooltip> */}
+
+          {/* <Tooltip
+                    label={`Switch to ${
+                      colorScheme.scheme === "light" ? "dark" : "light"
+                    } mode`}
+                    position="top"
+                  >
+                    <ActionIcon
+                      size="sm"
+                      variant={colorScheme.scheme === "light" ? "outline" : "filled"}
+                      onClick={toggleColorScheme}
+                    >
+                      {colorScheme.scheme === "light" ? (
+                        <IconMoon size={20} /> // Use IconMoon for light mode
+                      ) : (
+                        <IconBrightnessUp size={20} /> // Use IconBrightnessUp for dark mode
+                      )}
+                    </ActionIcon>
+                  </Tooltip> */}
+
           {/* <Menu.Item
             leftSection={<IconUserScan size={14} />}
             disabled

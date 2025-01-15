@@ -53,6 +53,8 @@ function SearchInput<T extends Record<string, any>>({
   record,
   data_items,
   query_name,
+  collections,
+  action_form_key,
 }: SearchInputComponentProps<T>) {
   const [query, setQuery] = useState(value?.value || "");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -97,16 +99,18 @@ function SearchInput<T extends Record<string, any>>({
   const state = {
     query_name: query_name || "search",
     search_term: debouncedQuery,
-    success_message_code: success_message_code,
-    session_id: params?.session_id || activeSession?.id,
-    task_id: params?.id || activeTask?.id,
+    success_message_code: action_form_key || success_message_code,
+    session_id: params?.id || params?.session_id || activeSession?.id,
+    // task_id: params?.id || activeTask?.id,
     application_id: params?.application_id || activeApplication?.id,
     view_id: params?.view_id || activeView?.id,
-    profile_id: params?.view_id || activeProfile?.id,
+    profile_id: params?.profile_id || activeProfile?.id,
     user_id: identity?.email,
-    tables: selected_filters
-      .map((filter: { entity_type: any }) => filter.entity_type)
-      .join(", "),
+    tables:
+      collections ||
+      selected_filters
+        .map((filter: { entity_type: any }) => filter.entity_type)
+        .join(", "),
   };
 
   // Only fetch data if data_items is not provided
@@ -128,7 +132,9 @@ function SearchInput<T extends Record<string, any>>({
       // Otherwise use the fetched data
       const results =
         data.data
-          ?.find((item: any) => item?.message?.code === success_message_code)
+          ?.find(
+            (item: any) => item?.message?.code === state?.success_message_code
+          )
           ?.data[0]?.search_results?.map((item: any) => ({
             ...item,
             value: item.id,
@@ -136,7 +142,7 @@ function SearchInput<T extends Record<string, any>>({
           })) || [];
       setAutocompleteData(results);
     }
-  }, [data, data_items, success_message_code]);
+  }, [data, data_items, state?.success_message_code]);
 
   const enhancedHandleOnChange = (value: any | null, option: any) => {
     if (value === null) {
@@ -312,7 +318,8 @@ function SearchInput<T extends Record<string, any>>({
             <MonacoEditor
               value={data.data
                 ?.find(
-                  (item: any) => item?.message?.code === success_message_code
+                  (item: any) =>
+                    item?.message?.code === state.success_message_code
                 )
                 ?.data[0]?.search_results?.map((item: any) => ({
                   ...item,

@@ -65,7 +65,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
         }}
       >
         <RichTextEditor.Toolbar sticky>
-          <RichTextEditor.ControlsGroup>
+          {/* <RichTextEditor.ControlsGroup>
             <RichTextEditor.Strikethrough />
             <RichTextEditor.Highlight />
           </RichTextEditor.ControlsGroup>
@@ -78,7 +78,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
           <RichTextEditor.ControlsGroup>
             <RichTextEditor.Link />
             <RichTextEditor.Unlink />
-          </RichTextEditor.ControlsGroup>
+          </RichTextEditor.ControlsGroup> */}
 
           <RichTextEditor.ControlsGroup>
             <RichTextEditor.Undo />
@@ -90,8 +90,8 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
           <BubbleMenu editor={editor}>
             <RichTextEditor.ControlsGroup>
               <RichTextEditor.Bold />
-              <RichTextEditor.Italic />
-              <RichTextEditor.Link />
+              {/* <RichTextEditor.Italic />
+              <RichTextEditor.Link /> */}
             </RichTextEditor.ControlsGroup>
           </BubbleMenu>
         )}
