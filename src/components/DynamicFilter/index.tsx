@@ -83,7 +83,22 @@ const OPERATOR_MAP: Record<string, Operator[]> = {
   multisearch: ["equals"],
 };
 
+// Display labels for the dropdown
 const OPERATOR_LABELS: Record<Operator, string> = {
+  equals: "=",
+  notEquals: "!=",
+  contains: "Contains",
+  startsWith: "Starts with",
+  endsWith: "Ends with",
+  gt: ">",
+  lt: "<",
+  between: "Between",
+  before: "Before",
+  after: "After",
+};
+
+// SQL operators for query generation
+const SQL_OPERATORS: Record<Operator, string> = {
   equals: "=",
   notEquals: "!=",
   contains: "LIKE",
@@ -200,8 +215,10 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
   }, [form.store, filter_form_values, filter_form_key, setFilterFormValues]);
 
   const clearFilterValues = (fieldName: string) => {
-    form.setFieldValue(fieldName, null);
-    form.setFieldValue(`${fieldName}_value2`, null);
+    form.store.batch(() => {
+      form.setFieldValue(fieldName, null);
+      form.setFieldValue(`${fieldName}_value2`, null);
+    });
   };
 
   const renderField = (fieldSchema: any) => {
@@ -230,19 +247,10 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
         </form.Field>
 
         <div className="flex-1">
-          {/* {JSON.stringify(fieldSchema)} */}
-
           <form.Field name={fieldName}>
             {(field) => (
               <Component
                 onBlur={field.handleBlur}
-                label={null}
-                // {...fieldSchema.props}
-                // value={valueField.state.value}
-                // onChange={(e: any) => {
-                //   const value = e?.target?.value ?? e;
-                //   valueField.handleChange(value);
-                // }}
                 onChange={
                   [
                     "NumberInput",
@@ -259,20 +267,21 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
                     : (e: any) => field.handleChange(e?.target?.value)
                 }
                 {...(fieldSchema.props || {})}
-                // {...(fieldSchema.props || {})}
-                {...(!["MultiSelect", "DateInput"].includes(
-                  fieldSchema.component
-                )
-                  ? { value: field.state.value }
-                  : {})}
-                {...(["DateInput"].includes(fieldSchema.component) &&
-                typeof field.state.value === "string"
-                  ? { value: new Date(field.state.value) }
-                  : {})}
+                value={
+                  fieldSchema.component === "DateInput"
+                    ? field.state.value
+                      ? new Date(field.state.value)
+                      : null
+                    : field.state.value ?? ""
+                }
                 {...(fieldSchema.component === "DateInput"
-                  ? { dateParser }
+                  ? {
+                      clearable: true,
+                      dateParser,
+                    }
                   : {})}
                 action_form_key={`${action_form_key}_filter`}
+                label={null}
               />
             )}
           </form.Field>
@@ -283,16 +292,39 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
             operatorField.state.value === "between" ? (
               <div className="flex-1">
                 <form.Field name={`${fieldName}_value2`}>
-                  {(value2Field) => (
+                  {(field) => (
                     <Component
-                      {...fieldSchema.props}
-                      value={value2Field.state.value}
-                      onChange={(e: any) => {
-                        const value = e?.target?.value ?? e;
-                        value2Field.handleChange(value);
-                      }}
-                      onBlur={value2Field.handleBlur}
-                      placeholder="end value"
+                      onBlur={field.handleBlur}
+                      onChange={
+                        [
+                          "NumberInput",
+                          "MonacoEditorFormInput",
+                          "NaturalLanguageEditorFormInput",
+                          "SearchInput",
+                          "DateInput",
+                          "MultiSelect",
+                          "Select",
+                          "FileInput",
+                          "RangeSlider",
+                        ].includes(fieldSchema.component)
+                          ? field.handleChange
+                          : (e: any) => field.handleChange(e?.target?.value)
+                      }
+                      {...(fieldSchema.props || {})}
+                      value={
+                        fieldSchema.component === "DateInput"
+                          ? field.state.value
+                            ? new Date(field.state.value)
+                            : null
+                          : field.state.value ?? ""
+                      }
+                      {...(fieldSchema.component === "DateInput"
+                        ? {
+                            clearable: true,
+                            dateParser,
+                          }
+                        : {})}
+                      action_form_key={`${action_form_key}_filter`}
                       label={null}
                     />
                   )}
@@ -361,27 +393,29 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
 
       switch (operator) {
         case "contains":
-          sqlCondition = `${variable.value} ${OPERATOR_LABELS[operator]} '%${formattedValue}%'`;
+          sqlCondition = `${variable.value} ${SQL_OPERATORS[operator]} '%${formattedValue}%'`;
           break;
         case "startsWith":
-          sqlCondition = `${variable.value} ${OPERATOR_LABELS[operator]} '${formattedValue}%'`;
+          sqlCondition = `${variable.value} ${SQL_OPERATORS[operator]} '${formattedValue}%'`;
           break;
         case "endsWith":
-          sqlCondition = `${variable.value} ${OPERATOR_LABELS[operator]} '%${formattedValue}'`;
+          sqlCondition = `${variable.value} ${SQL_OPERATORS[operator]} '%${formattedValue}'`;
           break;
         case "between":
           if (value2 === null) return;
           const formattedValue2 = formatValue(value2, variable.type);
-          sqlCondition = `${variable.value} ${OPERATOR_LABELS["between"]} ${
-            variable.type === "string" || variable.type === "datetime"
-              ? `'${formattedValue}' AND '${formattedValue2}'`
-              : `${formattedValue} AND ${formattedValue2}`
-          }`;
+          if (variable.type === "datetime") {
+            sqlCondition = `${variable.value} >= '${formattedValue}' AND ${variable.value} <= '${formattedValue2}'`;
+          } else {
+            sqlCondition = `${variable.value} ${SQL_OPERATORS["between"]} ${
+              variable.type === "string"
+                ? `'${formattedValue}' AND '${formattedValue2}'`
+                : `${formattedValue} AND ${formattedValue2}`
+            }`;
+          }
           break;
         default:
-          sqlCondition = `${variable.value} ${
-            OPERATOR_LABELS[operator as keyof typeof OPERATOR_LABELS]
-          } ${
+          sqlCondition = `${variable.value} ${SQL_OPERATORS[operator]} ${
             variable.type === "string" || variable.type === "datetime"
               ? `'${formattedValue}'`
               : formattedValue
