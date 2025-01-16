@@ -51,6 +51,7 @@ export const SessionsWrapper = ({
     session_id: activeSession?.id,
     view_id: activeView?.id,
     profile_id: activeProfile?.id,
+    user_id: String(user_session?.userProfile?.user?.id),
     application_id: activeApplication?.id,
     author_id: identity?.email || "guest",
     success_message_code: success_message_code || "sessions",
@@ -143,7 +144,7 @@ export const SessionsWrapper = ({
         id: record?.id,
       },
       query: {
-        profile_id: activeProfile?.id,
+        profile_id: String(record?.profile_id) || activeProfile?.id,
         ...record?.initial_state?.params,
       },
       type: "push",

@@ -30,6 +30,7 @@ import Reveal from "@components/Reveal";
 import MonacoEditor from "@components/MonacoEditor";
 import Documentation from "@components/Documentation";
 import ExternalSubmitButton from "@components/SubmitButton";
+import { useSession } from "next-auth/react";
 
 function SearchInput<T extends Record<string, any>>({
   activeFilters,
@@ -56,6 +57,7 @@ function SearchInput<T extends Record<string, any>>({
   collections,
   action_form_key,
 }: SearchInputComponentProps<T>) {
+  const { data: user_session } = useSession();
   const [query, setQuery] = useState(value?.value || "");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [autocompleteData, setAutocompleteData] = useState<any[]>([]);
@@ -105,7 +107,8 @@ function SearchInput<T extends Record<string, any>>({
     application_id: params?.application_id || activeApplication?.id,
     view_id: params?.view_id || activeView?.id,
     profile_id: params?.profile_id || activeProfile?.id,
-    user_id: identity?.email,
+    author_id: identity?.email,
+    user_id: String(user_session?.userProfile?.user?.id),
     tables:
       collections ||
       selected_filters

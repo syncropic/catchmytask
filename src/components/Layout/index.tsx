@@ -284,7 +284,7 @@ const Layout = ({
                             // record={record}
                             // action={action}
                             display_mode="search_input"
-                            success_message_code="action_input_data_model_schema"
+                            success_message_code="sessions search results"
                           />
                         </div>
                         {/* Row 2: Action Input Toggle Bar */}
@@ -425,7 +425,7 @@ const Layout = ({
                         // record={record}
                         // action={action}
                         display_mode="search_input"
-                        success_message_code="action_input_data_model_schema"
+                        success_message_code="sessions search results"
                       />
                     </div>
                     {/* <DynamicFilter
