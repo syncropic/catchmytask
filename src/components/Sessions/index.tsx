@@ -6,7 +6,7 @@ import DataDisplay from "@components/DataDisplay";
 import { useAppStore } from "src/store";
 import _, { filter } from "lodash";
 import MonacoEditor from "@components/MonacoEditor";
-import { useGetIdentity, useGo } from "@refinedev/core";
+import { useGetIdentity, useGo, useParse, useParsed } from "@refinedev/core";
 import { IIdentity } from "@components/interfaces";
 import SearchInput from "@components/SearchInput";
 import { useSession } from "next-auth/react";
@@ -39,6 +39,7 @@ export const SessionsWrapper = ({
   } = useAppStore();
   const { data: identity } = useGetIdentity<IIdentity>();
   const { data: user_session } = useSession();
+  const { params } = useParsed();
 
   let query_state = {
     id:
@@ -144,7 +145,9 @@ export const SessionsWrapper = ({
         id: record?.id,
       },
       query: {
-        profile_id: String(record?.profile_id) || activeProfile?.id,
+        profile_id: String(
+          record?.profile_id || params?.profile_id || activeProfile?.id
+        ),
         ...record?.initial_state?.params,
       },
       type: "push",

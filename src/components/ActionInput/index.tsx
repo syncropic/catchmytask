@@ -70,6 +70,7 @@ import DynamicFilter, {
   Variable,
 } from "@components/DynamicFilter";
 import { useSession } from "next-auth/react";
+import { useToggleView } from "@components/hooks/useToggleView";
 
 // Function to map class names to ExcelJS ARGB colors
 const getExcelJSStyleFromClass = (className: string) => {
@@ -135,7 +136,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   } = useAppStore();
   const queryClient = useQueryClient();
   const go = useGo(); // Navigation function
-
+  const { toggleView } = useToggleView();
   const { runtimeConfig: config } = useAppStore();
   const { data: user_session } = useSession();
   const { data: identity } = useGetIdentity<IIdentity>();
@@ -211,77 +212,81 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   //   (item: any) => item?.message?.code === view_id
   // )?.data[0];
 
-  let view_ids = Object.keys(views);
+  // let view_ids = Object.keys(views);
 
-  const toggleView = (id: string, record: any) => {
-    // Access the current views from your zustand store
-    const currentViews = views;
+  // const toggleView = (id: string, record: any) => {
+  //   // Access the current views from your zustand store
+  //   const currentViews = views;
 
-    // Check if the item exists in views
-    const existingView = currentViews[id];
+  //   // Check if the item exists in views
+  //   const existingView = currentViews[id];
 
-    const toggleItemInList = (list: any, itemId: any) => {
-      // Check if item exists in list
-      const exists = list.includes(itemId);
+  //   const toggleItemInList = (list: any, itemId: any) => {
+  //     // Check if item exists in list
+  //     const exists = list.includes(itemId);
 
-      if (exists) {
-        // If exists, filter it out
-        return list.filter((id: string) => id !== itemId);
-      } else {
-        // If doesn't exist, add it to the list (spreading the existing list)
-        return [...list, itemId];
-      }
-    };
+  //     if (exists) {
+  //       // If exists, filter it out
+  //       return list.filter((id: string) => id !== itemId);
+  //     } else {
+  //       // If doesn't exist, add it to the list (spreading the existing list)
+  //       return [...list, itemId];
+  //     }
+  //   };
 
-    if (existingView) {
-      // Remove the view if it exists
-      // const { [id]: removedView, ...remainingViews } = currentViews;
-      setViews(id, null);
-      let new_view_ids = toggleItemInList(view_ids, id);
-      const queryParams: {
-        profile_id: string;
-        [key: string]: string;
-      } = {
-        profile_id: String(activeProfile?.id),
-      };
+  //   if (existingView) {
+  //     // Remove the view if it exists
+  //     // const { [id]: removedView, ...remainingViews } = currentViews;
+  //     setViews(id, null);
+  //     let new_view_ids = toggleItemInList(view_ids, id);
+  //     const queryParams: {
+  //       profile_id: string;
+  //       [key: string]: string;
+  //     } = {
+  //       profile_id: String(
+  //         record?.profile_id || params?.profile_id || activeProfile?.id
+  //       ),
+  //     };
 
-      if (new_view_ids?.length > 0) {
-        queryParams.view_items = String(new_view_ids);
-      }
-      go({
-        // to: {
-        //   resource: "sessions",
-        //   action: "show",
-        //   id: record?.id,
-        // },
-        query: queryParams,
-        type: "push",
-      });
-    } else {
-      // Add the view if it doesn't exist
-      setViews(id, record);
-      let new_view_ids = [...view_ids, id];
-      const queryParams: {
-        profile_id: string;
-        [key: string]: string;
-      } = {
-        profile_id: String(activeProfile?.id),
-      };
+  //     if (new_view_ids?.length > 0) {
+  //       queryParams.view_items = String(new_view_ids);
+  //     }
+  //     go({
+  //       // to: {
+  //       //   resource: "sessions",
+  //       //   action: "show",
+  //       //   id: record?.id,
+  //       // },
+  //       query: queryParams,
+  //       type: "push",
+  //     });
+  //   } else {
+  //     // Add the view if it doesn't exist
+  //     setViews(id, record);
+  //     let new_view_ids = [...view_ids, id];
+  //     const queryParams: {
+  //       profile_id: string;
+  //       [key: string]: string;
+  //     } = {
+  //       profile_id: String(
+  //         record?.profile_id || params?.profile_id || activeProfile?.id
+  //       ),
+  //     };
 
-      if (new_view_ids?.length > 0) {
-        queryParams.view_items = String(new_view_ids);
-      }
-      go({
-        // to: {
-        //   resource: "sessions",
-        //   action: "show",
-        //   id: record?.id,
-        // },
-        query: queryParams,
-        type: "push",
-      });
-    }
-  };
+  //     if (new_view_ids?.length > 0) {
+  //       queryParams.view_items = String(new_view_ids);
+  //     }
+  //     go({
+  //       // to: {
+  //       //   resource: "sessions",
+  //       //   action: "show",
+  //       //   id: record?.id,
+  //       // },
+  //       query: queryParams,
+  //       type: "push",
+  //     });
+  //   }
+  // };
 
   const view_id = activeViewItem?.view_id;
   // const task_id = params?.task_id;
@@ -382,7 +387,9 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const handleClearViews = () => {
     go({
       query: {
-        profile_id: String(activeProfile?.id),
+        profile_id: String(
+          record?.profile_id || params?.profile_id || activeProfile?.id
+        ),
       },
       type: "push",
     });
@@ -859,17 +866,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               application_id: params?.application_id || activeApplication?.id,
             },
           };
-
-          // const baseData = {
-          //   action: {
-          //     operation: activeAction?.name,
-          //   },
-          //   input_values: {
-          //     action_input_form_values:
-          //       action_input_form_values[action_input_form_values_key] || {},
-          //   },
-          //   // ... rest of your baseData object
-          // };
 
           // Check if we have attachments before creating FormData
           const hasAttachments =

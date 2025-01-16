@@ -68,6 +68,8 @@ export const UserMenu = () => {
     setColorScheme,
     activeLayout,
     setActiveLayout,
+    open_new_items_in_window,
+    setOpenNewItemsInWindow,
   } = useAppStore();
   const { resource, action, id, pathname, params } = useParsed();
   const [opened, setOpened] = useState(false);
@@ -177,6 +179,11 @@ export const UserMenu = () => {
       newLayout[section].isDisplayed = !newLayout[section].isDisplayed;
       setActiveLayout(newLayout);
     }
+  };
+
+  const toggleOpenItemsInNewWindow = () => {
+    let set_to_view = open_new_items_in_window == "current" ? "new" : "current";
+    setOpenNewItemsInWindow(set_to_view);
   };
 
   return (
@@ -337,6 +344,23 @@ export const UserMenu = () => {
               Quick Actions Bar
             </Menu.Item>
           </div>
+
+          <Menu.Item
+            // leftSection={
+            //   colorScheme.scheme === "light" ? (
+            //     <IconMoon size={14} /> // Use IconMoon for light mode
+            //   ) : (
+            //     <IconBrightnessUp size={14} /> // Use IconBrightnessUp for dark mode
+            //   )
+            // }
+            leftSection={<IconMenu2 size={14} />}
+            className={`${
+              open_new_items_in_window !== "current" ? "text-blue-500" : ""
+            }`}
+            onClick={toggleOpenItemsInNewWindow}
+          >
+            Open Items In New Window
+          </Menu.Item>
 
           {/* <Tooltip label="Toggle quick actions" position="top">
               <ActionIcon

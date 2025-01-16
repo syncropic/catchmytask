@@ -549,6 +549,9 @@ export const useAppStore = create(
       },
       setPinnedActionSteps: (actionSteps) =>
         set((state) => ({ ...state, pinned_action_steps: actionSteps })),
+      open_new_items_in_window: "current",
+      setOpenNewItemsInWindow: (action) =>
+        set((state) => ({ ...state, open_new_items_in_window: action })),
       pinned_main_action: "search",
       setPinnedMainAction: (action) =>
         set((state) => ({ ...state, pinned_main_action: action })),

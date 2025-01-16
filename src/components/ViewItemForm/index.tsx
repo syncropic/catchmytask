@@ -1,4 +1,5 @@
 import { ActionInputForm } from "@components/ActionInput";
+import { useToggleView } from "@components/hooks/useToggleView";
 import ExternalSubmitButton from "@components/SubmitButton";
 import {
   useFetchQueryDataByState,
@@ -41,6 +42,7 @@ export const ViewItemForm = ({
 
   const go = useGo();
   let view_ids = Object.keys(views);
+  const { toggleView } = useToggleView();
 
   const toggleFullWindowDisplay = () => {
     setIsFullWindowDisplay(!isFullWindowDisplay);
@@ -62,76 +64,6 @@ export const ViewItemForm = ({
         newLayout.rightSection.isDisplayed = true;
         setActiveLayout(newLayout);
       }
-    }
-  };
-
-  const toggleView = (id: string, record: any) => {
-    // Access the current views from your zustand store
-    const currentViews = views;
-
-    // Check if the item exists in views
-    const existingView = currentViews[id];
-
-    const toggleItemInList = (list: any, itemId: any) => {
-      // Check if item exists in list
-      const exists = list.includes(itemId);
-
-      if (exists) {
-        // If exists, filter it out
-        return list.filter((id: string) => id !== itemId);
-      } else {
-        // If doesn't exist, add it to the list (spreading the existing list)
-        return [...list, itemId];
-      }
-    };
-
-    if (existingView) {
-      // Remove the view if it exists
-      // const { [id]: removedView, ...remainingViews } = currentViews;
-      setViews(id, null);
-      let new_view_ids = toggleItemInList(view_ids, id);
-      const queryParams: {
-        profile_id: string;
-        [key: string]: string;
-      } = {
-        profile_id: String(activeProfile?.id),
-      };
-
-      if (new_view_ids?.length > 0) {
-        queryParams.view_items = String(new_view_ids);
-      }
-      go({
-        // to: {
-        //   resource: "sessions",
-        //   action: "show",
-        //   id: record?.id,
-        // },
-        query: queryParams,
-        type: "push",
-      });
-    } else {
-      // Add the view if it doesn't exist
-      setViews(id, record);
-      let new_view_ids = [...view_ids, id];
-      const queryParams: {
-        profile_id: string;
-        [key: string]: string;
-      } = {
-        profile_id: String(activeProfile?.id),
-      };
-
-      if (new_view_ids?.length > 0) {
-        queryParams.view_items = String(new_view_ids);
-      }
-      go({
-        // to: {
-        //   resource: "sessions",
-        //   action: "show",
-        //   id: record?.id,
-        // },
-        query: queryParams,
-        type: "push",
-      });
     }
   };
 
