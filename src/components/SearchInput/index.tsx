@@ -101,7 +101,7 @@ function SearchInput<T extends Record<string, any>>({
   let selected_filters = activeFilters || [];
 
   const state = {
-    query_name: query_name || "search",
+    query_name: func_name || "search",
     func_name: func_name || "search",
     name: func_name || "search",
     search_term: debouncedQuery,
