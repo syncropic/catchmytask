@@ -366,7 +366,7 @@ const LargeScreenHeader = ({
 
 export function Header({ authenticatedData }: HeaderComponentProps) {
   const go = useGo();
-  const runtimeConfig = useAppStore((state) => state.runtimeConfig);
+  // const runtimeConfig = useAppStore((state) => state.runtimeConfig);
   const {
     domainData,
     isLoading: domainDataIsLoading,
@@ -374,9 +374,9 @@ export function Header({ authenticatedData }: HeaderComponentProps) {
     domainRecord,
   } = useDomainData();
 
-  let state = {
-    domain_url: runtimeConfig?.DOMAIN_URL,
-  };
+  // let state = {
+  //   domain_url: runtimeConfig?.DOMAIN_URL,
+  // };
   const { activeApplication } = useAppStore();
   // const {
   //   data: domainData,

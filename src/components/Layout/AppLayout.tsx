@@ -123,7 +123,7 @@ export function AppLayout({
                     </ActionIcon>
                   </Tooltip>
                 </div>
-                <div>
+                {/* <div>
                   <Tooltip label={`messages`} position="top">
                     <ActionIcon
                       size="sm"
@@ -145,7 +145,7 @@ export function AppLayout({
                       <IconMail size={20} />
                     </ActionIcon>
                   </Tooltip>
-                </div>
+                </div> */}
               </div>
             )}
           <Footer></Footer>

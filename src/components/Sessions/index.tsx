@@ -10,11 +10,12 @@ import { useGetIdentity, useGo, useParse, useParsed } from "@refinedev/core";
 import { IIdentity } from "@components/interfaces";
 import SearchInput from "@components/SearchInput";
 import { useSession } from "next-auth/react";
+import { useExecuteFunctionWithArgs } from "@components/hooks/useExecuteFunctionWithArgs";
 
 interface ActionProps {
   success_message_code?: string;
   display_mode?: string;
-  query_name?: string;
+  func_name?: string;
   view_id?: string;
   author_id?: string;
   title?: string;
@@ -23,7 +24,7 @@ interface ActionProps {
 export const SessionsWrapper = ({
   display_mode,
   view_id,
-  query_name,
+  func_name,
   success_message_code,
   author_id,
   title,
@@ -42,26 +43,27 @@ export const SessionsWrapper = ({
   const { params } = useParsed();
 
   let query_state = {
-    id:
-      activeView?.id ||
-      activeTask?.id ||
-      activeSession?.id ||
-      activeProfile?.id,
-    query_name: query_name || "fetch sessions",
-    task_id: activeTask?.id,
-    session_id: activeSession?.id,
-    view_id: activeView?.id,
-    profile_id: activeProfile?.id,
-    user_id: String(user_session?.userProfile?.user?.id),
+    // id:
+    //   activeView?.id ||
+    //   activeTask?.id ||
+    //   activeSession?.id ||
+    //   activeProfile?.id,
+    func_name: func_name || "fetch_system_sessions",
+    name: func_name || "fetch_system_sessions",
+    // task_id: activeTask?.id,
+    // session_id: activeSession?.id,
+    // view_id: activeView?.id,
+    // profile_id: activeProfile?.id,
     application_id: activeApplication?.id,
+    user_id: String(user_session?.userProfile?.user?.id),
     author_id: identity?.email || "guest",
-    success_message_code: success_message_code || "sessions",
+    success_message_code: success_message_code || "fetch_system_sessions",
   };
   const {
     data: queryData,
     isLoading: queryIsLoading,
     error: queryError,
-  } = useFetchQueryDataByState(query_state);
+  } = useExecuteFunctionWithArgs(query_state);
   const go = useGo();
 
   // let activity_view_read_record_state = {
@@ -138,6 +140,15 @@ export const SessionsWrapper = ({
       // clearViews
       clearViews({});
     }
+    let profile_id = String(
+      record?.profile_id ||
+        params?.profile_id ||
+        activeProfile?.id ||
+        user_session?.userProfile?.user_profile?.id ||
+        identity?.email ||
+        "guest"
+    );
+    console.log(user_session?.userProfile);
     go({
       to: {
         resource: "sessions",
@@ -145,9 +156,7 @@ export const SessionsWrapper = ({
         id: record?.id,
       },
       query: {
-        profile_id: String(
-          record?.profile_id || params?.profile_id || activeProfile?.id
-        ),
+        profile_id: profile_id,
         ...record?.initial_state?.params,
       },
       type: "push",

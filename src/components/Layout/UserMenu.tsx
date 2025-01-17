@@ -19,6 +19,7 @@ import {
   IconAdjustmentsHorizontal,
   IconApps,
   IconBrightnessUp,
+  IconClick,
   IconClipboard,
   IconComponents,
   IconDatabase,
@@ -261,7 +262,9 @@ export const UserMenu = () => {
                 include_action_icons={["record_info"]}
                 handleEdit={handleEdit}
                 record={activeProfile}
-                query_name="fetch profiles"
+                query_name="fetch_system_profiles"
+                func_name="fetch_system_profiles"
+                success_message_code="fetch_system_profiles"
                 // navigateOnSelect={{ resource: "views" }}
                 // navigateOnClear={{ resource: "home" }}
                 activeFilters={[
@@ -332,11 +335,12 @@ export const UserMenu = () => {
               //     <IconBrightnessUp size={14} /> // Use IconBrightnessUp for dark mode
               //   )
               // }
-              leftSection={<IconMenu2 size={14} />}
-              // className={`${
-              //   colorScheme.scheme === "light" ? "text-blue-500" : ""
-              // }`}
-              // onClick={toggleColorScheme}
+              leftSection={<IconClick size={14} />}
+              className={`${
+                activeLayout?.quickActionsBar?.isDisplayed
+                  ? "text-blue-500"
+                  : ""
+              }`}
               onClick={() => {
                 toggleDisplay("quickActionsBar");
               }}

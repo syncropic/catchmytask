@@ -22,9 +22,13 @@ export const useToggleView = ({
 
   const toggleItemInList = (list: string[], itemId: string): string[] => {
     const exists = list.includes(itemId);
-    return exists
-      ? list.filter((id: string) => id !== itemId)
-      : [...list, itemId];
+    if (open_new_items_in_window == "current") {
+      return exists ? list.filter((id: string) => id !== itemId) : [itemId];
+    } else {
+      return exists
+        ? list.filter((id: string) => id !== itemId)
+        : [...list, itemId];
+    }
   };
 
   const toggleView = (id: string, record: any) => {

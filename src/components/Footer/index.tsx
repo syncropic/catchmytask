@@ -6,6 +6,7 @@ import { Anchor } from "@mantine/core";
 import { FooterCentered } from "./FooterCentered";
 import { useFetchDomainDataByDomain } from "@components/Utils";
 import { useAppStore } from "src/store";
+import { useDomainData } from "@components/Utils/useDomainData";
 
 export function SimpleFooter() {
   return (
@@ -25,16 +26,16 @@ export function SimpleFooter() {
 export function Footer() {
   // const go = useGo();
 
-  const runtimeConfig = useAppStore((state) => state.runtimeConfig);
+  // const runtimeConfig = useAppStore((state) => state.runtimeConfig);
 
-  let state = {
-    domain_url: runtimeConfig?.DOMAIN_URL,
-  };
-  const {
-    data: domainData,
-    isLoading: domainDataIsLoading,
-    error: domainDataError,
-  } = useFetchDomainDataByDomain(state);
+  // let state = {
+  //   domain_url: runtimeConfig?.DOMAIN_URL,
+  // };
+  // const {
+  //   data: domainData,
+  //   isLoading: domainDataIsLoading,
+  //   error: domainDataError,
+  // } = useFetchDomainDataByDomain(state);
   // const links = [
   //   // { link: "#", label: "Contact" },
   //   // { link: "#", label: "Privacy" },
@@ -42,6 +43,29 @@ export function Footer() {
   // ] as { link: string; label: string }[];
 
   const links = [{ link: "#", label: "Contact" }];
+
+  const {
+    domainData,
+    isLoading: domainDataIsLoading,
+    error: domainDataError,
+    domainRecord,
+  } = useDomainData();
+
+  // let state = {
+  //   domain_url: runtimeConfig?.DOMAIN_URL,
+  // };
+  const { activeApplication } = useAppStore();
+  // const {
+  //   data: domainData,
+  //   isLoading: domainDataIsLoading,
+  //   error: domainDataError,
+  // } = useFetchDomainDataByDomain(state);
+
+  const applicationData =
+    domainData?.data?.find(
+      (item: any) => item?.message?.code === "query_success_results"
+    )?.data[0]?.application || {};
+
   return (
     <>
       {/* <SimpleFooter /> */}
@@ -51,11 +75,7 @@ export function Footer() {
             (item: any) => item?.message?.code === "query_success_results"
           )?.data[0]?.["application"]["footer_links"]
         }
-        copywright={
-          domainData?.data?.find(
-            (item: any) => item?.message?.code === "query_success_results"
-          )?.data[0]?.["application"]["copyright"]
-        }
+        copywright={applicationData?.copywright}
       />
     </>
   );

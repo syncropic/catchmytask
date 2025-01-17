@@ -133,6 +133,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     clearViews,
     activeInput,
     filter_form_values,
+    open_new_items_in_window,
   } = useAppStore();
   const queryClient = useQueryClient();
   const go = useGo(); // Navigation function
@@ -184,109 +185,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     data: any;
     response: any;
   };
-
-  // get view_record for utilization across all action inputs
-  // const action_input_form_values_key = `query_${params?.id || activeTask?.id}`;
-  // const fields = action_input_form_fields[action_input_form_values_key];
-
-  // const view_id = activeViewItem?.view_id || params?.view_id;
-  // const task_id = params?.task_id;
-  // const session_id = params?.session_id;
-
-  // let fetch_view_by_id_state = {
-  //   credential: "surrealdb catchmytask dev",
-  //   success_message_code: view_id,
-  //   record: {
-  //     id: view_id,
-  //   },
-  //   read_record_mode: "remote",
-  // };
-
-  // const {
-  //   data: viewData,
-  //   isLoading: viewIsLoading,
-  //   error: viewError,
-  // } = useReadRecordByState(fetch_view_by_id_state);
-
-  // let view_record = viewData?.data?.find(
-  //   (item: any) => item?.message?.code === view_id
-  // )?.data[0];
-
-  // let view_ids = Object.keys(views);
-
-  // const toggleView = (id: string, record: any) => {
-  //   // Access the current views from your zustand store
-  //   const currentViews = views;
-
-  //   // Check if the item exists in views
-  //   const existingView = currentViews[id];
-
-  //   const toggleItemInList = (list: any, itemId: any) => {
-  //     // Check if item exists in list
-  //     const exists = list.includes(itemId);
-
-  //     if (exists) {
-  //       // If exists, filter it out
-  //       return list.filter((id: string) => id !== itemId);
-  //     } else {
-  //       // If doesn't exist, add it to the list (spreading the existing list)
-  //       return [...list, itemId];
-  //     }
-  //   };
-
-  //   if (existingView) {
-  //     // Remove the view if it exists
-  //     // const { [id]: removedView, ...remainingViews } = currentViews;
-  //     setViews(id, null);
-  //     let new_view_ids = toggleItemInList(view_ids, id);
-  //     const queryParams: {
-  //       profile_id: string;
-  //       [key: string]: string;
-  //     } = {
-  //       profile_id: String(
-  //         record?.profile_id || params?.profile_id || activeProfile?.id
-  //       ),
-  //     };
-
-  //     if (new_view_ids?.length > 0) {
-  //       queryParams.view_items = String(new_view_ids);
-  //     }
-  //     go({
-  //       // to: {
-  //       //   resource: "sessions",
-  //       //   action: "show",
-  //       //   id: record?.id,
-  //       // },
-  //       query: queryParams,
-  //       type: "push",
-  //     });
-  //   } else {
-  //     // Add the view if it doesn't exist
-  //     setViews(id, record);
-  //     let new_view_ids = [...view_ids, id];
-  //     const queryParams: {
-  //       profile_id: string;
-  //       [key: string]: string;
-  //     } = {
-  //       profile_id: String(
-  //         record?.profile_id || params?.profile_id || activeProfile?.id
-  //       ),
-  //     };
-
-  //     if (new_view_ids?.length > 0) {
-  //       queryParams.view_items = String(new_view_ids);
-  //     }
-  //     go({
-  //       // to: {
-  //       //   resource: "sessions",
-  //       //   action: "show",
-  //       //   id: record?.id,
-  //       // },
-  //       query: queryParams,
-  //       type: "push",
-  //     });
-  //   }
-  // };
 
   const view_id = activeViewItem?.view_id;
   // const task_id = params?.task_id;

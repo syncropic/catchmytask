@@ -63,6 +63,7 @@ const Layout = ({
     error: domainDataError,
     domainRecord,
   } = useDomainData();
+
   const {
     isLoading: isLoadingAuthenticatedData,
     data: authenticatedData,
@@ -157,7 +158,7 @@ const Layout = ({
   if (!authenticatedData?.authenticated && parsed?.pathname === "/") {
     const domain_data =
       domainData?.data?.find(
-        (item: any) => item?.message?.code === "query_success_results"
+        (item: any) => item?.message?.code === "fetch_system_domain_data"
       )?.data?.[0] || {};
 
     const visible_sections =
@@ -278,13 +279,13 @@ const Layout = ({
                         <div className="flex px-3 py-1">
                           <SessionsWrapper
                             // name={action}
-                            query_name="fetch sessions"
+                            func_name="fetch_system_sessions"
                             view_id="views:36xo8keq9tsoyly68shk"
                             title="monitor"
                             // record={record}
                             // action={action}
                             display_mode="search_input"
-                            success_message_code="sessions search results"
+                            success_message_code="fetch_system_sessions"
                           />
                         </div>
                         {/* Row 2: Action Input Toggle Bar */}
@@ -419,13 +420,13 @@ const Layout = ({
                     <div className="flex px-3 py-1">
                       <SessionsWrapper
                         // name={action}
-                        query_name="fetch sessions"
+                        func_name="fetch_system_sessions"
                         view_id="views:36xo8keq9tsoyly68shk"
                         title="monitor"
                         // record={record}
                         // action={action}
                         display_mode="search_input"
-                        success_message_code="sessions search results"
+                        success_message_code="fetch_system_sessions"
                       />
                     </div>
                     {/* <DynamicFilter

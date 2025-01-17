@@ -574,35 +574,10 @@ export function useFetchDomainDataByDomain(state: any) {
   const { runtimeConfig: config } = useAppStore();
 
   const { data, isLoading, error, isError } = useCustom({
-    url: `${config?.API_URL}/execute-guest-query`,
+    url: `${config?.API_URL}/execute-guest-function`,
     method: "post",
     config: {
-      payload: {
-        task_variables: {},
-        global_variables: {},
-        include_action_steps: [1],
-        action_steps: [
-          {
-            id: "1",
-            execution_order: 1,
-            description: "get domain data",
-            name: "domain data",
-            job: "get domain data",
-            action_step_query: `SELECT * FROM fn::execute_query('domain data', '${JSON.stringify(
-              state
-            )}')`,
-            method: "get",
-            type: "main",
-            credential: "surrealdb catchmytask dev",
-            select: {
-              query: `SELECT * FROM fn::execute_query('domain data', '${JSON.stringify(
-                state
-              )}')`,
-              credential: "surrealdb catchmytask dev",
-            },
-          },
-        ],
-      },
+      payload: state,
     },
     queryOptions: {
       queryKey: [`useFetchDomainDataByDomain_${JSON.stringify(state)}`],

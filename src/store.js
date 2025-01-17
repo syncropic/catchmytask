@@ -79,7 +79,7 @@ export const useAppStore = create(
           isDisplayed: true,
         },
         quickActionsBar: {
-          isDisplayed: true,
+          isDisplayed: false,
         },
         mobileStateView: {
           isDisplayed: true,
@@ -309,7 +309,7 @@ export const useAppStore = create(
         return Object.values(formSections);
       },
       views: {},
-      clearViews: (views) => set((state) => ({ views })),
+      clearViews: (views) => set((state) => ({ views: {} })),
       // setViews: (views) => set((state) => ({ views })),
       // setViews: (key, newData) =>
       //   set((state) => {
@@ -327,21 +327,32 @@ export const useAppStore = create(
       setViews: (key, newData) =>
         set((state) => {
           if (newData === null) {
-            const newViews = { ...state.views };
-            delete newViews[key];
-            return { views: newViews };
+            if (state.open_new_items_in_window == "current") {
+              // const newViews = { ...state.views };
+              // delete newViews[key];
+              return { views: {} };
+            } else {
+              const newViews = { ...state.views };
+              delete newViews[key];
+              return { views: newViews };
+            }
           }
 
-          const existingData = state.views[key] || {};
-          return {
-            views: {
-              ...state.views,
-              [key]: {
-                ...existingData,
-                ...newData,
+          // const existingData = state.views[key] || {};
+          if (state.open_new_items_in_window == "current") {
+            return {
+              views: {
+                [key]: newData,
               },
-            },
-          };
+            };
+          } else {
+            return {
+              views: {
+                ...state.views,
+                [key]: newData,
+              },
+            };
+          }
         }),
       activeMainCustomComponent: {
         id: "components:h1ttsa94g3pcfbl278jq",

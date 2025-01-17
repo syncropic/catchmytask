@@ -31,10 +31,11 @@ import MonacoEditor from "@components/MonacoEditor";
 import Documentation from "@components/Documentation";
 import ExternalSubmitButton from "@components/SubmitButton";
 import { useSession } from "next-auth/react";
+import { useExecuteFunctionWithArgs } from "@components/hooks/useExecuteFunctionWithArgs";
 
 function SearchInput<T extends Record<string, any>>({
   activeFilters,
-  success_message_code = "search query results",
+  success_message_code,
   placeholder = "Search",
   label,
   description,
@@ -54,6 +55,7 @@ function SearchInput<T extends Record<string, any>>({
   record,
   data_items,
   query_name,
+  func_name,
   collections,
   action_form_key,
 }: SearchInputComponentProps<T>) {
@@ -100,6 +102,8 @@ function SearchInput<T extends Record<string, any>>({
 
   const state = {
     query_name: query_name || "search",
+    func_name: func_name || "search",
+    name: func_name || "search",
     search_term: debouncedQuery,
     success_message_code: action_form_key || success_message_code,
     session_id: params?.id || params?.session_id || activeSession?.id,
@@ -119,7 +123,7 @@ function SearchInput<T extends Record<string, any>>({
   // Only fetch data if data_items is not provided
   const { data, isLoading, error, isError } = data_items
     ? { data: null, isLoading: false, error: null, isError: false }
-    : useFetchQueryDataByState(state);
+    : useExecuteFunctionWithArgs(state);
 
   useEffect(() => {
     if (data_items) {

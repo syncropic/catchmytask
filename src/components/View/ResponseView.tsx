@@ -972,47 +972,79 @@ const ViewItem = ({
       <Accordion.Item value={view_item_id} key={view_item_id}>
         <Accordion.Control>
           <div className="flex justify-between items-center">
-            <div onClick={(e) => e.stopPropagation()}>
-              <Reveal
-                trigger="click"
-                target={
-                  <Tooltip
-                    multiline
-                    w={220}
-                    withArrow
-                    transitionProps={{ duration: 200 }}
-                    // label={getTooltipLabel(view_item_record || {})}
-                    label={"click for details"}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="flex flex-col gap-1">
-                        {/* Main Label - Made larger and bolder */}
-                        <div className="text-sm font-semibold text-blue-600 px-3 break-words max-w-xs sm:max-w-md">
-                          {getLabel(view_item_record || {})}
+            <div className="flex items-center gap-1">
+              {/* <Loader size={18} /> */}
+              {/* <ActionStatusInfo record={item} isRerunning={true} /> */}
+              {!view_record?.fields?.length &&
+                dataItems?.map((item: any, index: number) => {
+                  if (
+                    item?.view_id == "embed_url" ||
+                    item?.message_type == "content_embed_url"
+                  ) {
+                    return (
+                      <>
+                        <div>
+                          {
+                            <ActionStatusInfo
+                              record={item}
+                              isRerunning={true}
+                            />
+                          }
                         </div>
+                      </>
+                    );
+                    // if (item?.action_status == "running") {
+                    //   return <Loader size={18} />;
+                    // } else {
+                    //   return null;
+                    // }
+                  } else {
+                    return null;
+                  }
+                })}
 
-                        {/* Subheading - Smaller, lighter color and weight */}
-                        <div
-                          className="text-xs font-normal text-blue-400 truncate overflow-hidden whitespace-nowrap px-3"
-                          // className="text-sm font-normal text-blue-400 truncate"
-                          style={{ maxWidth: width < 500 ? 300 : 500 }}
-                        >
-                          {subheading}
+              <div onClick={(e) => e.stopPropagation()}>
+                <Reveal
+                  trigger="click"
+                  target={
+                    <Tooltip
+                      multiline
+                      w={220}
+                      withArrow
+                      transitionProps={{ duration: 200 }}
+                      // label={getTooltipLabel(view_item_record || {})}
+                      label={"click for details"}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-1">
+                          {/* Main Label - Made larger and bolder */}
+                          <div className="text-sm font-semibold text-blue-600 px-3 break-words max-w-xs sm:max-w-md">
+                            {getLabel(view_item_record || {})}
+                          </div>
+
+                          {/* Subheading - Smaller, lighter color and weight */}
+                          <div
+                            className="text-xs font-normal text-blue-400 truncate overflow-hidden whitespace-nowrap px-3"
+                            // className="text-sm font-normal text-blue-400 truncate"
+                            style={{ maxWidth: width < 500 ? 300 : 500 }}
+                          >
+                            {subheading}
+                          </div>
                         </div>
+                        <IconInfoCircle
+                          // className="text-blue-500 flex-shrink-0"
+                          size={12}
+                        />
                       </div>
-                      <IconInfoCircle
-                        // className="text-blue-500 flex-shrink-0"
-                        size={12}
-                      />
-                    </div>
-                  </Tooltip>
-                }
-              >
-                {/* <Documentation record={view_record}></Documentation> */}
-                <ViewDocumentation
-                  record={view_documentation_record}
-                ></ViewDocumentation>
-              </Reveal>
+                    </Tooltip>
+                  }
+                >
+                  {/* <Documentation record={view_record}></Documentation> */}
+                  <ViewDocumentation
+                    record={view_documentation_record}
+                  ></ViewDocumentation>
+                </Reveal>
+              </div>
             </div>
             {include_components?.includes("toolbar") && (
               <div className="hidden lg:block">
