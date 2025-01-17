@@ -54,7 +54,7 @@ export function Footer() {
   // let state = {
   //   domain_url: runtimeConfig?.DOMAIN_URL,
   // };
-  const { activeApplication } = useAppStore();
+  // const { activeApplication } = useAppStore();
   // const {
   //   data: domainData,
   //   isLoading: domainDataIsLoading,
@@ -63,7 +63,7 @@ export function Footer() {
 
   const applicationData =
     domainData?.data?.find(
-      (item: any) => item?.message?.code === "query_success_results"
+      (item: any) => item?.message?.code === "fetch_system_domain_data"
     )?.data[0]?.application || {};
 
   return (
@@ -72,10 +72,10 @@ export function Footer() {
       <FooterCentered
         links={
           domainData?.data?.find(
-            (item: any) => item?.message?.code === "query_success_results"
+            (item: any) => item?.message?.code === "fetch_system_domain_data"
           )?.data[0]?.["application"]["footer_links"]
         }
-        copywright={applicationData?.copywright}
+        copywright={applicationData?.copyright}
       />
     </>
   );

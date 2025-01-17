@@ -386,7 +386,7 @@ export function Header({ authenticatedData }: HeaderComponentProps) {
 
   const applicationData =
     domainData?.data?.find(
-      (item: any) => item?.message?.code === "query_success_results"
+      (item: any) => item?.message?.code === "fetch_system_domain_data"
     )?.data[0]?.application || {};
 
   return (
