@@ -1,0 +1,164 @@
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+  ImperativePanelHandle,
+} from "react-resizable-panels";
+import ResizeHandle from "@components/ResizeHandle";
+import MonitorWrapper from "@components/Monitor";
+
+interface PanelSection {
+  isDisplayed: boolean;
+  children?: React.ReactNode;
+}
+
+interface LayoutStorage {
+  getItem: (name: string) => string;
+  setItem: (name: string, value: string) => void;
+}
+
+interface PanelSizes {
+  left: number;
+  center: number;
+  right: number;
+}
+
+interface DesktopPanelLayoutProps {
+  global_developer_mode: boolean;
+  leftSection: PanelSection;
+  centerSection: PanelSection;
+  rightSection: PanelSection;
+  effectiveScheme: string;
+  children: React.ReactNode;
+  layoutStorage: LayoutStorage;
+}
+
+const DesktopPanelLayout: React.FC<DesktopPanelLayoutProps> = ({
+  global_developer_mode,
+  leftSection,
+  centerSection,
+  rightSection,
+  effectiveScheme,
+  children,
+  layoutStorage,
+}) => {
+  // Refs for imperative panel control
+  const leftPanelRef = useRef<ImperativePanelHandle>(null);
+  const centerPanelRef = useRef<ImperativePanelHandle>(null);
+  const rightPanelRef = useRef<ImperativePanelHandle>(null);
+
+  // State to track current panel sizes
+  const [sizes, setSizes] = useState<PanelSizes>({
+    left: global_developer_mode ? 60 : 30,
+    center: global_developer_mode ? 30 : 60,
+    right: 20,
+  });
+
+  // Update panel sizes when global_developer_mode changes
+  useEffect(() => {
+    const newSizes = {
+      left: global_developer_mode ? 60 : 30,
+      center: global_developer_mode ? 30 : 60,
+      right: 20,
+    };
+    setSizes(newSizes);
+
+    // Use imperative handles to resize panels
+    if (leftPanelRef.current) {
+      leftPanelRef.current.resize(newSizes.left);
+    }
+    if (centerPanelRef.current) {
+      centerPanelRef.current.resize(newSizes.center);
+    }
+    if (rightPanelRef.current) {
+      rightPanelRef.current.resize(newSizes.right);
+    }
+  }, [global_developer_mode]);
+
+  // Handle manual panel resizing
+  const handleLayout = (newSizes: number[]) => {
+    setSizes({
+      left: newSizes[0],
+      center: newSizes[1],
+      right: newSizes[2],
+    });
+  };
+
+  return (
+    <PanelGroup
+      direction="horizontal"
+      onLayout={handleLayout}
+      autoSaveId="main-layout"
+      // storage={layoutStorage}
+    >
+      {leftSection.isDisplayed && (
+        <>
+          <Panel
+            ref={leftPanelRef}
+            id="left-panel"
+            order={1}
+            minSize={0}
+            defaultSize={sizes.left}
+            // size={sizes.left}
+          >
+            <div
+              className={`overflow-auto h-[85vh] ${
+                effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
+              }`}
+            >
+              <div className="h-[85vh] flex flex-col">
+                {leftSection.children}
+              </div>
+            </div>
+          </Panel>
+          <PanelResizeHandle>
+            <ResizeHandle />
+          </PanelResizeHandle>
+        </>
+      )}
+
+      {centerSection.isDisplayed && (
+        <Panel
+          ref={centerPanelRef}
+          id="center-panel"
+          order={2}
+          minSize={0}
+          defaultSize={sizes.center}
+          // size={sizes.center}
+        >
+          <div
+            className={`overflow-auto h-[85vh] ${
+              effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
+            }`}
+          >
+            <div className="h-[85vh] flex flex-col">
+              {children}
+              {centerSection.children}
+            </div>
+          </div>
+        </Panel>
+      )}
+
+      {rightSection.isDisplayed && (
+        <>
+          <PanelResizeHandle>
+            <ResizeHandle />
+          </PanelResizeHandle>
+          <Panel
+            ref={rightPanelRef}
+            id="right-panel"
+            order={3}
+            minSize={0}
+            defaultSize={sizes.right}
+            // size={sizes.right}
+          >
+            {rightSection.children}
+          </Panel>
+        </>
+      )}
+    </PanelGroup>
+  );
+};
+
+export default DesktopPanelLayout;

@@ -103,6 +103,11 @@ import {
   IconTimelineEventText,
   IconAffiliate,
   IconFilter,
+  IconArrowLeft,
+  IconArrowRight,
+  IconArrowUp,
+  IconArrowDown,
+  IconLocationCode,
 } from "@tabler/icons-react";
 import { localDb } from "src/localDb";
 import { useQueryClient } from "@tanstack/react-query";
@@ -171,6 +176,7 @@ import { Checkbox } from "@components/Checkbox";
 import SearchInput from "@components/SearchInput";
 import { useClickOutside, useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { ListEditorFormInput } from "@components/ListEditor";
+import { VerticalTransformActionsFormInput } from "@components/VerticalTransformActions";
 
 // Adjusted createColumnDef to fit your use case
 export function createColumnDef<RowDataType extends RowData>(
@@ -412,6 +418,7 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   social_proof: List,
   showcase: AccordionList,
   email_list_signup: EmailBanner,
+  VerticalTransformActionsFormInput: VerticalTransformActionsFormInput,
   // MediaPlayerController: MediaPlayerController,
   // MediaPlayerTimeline: MediaPlayerTimeline,
 };
@@ -2302,6 +2309,11 @@ export const iconMap: Record<string, React.ElementType> = {
   filters: IconFilter,
   copy: IconCopy,
   dublicate: IconCopy,
+  IconArrowLeft: IconArrowLeft,
+  IconArrowRight: IconArrowRight,
+  IconArrowUp: IconArrowUp,
+  IconArrowDown: IconArrowDown,
+  IconLocationCode: IconLocationCode,
 };
 
 // export const useDuckDBSchema = () => {

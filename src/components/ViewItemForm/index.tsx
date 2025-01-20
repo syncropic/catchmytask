@@ -15,6 +15,8 @@ interface ViewItemFormProps {
   view_item_id: string;
   view_item_record: any;
   query_state: any;
+  view_record?: any;
+  view_query_state: any;
   // success_message_code?: string;
   // display_mode?: string;
   // query_name?: string;
@@ -28,6 +30,8 @@ export const ViewItemForm = ({
   view_item_record,
   view_item_id,
   query_state,
+  view_record,
+  view_query_state,
 }: ViewItemFormProps) => {
   const { params } = useParsed();
   const {
@@ -75,9 +79,14 @@ export const ViewItemForm = ({
           ...view_item_record,
           id: view_item_id,
           queryKey: `useRunTask_${JSON.stringify(query_state)}`,
+          view_query_state: view_query_state,
+          viewQueryKey: `useExecuteFunctionWithArgs_${JSON.stringify(
+            view_query_state
+          )}`,
         }}
         view_item={view_item_record}
         entity_type="view"
+        view_record={view_record}
         action_form_key={`form_${params?.id}_${view_item_id}`}
         action={"save"}
       />

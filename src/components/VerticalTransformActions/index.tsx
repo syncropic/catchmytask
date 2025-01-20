@@ -8,6 +8,7 @@ import styles from "./NaturalLanguageEditor.module.css";
 import suggestion from "./suggestion";
 import { useAppStore } from "src/store";
 import { useParsed } from "@refinedev/core";
+import ExternalSubmitButton from "@components/SubmitButton";
 
 interface NaturalLanguageEditorProps {
   value: any;
@@ -52,7 +53,6 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
 
   const { activeTask, focused_entities } = useAppStore();
   let action = focused_entities[activeTask?.id]?.["action"];
-  const { params } = useParsed();
 
   return (
     <div style={{ height, display: "flex", flexDirection: "column" }}>
@@ -120,18 +120,36 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
 
 export default NaturalLanguageEditor;
 
-export const NaturalLanguageEditorFormInput = ({ ...props }: any) => {
+export const VerticalTransformActionsFormInput = ({ ...props }: any) => {
+  const { params } = useParsed();
+
   return (
     <>
       {/* {JSON.stringify(props.height)} */}
-      {props?.title && <div>{props?.title}</div>}
+      {/* {props?.title && <div>{props?.title}</div>} */}
+      <div className="flex gap-10 justify-center">
+        <ExternalSubmitButton
+          record={{}}
+          entity_type="sessions"
+          action_form_key={`form_${params?.id}`}
+          action="query"
+          icon={"IconArrowDown"}
+        />
+        <ExternalSubmitButton
+          record={{}}
+          entity_type="sessions"
+          action_form_key={`form_${params?.id}`}
+          action="query"
+          icon={"IconArrowUp"}
+        />
+      </div>
 
-      <NaturalLanguageEditor
+      {/* <NaturalLanguageEditor
         value={props?.value}
         setValue={props?.onChange}
         record={props?.record}
         height={props?.height}
-      />
+      /> */}
     </>
   );
 };

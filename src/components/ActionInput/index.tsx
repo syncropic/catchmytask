@@ -71,6 +71,7 @@ import DynamicFilter, {
 } from "@components/DynamicFilter";
 import { useSession } from "next-auth/react";
 import { useToggleView } from "@components/hooks/useToggleView";
+import { useExecuteFunctionWithArgs } from "@components/hooks/useExecuteFunctionWithArgs";
 
 // Function to map class names to ExcelJS ARGB colors
 const getExcelJSStyleFromClass = (className: string) => {
@@ -134,6 +135,9 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     activeInput,
     filter_form_values,
     open_new_items_in_window,
+    global_developer_mode,
+    expandedRecordIds,
+    setExpandedRecordIds,
   } = useAppStore();
   const queryClient = useQueryClient();
   const go = useGo(); // Navigation function
@@ -181,35 +185,67 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     },
   });
 
-  const responseData = queryClient.getQueryData(["main_form_request"]) as {
-    data: any;
-    response: any;
-  };
+  // const responseData = queryClient.getQueryData(["main_form_request"]) as {
+  //   data: any;
+  //   response: any;
+  // };
 
-  const view_id = activeViewItem?.view_id;
+  // const view_id = activeViewItem?.view_id;
   // const task_id = params?.task_id;
   // const session_id = params?.session_id;
 
-  let fetch_view_by_id_state = {
-    credential: "surrealdb catchmytask dev",
-    success_message_code: view_id,
-    record: {
-      id: view_id,
-    },
-    read_record_mode: "remote",
-  };
+  // let fetch_view_by_id_state = {
+  //   credential: "surrealdb catchmytask dev",
+  //   success_message_code: view_id,
+  //   record: {
+  //     id: view_id,
+  //   },
+  //   read_record_mode: "remote",
+  // };
 
-  const {
-    data: viewData,
-    isLoading: viewIsLoading,
-    error: viewError,
-  } = useReadRecordByState(fetch_view_by_id_state);
+  // const {
+  //   data: viewData,
+  //   isLoading: viewIsLoading,
+  //   error: viewError,
+  // } = useReadRecordByState(fetch_view_by_id_state);
 
-  let view_record = viewData?.data?.find(
-    (item: any) =>
-      item?.message?.code ===
-      String(fetch_view_by_id_state?.success_message_code)
-  )?.data[0];
+  // let view_record = viewData?.data?.find(
+  //   (item: any) =>
+  //     item?.message?.code ===
+  //     String(fetch_view_by_id_state?.success_message_code)
+  // )?.data[0];
+
+  // let view_query_state = {
+  //   // id:
+  //   //   activeView?.id ||
+  //   //   activeTask?.id ||
+  //   //   activeSession?.id ||
+  //   //   activeProfile?.id,
+  //   func_name: "fetch_system_views",
+  //   name: "fetch_system_views",
+  //   // task_id: activeTask?.id,
+  //   // session_id: activeSession?.id,
+  //   // view_id: activeView?.id,
+  //   // profile_id: activeProfile?.id,
+  //   application_id: activeApplication?.id,
+  //   // user_id: String(user_session?.userProfile?.user?.id),
+  //   // author_id: identity?.email || "guest",
+  //   view_name: activeAction?.reference_record?.variables?.summary_message_view,
+  //   success_message_code: "fetch_system_views",
+  // };
+  // const {
+  //   data: viewData,
+  //   isLoading: viewIsLoading,
+  //   error: viewError,
+  // } = useExecuteFunctionWithArgs(view_query_state);
+
+  // let view_records = viewData?.data?.find
+  //   ? viewData?.data?.find(
+  //       (item: any) =>
+  //         item?.message?.code === view_query_state?.success_message_code
+  //     )?.data || []
+  //   : null;
+  // let view_record = view_records ? view_records[0] : null;
 
   const [showVariables, setShowVariables] = useState(false);
 
@@ -342,8 +378,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           ...action_input_form_values,
           [action_input_form_values_key]: {
             ...action_input_form_values[action_input_form_values_key],
-            query_template: view_record?.query,
-            query: view_record?.query,
+            // query_template: view_record?.query,
+            // query: view_record?.query,
           },
         };
         setActionInputFormValues(new_action_input_form_values);
@@ -358,6 +394,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             let reference_item_name = sanitizeSheetName(
               activeAction?.reference_record?.name
             );
+            // console.log(view_query_state);
+            console.log(activeAction?.reference_record);
             // console.log(`globalQuery: ${globalQuery}`);
 
             // let active_view_query_model_data_data_model_query_filters =
@@ -407,13 +445,33 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 )
               : {};
 
-            // console.log(`actionItem:`);
-            // console.log(actionItem);
+            const cachedViewData = queryClient.getQueryData([
+              activeAction?.reference_record?.viewQueryKey,
+            ]) as any;
+
+            let view_records = cachedViewData?.data?.find
+              ? cachedViewData?.data?.find(
+                  (item: any) =>
+                    item?.message?.code ===
+                    activeAction?.reference_record?.view_query_state
+                      ?.success_message_code
+                )?.data || []
+              : null;
+            let view_record = view_records ? view_records[0] : null;
+
+            // let view_record_for_action = cachedViewData?.data?.find
+            //   ? cachedViewData?.data?.find(
+            //       (item: any) => item?.message?.code === "fetch_system_views"
+            //     )
+            //   : {};
+
+            // console.log(`view_record`);
+            // console.log(view_record);
 
             let downloadData = actionItem?.data || [];
             // either read view from the response or retrieve view from external
 
-            let view_record = actionItem?.view || {};
+            // let view_record = actionItem?.view || {};
 
             // Check if data exists
             if (!downloadData || downloadData.length === 0) {
@@ -924,7 +982,12 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   display_items.map((record: any) => {
                     // console.log(item?.entity_type);
                     if (["messages"].includes(record?.entity_type)) {
+                      console.log(`toggleView : ${String(record?.id)}`);
                       toggleView(String(record?.id), record);
+                      console.log(
+                        `setExpandedRecordIds : ${String(record?.id)}`
+                      );
+                      setExpandedRecordIds([String(record?.id)]); // set this to expandd the item
                     }
                   });
                 }
@@ -1304,9 +1367,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   // Filter fields based on required fields in schema
   const filterFields = (fields: any) => {
     const requiredFields =
-      view_record?.data_model?.schema?.required ||
-      data_model?.schema?.required ||
-      [];
+      // view_record?.data_model?.schema?.required ||
+      data_model?.schema?.required || [];
 
     return fields.filter(
       (field: any) => field.key && requiredFields.includes(field.key)
@@ -1333,9 +1395,11 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           field.fieldName || field.title.toLowerCase().replace(/ /g, "_"),
       }));
     }
-    const schema = view_record?.data_model?.schema || data_model?.schema;
+    const schema = data_model?.schema;
+    // const schema = view_record?.data_model?.schema || data_model?.schema;
+
     return schema ? normalizeSchemaFields(schema) : [];
-  }, [fields, view_record?.data_model?.schema, data_model?.schema]);
+  }, [fields, data_model?.schema]);
 
   // // Filter and group the fields
   // const filteredFields = React.useMemo(
@@ -1462,7 +1526,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
   // Check if we should render the form based on required fields
   const hasRequiredFields =
-    view_record?.data_model?.schema?.required?.length > 0 ||
+    // view_record?.data_model?.schema?.required?.length > 0 ||
     data_model?.schema?.required?.length > 0;
 
   if (!hasRequiredFields) return null;
@@ -1501,9 +1565,12 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             {params?.id &&
               user_session?.userProfile?.permissions?.includes(
                 "filter_action_input"
-              ) && (
+              ) &&
+              !global_developer_mode && (
                 <Tooltip
-                  label={`${showVariables ? "hide" : "provide"} variables`}
+                  label={`${
+                    showVariables ? "hide" : "provide"
+                  } optional variables`}
                   key="variables"
                 >
                   <Indicator
@@ -1519,24 +1586,26 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                       leftSection={<IconAdjustments size={20} />}
                       variant={showVariables ? "filled" : "outline"}
                       onClick={toggleVariables}
+                      disabled={!global_developer_mode}
                     >
                       Variables
                     </Button>
                   </Indicator>
                 </Tooltip>
               )}
-            {showVariables && (
-              <DynamicFilter
-                variables={record?.variables_options?.filter((item: any) =>
-                  (
-                    action_input_form_values[action_input_form_values_key]
-                      ?.variables || []
-                  ).includes(item.value)
-                )}
-                action_form_key={action_form_key}
-                onFilterChange={handleFilterChange}
-              />
-            )}
+            {showVariables ||
+              (!global_developer_mode && (
+                <DynamicFilter
+                  variables={record?.variables_options?.filter((item: any) =>
+                    (
+                      action_input_form_values[action_input_form_values_key]
+                        ?.variables || []
+                    ).includes(item.value)
+                  )}
+                  action_form_key={action_form_key}
+                  onFilterChange={handleFilterChange}
+                />
+              ))}
           </div>
         )}
 
@@ -1545,7 +1614,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             const field = data_model?.schema?.properties?.[fieldName];
             if (
               ["variables", "variables_value"].includes(fieldName) &&
-              !showVariables
+              !showVariables &&
+              global_developer_mode
             ) {
               return null;
             }
@@ -1571,7 +1641,6 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   children,
   data_model,
   nested_component,
-  setExpandedRecordIds,
   success_message_code,
   invalidate_queries_on_submit_success,
   description,
@@ -1673,7 +1742,8 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
           // recordData: recordData,
           // record_data: record_data,
           // data_model_data: data_model_data,
-          record_data: record_data?.variables,
+          // record_data: record_data?.variables,
+          action_form_key: action_form_key,
           // data: error?.response?.data,
           // status: error?.response?.status,
         }}

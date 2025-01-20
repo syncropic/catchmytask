@@ -17,6 +17,7 @@ import AutomationsToggle from "@components/AutomationsToggle";
 
 import { ActionIcon, Tooltip, Text } from "@mantine/core";
 import {
+  IconCode,
   IconHttpGet,
   IconIconsOff,
   IconLetterB,
@@ -35,6 +36,7 @@ import { useViewportSize } from "@mantine/hooks";
 import SectionsToggle from "@components/SectionsToggle";
 import { useSession } from "next-auth/react";
 import { useDomainData } from "@components/Utils/useDomainData";
+import SessionsWrapper from "@components/Sessions";
 
 interface HeaderComponentProps {
   authenticatedData?: any;
@@ -64,11 +66,19 @@ const LargeScreenHeader = ({
     setShowRequestResponseView,
     views,
     setMonitorComponents,
+    global_developer_mode,
+    toggleGlobalDeveloperMode,
   } = useAppStore();
   const { updateComponentAction } = useUpdateComponentAction();
   let action = focused_entities[activeTask?.id]?.["action"];
   const { width } = useViewportSize();
   const { data: user_session } = useSession();
+
+  const hasPermission = (permission: string): boolean => {
+    return Boolean(
+      user_session?.userProfile?.permissions?.includes(permission)
+    );
+  };
 
   const handleClearViews = () => {
     go({
@@ -221,6 +231,25 @@ const LargeScreenHeader = ({
           </div>
         )}
 
+        {authenticatedData?.authenticated &&
+          hasPermission("has_developer_mode") && (
+            <div className="hidden lg:block">
+              <div className="flex items-center pl-4 pr-4">
+                <div>
+                  <Tooltip label={`toggle developer mode`} position="top">
+                    <ActionIcon
+                      size="sm"
+                      onClick={toggleGlobalDeveloperMode}
+                      variant={global_developer_mode ? "filled" : "outline"}
+                    >
+                      <IconCode size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                </div>
+              </div>
+            </div>
+          )}
+
         {/* {authenticatedData?.authenticated && (
           <div className="block lg:hidden">
             <Tooltip label="Toggle quick actions" position="top">
@@ -332,7 +361,7 @@ const LargeScreenHeader = ({
         <SectionsToggle />
       )} */}
 
-      {authenticatedData?.authenticated && activeSession && (
+      {/* {authenticatedData?.authenticated && activeSession && (
         <div className="w-full overflow-hidden ">
           <Reveal
             trigger="click"
@@ -354,6 +383,19 @@ const LargeScreenHeader = ({
             <MonacoEditor value={activeSession} language="json" height="50vh" />
           </Reveal>
         </div>
+      )} */}
+
+      {authenticatedData?.authenticated && (
+        <SessionsWrapper
+          // name={action}
+          func_name="fetch_system_sessions"
+          view_id="views:36xo8keq9tsoyly68shk"
+          title="monitor"
+          // record={record}
+          // action={action}
+          display_mode="search_input"
+          success_message_code="fetch_system_sessions"
+        />
       )}
 
       {applicationData?.disabled_sections &&

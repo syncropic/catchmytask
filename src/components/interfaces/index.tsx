@@ -82,7 +82,8 @@ export type ComponentKey =
   | "Switch"
   | "Checkbox"
   | "SearchInput"
-  | "ListEditorFormInput";
+  | "ListEditorFormInput"
+  | "VerticalTransformActionsFormInput";
 
 export type CellTemplateKey = "detail" | "conditionallyformatted" | "text";
 

@@ -308,6 +308,11 @@ export const useAppStore = create(
         const formSections = state.lockedSections[formId] || {};
         return Object.values(formSections);
       },
+      global_developer_mode: false,
+      toggleGlobalDeveloperMode: () =>
+        set((state) => ({
+          global_developer_mode: !state.global_developer_mode,
+        })),
       views: {},
       clearViews: (views) => set((state) => ({ views: {} })),
       // setViews: (views) => set((state) => ({ views })),
@@ -416,6 +421,9 @@ export const useAppStore = create(
       activeAgent: null,
       setActiveAgent: (actionAgent) =>
         set((state) => ({ activeAgent: actionAgent })),
+      expandedRecordIds: [],
+      setExpandedRecordIds: (item) =>
+        set((state) => ({ expandedRecordIds: item })),
       activeViewItem: null,
       setActiveViewItem: (item) => set((state) => ({ activeViewItem: item })),
       setActionModes: (actionModes) =>

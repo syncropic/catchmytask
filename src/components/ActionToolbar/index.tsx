@@ -1,3 +1,4 @@
+import ExternalSubmitButton from "@components/SubmitButton";
 import { Button, Tooltip } from "@mantine/core";
 import {
   IconArrowsMaximize,
@@ -5,6 +6,7 @@ import {
   IconSquareX,
 } from "@tabler/icons-react";
 import React from "react";
+import { useAppStore } from "src/store";
 
 interface UserProfile {
   permissions?: string[];
@@ -40,7 +42,6 @@ interface ActionToolbarProps {
   setSectionIsExpanded: (section: string) => void;
   closeDisplay: (section: string) => void;
   includeComponents?: string[];
-  ExternalSubmitButton: React.ComponentType<ExternalSubmitButtonProps>;
 }
 
 const ActionToolbar: React.FC<ActionToolbarProps> = ({
@@ -52,19 +53,57 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
   setSectionIsExpanded,
   closeDisplay,
   includeComponents = [],
-  ExternalSubmitButton,
 }) => {
   const hasPermission = (permission: string): boolean => {
     return Boolean(userSession?.userProfile?.permissions?.includes(permission));
   };
+  const { global_developer_mode } = useAppStore();
 
   return (
     <div className="w-full flex items-center justify-between bg-gray-50 px-3">
       {/* Toggle Buttons */}
+
       <div className="flex gap-2">
-        {params?.id ? (
+        {params?.id && global_developer_mode && (
           <>
-            {true && (
+            {hasPermission("query_action_input") && (
+              <ExternalSubmitButton
+                record={{}}
+                entity_type="sessions"
+                action_form_key={`form_${params.id}`}
+                action="query"
+              />
+            )}
+          </>
+        )}
+
+        {params?.id && !global_developer_mode && (
+          <>
+            {hasPermission("queue_action_input") && (
+              <ExternalSubmitButton
+                record={{}}
+                entity_type="sessions"
+                action_form_key={`form_${params.id}`}
+                action="queue"
+              />
+            )}
+          </>
+        )}
+        {/* {params?.id && !global_developer_mode && (
+          <>
+            {hasPermission("queue_action_input") && (
+              <ExternalSubmitButton
+                record={{}}
+                entity_type="sessions"
+                action_form_key={`form_${params.id}`}
+                action="connect"
+              />
+            )}
+          </>
+        )} */}
+        {params?.id && global_developer_mode && (
+          <>
+            {/* {true && (
               <Tooltip label="session info">
                 <Button
                   size="compact-sm"
@@ -75,8 +114,8 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
                   Info
                 </Button>
               </Tooltip>
-            )}
-
+            )} */}
+            {/* 
             {hasPermission("describe_action_input") && (
               <Button
                 size="compact-sm"
@@ -90,9 +129,9 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
               >
                 Describe
               </Button>
-            )}
+            )} */}
 
-            {hasPermission("code_action_input") && (
+            {/* {hasPermission("code_action_input") && (
               <Button
                 size="compact-sm"
                 variant={
@@ -103,9 +142,9 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
               >
                 Code
               </Button>
-            )}
+            )} */}
 
-            {hasPermission("terminal_action_input") && (
+            {/* {hasPermission("terminal_action_input") && (
               <Button
                 size="compact-sm"
                 variant={
@@ -116,9 +155,9 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
               >
                 Terminal
               </Button>
-            )}
+            )} */}
 
-            {hasPermission("split_action_input") && (
+            {/* {hasPermission("split_action_input") && (
               <Button
                 size="compact-sm"
                 variant={
@@ -129,28 +168,26 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
               >
                 Split
               </Button>
-            )}
+            )} */}
 
-            {hasPermission("query_action_input") && (
+            {/* {hasPermission("query_action_input") && (
               <ExternalSubmitButton
                 record={{}}
                 entity_type="tasks"
                 action_form_key={`form_${params.id}`}
                 action="query"
               />
-            )}
+            )} */}
 
-            {hasPermission("queue_action_input") && (
+            {/* {hasPermission("queue_action_input") && (
               <ExternalSubmitButton
                 record={{}}
                 entity_type="tasks"
                 action_form_key={`form_${params.id}`}
                 action="queue"
               />
-            )}
+            )} */}
           </>
-        ) : (
-          <div>Select profile → session to continue</div>
         )}
       </div>
 

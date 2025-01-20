@@ -28,6 +28,7 @@ export default function Login({
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { data: session } = useSession();
   const { isLoading, data: isAuthenticatedData } = useIsAuthenticated();
+  const { data: user_session } = useSession();
 
   const content = session ? (
     <div className="text-center">
@@ -79,10 +80,22 @@ export default function Login({
 Login.noLayout = true;
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const session = await getServerSession(context.req, context.res, authOptions);
+  const user_session = await getServerSession(
+    context.req,
+    context.res,
+    authOptions
+  );
+
+  let is_invalid_token = Boolean(
+    user_session?.userProfile?.detail &&
+      typeof user_session.userProfile.detail === "string" &&
+      user_session.userProfile.detail.includes(
+        "Invalid authentication credentials"
+      )
+  );
 
   // If the user is already logged in, redirect to the homepage.
-  if (session) {
+  if (user_session && !is_invalid_token) {
     return { redirect: { destination: "/" } };
   }
 

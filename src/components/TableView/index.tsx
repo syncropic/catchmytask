@@ -65,6 +65,7 @@ import {
 } from "@tabler/icons-react";
 import MessageLabel from "@components/MessageLabel";
 import { useToggleView } from "@components/hooks/useToggleView";
+import ExecutionStatus from "@components/ExecutionStatus";
 
 export function TableView<T extends Record<string, any>>({
   data_items,
@@ -87,6 +88,8 @@ export function TableView<T extends Record<string, any>>({
     activeTask,
     setViews,
     views,
+    expandedRecordIds,
+    setExpandedRecordIds,
   } = useAppStore();
 
   interface RowClickProps<T> {
@@ -161,7 +164,7 @@ export function TableView<T extends Record<string, any>>({
   };
 
   return (
-    <>
+    <Box className="w-full overflow-hidden">
       {data_items && data_fields && (
         <DataTable<T>
           columns={[
@@ -334,29 +337,54 @@ export function TableView<T extends Record<string, any>>({
             }
             return undefined;
           }}
-          rowStyle={({ id }) => {
-            if (view_ids.includes(String(id))) {
-              return {
-                borderLeft: "4px solid #3b82f6", // Medium blue border
-                fontWeight: 500,
-                "& td": {
-                  // Style all td elements within the row
-                  color: "#2563eb !important", // Blue text
-                },
-                "&:hover": {
-                  backgroundColor: "#dbeafe !important", // Slightly darker blue on hover
+          // rowStyle={({ id }) => {
+          //   if (view_ids.includes(String(id))) {
+          //     return {
+          //       borderLeft: "4px solid #3b82f6", // Medium blue border
+          //       fontWeight: 500,
+          //       "& td": {
+          //         // Style all td elements within the row
+          //         color: "#2563eb !important", // Blue text
+          //       },
+          //       "&:hover": {
+          //         backgroundColor: "#dbeafe !important", // Slightly darker blue on hover
+          //         "& td": {
+          //           color: "#1e40af !important", // Darker blue text on hover
+          //         },
+          //       },
+          //     };
+          //   }
+          //   return {
+          //     "&:hover": {
+          //       backgroundColor: "#f8fafc !important", // Very light gray for non-highlighted hover
+          //     },
+          //   };
+          // }}
+          rowStyle={({ id }) => ({
+            maxWidth: "100%", // Ensure rows don't exceed container width
+            ...(view_ids.includes(String(id))
+              ? {
+                  borderLeft: "4px solid #3b82f6",
+                  fontWeight: 500,
                   "& td": {
-                    color: "#1e40af !important", // Darker blue text on hover
+                    color: "#2563eb !important",
+                    maxWidth: "0", // Enable text truncation
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   },
-                },
-              };
-            }
-            return {
-              "&:hover": {
-                backgroundColor: "#f8fafc !important", // Very light gray for non-highlighted hover
-              },
-            };
-          }}
+                  "&:hover": {
+                    backgroundColor: "#dbeafe !important",
+                    "& td": {
+                      color: "#1e40af !important",
+                    },
+                  },
+                }
+              : {
+                  "&:hover": {
+                    backgroundColor: "#f8fafc !important",
+                  },
+                }),
+          })}
           onRowClick={handleRowClick}
           onRowContextMenu={({ record, event }) =>
             showContextMenu([
@@ -386,123 +414,60 @@ export function TableView<T extends Record<string, any>>({
           // striped={true}
           // selectedRecords={selectedRecords}
           // onSelectedRecordsChange={setSelectedRecords}
+          scrollAreaProps={{
+            type: "auto",
+            offsetScrollbars: false,
+            scrollbarSize: 8,
+            scrollHideDelay: 0,
+            viewportProps: {
+              style: {
+                maxWidth: "100%",
+                overflowX: "auto",
+              },
+            },
+          }}
           {...(view_record?.include_items?.includes("row_expansion")
             ? {
                 rowExpansion: {
-                  allowMultiple: true,
-                  trigger: "always",
+                  allowMultiple: false,
+                  expanded: {
+                    recordIds: expandedRecordIds,
+                    onRecordIdsChange: setExpandedRecordIds,
+                  },
+                  trigger: "never",
                   content: ({ record, collapse }) => (
-                    <>
-                      <DataTable<T>
-                        columns={[
-                          // First spread the data fields columns
-                          ...data_fields.map(
-                            (field) =>
-                              ({
-                                id: field?.name,
-                                accessor: field?.name,
-                                ellipsis: true,
-                                title: ["name", "author_id"]?.includes(
-                                  field?.name
-                                )
-                                  ? title
-                                  : null,
-                                render: (record: any) => {
-                                  if (field?.name === "author_id") {
-                                    return (
-                                      <AuthorInfo
-                                        record={record}
-                                        onAction={(e) => handleAction(e, forms)}
-                                        displayConfig={
-                                          authorInfoConfigs.compact
-                                        }
-                                        formatDate={formatDate}
-                                      />
-                                    );
-                                  } else {
-                                    return <div>{record[field?.name]}</div>;
-                                  }
-                                },
-                              } as DataTableColumn<T>)
-                          ),
-
-                          // Then conditionally spread the actions column
-                          ...(view_record?.include_items?.includes("actions")
-                            ? [
-                                {
-                                  accessor: "actions",
-                                  title: <Box mr={6}>actions</Box>,
-                                  textAlign: "right",
-                                  render: (record: any) => (
-                                    <Group
-                                      gap={4}
-                                      justify="right"
-                                      wrap="nowrap"
-                                    >
-                                      {/* {["user"]?.includes(
-                                        record?.author_type
-                                      ) && <></>} */}
-                                      {true && (
-                                        <>
-                                          <Tooltip
-                                            key="view"
-                                            label={`view`}
-                                            position="top"
-                                          >
-                                            <ActionIcon
-                                              size="sm"
-                                              variant="subtle"
-                                              color="green"
-                                              onClick={(e) =>
-                                                handleAction(
-                                                  {
-                                                    record: record,
-                                                    action: "view",
-                                                    e: e,
-                                                  },
-                                                  forms
-                                                )
-                                              }
-                                            >
-                                              <IconPlayerPlay size={24} />
-                                            </ActionIcon>
-                                          </Tooltip>
-                                        </>
-                                      )}
-                                    </Group>
-                                  ),
-                                } as DataTableColumn<T>,
-                              ]
-                            : []),
-                        ]}
-                        noHeader
-                        // sortStatus={localSortStatus}
-                        // onSortStatusChange={customSetSorting}
-                        customRowAttributes={({ id }, recordIndex) => ({
-                          "data-row-first-name": id,
-                          "data-row-index": `${title} - ${recordIndex}`,
-                        })}
-                        scrollViewportRef={viewportRef}
-                        // height="100%"
-                        records={data_items?.[0]?.actions || []}
-                        highlightOnHover={true}
-                        withColumnBorders={true}
-                        pinFirstColumn={true}
-                        {...(view_record?.include_items?.includes("row_click")
-                          ? { onRowClick: handleRowClick }
-                          : {})}
-                        // textSelectionDisabled={isTouch} // 👈 disable text selection on touch devices
-                        pinLastColumn={true}
-                        striped={true}
-                      />
-                    </>
+                    <div className="w-full">
+                      <div className="px-4 py-2">
+                        {record?.actions ? (
+                          <Box
+                            style={{
+                              maxWidth: "100%",
+                              overflowX: "auto",
+                            }}
+                          >
+                            <ExecutionStatus record={record?.actions} />
+                          </Box>
+                        ) : null
+                        // <Box
+                        //   style={{
+                        //     maxWidth: "100%",
+                        //     overflowX: "auto",
+                        //   }}
+                        // >
+                        //   <pre className="whitespace-pre-wrap break-words">
+                        //     {JSON.stringify(record, null, 2)}
+                        //   </pre>
+                        // </Box>
+                        }
+                      </div>
+                    </div>
                   ),
                 },
               }
             : {})}
         />
       )}
-    </>
+    </Box>
   );
 }
 

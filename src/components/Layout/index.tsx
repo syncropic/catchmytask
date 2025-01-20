@@ -49,6 +49,9 @@ import {
 } from "@tabler/icons-react";
 import DynamicFilter from "@components/DynamicFilter";
 import ActionToolbar from "@components/ActionToolbar";
+import { handleLogout } from "@components/Utils/auth";
+import SessionSummaryInfoCard from "@components/Sessions/SessionSummaryInfoCard";
+import DesktopPanelLayout from "./DesktopPanelLayout";
 
 const Layout = ({
   children,
@@ -89,11 +92,12 @@ const Layout = ({
     setActiveLayout,
     sectionIsExpanded,
     setSectionIsExpanded,
+    setNavigationHistory,
+    global_developer_mode,
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
   const { data: user_session } = useSession();
-
-  const { params } = useParsed();
+  const { params, pathname } = useParsed();
 
   const { leftSection, centerSection, rightSection } = activeLayout; // Destructure the sections for visibility checks
 
@@ -125,6 +129,59 @@ const Layout = ({
     }
   };
 
+  let is_invalid_token = Boolean(
+    user_session?.userProfile?.detail &&
+      typeof user_session.userProfile.detail === "string" &&
+      user_session.userProfile.detail.includes(
+        "Invalid authentication credentials"
+      )
+  );
+
+  // Create storage handler for layout persistence
+  const layoutStorage = useMemo(
+    () => ({
+      getItem(name: any) {
+        try {
+          // Check if layout data exists in URL params
+          const layoutData = params?.layout;
+          if (!layoutData) return "";
+          const parsed = JSON.parse(decodeURI(layoutData));
+          return parsed[name] || "";
+        } catch (error) {
+          console.error("Error reading layout:", error);
+          return "";
+        }
+      },
+      setItem(name: any, value: any) {
+        try {
+          // Get existing layout data from params
+          const currentLayout = params?.layout
+            ? JSON.parse(decodeURI(params.layout))
+            : {};
+
+          // Update with new values
+          const newLayout = {
+            ...currentLayout,
+            [name]: value,
+          };
+
+          // // Update URL with new layout data
+          // go({
+          //   to: pathname,
+          //   query: {
+          //     ...params,
+          //     layout: encodeURI(JSON.stringify(newLayout)),
+          //   },
+          //   type: "replace",
+          // });
+        } catch (error) {
+          console.error("Error saving layout:", error);
+        }
+      },
+    }),
+    [params, pathname, go]
+  );
+
   // Automatically hide the scroll hint after a few seconds
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -132,6 +189,35 @@ const Layout = ({
     }, 3000); // Hide after 3 seconds
     return () => clearTimeout(timer);
   }, []);
+
+  // In your UserMenu component:
+  const handleLogoutClick = async () => {
+    setNavigationHistory({
+      pathname: pathname,
+      params: params,
+    });
+
+    // // Clear any app-specific state
+    // setActiveProfile(null);
+    // setActiveFloatingWindow(null);
+    // setIsFloatingWindowOpen(false);
+    // setMonitorComponents([]);
+
+    // Call the utility function to handle complete logout
+    await handleLogout();
+  };
+
+  // Add useEffect near the top of your component where other hooks are
+  useEffect(() => {
+    if (is_invalid_token) {
+      console.log("routing to login page");
+      // handleLogoutClick();
+      go({
+        to: "/login",
+        type: "push",
+      });
+    }
+  }, [is_invalid_token, go]); // Only run when is_invalid_token changes
 
   // Redirect and render logic based on the user's authentication status and path
   if (isLoadingAuthenticatedData || isLoadingDomainData) {
@@ -261,6 +347,14 @@ const Layout = ({
               multiple
               defaultValue={["action_input", "messages", "views"]}
             >
+              {rightSection.isDisplayed && (
+                <Accordion.Item value={"messages"} key={"messages"}>
+                  <Accordion.Control icon={null}>messages</Accordion.Control>
+                  <Accordion.Panel>
+                    <MonitorWrapper></MonitorWrapper>
+                  </Accordion.Panel>
+                </Accordion.Item>
+              )}
               {leftSection.isDisplayed && (
                 <Accordion.Item value={"action_input"} key={"action_input"}>
                   <Accordion.Control icon={null}>input</Accordion.Control>
@@ -273,125 +367,26 @@ const Layout = ({
                       }`}
                     >
                       <div className="h-[85vh] flex flex-col">
-                        {" "}
-                        {/* Using 85% of viewport height */}
-                        {/* Row 1: session switch and actions */}
-                        <div className="flex px-3 py-1">
-                          <SessionsWrapper
-                            // name={action}
-                            func_name="fetch_system_sessions"
-                            view_id="views:36xo8keq9tsoyly68shk"
-                            title="monitor"
-                            // record={record}
-                            // action={action}
-                            display_mode="search_input"
-                            success_message_code="fetch_system_sessions"
-                          />
-                        </div>
-                        {/* Row 2: Action Input Toggle Bar */}
-                        <ActionToolbar
-                          params={params}
-                          userSession={user_session}
-                          activeInput={activeInput}
-                          setActiveInput={setActiveInput}
-                          sectionIsExpanded={sectionIsExpanded}
-                          setSectionIsExpanded={setSectionIsExpanded}
-                          closeDisplay={closeDisplay}
-                          includeComponents={["toolbar"]}
-                          ExternalSubmitButton={ExternalSubmitButton}
-                        />
-                        <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-                          {/* Row 3: Form Display Area */}
-                          <div className="w-full">
-                            {activeInput === "info" && (
-                              <ActionInputWrapper
-                                data_model="info query input"
-                                query_name="data_model"
-                                collection="data_models"
-                                record={{
-                                  id: params?.id,
-                                }}
-                                action="query"
-                                action_form_key={`form_${params?.id}`}
-                                success_message_code="info_query_input"
-                              />
-                            )}
-
-                            {activeInput === "natural_language_query" && (
-                              <ActionInputWrapper
-                                data_model="natural language query input"
-                                query_name="data_model"
-                                collection="data_models"
-                                record={{
-                                  id: params?.id,
-                                }}
-                                action="query"
-                                action_form_key={`form_${params?.id}`}
-                                success_message_code="natural_language_query_input"
-                              />
-                            )}
-                            {activeInput === "structured_query" && (
-                              <ActionInputWrapper
-                                data_model="structured query input"
-                                query_name="data_model"
-                                record={{
-                                  id: params?.id,
-                                }}
-                                action="query"
-                                action_form_key={`form_${params?.id}`}
-                                success_message_code="structured_query_input"
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Accordion.Panel>
-                </Accordion.Item>
-              )}
-
-              {rightSection.isDisplayed && params?.id && (
-                <Accordion.Item value={"messages"} key={"messages"}>
-                  <Accordion.Control icon={null}>messages</Accordion.Control>
-                  <Accordion.Panel>
-                    <MonitorWrapper></MonitorWrapper>
-                  </Accordion.Panel>
-                </Accordion.Item>
-              )}
-              {centerSection.isDisplayed && params?.id && (
-                <Accordion.Item value={"views"} key={"views"}>
-                  <Accordion.Control icon={null}>views</Accordion.Control>
-                  <Accordion.Panel>
-                    <div className="w-full">
-                      {/* // to load in the page content */}
-                      {/* {!select_or_create_to_continue_items.some(
-                              (item) => item === null
-                            ) && children} */}
-                      {children && children}
-                      {select_or_create_to_continue_items.some(
-                        (item) => item === null
-                      ) &&
-                        ["/home", "/"].includes(parsed?.pathname || "") && (
-                          <div className="flex flex-col h-[75vh] items-start justify-center p-4">
-                            <div>
-                              <Breadcrumbs />
-                            </div>
-                            <p className="text-sm text-gray-600 max-w-sm">
-                              <Highlight
-                                component="p"
-                                color="lime"
-                                highlight={["session", "profile"]}
-                                // highlight={
-                                //   select_or_create_to_continue_items_map[
-                                //     nullIndex
-                                //   ] || ""
-                                // }
-                              >
-                                {message || ""}
-                              </Highlight>
-                            </p>
+                        <div className="sticky top-0 z-10">
+                          {!global_developer_mode && activeSession && (
+                            <SessionSummaryInfoCard
+                              session={activeSession}
+                            ></SessionSummaryInfoCard>
+                          )}
+                        </div>{" "}
+                        {!global_developer_mode && (
+                          <div>
+                            <ActionInputWrapper
+                              data_model="user mode query input"
+                              query_name="data_model"
+                              record={{ id: params?.id }}
+                              action="query"
+                              action_form_key={`form_${params?.id}`}
+                              success_message_code="user_mode_query_input"
+                            />
                           </div>
                         )}
+                      </div>
                     </div>
                   </Accordion.Panel>
                 </Accordion.Item>
@@ -399,183 +394,167 @@ const Layout = ({
             </Accordion>
           </div>
         ) : (
-          // Desktop layout with left, center, and right sections
-          <PanelGroup direction="horizontal">
-            {/* Left Panel */}
-            {leftSection.isDisplayed && (
-              <Panel
-                defaultSize={30}
-                minSize={0}
-                style={{ display: leftSection.isDisplayed ? "block" : "none" }}
-              >
-                <div
-                  className={`overflow-auto h-[85vh] ${
-                    effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
-                  }`}
-                >
-                  <div className="h-[85vh] flex flex-col">
-                    {" "}
-                    {/* Using 85% of viewport height */}
-                    {/* Row 1: session switch and actions */}
-                    <div className="flex px-3 py-1">
-                      <SessionsWrapper
-                        // name={action}
-                        func_name="fetch_system_sessions"
-                        view_id="views:36xo8keq9tsoyly68shk"
-                        title="monitor"
-                        // record={record}
-                        // action={action}
-                        display_mode="search_input"
-                        success_message_code="fetch_system_sessions"
+          // Replace this entire PanelGroup section with:
+          <DesktopPanelLayout
+            global_developer_mode={global_developer_mode}
+            leftSection={{
+              isDisplayed: leftSection.isDisplayed,
+              children: (
+                <>
+                  <div className="sticky top-0 z-10">
+                    {!global_developer_mode && activeSession && params?.id && (
+                      <SessionSummaryInfoCard session={activeSession} />
+                    )}
+                  </div>
+                  {!global_developer_mode && (
+                    <div>
+                      <ActionInputWrapper
+                        data_model="user mode query input"
+                        query_name="data_model"
+                        record={{ id: params?.id }}
+                        action="query"
+                        action_form_key={`form_${params?.id}`}
+                        success_message_code="user_mode_query_input"
                       />
                     </div>
-                    {/* <DynamicFilter
-                      onFilterChange={(item) => console.log(item)}
-                    /> */}
-                    {/* Row 2: Action Input Toggle Bar */}
-                    <ActionToolbar
-                      params={params}
-                      userSession={user_session}
-                      activeInput={activeInput}
-                      setActiveInput={setActiveInput}
-                      sectionIsExpanded={sectionIsExpanded}
-                      setSectionIsExpanded={setSectionIsExpanded}
-                      closeDisplay={closeDisplay}
-                      includeComponents={["toolbar"]}
-                      ExternalSubmitButton={ExternalSubmitButton}
-                    />
-                    <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-                      {/* Row 3: Form Display Area */}
-                      {activeInput === "info" && (
-                        <ActionInputWrapper
-                          data_model="info query input"
-                          query_name="data_model"
-                          collection="data_models"
-                          record={{
-                            id: params?.id,
-                          }}
-                          action="query"
-                          action_form_key={`form_${params?.id}`}
-                          success_message_code="info_query_input"
-                        />
-                      )}
-                      <div className="w-full">
-                        {activeInput === "natural_language_query" && (
-                          <ActionInputWrapper
-                            data_model="natural language query input"
-                            query_name="data_model"
-                            record={{
-                              id: params?.id,
-                            }}
-                            action="query"
-                            action_form_key={`form_${params?.id}`}
-                            success_message_code="natural_language_query_input"
-                          />
-                        )}
-                        {activeInput === "structured_query" && (
-                          <ActionInputWrapper
-                            data_model="structured query input"
-                            query_name="data_model"
-                            record={{
-                              id: params?.id,
-                            }}
-                            action="query"
-                            action_form_key={`form_${params?.id}`}
-                            success_message_code="structured_query_input"
-                          />
-                        )}
-                        {activeInput === "terminal_query" && (
-                          <ActionInputWrapper
-                            data_model="terminal query input"
-                            query_name="data_model"
-                            record={{
-                              id: params?.id,
-                            }}
-                            action="query"
-                            action_form_key={`form_${params?.id}`}
-                            success_message_code="terminal_query_input"
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Panel>
-            )}
+                  )}
+                  {global_developer_mode && (
+                    <>
+                      <ActionToolbar
+                        params={params}
+                        userSession={user_session}
+                        activeInput={activeInput}
+                        setActiveInput={setActiveInput}
+                        sectionIsExpanded={sectionIsExpanded}
+                        setSectionIsExpanded={setSectionIsExpanded}
+                        closeDisplay={closeDisplay}
+                        includeComponents={["toolbar"]}
+                      />
+                      <div className="min-h-0 flex-1 overflow-y-auto pb-6">
+                        <div className="w-full h-full">
+                          {" "}
+                          {/* Add h-full here */}
+                          <div className="flex w-full h-full">
+                            {" "}
+                            {/* Removed gap-4 */}
+                            {/* Left Column - Natural Language Query */}
+                            <div className="w-[45%] min-w-0">
+                              <ActionInputWrapper
+                                data_model="natural language query input"
+                                query_name="data_model"
+                                record={{ id: params?.id }}
+                                action="query"
+                                action_form_key={`form_${params?.id}`}
+                                success_message_code="natural_language_query_input"
+                              />
+                            </div>
+                            {/* Middle Column - Submit Buttons (No spacing) */}
+                            <div className="w-auto min-w-0 h-full flex-shrink-0">
+                              <div className="flex flex-col h-full">
+                                {/* First section - 75% height */}
+                                <div className="h-[75%] flex flex-col justify-center">
+                                  <div className="flex flex-col gap-10">
+                                    <ExternalSubmitButton
+                                      record={{}}
+                                      entity_type="sessions"
+                                      action_form_key={`form_${params?.id}`}
+                                      action="query"
+                                      icon={"IconArrowRight"}
+                                    />
+                                    <ExternalSubmitButton
+                                      record={{}}
+                                      entity_type="sessions"
+                                      action_form_key={`form_${params?.id}`}
+                                      action="query"
+                                      icon={"IconArrowLeft"}
+                                    />
+                                  </div>
+                                </div>
 
-            {/* Center Panel */}
-
-            {centerSection.isDisplayed && (
-              <>
-                <PanelResizeHandle>
-                  <ResizeHandle />
-                </PanelResizeHandle>
-                <Panel defaultSize={50} minSize={0}>
-                  {/* {children && children} */}
-                  <div className="">
-                    <div
-                      className={`overflow-auto h-[85vh] ${
-                        effectiveScheme === "light"
-                          ? "bg-gray-100"
-                          : "bg-gray-800"
-                      }`}
-                    >
-                      <div className="h-[85vh] flex flex-col">
-                        {" "}
-                        {/* Using 85% of viewport height */}
-                        {/* Top component */}
-                        {/* <div className="min-h-0 flex-1 overflow-y-auto pb-6"> */}
-                        {/* Row 1: Form Display Area */}
-                        <div className="w-full">
-                          {/* // to load in the page content */}
-                          {/* {!select_or_create_to_continue_items.some(
-                              (item) => item === null
-                            ) && children} */}
-                          {children && children}
-                          {select_or_create_to_continue_items.some(
-                            (item) => item === null
-                          ) &&
-                            ["/home", "/"].includes(parsed?.pathname || "") && (
-                              <div className="flex flex-col h-[75vh] items-center justify-center p-4">
-                                <Breadcrumbs />
-                                <p className="text-sm text-gray-600 text-center max-w-sm">
-                                  <Highlight
-                                    component="p"
-                                    color="lime"
-                                    highlight={["session", "profile"]}
-                                    // highlight={
-                                    //   select_or_create_to_continue_items_map[
-                                    //     nullIndex
-                                    //   ] || ""
-                                    // }
-                                  >
-                                    {message || ""}
-                                  </Highlight>
-                                </p>
+                                {/* Second section - 25% height */}
+                                <div className="h-[25%] flex flex-col justify-end">
+                                  <div className="flex flex-col gap-10">
+                                    <ExternalSubmitButton
+                                      record={{}}
+                                      entity_type="sessions"
+                                      action_form_key={`form_${params?.id}`}
+                                      action="query"
+                                      icon={"IconArrowRight"}
+                                    />
+                                    <ExternalSubmitButton
+                                      record={{}}
+                                      entity_type="sessions"
+                                      action_form_key={`form_${params?.id}`}
+                                      action="query"
+                                      icon={"IconArrowLeft"}
+                                    />
+                                    <ExternalSubmitButton
+                                      record={{}}
+                                      entity_type="command"
+                                      action_form_key={`form_${params?.id}`}
+                                      action="command"
+                                      actionProps={{
+                                        color: "green",
+                                      }}
+                                      icon={"IconLocationCode"}
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                            )}
+                            </div>
+                            {/* Right Column - Structured Query */}
+                            <div className="w-[53%] min-w-0">
+                              <ActionInputWrapper
+                                data_model="structured query input"
+                                query_name="data_model"
+                                record={{ id: params?.id }}
+                                action="query"
+                                action_form_key={`form_${params?.id}`}
+                                success_message_code="structured_query_input"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                  {/* </div> */}
-                </Panel>
-              </>
-            )}
-
-            {/* Right Panel */}
-            {rightSection.isDisplayed && params?.id && (
-              <>
-                <PanelResizeHandle>
-                  <ResizeHandle />
-                </PanelResizeHandle>
-
-                <Panel defaultSize={20} minSize={0}>
-                  <MonitorWrapper></MonitorWrapper>
-                </Panel>
-              </>
-            )}
-          </PanelGroup>
+                    </>
+                  )}
+                </>
+              ),
+            }}
+            centerSection={{
+              isDisplayed: centerSection.isDisplayed,
+              children: (
+                <>
+                  {/* {children}
+                  {select_or_create_to_continue_items.some(
+                    (item) => item === null
+                  ) &&
+                    ["/home", "/"].includes(parsed?.pathname || "") && (
+                      <div className="flex flex-col h-[75vh] items-center justify-center p-4">
+                        <Breadcrumbs />
+                        <p className="text-sm text-gray-600 text-center max-w-sm">
+                          <Highlight
+                            component="p"
+                            color="lime"
+                            highlight={["session", "profile"]}
+                          >
+                            {message || ""}
+                          </Highlight>
+                        </p>
+                      </div>
+                    )} */}
+                </>
+              ),
+            }}
+            rightSection={{
+              isDisplayed: rightSection.isDisplayed,
+              children: <MonitorWrapper />,
+            }}
+            effectiveScheme={effectiveScheme}
+            layoutStorage={layoutStorage}
+          >
+            {children}
+          </DesktopPanelLayout>
         )}
       </AppLayout>
     </Authenticated>

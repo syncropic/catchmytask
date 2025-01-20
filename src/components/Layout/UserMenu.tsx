@@ -304,13 +304,13 @@ export const UserMenu = () => {
           >
             Messages
           </Menu.Item> */}
-          {/* <Menu.Item
+          <Menu.Item
             leftSection={<IconHttpGet size={14} />}
             className={`${showRequestResponseView ? "text-blue-500" : ""}`}
             onClick={toggleShowRequestResponseView}
           >
             Toggle Request Response
-          </Menu.Item> */}
+          </Menu.Item>
           <Menu.Item
             leftSection={
               colorScheme.scheme === "light" ? (

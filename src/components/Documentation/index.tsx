@@ -146,6 +146,7 @@ export function Documentation<T extends Record<string, any>>({
       /> */}
       <div className="h-96 relative border border-gray-300 rounded-md overflow-hidden">
         <NaturalLanguageEditor
+          height="50vh"
           value={createFieldsDocumentationHTML(record?.fields, {
             name: record?.name,
             description: record?.description,

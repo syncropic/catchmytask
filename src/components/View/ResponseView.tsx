@@ -37,6 +37,7 @@ import EmbedComponent from "@components/EmbedComponent";
 import ViewItemForm from "@components/ViewItemForm";
 import { useLiveQuery } from "@components/Utils/useLiveQuery";
 import { ActionStatusInfo } from "@components/MessageLabel";
+import { useExecuteFunctionWithArgs } from "@components/hooks/useExecuteFunctionWithArgs";
 
 interface ResponseViewWrapperProps {}
 
@@ -120,6 +121,21 @@ const ViewItemWrapper = ({ view_item_id }: { view_item_id: string }) => {
           include_components={["toolbar"]}
           view_item_record={view_item_record}
           query_state={{}}
+          view_query_state={{}}
+        />
+      </>
+    );
+  } else if (
+    ["content_stream_query"]?.includes(view_item_record?.message_type)
+  ) {
+    return (
+      <>
+        <ViewItemContentStreamQuery
+          // dataItems={view_item_record}
+          view_item_id={view_item_id}
+          include_components={["toolbar"]}
+          view_item_record={view_item_record}
+          query_state={{}}
         />
       </>
     );
@@ -186,6 +202,38 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
     error: runTaskDataError,
   } = useRunTask(run_task_state);
 
+  let view_query_state = {
+    // id:
+    //   activeView?.id ||
+    //   activeTask?.id ||
+    //   activeSession?.id ||
+    //   activeProfile?.id,
+    func_name: "fetch_system_views",
+    name: "fetch_system_views",
+    // task_id: activeTask?.id,
+    // session_id: activeSession?.id,
+    // view_id: activeView?.id,
+    // profile_id: activeProfile?.id,
+    application_id: activeApplication?.id,
+    // user_id: String(user_session?.userProfile?.user?.id),
+    // author_id: identity?.email || "guest",
+    view_name: view_item_record?.variables?.summary_message_view,
+    success_message_code: "fetch_system_views",
+  };
+  const {
+    data: viewData,
+    isLoading: viewIsLoading,
+    error: viewError,
+  } = useExecuteFunctionWithArgs(view_query_state);
+
+  let view_records = viewData?.data?.find
+    ? viewData?.data?.find(
+        (item: any) =>
+          item?.message?.code === view_query_state?.success_message_code
+      )?.data || []
+    : null;
+  let view_record = view_records ? view_records[0] : null;
+
   if (runTaskDataError) {
     return (
       <>
@@ -210,7 +258,7 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
   let dataItems = actionItem?.data;
   // either read view from the response or retrieve view from external
 
-  let view_record = actionItem?.view;
+  // let view_record = actionItem?.view;
   let include_components = ["toolbar"];
 
   const go = useGo();
@@ -294,10 +342,12 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
           // runTaskData: runTaskData,
           // runTaskDataIsLoading: runTaskDataIsLoading,
           // dataItems: dataItems,
+          // actionItem: actionItem,
+          // viewData: viewData,
           view_record: view_record,
         }}
         language="json"
-        height="25vh"
+        height="65vh"
       ></MonacoEditor> */}
       {runTaskDataIsLoading && (
         <Accordion multiple>
@@ -351,14 +401,17 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
       )}
 
       {dataItems && view_record && (
-        <ViewItem
-          dataItems={dataItems}
-          view_record={view_record}
-          include_components={include_components}
-          view_item_id={view_item_id}
-          view_item_record={view_item_record}
-          query_state={run_task_state}
-        />
+        <>
+          <ViewItem
+            dataItems={dataItems}
+            view_record={view_record}
+            view_query_state={view_query_state}
+            include_components={include_components}
+            view_item_id={view_item_id}
+            view_item_record={view_item_record}
+            query_state={run_task_state}
+          />
+        </>
       )}
     </div>
   );
@@ -393,6 +446,18 @@ const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
     isLoading: runTaskDataIsLoading,
     error: runTaskDataError,
   } = useQueryByState(query_state);
+
+  // return (
+  //   <>
+  //     <MonacoEditor
+  //       value={{
+  //         viewData: viewData,
+  //       }}
+  //       language="json"
+  //       height="25vh"
+  //     ></MonacoEditor>
+  //   </>
+  // );
 
   if (runTaskDataError) {
     return (
@@ -567,6 +632,7 @@ const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
           view_item_id={view_item_id}
           view_item_record={view_item_record}
           query_state={query_state}
+          view_query_state={{}}
         />
       )}
     </div>
@@ -580,6 +646,7 @@ const ViewItemContentEmbed = ({
   view_item_record,
   include_components,
   query_state,
+  view_query_state,
 }: {
   dataItems?: any;
   view_record?: any;
@@ -587,6 +654,7 @@ const ViewItemContentEmbed = ({
   view_item_record: any;
   include_components?: any;
   query_state: any;
+  view_query_state: any;
 }) => {
   let query = `SELECT * FROM messages WHERE id = ${view_item_id}`;
   const {
@@ -596,173 +664,6 @@ const ViewItemContentEmbed = ({
   } = useLiveQuery<Event>(query, "messages");
 
   let dataItemsRetrieved = dataItems || messages;
-
-  // const { width } = useViewportSize();
-  // const { params } = useParsed();
-  // const {
-  //   activeLayout,
-  //   setActiveLayout,
-  //   isFullWindowDisplay,
-  //   setIsFullWindowDisplay,
-  //   views,
-  //   setViews,
-  //   activeProfile,
-  // } = useAppStore();
-
-  // let view_documentation_record = {
-  //   action: {
-  //     id: view_item_record?.id,
-  //     name: view_item_record?.name,
-  //     function: view_item_record?.func_name,
-  //   },
-  //   session: {
-  //     id: view_item_record?.session_id,
-  //   },
-  //   credential: {
-  //     id: view_item_record?.credential_id,
-  //   },
-  //   task: {
-  //     id: view_item_record?.task_id,
-  //     variables: view_item_record?.variables,
-  //   },
-  //   author: {
-  //     id: view_item_record?.author_id,
-  //   },
-  //   timestamp: {
-  //     created_datetime: view_item_record?.created_datetime,
-  //     updated_datetime: view_item_record?.updated_datetime,
-  //   },
-  //   view: {
-  //     id: view_item_record?.view_id,
-  //     fields: view_record?.fields || [],
-  //   },
-  //   status: {
-  //     action_status: view_item_record?.action_status,
-  //   },
-  // };
-
-  // let subheading_object = view_item_record?.variables
-  //   ? extractKeys(
-  //       view_item_record?.variables,
-  //       [
-  //         "application_id",
-  //         "profile_id",
-  //         "session_id",
-  //         "task_id",
-  //         "execution_mode",
-  //         "breakpoint",
-  //         "summary_message_code",
-  //         "task_name",
-  //         "variables_output",
-  //         "variables",
-  //       ],
-  //       "exclude"
-  //     )
-  //   : {};
-
-  // // Format the JSON string on a single line
-  // const formatObject = (obj: any) => {
-  //   return Object.entries(obj)
-  //     .map(([key, value]) => `${key}: ${value}`)
-  //     .join("  •  "); // Using bullet point as separator for better readability
-  // };
-
-  // const subheading = formatObject(subheading_object);
-
-  // const toggleFullWindowDisplay = () => {
-  //   setIsFullWindowDisplay(!isFullWindowDisplay);
-  // };
-
-  // const toggleItemFullWindowDisplay = () => {
-  //   toggleFullWindowDisplay();
-  //   if (!isFullWindowDisplay) {
-  //     if (activeLayout) {
-  //       const newLayout = { ...activeLayout };
-  //       newLayout.leftSection.isDisplayed = false;
-  //       newLayout.rightSection.isDisplayed = false;
-  //       setActiveLayout(newLayout);
-  //     }
-  //   } else {
-  //     if (activeLayout) {
-  //       const newLayout = { ...activeLayout };
-  //       newLayout.leftSection.isDisplayed = true;
-  //       newLayout.rightSection.isDisplayed = true;
-  //       setActiveLayout(newLayout);
-  //     }
-  //   }
-  // };
-  // const go = useGo();
-  // let view_ids = Object.keys(views);
-
-  // const toggleView = (id: string, record: any) => {
-  //   // Access the current views from your zustand store
-  //   const currentViews = views;
-
-  //   // Check if the item exists in views
-  //   const existingView = currentViews[id];
-
-  //   const toggleItemInList = (list: any, itemId: any) => {
-  //     // Check if item exists in list
-  //     const exists = list.includes(itemId);
-
-  //     if (exists) {
-  //       // If exists, filter it out
-  //       return list.filter((id: string) => id !== itemId);
-  //     } else {
-  //       // If doesn't exist, add it to the list (spreading the existing list)
-  //       return [...list, itemId];
-  //     }
-  //   };
-
-  //   if (existingView) {
-  //     // Remove the view if it exists
-  //     // const { [id]: removedView, ...remainingViews } = currentViews;
-  //     setViews(id, null);
-  //     let new_view_ids = toggleItemInList(view_ids, id);
-  //     const queryParams: {
-  //       profile_id: string;
-  //       [key: string]: string;
-  //     } = {
-  //       profile_id: String(activeProfile?.id),
-  //     };
-
-  //     if (new_view_ids?.length > 0) {
-  //       queryParams.view_items = String(new_view_ids);
-  //     }
-  //     go({
-  //       // to: {
-  //       //   resource: "sessions",
-  //       //   action: "show",
-  //       //   id: record?.id,
-  //       // },
-  //       query: queryParams,
-  //       type: "push",
-  //     });
-  //   } else {
-  //     // Add the view if it doesn't exist
-  //     setViews(id, record);
-  //     let new_view_ids = [...view_ids, id];
-  //     const queryParams: {
-  //       profile_id: string;
-  //       [key: string]: string;
-  //     } = {
-  //       profile_id: String(activeProfile?.id),
-  //     };
-
-  //     if (new_view_ids?.length > 0) {
-  //       queryParams.view_items = String(new_view_ids);
-  //     }
-  //     go({
-  //       // to: {
-  //       //   resource: "sessions",
-  //       //   action: "show",
-  //       //   id: record?.id,
-  //       // },
-  //       query: queryParams,
-  //       type: "push",
-  //     });
-  //   }
-  // };
 
   return (
     // <>
@@ -779,7 +680,125 @@ const ViewItemContentEmbed = ({
       include_components={["toolbar"]}
       view_item_record={view_item_record}
       query_state={{}}
+      view_query_state={view_query_state}
     />
+  );
+};
+
+const ViewItemContentStreamQuery = ({
+  dataItems,
+  // view_record,
+  view_item_id,
+  view_item_record,
+  include_components,
+  query_state,
+}: {
+  dataItems?: any;
+  // view_record?: any;
+  view_item_id: string;
+  view_item_record: any;
+  include_components?: any;
+  query_state: any;
+}) => {
+  const { activeApplication } = useAppStore();
+  // let query = `SELECT * FROM messages WHERE id = ${view_item_id}`;
+  // const {
+  //   data: messages,
+  //   error: messagesError,
+  //   loading: messagesLoading,
+  // } = useLiveQuery<Event>(query, "messages");
+
+  // let dataItemsRetrieved = dataItems || messages;
+
+  let stream_query_state = {
+    // id:
+    //   activeView?.id ||
+    //   activeTask?.id ||
+    //   activeSession?.id ||
+    //   activeProfile?.id,
+    func_name: "stream",
+    name: "stream",
+    // task_id: activeTask?.id,
+    // session_id: activeSession?.id,
+    // view_id: activeView?.id,
+    // profile_id: activeProfile?.id,
+    application_id: activeApplication?.id,
+    // user_id: String(user_session?.userProfile?.user?.id),
+    // author_id: identity?.email || "guest",
+    // view_name: view_item_record?.variables?.summary_message_view,
+    success_message_code: "stream",
+    content_stream_query_credential_id:
+      view_item_record?.variables?.content_stream_query_credential_id,
+    query: view_item_record?.variables?.content_stream_query,
+  };
+  const {
+    data: streamData,
+    isLoading: streamDataIsLoading,
+    error: streamDataError,
+  } = useExecuteFunctionWithArgs(stream_query_state);
+
+  let dataItemsRetrieved = streamData?.data?.find
+    ? streamData?.data?.find(
+        (item: any) =>
+          item?.message?.code === stream_query_state?.success_message_code
+      )?.data || []
+    : null;
+
+  let view_query_state = {
+    // id:
+    //   activeView?.id ||
+    //   activeTask?.id ||
+    //   activeSession?.id ||
+    //   activeProfile?.id,
+    func_name: "fetch_system_views",
+    name: "fetch_system_views",
+    // task_id: activeTask?.id,
+    // session_id: activeSession?.id,
+    // view_id: activeView?.id,
+    // profile_id: activeProfile?.id,
+    application_id: activeApplication?.id,
+    // user_id: String(user_session?.userProfile?.user?.id),
+    // author_id: identity?.email || "guest",
+    view_name: view_item_record?.variables?.summary_message_view,
+    success_message_code: "fetch_system_views",
+  };
+  const {
+    data: viewData,
+    isLoading: viewIsLoading,
+    error: viewError,
+  } = useExecuteFunctionWithArgs(view_query_state);
+
+  let view_records = viewData?.data?.find
+    ? viewData?.data?.find(
+        (item: any) =>
+          item?.message?.code === view_query_state?.success_message_code
+      )?.data || []
+    : null;
+  let view_record = view_records ? view_records[0] : null;
+
+  return (
+    <>
+      {/* <MonacoEditor
+        value={{
+          view_record,
+          // viewData: viewData,
+          // query: "query",
+          // view_item_record: view_item_record?.variables?.content_stream_query,
+          // content_stream_query_credential_id:
+          //   view_item_record?.variables?.content_stream_query_credential_id,
+          // dataItemsRetrieved: dataItemsRetrieved
+        }}
+      ></MonacoEditor> */}
+      <ViewItem
+        view_record={view_record}
+        dataItems={dataItemsRetrieved}
+        view_item_id={view_item_id}
+        include_components={["toolbar"]}
+        view_item_record={view_item_record}
+        query_state={{}}
+        view_query_state={view_query_state}
+      />
+    </>
   );
 };
 
@@ -790,6 +809,7 @@ const ViewItem = ({
   view_item_record,
   include_components,
   query_state,
+  view_query_state,
 }: {
   dataItems: any;
   view_record?: any;
@@ -797,6 +817,7 @@ const ViewItem = ({
   view_item_record: any;
   include_components?: any;
   query_state: any;
+  view_query_state: any;
 }) => {
   const { width } = useViewportSize();
   const { params } = useParsed();
@@ -808,6 +829,7 @@ const ViewItem = ({
     views,
     setViews,
     activeProfile,
+    activeApplication,
   } = useAppStore();
 
   let view_documentation_record = {
@@ -1057,6 +1079,8 @@ const ViewItem = ({
                     action_form_key={`form_${params?.id}_${view_item_id}`}
                     view_item_id={view_item_id}
                     query_state={query_state}
+                    view_record={view_record}
+                    view_query_state={view_query_state}
                   ></ViewItemForm>
                 </div>
               </div>
@@ -1074,6 +1098,9 @@ const ViewItem = ({
                     ...view_item_record,
                     id: view_item_id,
                     queryKey: `useRunTask_${JSON.stringify(query_state)}`,
+                    viewQueryKey: `useExecuteFunctionWithArgs_${JSON.stringify(
+                      view_query_state
+                    )}`,
                   }}
                   view_item={view_record}
                   entity_type="view"

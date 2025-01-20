@@ -16,6 +16,8 @@ import {
   IconQuestionMark,
   IconPlayerPlay,
   IconX,
+  IconChevronUp,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import { useCustomMutation, useGetIdentity, useParsed } from "@refinedev/core";
 import { useAppStore } from "src/store";
@@ -47,6 +49,7 @@ interface MessageLabelRecord {
   task_id?: string;
   action_status?: ActionStatus;
   variables?: Record<string, any>;
+  id: string;
 }
 
 interface MessageLabelProps {
@@ -80,6 +83,21 @@ export const ActionStatusInfo: React.FC<{
   isRerunning?: boolean;
 }> = ({ record, onRerun, onCancel, isRerunning }) => {
   const { data: user_session } = useSession();
+
+  const { expandedRecordIds, setExpandedRecordIds } = useAppStore();
+
+  const isExpanded =
+    String(record.id) && expandedRecordIds.includes(String(record.id));
+
+  const handleExpandToggle = useCallback(() => {
+    if (!record.id) return;
+
+    if (isExpanded) {
+      setExpandedRecordIds([]);
+    } else {
+      setExpandedRecordIds([String(record.id)]);
+    }
+  }, [record.id, isExpanded, setExpandedRecordIds]);
 
   const getStatusConfig = (status?: ActionStatus): StatusConfig => {
     const configs: Record<ActionStatus, StatusConfig> = {
@@ -183,6 +201,32 @@ export const ActionStatusInfo: React.FC<{
             </Button>
           )}
       </div>
+      <div className="flex items-center space-x-2 min-w-0">
+        {" "}
+        {record.id && (
+          <Button
+            size="xs"
+            variant="subtle"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleExpandToggle();
+            }}
+            className="flex items-center gap-1"
+          >
+            {isExpanded ? (
+              <>
+                <IconChevronUp size={16} />
+                Collapse
+              </>
+            ) : (
+              <>
+                <IconChevronDown size={16} />
+                Expand
+              </>
+            )}
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
@@ -194,9 +238,13 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
 }) => {
   const { runtimeConfig: config } = useAppStore();
   const { mutate, isLoading: isRerunning } = useCustomMutation();
-
   const { params } = useParsed();
   const { data: identity } = useGetIdentity<IIdentity>();
+
+  const { expandedRecordIds, setExpandedRecordIds } = useAppStore();
+
+  const isExpanded =
+    String(record.id) && expandedRecordIds.includes(String(record.id));
 
   const {
     views,
@@ -365,22 +413,28 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
           >
             {record.author_id || ""}
           </Text>
-          <div className="flex flex-col items-end gap-1 flex-shrink-0">
-            <Text size="sm" className="text-gray-500">
-              {formattedTime}
-            </Text>
-            {record.action_status && (
-              <ActionStatusInfo
-                record={record}
-                onRerun={handleRerun}
-                onCancel={onCancel}
-                isRerunning={isRerunning}
-              />
-            )}
+          <div className="flex items-center gap-2">
+            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+              <Text size="sm" className="text-gray-500">
+                {formattedTime}
+              </Text>
+              {record.action_status && (
+                <ActionStatusInfo
+                  record={record}
+                  onRerun={handleRerun}
+                  onCancel={onCancel}
+                  isRerunning={isRerunning}
+                />
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="w-full min-w-0 space-y-1">
+        <div
+          className={`w-full min-w-0 space-y-1 ${
+            isExpanded ? "" : "max-h-32 overflow-hidden"
+          }`}
+        >
           <Text
             size="sm"
             className="font-medium text-gray-900 break-words whitespace-pre-wrap w-full overflow-hidden"

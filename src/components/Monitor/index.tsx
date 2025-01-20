@@ -210,7 +210,7 @@ export const MonitorWrapper = ({
 
   return (
     <div className="flex flex-col p-3 gap-2 h-[85vh] overflow-y-auto">
-      {user_session?.userProfile?.monitor_options?.length > 1 && (
+      {/* {user_session?.userProfile?.monitor_options?.length > 1 && (
         <div className="flex justify-between items-center gap-1">
           <div className="w-full">
             <MultiSelect
@@ -223,7 +223,7 @@ export const MonitorWrapper = ({
               clearable
             />
           </div>
-          {/* <TextInput size="xs" placeholder="search" /> */}
+          <TextInput size="xs" placeholder="search" />
           <Tooltip
             withArrow
             transitionProps={{ duration: 200 }}
@@ -243,9 +243,9 @@ export const MonitorWrapper = ({
             </ActionIcon>
           </Tooltip>
         </div>
-      )}
+      )} */}
 
-      {monitorComponents?.includes("profile explorer") && (
+      {/* {monitorComponents?.includes("profile explorer") && (
         <>
           <MultiSelect
             size="xs"
@@ -258,7 +258,7 @@ export const MonitorWrapper = ({
           />
           <ExplorerWrapper />
         </>
-      )}
+      )} */}
 
       {actions &&
         actionsViewRecord &&
@@ -284,7 +284,7 @@ export const MonitorWrapper = ({
         messagesViewRecord &&
         monitorComponents?.includes("messages") && (
           <>
-            <MultiSelect
+            {/* <MultiSelect
               size="xs"
               // placeholder="filter"
               value={["messages"]}
@@ -292,7 +292,7 @@ export const MonitorWrapper = ({
               searchable
               clearable
               disabled
-            />
+            /> */}
             <TableView
               data_fields={messagesViewRecord?.fields}
               data_items={messages}
@@ -320,7 +320,7 @@ export const MonitorWrapper = ({
             />
           </>
         )}
-      {user_session?.userProfile?.monitor_options?.includes("memory") && (
+      {/* {user_session?.userProfile?.monitor_options?.includes("memory") && (
         <div>
           <div>
             <Accordion multiple defaultValue={[]}>
@@ -333,22 +333,16 @@ export const MonitorWrapper = ({
                     value={{
                       responseData: responseData,
                     }}
-                    height="35vh"
+                    height="65vh"
                     language="json"
                   ></MonacoEditor>
                 </Accordion.Panel>
               </Accordion.Item>
             </Accordion>
-            {/* <AccordionComponent
-            sections={viewSearchActionAccordionConfig}
-            activeView={{}}
-            activeTask={{}}
-            defaultExpandedValues={[]}
-            action={"filters"}
-          /> */}
+           
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

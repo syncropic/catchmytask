@@ -189,9 +189,9 @@ export const SessionsWrapper = ({
           placeholder="sessions"
           handleOptionSubmit={handleSessionSelect}
           data_items={dataItems?.[0]?.items}
-          include_action_icons={
-            user_session?.userProfile?.session_actions || []
-          }
+          // include_action_icons={
+          //   user_session?.userProfile?.session_actions || []
+          // }
           activeFilters={[
             {
               id: 1,
