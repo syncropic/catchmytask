@@ -77,7 +77,7 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
           </>
         )}
 
-        {params?.id && !global_developer_mode && (
+        {params?.id && (
           <>
             {hasPermission("queue_action_input") && (
               <ExternalSubmitButton

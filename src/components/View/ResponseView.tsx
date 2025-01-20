@@ -343,8 +343,9 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
           // runTaskDataIsLoading: runTaskDataIsLoading,
           // dataItems: dataItems,
           // actionItem: actionItem,
+          view_item_record: view_item_record,
           // viewData: viewData,
-          view_record: view_record,
+          // view_record: view_record,
         }}
         language="json"
         height="65vh"

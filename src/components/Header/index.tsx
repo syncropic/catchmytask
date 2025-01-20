@@ -386,16 +386,15 @@ const LargeScreenHeader = ({
       )} */}
 
       {authenticatedData?.authenticated && (
-        <SessionsWrapper
-          // name={action}
-          func_name="fetch_system_sessions"
-          view_id="views:36xo8keq9tsoyly68shk"
-          title="monitor"
-          // record={record}
-          // action={action}
-          display_mode="search_input"
-          success_message_code="fetch_system_sessions"
-        />
+        <div className="w-[600px] ">
+          <SessionsWrapper
+            func_name="fetch_system_sessions"
+            view_id="views:36xo8keq9tsoyly68shk"
+            title="monitor"
+            display_mode="search_input"
+            success_message_code="fetch_system_sessions"
+          />
+        </div>
       )}
 
       {applicationData?.disabled_sections &&
