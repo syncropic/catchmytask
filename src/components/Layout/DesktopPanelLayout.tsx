@@ -133,7 +133,7 @@ const DesktopPanelLayout: React.FC<DesktopPanelLayoutProps> = ({
             }`}
           >
             <div className="h-[85vh] flex flex-col">
-              {children}
+              {/* {children} */}
               {centerSection.children}
             </div>
           </div>

@@ -9,6 +9,7 @@ import {
   extractKeys,
   getLabel,
   getTooltipLabel,
+  useIsMobile,
   useQueryByState,
   useRunTask,
 } from "@components/Utils";
@@ -158,6 +159,7 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
     activeSession,
     activeView,
     setViews,
+    displayJSONView,
   } = useAppStore();
   const { params } = useParsed();
   const { data: identity } = useGetIdentity<IIdentity>();
@@ -336,20 +338,26 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
 
   return (
     <div>
-      {/* <MonacoEditor
-        value={{
-          // error: runTaskDataError,
-          // runTaskData: runTaskData,
-          // runTaskDataIsLoading: runTaskDataIsLoading,
-          // dataItems: dataItems,
-          // actionItem: actionItem,
-          view_item_record: view_item_record,
-          // viewData: viewData,
-          // view_record: view_record,
-        }}
-        language="json"
-        height="65vh"
-      ></MonacoEditor> */}
+      {displayJSONView && (
+        <div>
+          <div>{`${view_item_record?.name} | ${view_item_record?.id}`}</div>
+          <MonacoEditor
+            value={{
+              error: runTaskDataError,
+              runTaskData: runTaskData,
+              // runTaskDataIsLoading: runTaskDataIsLoading,
+              dataItems: dataItems,
+              // actionItem: actionItem,
+              view_item_record: view_item_record,
+              // viewData: viewData,
+              view_record: view_record,
+            }}
+            language="json"
+            height="65vh"
+          ></MonacoEditor>
+        </div>
+      )}
+
       {runTaskDataIsLoading && (
         <Accordion multiple>
           <Accordion.Item value={view_item_id} key={view_item_id}>
@@ -822,6 +830,7 @@ const ViewItem = ({
 }) => {
   const { width } = useViewportSize();
   const { params } = useParsed();
+  const isMobile = useIsMobile();
   const {
     activeLayout,
     setActiveLayout,
@@ -998,7 +1007,8 @@ const ViewItem = ({
             <div className="flex items-center gap-1">
               {/* <Loader size={18} /> */}
               {/* <ActionStatusInfo record={item} isRerunning={true} /> */}
-              {!view_record?.fields?.length &&
+              {!isMobile &&
+                !view_record?.fields?.length &&
                 dataItems?.map((item: any, index: number) => {
                   if (
                     item?.view_id == "embed_url" ||
@@ -1093,6 +1103,34 @@ const ViewItem = ({
                 className="flex p-3 gap-3 items-center"
                 onClick={(e) => e.stopPropagation()}
               >
+                {isMobile &&
+                  !view_record?.fields?.length &&
+                  dataItems?.map((item: any, index: number) => {
+                    if (
+                      item?.view_id == "embed_url" ||
+                      item?.message_type == "content_embed_url"
+                    ) {
+                      return (
+                        <>
+                          <div>
+                            {
+                              <ActionStatusInfo
+                                record={item}
+                                isRerunning={true}
+                              />
+                            }
+                          </div>
+                        </>
+                      );
+                      // if (item?.action_status == "running") {
+                      //   return <Loader size={18} />;
+                      // } else {
+                      //   return null;
+                      // }
+                    } else {
+                      return null;
+                    }
+                  })}
                 <ExternalSubmitButton
                   record={{}}
                   reference_record={{

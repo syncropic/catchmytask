@@ -23,6 +23,7 @@ import { useCustomMutation, useGetIdentity, useParsed } from "@refinedev/core";
 import { useAppStore } from "src/store";
 import { IIdentity } from "@components/interfaces";
 import { useSession } from "next-auth/react";
+import { useIsMobile } from "@components/Utils";
 
 type ActionStatus =
   | "empty"
@@ -56,6 +57,7 @@ interface MessageLabelProps {
   record: MessageLabelRecord;
   onRerun?: (record: MessageLabelRecord) => void;
   onCancel?: (record: MessageLabelRecord) => void;
+  showCollapse?: boolean;
 }
 
 const extractKeys = (
@@ -76,14 +78,51 @@ const extractKeys = (
   }, {} as Record<string, any>);
 };
 
+const getStatusConfig = (status?: ActionStatus): StatusConfig => {
+  const configs: Record<ActionStatus, StatusConfig> = {
+    empty: {
+      icon: IconCircle,
+      color: "text-gray-400",
+      bgColor: "bg-gray-50",
+    },
+    pending: {
+      icon: IconClock,
+      color: "text-orange-500",
+      bgColor: "bg-orange-50",
+    },
+    scheduled: {
+      icon: IconClock,
+      color: "text-orange-500",
+      bgColor: "bg-orange-50",
+    },
+    running: {
+      icon: IconClock,
+      color: "text-blue-500",
+      bgColor: "bg-blue-50",
+    },
+    failed: {
+      icon: IconCircleX,
+      color: "text-red-500",
+      bgColor: "bg-red-50",
+    },
+    passed: {
+      icon: IconCircleCheck,
+      color: "text-green-500",
+      bgColor: "bg-green-50",
+    },
+  };
+
+  return configs[status || "empty"] || configs.empty;
+};
+
 export const ActionStatusInfo: React.FC<{
   record: MessageLabelRecord;
   onRerun?: (record: MessageLabelRecord) => void;
   onCancel?: (record: MessageLabelRecord) => void;
   isRerunning?: boolean;
-}> = ({ record, onRerun, onCancel, isRerunning }) => {
+  showCollapse?: boolean;
+}> = ({ record, onRerun, onCancel, isRerunning, showCollapse }) => {
   const { data: user_session } = useSession();
-
   const { expandedRecordIds, setExpandedRecordIds } = useAppStore();
 
   const isExpanded =
@@ -91,50 +130,12 @@ export const ActionStatusInfo: React.FC<{
 
   const handleExpandToggle = useCallback(() => {
     if (!record.id) return;
-
     if (isExpanded) {
       setExpandedRecordIds([]);
     } else {
       setExpandedRecordIds([String(record.id)]);
     }
   }, [record.id, isExpanded, setExpandedRecordIds]);
-
-  const getStatusConfig = (status?: ActionStatus): StatusConfig => {
-    const configs: Record<ActionStatus, StatusConfig> = {
-      empty: {
-        icon: IconCircle,
-        color: "text-gray-400",
-        bgColor: "bg-gray-50",
-      },
-      pending: {
-        icon: IconClock,
-        color: "text-orange-500",
-        bgColor: "bg-orange-50",
-      },
-      scheduled: {
-        icon: IconClock,
-        color: "text-orange-500",
-        bgColor: "bg-orange-50",
-      },
-      running: {
-        icon: IconClock,
-        color: "text-blue-500",
-        bgColor: "bg-blue-50",
-      },
-      failed: {
-        icon: IconCircleX,
-        color: "text-red-500",
-        bgColor: "bg-red-50",
-      },
-      passed: {
-        icon: IconCircleCheck,
-        color: "text-green-500",
-        bgColor: "bg-green-50",
-      },
-    };
-
-    return configs[status || "empty"] || configs.empty;
-  };
 
   const config = getStatusConfig(record.action_status);
   const StatusIcon = config.icon;
@@ -150,11 +151,7 @@ export const ActionStatusInfo: React.FC<{
                   visible={true}
                   zIndex={1000}
                   overlayProps={{ radius: "sm", blur: 8 }}
-                  loaderProps={{
-                    color: "blue",
-                    size: "xs",
-                    type: "dots",
-                  }}
+                  loaderProps={{ color: "blue", size: "xs", type: "dots" }}
                 />
                 loading
               </Box>
@@ -177,11 +174,9 @@ export const ActionStatusInfo: React.FC<{
   };
 
   return (
-    <div className="flex flex-col space-y-2 min-w-0">
-      <div className="flex items-center space-x-2 flex-wrap">
-        {renderContent()}
-      </div>
-      <div className="flex items-center space-x-2 min-w-0">
+    <div className="flex items-center justify-between gap-2">
+      {renderContent()}
+      <div className="flex items-center gap-2">
         {!["running", "pending"].includes(record.action_status || "") &&
           !isRerunning &&
           user_session?.userProfile?.permissions?.includes(
@@ -195,15 +190,11 @@ export const ActionStatusInfo: React.FC<{
                 e.stopPropagation();
                 onRerun?.(record);
               }}
-              className="flex-1 min-w-0"
             >
               Re-run
             </Button>
           )}
-      </div>
-      <div className="flex items-center space-x-2 min-w-0">
-        {" "}
-        {record.id && (
+        {record.id && showCollapse && (
           <Button
             size="xs"
             variant="subtle"
@@ -214,15 +205,9 @@ export const ActionStatusInfo: React.FC<{
             className="flex items-center gap-1"
           >
             {isExpanded ? (
-              <>
-                <IconChevronUp size={16} />
-                Collapse
-              </>
+              <IconChevronUp size={16} />
             ) : (
-              <>
-                <IconChevronDown size={16} />
-                Expand
-              </>
+              <IconChevronDown size={16} />
             )}
           </Button>
         )}
@@ -235,12 +220,13 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
   record,
   onRerun,
   onCancel,
+  showCollapse = true,
 }) => {
   const { runtimeConfig: config } = useAppStore();
   const { mutate, isLoading: isRerunning } = useCustomMutation();
   const { params } = useParsed();
   const { data: identity } = useGetIdentity<IIdentity>();
-
+  const isMobile = useIsMobile();
   const { expandedRecordIds, setExpandedRecordIds } = useAppStore();
 
   const isExpanded =
@@ -405,58 +391,54 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
         </div>
       }
     >
-      <div className="w-full flex flex-col py-2 px-3 gap-1 cursor-pointer hover:bg-gray-50">
-        <div className="flex items-center justify-between gap-2 min-w-0 flex-wrap">
-          <Text
-            size="sm"
-            className="text-gray-600 font-medium truncate min-w-0 flex-1"
-          >
+      <div className="w-full flex flex-col py-2 px-3 gap-2 cursor-pointer hover:bg-gray-50">
+        {/* Author and Timestamp Row */}
+        <div className="flex justify-between items-center">
+          <Text size="sm" className="text-gray-600 font-medium">
             {record.author_id || ""}
           </Text>
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col items-end gap-1 flex-shrink-0">
-              <Text size="sm" className="text-gray-500">
-                {formattedTime}
-              </Text>
-              {record.action_status && (
-                <ActionStatusInfo
-                  record={record}
-                  onRerun={handleRerun}
-                  onCancel={onCancel}
-                  isRerunning={isRerunning}
-                />
-              )}
-            </div>
-          </div>
+          <Text size="sm" className="text-gray-500">
+            {formattedTime}
+          </Text>
         </div>
 
-        <div
-          className={`w-full min-w-0 space-y-1 ${
-            isExpanded ? "" : "max-h-32 overflow-hidden"
-          }`}
+        {/* Heading Row */}
+        <Text
+          size="sm"
+          className="font-medium text-gray-900 break-words whitespace-pre-wrap w-full"
         >
+          {heading}
+        </Text>
+
+        {/* Subheading Row */}
+        {subheading && (
           <Text
             size="sm"
-            className="font-medium text-gray-900 break-words whitespace-pre-wrap w-full overflow-hidden"
+            className="text-gray-600 break-words whitespace-pre-wrap w-full"
           >
-            {heading}
+            {subheading}
           </Text>
+        )}
 
-          {subheading && (
-            <Text
-              size="sm"
-              className="text-gray-600 break-words whitespace-pre-wrap w-full overflow-hidden"
-            >
-              {subheading}
-            </Text>
-          )}
+        {/* Action Status Row */}
+        {record.action_status && (
+          <div className="w-full">
+            <ActionStatusInfo
+              record={record}
+              onRerun={handleRerun}
+              onCancel={onCancel}
+              isRerunning={isRerunning}
+              showCollapse={showCollapse}
+            />
+          </div>
+        )}
 
-          {Object.keys(filteredVariables).length > 0 && (
-            <div className="whitespace-pre-wrap font-mono text-xs text-gray-500 mt-0.5 overflow-x-auto">
-              {formatVariables(filteredVariables)}
-            </div>
-          )}
-        </div>
+        {/* Variables Row */}
+        {Object.keys(filteredVariables).length > 0 && (
+          <div className="whitespace-pre-wrap font-mono text-xs text-gray-500 overflow-x-auto">
+            {formatVariables(filteredVariables)}
+          </div>
+        )}
       </div>
     </Tooltip>
   );

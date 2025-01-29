@@ -120,7 +120,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
 
 export default NaturalLanguageEditor;
 
-export const VerticalTransformActionsFormInput = ({ ...props }: any) => {
+export const StorageAttachmentActionsFormInput = ({ ...props }: any) => {
   const { params } = useParsed();
 
   return (
@@ -128,35 +128,34 @@ export const VerticalTransformActionsFormInput = ({ ...props }: any) => {
       {/* {JSON.stringify(props.height)} */}
       {/* {props?.title && <div>{props?.title}</div>} */}
       <div className="flex gap-10 justify-center">
-        {props?.actions &&
-          props?.actions?.map((action: any) => {
-            return (
-              <div key={action?.name}>
-                <ExternalSubmitButton
-                  record={{}}
-                  entity_type={action?.entity_type}
-                  action_form_key={`form_${params?.id}_${action?.entity_type}`}
-                  action={action?.name}
-                  icon={action?.icon}
-                />
-              </div>
-            );
-          })}
-        {/* {JSON.stringify(props?.actions)} */}
-        {/* <ExternalSubmitButton
+        <ExternalSubmitButton
           record={{}}
-          entity_type="sessions"
-          action_form_key={`form_${params?.id}`}
-          action="query"
-          icon={"IconArrowDown"}
+          entity_type="memory"
+          action_form_key={`form_${params?.id}_memory`}
+          action="upload"
+          icon={"IconUpload"}
         />
         <ExternalSubmitButton
           record={{}}
-          entity_type="sessions"
-          action_form_key={`form_${params?.id}`}
-          action="query"
-          icon={"IconArrowUp"}
-        /> */}
+          entity_type="memory"
+          action_form_key={`form_${params?.id}_memory`}
+          action="google drive"
+          icon={"IconBrandGoogleDrive"}
+        />
+        <ExternalSubmitButton
+          record={{}}
+          entity_type="memory"
+          action_form_key={`form_${params?.id}_memory`}
+          action="onedrive"
+          icon={"IconBrandOnedrive"}
+        />
+        <ExternalSubmitButton
+          record={{}}
+          entity_type="memory"
+          action_form_key={`form_${params?.id}_memory`}
+          action="system files"
+          icon={"IconFiles"}
+        />
       </div>
 
       {/* <NaturalLanguageEditor

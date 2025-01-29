@@ -6,6 +6,7 @@ import {
   getLabel,
   getTooltipLabel,
   useFetchDomainDataByDomain,
+  useIsMobile,
   useUpdateComponentAction,
 } from "@components/Utils";
 import { useGo } from "@refinedev/core";
@@ -17,12 +18,15 @@ import AutomationsToggle from "@components/AutomationsToggle";
 
 import { ActionIcon, Tooltip, Text } from "@mantine/core";
 import {
+  IconChartDots3,
   IconCode,
+  IconDatabase,
   IconHttpGet,
   IconIconsOff,
   IconLetterB,
   IconMail,
   IconMenu2,
+  IconPlus,
   IconSettingsAutomation,
 } from "@tabler/icons-react";
 import SearchInput from "@components/SearchInput";
@@ -68,11 +72,16 @@ const LargeScreenHeader = ({
     setMonitorComponents,
     global_developer_mode,
     toggleGlobalDeveloperMode,
+    toggleShowSessionWorkingMemory,
+    showSessionWorkingMemory,
+    global_session_trace_mode,
+    toggleGlobalSessionTraceMode,
   } = useAppStore();
   const { updateComponentAction } = useUpdateComponentAction();
   let action = focused_entities[activeTask?.id]?.["action"];
   const { width } = useViewportSize();
   const { data: user_session } = useSession();
+  const isMobile = useIsMobile();
 
   const hasPermission = (permission: string): boolean => {
     return Boolean(
@@ -141,12 +150,14 @@ const LargeScreenHeader = ({
           companyName={
             applicationData.name || activeApplication?.name || "APP NAME"
           }
+          authenticatedData={authenticatedData}
           iconName={applicationData.logo_icon_name}
           handleClickHome={() => {
-            go({
-              to: "/",
-              type: "push",
-            });
+            console.log("click logo");
+            // go({
+            //   to: "/",
+            //   type: "push",
+            // });
           }}
         />
         {authenticatedData?.authenticated && (
@@ -243,6 +254,47 @@ const LargeScreenHeader = ({
                       variant={global_developer_mode ? "filled" : "outline"}
                     >
                       <IconCode size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                </div>
+              </div>
+            </div>
+          )}
+
+        {authenticatedData?.authenticated &&
+          hasPermission("has_session_trace_mode") && (
+            <div className="hidden lg:block">
+              <div className="flex items-center pl-4 pr-4">
+                <div>
+                  <Tooltip label={`toggle session trace mode`} position="top">
+                    <ActionIcon
+                      size="sm"
+                      onClick={toggleGlobalSessionTraceMode}
+                      variant={global_session_trace_mode ? "filled" : "outline"}
+                    >
+                      <IconChartDots3 size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                </div>
+              </div>
+            </div>
+          )}
+
+        {authenticatedData?.authenticated &&
+          hasPermission("has_show_session_working_memory") && (
+            <div className="hidden lg:block">
+              <div className="flex items-center pl-4 pr-4">
+                <div>
+                  <Tooltip
+                    label={`toggle session working memory`}
+                    position="top"
+                  >
+                    <ActionIcon
+                      size="sm"
+                      onClick={toggleShowSessionWorkingMemory}
+                      variant={showSessionWorkingMemory ? "filled" : "outline"}
+                    >
+                      <IconDatabase size={20} />
                     </ActionIcon>
                   </Tooltip>
                 </div>
@@ -397,9 +449,27 @@ const LargeScreenHeader = ({
         </div>
       )}
 
-      {applicationData?.disabled_sections &&
-      applicationData?.disabled_sections?.includes("user_menu") ? null : (
+      {isMobile ||
+      (applicationData?.disabled_sections &&
+        applicationData?.disabled_sections?.includes("user_menu")) ? null : (
         <UserMenu />
+      )}
+
+      {!isMobile ||
+      (applicationData?.disabled_sections &&
+        applicationData?.disabled_sections?.includes("user_menu")) ? null : (
+        <div className="px-3">
+          <ActionIcon
+            radius="xl"
+            disabled
+            // variant="gradient"
+            // size="xl"
+            // aria-label="Gradient action icon"
+            // gradient={{ from: "blue", to: "cyan", deg: 90 }}
+          >
+            <IconPlus />
+          </ActionIcon>
+        </div>
       )}
     </div>
   );

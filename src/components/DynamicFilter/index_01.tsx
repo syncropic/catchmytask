@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Box, Button, Select, ActionIcon } from "@mantine/core";
 import { useForm } from "@tanstack/react-form";
-import { getComponentByResourceType, useIsMobile } from "@components/Utils";
+import { getComponentByResourceType } from "@components/Utils";
 import { IconX } from "@tabler/icons-react";
 import { useAppStore } from "src/store";
 import _ from "lodash";
@@ -37,7 +37,15 @@ export interface FilterCondition {
   operator: string;
   value: string | number | boolean | Date | null;
   value2?: string | number | Date | null;
-  fieldType: Variable["type"];
+  fieldType:
+    | "string"
+    | "number"
+    | "datetime"
+    | "boolean"
+    | "select"
+    | "multiselect"
+    | "search"
+    | "multisearch";
 }
 
 export interface FilterOutput {
@@ -75,6 +83,7 @@ const OPERATOR_MAP: Record<string, Operator[]> = {
   multisearch: ["equals"],
 };
 
+// Display labels for the dropdown
 const OPERATOR_LABELS: Record<Operator, string> = {
   equals: "=",
   notEquals: "!=",
@@ -88,6 +97,7 @@ const OPERATOR_LABELS: Record<Operator, string> = {
   after: "After",
 };
 
+// SQL operators for query generation
 const SQL_OPERATORS: Record<Operator, string> = {
   equals: "=",
   notEquals: "!=",
@@ -114,7 +124,6 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
     setFilterFormFields,
   } = useAppStore();
   const previousIsValid = useRef(false);
-  const isMobile = useIsMobile();
 
   const createFieldSchema = (variable: Variable) => {
     let component = "TextInput";
@@ -156,6 +165,7 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
     if (input === "WW2") {
       return new Date(1939, 8, 1);
     }
+
     return dayjs(input, "DD/MM/YYYY").toDate();
   };
 
@@ -208,152 +218,10 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
     form.store.batch(() => {
       form.setFieldValue(fieldName, null);
       form.setFieldValue(`${fieldName}_value2`, null);
-      form.setFieldValue(
-        `${fieldName}_operator`,
-        OPERATOR_MAP[
-          variables.find((v) => v.value === fieldName)?.type || "string"
-        ][0]
-      );
     });
   };
 
-  const renderMobileField = (fieldSchema: any) => {
-    const Component = getComponentByResourceType(fieldSchema.component);
-    const fieldName = fieldSchema.key;
-
-    return (
-      <div key={fieldName} className="py-2">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="text-sm font-medium text-gray-700 flex-1">
-            {fieldSchema.title}
-          </div>
-          <form.Field name={`${fieldName}_operator`}>
-            {(operatorField) => (
-              <div className="w-32">
-                <Select
-                  value={operatorField.state.value}
-                  onChange={(value) => operatorField.handleChange(value)}
-                  data={OPERATOR_MAP[fieldSchema.type].map((op) => ({
-                    value: op,
-                    label: OPERATOR_LABELS[op],
-                  }))}
-                  placeholder="Operator"
-                  size="sm"
-                />
-              </div>
-            )}
-          </form.Field>
-        </div>
-
-        <div className="mb-2">
-          <form.Field name={fieldName}>
-            {(field) => (
-              <div className="flex gap-2 items-center">
-                <div className="flex-1">
-                  <Component
-                    onBlur={field.handleBlur}
-                    onChange={
-                      [
-                        "NumberInput",
-                        "MonacoEditorFormInput",
-                        "NaturalLanguageEditorFormInput",
-                        "SearchInput",
-                        "DateInput",
-                        "MultiSelect",
-                        "Select",
-                        "FileInput",
-                        "RangeSlider",
-                      ].includes(fieldSchema.component)
-                        ? field.handleChange
-                        : (e: any) => field.handleChange(e?.target?.value)
-                    }
-                    {...(fieldSchema.props || {})}
-                    value={
-                      fieldSchema.component === "DateInput"
-                        ? field.state.value
-                          ? new Date(field.state.value)
-                          : null
-                        : field.state.value ?? ""
-                    }
-                    {...(fieldSchema.component === "DateInput"
-                      ? {
-                          clearable: true,
-                          dateParser,
-                        }
-                      : {})}
-                    action_form_key={`${action_form_key}_filter`}
-                    label={null}
-                  />
-                </div>
-                {field.state.value !== null && field.state.value !== "" && (
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    onClick={() => clearFilterValues(fieldName)}
-                    size="sm"
-                  >
-                    <IconX size={16} />
-                  </ActionIcon>
-                )}
-              </div>
-            )}
-          </form.Field>
-        </div>
-
-        <form.Field name={`${fieldName}_operator`}>
-          {(operatorField) => {
-            if (operatorField.state.value !== "between") {
-              return null;
-            }
-            return (
-              <div className="w-full">
-                <form.Field name={`${fieldName}_value2`}>
-                  {(field) => (
-                    <Component
-                      onBlur={field.handleBlur}
-                      onChange={
-                        [
-                          "NumberInput",
-                          "MonacoEditorFormInput",
-                          "NaturalLanguageEditorFormInput",
-                          "SearchInput",
-                          "DateInput",
-                          "MultiSelect",
-                          "Select",
-                          "FileInput",
-                          "RangeSlider",
-                        ].includes(fieldSchema.component)
-                          ? field.handleChange
-                          : (e: any) => field.handleChange(e?.target?.value)
-                      }
-                      {...(fieldSchema.props || {})}
-                      value={
-                        fieldSchema.component === "DateInput"
-                          ? field.state.value
-                            ? new Date(field.state.value)
-                            : null
-                          : field.state.value ?? ""
-                      }
-                      {...(fieldSchema.component === "DateInput"
-                        ? {
-                            clearable: true,
-                            dateParser,
-                          }
-                        : {})}
-                      action_form_key={`${action_form_key}_filter`}
-                      label={null}
-                    />
-                  )}
-                </form.Field>
-              </div>
-            );
-          }}
-        </form.Field>
-      </div>
-    );
-  };
-
-  const renderDesktopField = (fieldSchema: any) => {
+  const renderField = (fieldSchema: any) => {
     const Component = getComponentByResourceType(fieldSchema.component);
     const fieldName = fieldSchema.key;
 
@@ -581,11 +449,7 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
           form.handleSubmit();
         }}
       >
-        {variables.map((variable) =>
-          isMobile
-            ? renderMobileField(createFieldSchema(variable))
-            : renderDesktopField(createFieldSchema(variable))
-        )}
+        {variables.map((variable) => renderField(createFieldSchema(variable)))}
       </form>
     </Box>
   );

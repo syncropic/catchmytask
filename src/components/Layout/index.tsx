@@ -22,6 +22,9 @@ import {
   Tooltip,
   ActionIcon,
   Accordion,
+  Drawer,
+  Menu,
+  Modal,
 } from "@mantine/core";
 
 import {
@@ -52,6 +55,11 @@ import ActionToolbar from "@components/ActionToolbar";
 import { handleLogout } from "@components/Utils/auth";
 import SessionSummaryInfoCard from "@components/Sessions/SessionSummaryInfoCard";
 import DesktopPanelLayout from "./DesktopPanelLayout";
+import InteractiveGraph from "@components/InteractiveGraph";
+import { MenuItems } from "./UserMenu";
+import NavbarSearch from "@components/Navbar";
+import UserMenuMobile from "./UserMenuMobile";
+import SessionActionInput from "@components/SessionActionInput";
 
 const Layout = ({
   children,
@@ -94,10 +102,12 @@ const Layout = ({
     setSectionIsExpanded,
     setNavigationHistory,
     global_developer_mode,
+    global_session_trace_mode,
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
   const { data: user_session } = useSession();
   const { params, pathname } = useParsed();
+  const { displaySidebar, toggleDisplaySidebar } = useAppStore();
 
   const { leftSection, centerSection, rightSection } = activeLayout; // Destructure the sections for visibility checks
 
@@ -341,6 +351,34 @@ const Layout = ({
   return (
     <Authenticated key="home" redirectOnFail="/login">
       <AppLayout authenticatedData={authenticatedData}>
+        {isMobile && <SessionActionInput />}
+
+        <Drawer
+          opened={displaySidebar}
+          onClose={toggleDisplaySidebar}
+          // title="Sidebar"
+          offset={8}
+        >
+          {/* <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <Button>Toggle menu</Button>
+            </Menu.Target>
+
+            <MenuItems />
+          </Menu> */}
+          <div className="flex flex-col gap-2">
+            <div className="sticky top-10 z-10">
+              <UserMenuMobile />
+            </div>
+
+            <SessionSummaryInfoCard
+              session={activeSession}
+              execlude_components={["toolbar"]}
+            />
+            <NavbarSearch></NavbarSearch>
+          </div>
+        </Drawer>
+
         {isMobile ? (
           <div className="flex flex-col mb-24">
             <Accordion
@@ -348,14 +386,15 @@ const Layout = ({
               defaultValue={["action_input", "messages", "views"]}
             >
               {rightSection.isDisplayed && (
-                <Accordion.Item value={"messages"} key={"messages"}>
-                  <Accordion.Control icon={null}>messages</Accordion.Control>
-                  <Accordion.Panel>
-                    <MonitorWrapper></MonitorWrapper>
-                  </Accordion.Panel>
-                </Accordion.Item>
+                <MonitorWrapper></MonitorWrapper>
+                // <Accordion.Item value={"messages"} key={"messages"}>
+                //   <Accordion.Control icon={null}>messages</Accordion.Control>
+                //   <Accordion.Panel>
+                //     <MonitorWrapper></MonitorWrapper>
+                //   </Accordion.Panel>
+                // </Accordion.Item>
               )}
-              {leftSection.isDisplayed && (
+              {/* {leftSection.isDisplayed && (
                 <Accordion.Item value={"action_input"} key={"action_input"}>
                   <Accordion.Control icon={null}>input</Accordion.Control>
                   <Accordion.Panel>
@@ -368,29 +407,32 @@ const Layout = ({
                     >
                       <div className="h-[85vh] flex flex-col">
                         <div className="sticky top-0 z-10">
-                          {!global_developer_mode && activeSession && (
-                            <SessionSummaryInfoCard
-                              session={activeSession}
-                            ></SessionSummaryInfoCard>
-                          )}
+                          {!global_developer_mode &&
+                            !global_session_trace_mode &&
+                            activeSession && (
+                              <SessionSummaryInfoCard
+                                session={activeSession}
+                              ></SessionSummaryInfoCard>
+                            )}
                         </div>{" "}
-                        {!global_developer_mode && (
-                          <div>
-                            <ActionInputWrapper
-                              data_model="user mode query input"
-                              query_name="data_model"
-                              record={{ id: params?.id }}
-                              action="query"
-                              action_form_key={`form_${params?.id}`}
-                              success_message_code="user_mode_query_input"
-                            />
-                          </div>
-                        )}
+                        {!global_developer_mode &&
+                          !global_session_trace_mode && (
+                            <div>
+                              <ActionInputWrapper
+                                data_model="user mode query input"
+                                query_name="data_model"
+                                record={{ id: params?.id }}
+                                action="query"
+                                action_form_key={`form_${params?.id}`}
+                                success_message_code="user_mode_query_input"
+                              />
+                            </div>
+                          )}
                       </div>
                     </div>
                   </Accordion.Panel>
                 </Accordion.Item>
-              )}
+              )} */}
             </Accordion>
           </div>
         ) : (
@@ -402,11 +444,20 @@ const Layout = ({
               children: (
                 <>
                   <div className="sticky top-0 z-10">
-                    {!global_developer_mode && activeSession && params?.id && (
-                      <SessionSummaryInfoCard session={activeSession} />
-                    )}
+                    {!global_developer_mode &&
+                      !global_session_trace_mode &&
+                      activeSession &&
+                      params?.id && (
+                        <SessionSummaryInfoCard session={activeSession} />
+                      )}
                   </div>
-                  {!global_developer_mode && (
+                  {global_session_trace_mode && (
+                    <div>
+                      {/* <InteractiveGraph /> */}
+                      <div>interactive graph</div>
+                    </div>
+                  )}
+                  {!global_developer_mode && !global_session_trace_mode && (
                     <div>
                       <ActionInputWrapper
                         data_model="user mode query input"
@@ -418,7 +469,7 @@ const Layout = ({
                       />
                     </div>
                   )}
-                  {global_developer_mode && (
+                  {global_developer_mode && !global_session_trace_mode && (
                     <>
                       <ActionToolbar
                         params={params}
@@ -525,7 +576,7 @@ const Layout = ({
               isDisplayed: centerSection.isDisplayed,
               children: (
                 <>
-                  {/* {children}
+                  {children}
                   {select_or_create_to_continue_items.some(
                     (item) => item === null
                   ) &&
@@ -542,7 +593,7 @@ const Layout = ({
                           </Highlight>
                         </p>
                       </div>
-                    )} */}
+                    )}
                 </>
               ),
             }}

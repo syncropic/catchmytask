@@ -47,9 +47,10 @@ import { useState } from "react";
 import { useClickOutside } from "@mantine/hooks";
 import { handleLogout } from "@components/Utils/auth";
 import ColorSchemeToggle from "@components/ColorSchemeToggle";
+import UserButtonMobile from "./UserButtonMobile";
 // import MonacoEditor from "@components/MonacoEditor";
 
-export const UserMenu = () => {
+export const UserMenuMobile = () => {
   const { list } = useNavigation();
   const go = useGo();
   const { mutate: logout } = useLogout();
@@ -189,27 +190,65 @@ export const UserMenu = () => {
   };
 
   return (
-    <Group align="center">
-      <Menu withArrow withinPortal opened={opened}>
-        <Menu.Target>
-          <UserButton
-            image=""
-            // image="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
-            name={user?.name}
-            email={activeProfile?.name || user?.email}
-            onClick={() => setOpened(!opened)}
-            opened={opened}
-          />
-          {/* <div>userbutton</div> */}
-        </Menu.Target>
-        {/* ...Menu.Items */}
-        <MenuItems />
-      </Menu>
-    </Group>
+    <div>
+      <UserButtonMobile
+        image=""
+        // image="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
+        name={user?.name}
+        email={activeProfile?.name || user?.email}
+        onClick={() => setOpened(!opened)}
+        opened={opened}
+      />
+      <div onClick={(e) => e.stopPropagation()}>
+        <SearchInput
+          placeholder="profiles"
+          description="profiles"
+          handleOptionSubmit={setActiveProfile}
+          value={activeProfile?.id || ""}
+          withinPortal={true}
+          ref={ref}
+          // include_action_icons={["record_info", "explore"]}
+          include_action_icons={["record_info"]}
+          handleEdit={handleEdit}
+          record={activeProfile}
+          query_name="fetch_system_profiles"
+          func_name="fetch_system_profiles"
+          success_message_code="fetch_system_profiles"
+          // navigateOnSelect={{ resource: "views" }}
+          // navigateOnClear={{ resource: "home" }}
+          activeFilters={[
+            {
+              id: 1,
+              name: "profiles",
+              description: "profiles",
+              entity_type: "profiles",
+              is_selected: true,
+            },
+          ]}
+        ></SearchInput>
+      </div>
+    </div>
+    // <Group align="center">
+    //   <Menu withArrow withinPortal opened={opened}>
+    //     <Menu.Target>
+    //       <UserButton
+    //         image=""
+    //         // image="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
+    //         name={user?.name}
+    //         email={activeProfile?.name || user?.email}
+    //         onClick={() => setOpened(!opened)}
+    //         opened={opened}
+    //       />
+    //       {/* <div>userbutton</div> */}
+    //     </Menu.Target>
+    //     {/* ...Menu.Items */}
+    //     <MenuItems />
+    //   </Menu>
+    // </Group>
   );
 };
 
-export default UserMenu;
+export default UserMenuMobile;
 
 export const MenuItems = () => {
   const { list } = useNavigation();
@@ -486,7 +525,7 @@ export const MenuItems = () => {
         </Menu.Item>
         {/* <div className="block lg:hidden">
           <Menu.Item
-           
+            
             leftSection={<IconClick size={14} />}
             className={`${
               activeLayout?.quickActionsBar?.isDisplayed ? "text-blue-500" : ""
@@ -500,13 +539,6 @@ export const MenuItems = () => {
         </div> */}
 
         <Menu.Item
-          // leftSection={
-          //   colorScheme.scheme === "light" ? (
-          //     <IconMoon size={14} /> // Use IconMoon for light mode
-          //   ) : (
-          //     <IconBrightnessUp size={14} /> // Use IconBrightnessUp for dark mode
-          //   )
-          // }
           leftSection={<IconMenu2 size={14} />}
           className={`${
             open_new_items_in_window !== "current" ? "text-blue-500" : ""

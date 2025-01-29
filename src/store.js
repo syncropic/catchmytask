@@ -308,10 +308,39 @@ export const useAppStore = create(
         const formSections = state.lockedSections[formId] || {};
         return Object.values(formSections);
       },
+      displayJSONView: false,
+      toggleDisplayJSONView: () =>
+        set((state) => ({
+          displayJSONView: !state.displayJSONView,
+        })),
+
+      displaySidebar: false,
+      toggleDisplaySidebar: () =>
+        set((state) => ({
+          displaySidebar: !state.displaySidebar,
+        })),
+      displaySessionActionInput: false,
+      toggleDisplaySessionActionInput: () =>
+        set((state) => ({
+          displaySessionActionInput: !state.displaySessionActionInput,
+        })),
       global_developer_mode: false,
       toggleGlobalDeveloperMode: () =>
         set((state) => ({
           global_developer_mode: !state.global_developer_mode,
+          showRequestResponseView: false,
+        })),
+      global_session_trace_mode: false,
+      toggleGlobalSessionTraceMode: () =>
+        set((state) => ({
+          global_session_trace_mode: !state.global_session_trace_mode,
+          showRequestResponseView: false,
+          global_developer_mode: false,
+        })),
+      showSessionWorkingMemory: false,
+      toggleShowSessionWorkingMemory: () =>
+        set((state) => ({
+          showSessionWorkingMemory: !state.showSessionWorkingMemory,
         })),
       views: {},
       clearViews: (views) => set((state) => ({ views: {} })),
@@ -580,6 +609,84 @@ export const useAppStore = create(
       form_status: {},
       setFormStatus: (formStatus) =>
         set((state) => ({ ...state, form_status: formStatus })),
+
+      // Add these new graph-related states and actions
+      graph: {
+        nodes: [], // Store graph nodes
+        edges: [], // Store graph edges
+        selectedNode: null,
+        highlightedNodes: new Set(),
+        highlightedEdges: new Set(),
+        nodeData: {}, // Cache for detailed node data
+        expandedNodes: new Set(), // Track which nodes are expanded
+        zoomLevel: 1,
+        viewPosition: { x: 0, y: 0 },
+      },
+
+      // Graph actions
+      setGraphData: (nodes, edges) =>
+        set((state) => ({
+          graph: {
+            ...state.graph,
+            nodes,
+            edges,
+          },
+        })),
+
+      setSelectedNode: (nodeId) =>
+        set((state) => ({
+          graph: {
+            ...state.graph,
+            selectedNode: nodeId,
+          },
+        })),
+
+      setHighlightedElements: (nodes, edges) =>
+        set((state) => ({
+          graph: {
+            ...state.graph,
+            highlightedNodes: new Set(nodes),
+            highlightedEdges: new Set(edges),
+          },
+        })),
+
+      expandNode: (nodeId) =>
+        set((state) => ({
+          graph: {
+            ...state.graph,
+            expandedNodes: new Set([...state.graph.expandedNodes, nodeId]),
+          },
+        })),
+
+      collapseNode: (nodeId) =>
+        set((state) => ({
+          graph: {
+            ...state.graph,
+            expandedNodes: new Set(
+              [...state.graph.expandedNodes].filter((id) => id !== nodeId)
+            ),
+          },
+        })),
+
+      updateNodeData: (nodeId, data) =>
+        set((state) => ({
+          graph: {
+            ...state.graph,
+            nodeData: {
+              ...state.graph.nodeData,
+              [nodeId]: data,
+            },
+          },
+        })),
+
+      setGraphView: (zoom, position) =>
+        set((state) => ({
+          graph: {
+            ...state.graph,
+            zoomLevel: zoom,
+            viewPosition: position,
+          },
+        })),
       local_db: {},
       setLocalDB: (local_db) => set((state) => ({ ...state, local_db })),
       // Function to update a specific part of the local_db

@@ -11,6 +11,7 @@ import {
   formatPythonTemplate,
   sanitizeFilters,
   stepsToMarkdown,
+  useIsMobile,
 } from "@components/Utils";
 import {
   ActionIcon,
@@ -66,6 +67,7 @@ import {
 import MessageLabel from "@components/MessageLabel";
 import { useToggleView } from "@components/hooks/useToggleView";
 import ExecutionStatus from "@components/ExecutionStatus";
+import ResponseViewWrapper from "@components/View/ResponseView";
 
 export function TableView<T extends Record<string, any>>({
   data_items,
@@ -99,6 +101,7 @@ export function TableView<T extends Record<string, any>>({
   }
   const clipboard = useClipboard({ timeout: 500 });
   const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
+  const isMobile = useIsMobile();
 
   let view_ids = Object.keys(views);
 
@@ -196,6 +199,7 @@ export function TableView<T extends Record<string, any>>({
                         <MessageLabel
                           record={record}
                           onRerun={(record) => console.log("Rerun:", record)}
+                          showCollapse={true}
                         />
                       );
                     } else if (field?.name === "name") {
@@ -436,29 +440,25 @@ export function TableView<T extends Record<string, any>>({
                   },
                   trigger: "never",
                   content: ({ record, collapse }) => (
-                    <div className="w-full">
-                      <div className="px-4 py-2">
+                    <div className="overflow-hidden">
+                      <div>
+                        {isMobile && view_ids.includes(String(record?.id)) && (
+                          <div className="w-96">
+                            <ResponseViewWrapper />
+                          </div>
+                        )}
                         {record?.actions ? (
-                          <Box
-                            style={{
-                              maxWidth: "100%",
-                              overflowX: "auto",
-                            }}
-                          >
-                            <ExecutionStatus record={record?.actions} />
-                          </Box>
-                        ) : null
-                        // <Box
-                        //   style={{
-                        //     maxWidth: "100%",
-                        //     overflowX: "auto",
-                        //   }}
-                        // >
-                        //   <pre className="whitespace-pre-wrap break-words">
-                        //     {JSON.stringify(record, null, 2)}
-                        //   </pre>
-                        // </Box>
-                        }
+                          <div className="w-96">
+                            <Box
+                              style={{
+                                maxWidth: "100%",
+                                overflowX: "auto",
+                              }}
+                            >
+                              <ExecutionStatus record={record?.actions} />
+                            </Box>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   ),

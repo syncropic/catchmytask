@@ -83,7 +83,8 @@ export type ComponentKey =
   | "Checkbox"
   | "SearchInput"
   | "ListEditorFormInput"
-  | "VerticalTransformActionsFormInput";
+  | "VerticalTransformActionsFormInput"
+  | "StorageAttachmentActionsFormInput";
 
 export type CellTemplateKey = "detail" | "conditionallyformatted" | "text";
 

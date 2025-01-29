@@ -76,7 +76,97 @@ export const ShowPage: React.FC = () => {
   // Render the page content
   return (
     <>
-      <ResponseViewWrapper />
+      {/* <MonacoEditor
+        value={activeTask}
+        language="json"
+        height="25vh"
+      ></MonacoEditor> */}
+      {/* <div>{JSON.stringify(events)}</div> */}
+      {/* {!activeView && (<Title order={3}>Get Important Things Done.</Title>)} */}
+      {/* <Breadcrumbs /> */}
+      {/* <Text>Task Show Page</Text>
+      <Title order={2}>{activeTask?.name || "No Task Name"}</Title> */}
+      <PanelGroup direction="horizontal">
+        <Panel defaultSize={100} minSize={0}>
+          <div className="h-[85vh] flex flex-col">
+            {" "}
+            {/* Using 85% of viewport height */}
+            {/* Top component */}
+            <div className="min-h-0 flex-1 overflow-y-auto pb-6">
+              {/* <WebAutomation></WebAutomation> */}
+
+              {/* {params?.id && events && (
+                <EventsWrapper
+                  task_id={params?.id}
+                  title="events"
+                  data_items={events || []}
+                />
+              )} */}
+              {/* {params?.view_id && <ViewWrapper></ViewWrapper>} */}
+              {/* {<ViewWrapper></ViewWrapper>} */}
+              {/* <ViewsDisplay views={views} /> */}
+              <ResponseViewWrapper />
+              {/* <MonacoEditor
+                value={request_response}
+                height="75vh"
+                language="json"
+              ></MonacoEditor> */}
+            </div>
+            {/* Bottom component */}
+            <div>
+              {/* <div>
+                <AccordionComponent
+                  sections={viewSearchActionAccordionConfig}
+                  activeView={{}}
+                  activeTask={{}}
+                  defaultExpandedValues={[]}
+                  action={"filters"}
+                />
+              </div> */}
+              {/* <ActionInputWrapper
+                name={"query"}
+                query_name="data_model"
+                record={{
+                  id: params?.id,
+                }}
+                action={"query"}
+                action_form_key="query_general"
+                success_message_code="action_input_data_model_schema"
+              /> */}
+              {/* <div>
+                <AccordionComponent
+                  sections={viewFooterAccordionConfig}
+                  globalQuery={globalQuery}
+                  include_items={[]}
+                  key="view_footer"
+                  title={
+                    <div className="flex gap-4 items-center">
+                      <IconCode size={16} />
+                      <Text>Code</Text>
+                    </div>
+                  }
+                />
+              </div> */}
+            </div>
+          </div>
+        </Panel>
+
+        {/* <Panel
+          defaultSize={50}
+          minSize={0}
+          style={{
+            display: true ? "block" : "none",
+          }}
+        >
+          <div
+            className={`${
+              effectiveScheme === "light" ? "bg-gray-100" : "bg-gray-800"
+            }`}
+          >
+            {params?.view_id && <ViewWrapper></ViewWrapper>}
+          </div>
+        </Panel> */}
+      </PanelGroup>
     </>
   );
 };

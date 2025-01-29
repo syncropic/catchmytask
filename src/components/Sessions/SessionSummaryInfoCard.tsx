@@ -6,7 +6,13 @@ import { useSession } from "next-auth/react";
 import { useParsed } from "@refinedev/core";
 import ExternalSubmitButton from "@components/SubmitButton";
 
-const SessionSummaryInfoCard = ({ session }: { session: any }) => {
+const SessionSummaryInfoCard = ({
+  session,
+  execlude_components,
+}: {
+  session: any;
+  execlude_components?: any;
+}) => {
   const {
     sectionIsExpanded,
     setSectionIsExpanded,
@@ -69,20 +75,23 @@ const SessionSummaryInfoCard = ({ session }: { session: any }) => {
       </div>
 
       {/* Interaction Actions */}
-      <div className="px-4 py-3 bg-white border-t border-gray-100">
-        <div className="min-w-0 w-full">
-          <ActionToolbar
-            params={params}
-            userSession={user_session}
-            activeInput={activeInput}
-            setActiveInput={setActiveInput}
-            sectionIsExpanded={sectionIsExpanded}
-            setSectionIsExpanded={setSectionIsExpanded}
-            closeDisplay={closeDisplay}
-            includeComponents={["toolbar"]}
-          />
+      {execlude_components &&
+      execlude_components?.includes("toolbar") ? null : (
+        <div className="px-4 py-3 bg-white border-t border-gray-100">
+          <div className="min-w-0 w-full">
+            <ActionToolbar
+              params={params}
+              userSession={user_session}
+              activeInput={activeInput}
+              setActiveInput={setActiveInput}
+              sectionIsExpanded={sectionIsExpanded}
+              setSectionIsExpanded={setSectionIsExpanded}
+              closeDisplay={closeDisplay}
+              includeComponents={["toolbar"]}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

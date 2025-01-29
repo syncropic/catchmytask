@@ -1740,7 +1740,7 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
         value={{
           // record: record,
           // recordData: recordData,
-          // record_data: record_data,
+          record_data: record_data,
           // data_model_data: data_model_data,
           // record_data: record_data?.variables,
           action_form_key: action_form_key,
