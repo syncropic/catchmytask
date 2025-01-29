@@ -9,14 +9,14 @@ import {
   useIsMobile,
   useUpdateComponentAction,
 } from "@components/Utils";
-import { useGo } from "@refinedev/core";
+import { useActiveAuthProvider, useGetIdentity, useGo } from "@refinedev/core";
 import { useAppStore } from "src/store";
 import SearchBar from "@components/SearchBar";
 import QuickActionsBar from "@components/QuickActionsBar";
 import ColorSchemeToggle from "@components/ColorSchemeToggle";
 import AutomationsToggle from "@components/AutomationsToggle";
 
-import { ActionIcon, Tooltip, Text } from "@mantine/core";
+import { ActionIcon, Tooltip, Text, Button } from "@mantine/core";
 import {
   IconChartDots3,
   IconCode,
@@ -38,7 +38,7 @@ import ComponentsToolbar from "@components/ComponentsToolbar";
 import ExternalSubmitButton from "@components/SubmitButton";
 import { useViewportSize } from "@mantine/hooks";
 import SectionsToggle from "@components/SectionsToggle";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useDomainData } from "@components/Utils/useDomainData";
 import SessionsWrapper from "@components/Sessions";
 
@@ -81,6 +81,11 @@ const LargeScreenHeader = ({
   let action = focused_entities[activeTask?.id]?.["action"];
   const { width } = useViewportSize();
   const { data: user_session } = useSession();
+  const authProvider = useActiveAuthProvider();
+
+  const { data: user } = useGetIdentity({
+    v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+  });
   const isMobile = useIsMobile();
 
   const hasPermission = (permission: string): boolean => {
@@ -438,7 +443,7 @@ const LargeScreenHeader = ({
       )} */}
 
       {authenticatedData?.authenticated && (
-        <div className="w-[600px] ">
+        <div className="w-[600px] pr-3">
           <SessionsWrapper
             func_name="fetch_system_sessions"
             view_id="views:36xo8keq9tsoyly68shk"
@@ -455,22 +460,32 @@ const LargeScreenHeader = ({
         <UserMenu />
       )}
 
-      {!isMobile ||
+      {isMobile && !applicationData?.authenticated && !user && (
+        <div className="pr-3">
+          <Button
+            size="xs"
+            gradient={{ from: "blue", to: "cyan", deg: 90 }}
+            variant="gradient"
+            // fullWidth
+            onClick={() => signIn("keycloak")}
+          >
+            Sign In
+          </Button>
+        </div>
+      )}
+
+      {/* {!isMobile ||
       (applicationData?.disabled_sections &&
         applicationData?.disabled_sections?.includes("user_menu")) ? null : (
         <div className="px-3">
           <ActionIcon
             radius="xl"
             disabled
-            // variant="gradient"
-            // size="xl"
-            // aria-label="Gradient action icon"
-            // gradient={{ from: "blue", to: "cyan", deg: 90 }}
           >
             <IconPlus />
           </ActionIcon>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

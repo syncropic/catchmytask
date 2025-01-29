@@ -370,11 +370,13 @@ const Layout = ({
             <div className="sticky top-10 z-10">
               <UserMenuMobile />
             </div>
+            {activeSession && (
+              <SessionSummaryInfoCard
+                session={activeSession}
+                execlude_components={["toolbar"]}
+              />
+            )}
 
-            <SessionSummaryInfoCard
-              session={activeSession}
-              execlude_components={["toolbar"]}
-            />
             <NavbarSearch></NavbarSearch>
           </div>
         </Drawer>
