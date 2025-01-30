@@ -23,7 +23,7 @@ import { useCustomMutation, useGetIdentity, useParsed } from "@refinedev/core";
 import { useAppStore } from "src/store";
 import { IIdentity } from "@components/interfaces";
 import { useSession } from "next-auth/react";
-import { useIsMobile } from "@components/Utils";
+import { formatAuthorId, useIsMobile } from "@components/Utils";
 
 type ActionStatus =
   | "empty"
@@ -395,7 +395,7 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
         {/* Author and Timestamp Row */}
         <div className="flex justify-between items-center">
           <Text size="sm" className="text-gray-600 font-medium">
-            {record.author_id || ""}
+            {formatAuthorId(record.author_id || "")}
           </Text>
           <Text size="sm" className="text-gray-500">
             {formattedTime}

@@ -1539,6 +1539,19 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   </Indicator>
                 </Tooltip>
               )}
+            {hasRequiredFields &&
+              data_model?.schema?.required.map((fieldName: string) => {
+                const field = data_model?.schema?.properties?.[fieldName];
+                if (
+                  (["variables", "variables_value"].includes(fieldName) &&
+                    !showVariables &&
+                    global_developer_mode) ||
+                  fieldName == "variables"
+                ) {
+                  return null;
+                }
+                return field ? renderField(field) : null;
+              })}
             {showVariables ||
               (!global_developer_mode && (
                 <DynamicFilter
@@ -1554,19 +1567,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               ))}
           </div>
         )}
-
-        {hasRequiredFields &&
-          data_model?.schema?.required.map((fieldName: string) => {
-            const field = data_model?.schema?.properties?.[fieldName];
-            if (
-              ["variables", "variables_value"].includes(fieldName) &&
-              !showVariables &&
-              global_developer_mode
-            ) {
-              return null;
-            }
-            return field ? renderField(field) : null;
-          })}
 
         {record?.features && record?.features?.includes("can_schedule") && (
           <div>
@@ -1615,6 +1615,15 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             )}
           </div>
         )}
+
+        {hasRequiredFields &&
+          data_model?.schema?.required.map((fieldName: string) => {
+            const field = data_model?.schema?.properties?.[fieldName];
+            if (fieldName == "variables") {
+              return field ? renderField(field) : null;
+            }
+            return null;
+          })}
       </div>
     </form>
   );
@@ -1640,9 +1649,9 @@ export const scheduleFields: Field[] = [
     type: "string",
     label: "Frequency (Cron Expression)",
     placeholder: "Enter cron expression (e.g., 0 0 * * *)",
-    props: {
-      required: true,
-    },
+    // props: {
+    //   required: true,
+    // },
   },
   {
     title: "Frequency (Natural Language)",
@@ -1652,9 +1661,9 @@ export const scheduleFields: Field[] = [
     label: "Frequency (Natural Language)",
     placeholder:
       "Enter frequency in natural language (e.g., every day at midnight)",
-    props: {
-      required: true,
-    },
+    // props: {
+    //   required: true,
+    // },
   },
   // {
   //   title: "Schedule ID",

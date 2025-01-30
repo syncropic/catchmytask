@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Box, Button, Select, ActionIcon } from "@mantine/core";
 import { useForm } from "@tanstack/react-form";
 import { getComponentByResourceType, useIsMobile } from "@components/Utils";
-import { IconTrash, IconX } from "@tabler/icons-react";
+import { IconX } from "@tabler/icons-react";
 import { useAppStore } from "src/store";
 import _ from "lodash";
 import { debounce } from "lodash";
@@ -204,28 +204,6 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
     };
   }, [form.store, filter_form_values, filter_form_key, setFilterFormValues]);
 
-  const clearAllFilters = () => {
-    form.store.batch(() => {
-      variables.forEach((variable) => {
-        form.setFieldValue(variable.value, null);
-        form.setFieldValue(`${variable.value}_value2`, null);
-        form.setFieldValue(
-          `${variable.value}_operator`,
-          OPERATOR_MAP[variable.type][0]
-        );
-      });
-    });
-  };
-
-  const handleValueChange = (field: any, value: any, fieldName: string) => {
-    // Clear the field if value is empty string
-    if (value === "") {
-      clearFilterValues(fieldName);
-    } else {
-      field.handleChange(value);
-    }
-  };
-
   const clearFilterValues = (fieldName: string) => {
     form.store.batch(() => {
       form.setFieldValue(fieldName, null);
@@ -286,14 +264,8 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
                         "FileInput",
                         "RangeSlider",
                       ].includes(fieldSchema.component)
-                        ? (value: any) =>
-                            handleValueChange(field, value, fieldName)
-                        : (e: any) =>
-                            handleValueChange(
-                              field,
-                              e?.target?.value,
-                              fieldName
-                            )
+                        ? field.handleChange
+                        : (e: any) => field.handleChange(e?.target?.value)
                     }
                     {...(fieldSchema.props || {})}
                     value={
@@ -351,14 +323,8 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
                           "FileInput",
                           "RangeSlider",
                         ].includes(fieldSchema.component)
-                          ? (value: any) =>
-                              handleValueChange(field, value, fieldName)
-                          : (e: any) =>
-                              handleValueChange(
-                                field,
-                                e?.target?.value,
-                                fieldName
-                              )
+                          ? field.handleChange
+                          : (e: any) => field.handleChange(e?.target?.value)
                       }
                       {...(fieldSchema.props || {})}
                       value={
@@ -609,17 +575,6 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
 
   return (
     <Box className="mt-3 gap-2 space-y-4">
-      <div className="flex justify-end mb-4">
-        <Button
-          variant="subtle"
-          color="gray"
-          leftSection={<IconTrash size={16} />}
-          onClick={clearAllFilters}
-          size="sm"
-        >
-          Clear All Variables
-        </Button>
-      </div>
       <form
         onSubmit={(e) => {
           e.preventDefault();

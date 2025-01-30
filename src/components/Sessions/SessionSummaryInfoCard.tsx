@@ -5,6 +5,7 @@ import { useAppStore } from "src/store";
 import { useSession } from "next-auth/react";
 import { useParsed } from "@refinedev/core";
 import ExternalSubmitButton from "@components/SubmitButton";
+import { formatAuthorId } from "@components/Utils";
 
 const SessionSummaryInfoCard = ({
   session,
@@ -59,7 +60,7 @@ const SessionSummaryInfoCard = ({
         <div className="flex items-center gap-2 min-w-0">
           <IconUser className="h-4 w-4 flex-shrink-0 text-blue-500" />
           <span className="font-medium text-gray-900 break-all">
-            {session.author_id}
+            {formatAuthorId(session.author_id || "")}
           </span>
         </div>
         <span className="text-gray-500">

@@ -442,8 +442,20 @@ const LargeScreenHeader = ({
         </div>
       )} */}
 
-      {authenticatedData?.authenticated && (
-        <div className="w-full max-w-1=2xl pr-3">
+      {authenticatedData?.authenticated && !isMobile && (
+        <div className="w-full max-w-3xl pr-3">
+          <SessionsWrapper
+            func_name="fetch_system_sessions"
+            view_id="views:36xo8keq9tsoyly68shk"
+            title="monitor"
+            display_mode="search_input"
+            success_message_code="fetch_system_sessions"
+          />
+        </div>
+      )}
+
+      {authenticatedData?.authenticated && isMobile && (
+        <div className="w-full pr-8">
           <SessionsWrapper
             func_name="fetch_system_sessions"
             view_id="views:36xo8keq9tsoyly68shk"

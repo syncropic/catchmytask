@@ -3927,3 +3927,14 @@ export function extractKeys(obj: any, keys: any, mode = "include") {
     )
   );
 }
+
+export const formatAuthorId = (authorId: string): string => {
+  if (!authorId) return "";
+
+  // Check if the string contains an @ symbol (likely an email)
+  const emailParts = authorId.split("@");
+  if (emailParts.length > 1) {
+    return emailParts[0]; // Return only the part before @
+  }
+  return authorId; // Return the original string if it's not an email
+};

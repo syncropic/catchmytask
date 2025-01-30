@@ -1,3 +1,4 @@
+import { formatAuthorId } from "@components/Utils";
 import { Group, Text } from "@mantine/core";
 
 // Define the type for the option object
@@ -55,7 +56,7 @@ const renderSearchItem = (props: any) => {
         {value.substring(endIndex)}
         {" • "} {/* Separator between value and author ID */}
         <Text size="xs" color="teal" component="span">
-          {author_id}
+          {formatAuthorId(author_id || "")}
         </Text>
       </Text>
 
