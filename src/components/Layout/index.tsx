@@ -601,6 +601,7 @@ const Layout = ({
             }}
             rightSection={{
               isDisplayed: rightSection.isDisplayed,
+              // children: null,
               children: <MonitorWrapper />,
             }}
             effectiveScheme={effectiveScheme}

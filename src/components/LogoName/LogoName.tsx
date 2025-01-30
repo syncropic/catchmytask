@@ -30,7 +30,40 @@ export function LogoName({
 
     // </Anchor>
     <>
-      {!isMobile ? (
+      {!authenticatedData?.authenticated && (
+        <Button
+          variant="transparent"
+          // leftSection={
+          //   authenticatedData?.authenticated ? (
+          //     <Burger
+          //       opened={displaySidebar}
+          //       size="sm"
+          //       // onClick={toggleDisplaySidebar}
+          //       aria-label="Toggle navigation"
+          //       color="blue"
+          //     />
+          //   ) : null
+          // }
+          // leftSection={
+          //   logoURL ? (
+          //     <Avatar src={logoURL} alt="company logo" size="sm" />
+          //   ) : iconName ? (
+          //     <Avatar color="blue" radius="sm">
+          //       <IconLetterC />
+          //     </Avatar>
+          //   ) : (
+          //     <Avatar color="blue" radius="sm">
+          //       <IconLetterC />
+          //     </Avatar>
+          //   )
+          // }
+          // onClick={toggleDisplaySidebar}
+        >
+          {companyName}
+        </Button>
+      )}
+
+      {authenticatedData?.authenticated && (
         <Button
           variant="transparent"
           leftSection={
@@ -61,7 +94,42 @@ export function LogoName({
         >
           {isMobile ? null : companyName}
         </Button>
-      ) : (
+      )}
+
+      {/* {!isMobile && !authenticatedData?.authenticated && (
+        <Button
+          variant="transparent"
+          leftSection={
+            authenticatedData?.authenticated ? (
+              <Burger
+                opened={displaySidebar}
+                size="sm"
+                // onClick={toggleDisplaySidebar}
+                aria-label="Toggle navigation"
+                color="blue"
+              />
+            ) : null
+          }
+          // leftSection={
+          //   logoURL ? (
+          //     <Avatar src={logoURL} alt="company logo" size="sm" />
+          //   ) : iconName ? (
+          //     <Avatar color="blue" radius="sm">
+          //       <IconLetterC />
+          //     </Avatar>
+          //   ) : (
+          //     <Avatar color="blue" radius="sm">
+          //       <IconLetterC />
+          //     </Avatar>
+          //   )
+          // }
+          onClick={toggleDisplaySidebar}
+        >
+          {isMobile ? null : companyName}
+        </Button>
+      )} */}
+
+      {/* : (
         <div className="p-1">
           <Burger
             opened={displaySidebar}
@@ -71,7 +139,7 @@ export function LogoName({
             color="blue"
           />
         </div>
-      )}
+      )} */}
     </>
   );
 }

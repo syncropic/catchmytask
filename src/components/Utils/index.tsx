@@ -759,7 +759,7 @@ export function useReadRecordByState(state: any) {
     },
     queryOptions: {
       queryKey: [
-        `readByState_${JSON.stringify({
+        `useReadRecordByState_${JSON.stringify({
           id: state?.record?.id,
           success_message_code: state?.success_message_code || "read_record",
         })}`,

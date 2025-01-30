@@ -103,6 +103,7 @@ const ViewItemWrapper = ({ view_item_id }: { view_item_id: string }) => {
   const { params } = useParsed();
   const { data: identity } = useGetIdentity<IIdentity>();
   let view_item_record = views[view_item_id];
+
   if (
     ["actions"]?.includes(view_item_record?.entity_type) ||
     ["execute_task_id"]?.includes(view_item_record?.message_type)

@@ -1,81 +1,191 @@
-import {
-  Title,
-  Text,
-  useComputedColorScheme,
-  Button,
-  Accordion,
-  Tooltip,
-} from "@mantine/core";
-import React, { useEffect, useState, useRef } from "react";
+// import MonacoEditor from "@components/MonacoEditor";
+// import { useReadRecordByState } from "@components/Utils";
+// import ResponseViewWrapper from "@components/View/ResponseView";
+// import { useParsed } from "@refinedev/core";
+// import { useEffect } from "react";
+// import { useAppStore } from "src/store";
+
+// export const ShowPage: React.FC = () => {
+//   const { activeSession, setActiveSession } = useAppStore();
+//   const { params } = useParsed();
+
+//   let session_id = params?.id;
+
+//   let read_session_state = {
+//     credential: "surrealdb catchmytask dev",
+//     success_message_code: session_id,
+//     id: session_id,
+//     record: {
+//       id: session_id,
+//     },
+//     read_record_mode: "remote",
+//   };
+
+//   const {
+//     data: sessionData,
+//     isLoading: sessionIsLoading,
+//     error: sessionError,
+//   } = useReadRecordByState(read_session_state);
+
+//   let session_data = sessionData
+//     ? sessionData?.data?.find(
+//         (item: any) => item?.message?.code === read_session_state?.id
+//       )?.data[0]
+//     : null;
+
+//   useEffect(() => {
+//     if (session_data && activeSession?.id !== session_data?.id) {
+//       setActiveSession(session_data);
+//     }
+//   }, [session_data, activeSession?.id, setActiveSession]);
+
+//   return (
+//     <>
+//       {/* <MonacoEditor
+//         value={{
+//           session_id: session_id,
+//           session_data: session_data,
+//           sessionData: sessionData,
+//           activeSession: activeSession,
+//         }}
+//       ></MonacoEditor> */}
+//       <ResponseViewWrapper></ResponseViewWrapper>
+//     </>
+//   );
+// };
+
+// export default ShowPage;
+
+// ShowPage.tsx
+import { useEffect } from "react";
 import { useAppStore } from "src/store";
-import { useParsed, useNavigation } from "@refinedev/core";
-import {
-  getLabel,
-  getTooltipLabel,
-  useReadRecordByState,
-} from "@components/Utils";
-import ErrorComponent from "@components/ErrorComponent";
-import Breadcrumbs from "@components/Breadcrumbs";
-import View from "@components/View";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import ResizeHandle from "@components/ResizeHandle";
-import MessagesWrapper from "@components/Messages";
-import ActionInputWrapper from "@components/ActionInput";
-import EventsWrapper from "@components/Events";
-import ViewWrapper from "@components/View";
-import AccordionComponent from "@components/AccordionComponent";
-import { viewQueryAccordionConfig } from "@components/View/viewQueryAccordionConfig";
-import { getDb } from "src/surreal";
-import Surreal, { LiveHandler, Uuid } from "surrealdb";
-import { viewSearchActionAccordionConfig } from "@components/Layout/viewSearchActionAccordionConfig";
-import { viewFooterAccordionConfig } from "@components/View/viewFooterAccordionConfig";
-import { IconCode, IconInfoCircle } from "@tabler/icons-react";
-import MonacoEditor from "@components/MonacoEditor";
-import WebAutomation from "@components/WebAutomation";
-import { Tabs } from "@mantine/core";
-import SearchInput from "@components/SearchInput";
-import ExternalSubmitButton from "@components/SubmitButton";
-import ActionsWrapper from "@components/Actions";
-import Reveal from "@components/Reveal";
-import CustomComponentsView from "@components/CustomComponentsView";
-import ComponentsToolbar from "@components/ComponentsToolbar";
-import Documentation from "@components/Documentation";
-import { useViewportSize } from "@mantine/hooks";
+import { useReadRecordByState } from "@components/Utils";
+import { useParsed } from "@refinedev/core";
 import ResponseViewWrapper from "@components/View/ResponseView";
-import SessionsWrapper from "@components/Sessions";
-import MonitorWrapper from "@components/Monitor";
+import MonacoEditor from "@components/MonacoEditor";
+import { useExecuteFunctionWithArgs } from "@components/hooks/useExecuteFunctionWithArgs";
+import { useToggleView } from "@components/hooks/useToggleView";
 
 export const ShowPage: React.FC = () => {
-  // const [templateSearch, setTemplateSearch] = useState("");
-  const { colorScheme, activeTask, request_response, views } = useAppStore();
-
+  const { activeSession, setActiveSession, views, setViews } = useAppStore();
   const { params } = useParsed();
-  const computedColorScheme = useComputedColorScheme("light"); // Default to light theme if auto is selected
-  // const effectiveScheme =
-  //   colorScheme.scheme === "auto" ? computedColorScheme : colorScheme.scheme;
+  const { toggleView } = useToggleView();
 
-  const action_input_form_values_key = `query_${params?.id || activeTask?.id}`;
-  // const action_input_form_values = useAppStore(
-  //   (state) => state.action_input_form_values[action_input_form_values_key]
-  // );
+  let session_id = params?.id;
+  let view_items = params?.view_items?.split(",") || [];
 
-  // const globalQuery = useAppStore(
-  //   (state) =>
-  //     state.action_input_form_values[`${action_input_form_values_key}`]?.query
-  // );
+  // Session fetch logic
+  let read_session_state = {
+    credential: "surrealdb catchmytask dev",
+    success_message_code: session_id,
+    id: session_id,
+    record: { id: session_id },
+    read_record_mode: "remote",
+  };
+
+  const {
+    data: sessionData,
+    isLoading: sessionIsLoading,
+    error: sessionError,
+  } = useReadRecordByState(read_session_state);
+
+  // View items fetch logic
+  const missingViewItems = view_items.filter((id: any) => !views[id]);
 
   // const {
-  //   data: events,
-  //   error,
-  //   loading,
-  // } = useLiveQuery<Event>(
-  //   "events",
-  //   `task_id = "${params?.id}" ORDER BY created_datetime ASC`
-  // );
+  //   data: viewItemsData,
+  //   isLoading: viewItemsLoading,
+  //   error: viewItemsError,
+  // } = useReadRecordByState({
+  //   credential: "surrealdb catchmytask dev",
+  //   success_message_code: missingViewItems.join(","),
+  //   id: missingViewItems.join(","),
+  //   record: { ids: missingViewItems },
+  //   read_record_mode: "remote",
+  //   skip: missingViewItems.length === 0,
+  // });
 
-  // Render the page content
+  let view_items_query_state = {
+    // id:
+    //   activeView?.id ||
+    //   activeTask?.id ||
+    //   activeSession?.id ||
+    //   activeProfile?.id,
+    func_name: "fetch_system_view_items",
+    name: "fetch_system_view_items",
+    view_item_ids: missingViewItems,
+    success_message_code: "fetch_system_view_items",
+  };
+  const {
+    data: viewItemsData,
+    isLoading: viewItemsIsLoading,
+    error: viewItemsError,
+  } = useExecuteFunctionWithArgs(view_items_query_state);
+
+  let session_data = sessionData
+    ? sessionData?.data?.find(
+        (item: any) => item?.message?.code === read_session_state?.id
+      )?.data[0]
+    : null;
+
+  // Update session
+  useEffect(() => {
+    if (session_data && activeSession?.id !== session_data?.id) {
+      setActiveSession(session_data);
+    }
+  }, [session_data, activeSession?.id, setActiveSession]);
+
+  // // Update view items
+  // useEffect(() => {
+  //   if (viewItemsData?.data) {
+  //     // console.log(viewItemsData?.data);
+  //     const newViews = viewItemsData.data.reduce((acc: any, item: any) => {
+  //       if (item?.data?.[0]) {
+  //         acc[item.data[0].id] = item.data[0];
+  //       }
+  //       return acc;
+  //     }, {});
+  //     // console.log(newViews);
+  //     // setViews({ ...views, ...newViews });
+  //     toggleView(String(record?.id), record);
+  //   }
+  // }, [viewItemsData, setViews]);
+  useEffect(() => {
+    if (viewItemsData?.data) {
+      // Process each item in the viewItemsData
+      viewItemsData.data.forEach((item: any) => {
+        if (item?.data?.[0]) {
+          const viewRecord = item.data[0];
+          // Use computed property name syntax correctly
+          setViews(String(viewRecord?.id), viewRecord);
+        }
+      });
+    }
+  }, [viewItemsData, setViews]);
+
+  // const isLoading = sessionIsLoading || viewItemsLoading;
+  // const error = sessionError || viewItemsError;
+
+  // if (isLoading) {
+  //   return <div>Loading...</div>;
+  // }
+
+  // if (error) {
+  //   return <div>Error: {error.message}</div>;
+  // }
+
   return (
     <>
+      {/* <MonacoEditor
+        value={{
+          missingViewItems: missingViewItems,
+          viewItemsData: viewItemsData,
+          session_id: session_id,
+          session_data: session_data,
+          sessionData: sessionData,
+          activeSession: activeSession,
+        }}
+      ></MonacoEditor> */}
       <ResponseViewWrapper />
     </>
   );

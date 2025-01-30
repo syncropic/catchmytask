@@ -133,13 +133,43 @@ export const SessionsWrapper = ({
   //   return step?.initial_state?.read === true;
   // });
 
+  // // const { search_term, ...query_key_dict } = tasks_state;
+  // const handleSessionSelect = (record: any) => {
+  //   if (record?.entity_type === "sessions") {
+  //     setActiveSession(record);
+  //     // clearViews
+  //     clearViews({});
+  //   }
+  //   let profile_id = String(
+  //     record?.profile_id ||
+  //       params?.profile_id ||
+  //       activeProfile?.id ||
+  //       user_session?.userProfile?.user_profile?.id ||
+  //       identity?.email ||
+  //       "guest"
+  //   );
+  //   // console.log(user_session?.userProfile);
+  //   go({
+  //     to: {
+  //       resource: "sessions",
+  //       action: "show",
+  //       id: record?.id,
+  //     },
+  //     query: {
+  //       profile_id: profile_id,
+  //       ...record?.initial_state?.params,
+  //     },
+  //     type: "push",
+  //   });
+  // };
   // const { search_term, ...query_key_dict } = tasks_state;
   const handleSessionSelect = (record: any) => {
-    if (record?.entity_type === "sessions") {
-      setActiveSession(record);
-      // clearViews
-      clearViews({});
-    }
+    // if (record?.entity_type === "sessions") {
+    //   // console.log(record);
+    //   setActiveSession(record);
+    //   // clearViews
+    //   clearViews({});
+    // }
     let profile_id = String(
       record?.profile_id ||
         params?.profile_id ||
@@ -148,7 +178,7 @@ export const SessionsWrapper = ({
         identity?.email ||
         "guest"
     );
-    console.log(user_session?.userProfile);
+    // console.log(user_session?.userProfile);
     go({
       to: {
         resource: "sessions",
