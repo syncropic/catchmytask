@@ -23,6 +23,7 @@ import {
   Button,
   Indicator,
   LoadingOverlay,
+  Stack,
   Title,
   Tooltip,
 } from "@mantine/core";
@@ -63,7 +64,12 @@ import { saveAs } from "file-saver";
 import { showNotification } from "@mantine/notifications";
 import { saveToLocalDB } from "src/local_db";
 import React from "react";
-import { IconAdjustments, IconFilter, IconX } from "@tabler/icons-react";
+import {
+  IconAdjustments,
+  IconClock,
+  IconFilter,
+  IconX,
+} from "@tabler/icons-react";
 import { ConsoleLogger } from "@duckdb/duckdb-wasm";
 import DynamicFilter, {
   FilterOutput,
@@ -184,68 +190,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       mutationKey: ["main_form_request"],
     },
   });
-
-  // const responseData = queryClient.getQueryData(["main_form_request"]) as {
-  //   data: any;
-  //   response: any;
-  // };
-
-  // const view_id = activeViewItem?.view_id;
-  // const task_id = params?.task_id;
-  // const session_id = params?.session_id;
-
-  // let fetch_view_by_id_state = {
-  //   credential: "surrealdb catchmytask dev",
-  //   success_message_code: view_id,
-  //   record: {
-  //     id: view_id,
-  //   },
-  //   read_record_mode: "remote",
-  // };
-
-  // const {
-  //   data: viewData,
-  //   isLoading: viewIsLoading,
-  //   error: viewError,
-  // } = useReadRecordByState(fetch_view_by_id_state);
-
-  // let view_record = viewData?.data?.find(
-  //   (item: any) =>
-  //     item?.message?.code ===
-  //     String(fetch_view_by_id_state?.success_message_code)
-  // )?.data[0];
-
-  // let view_query_state = {
-  //   // id:
-  //   //   activeView?.id ||
-  //   //   activeTask?.id ||
-  //   //   activeSession?.id ||
-  //   //   activeProfile?.id,
-  //   func_name: "fetch_system_views",
-  //   name: "fetch_system_views",
-  //   // task_id: activeTask?.id,
-  //   // session_id: activeSession?.id,
-  //   // view_id: activeView?.id,
-  //   // profile_id: activeProfile?.id,
-  //   application_id: activeApplication?.id,
-  //   // user_id: String(user_session?.userProfile?.user?.id),
-  //   // author_id: identity?.email || "guest",
-  //   view_name: activeAction?.reference_record?.variables?.summary_message_view,
-  //   success_message_code: "fetch_system_views",
-  // };
-  // const {
-  //   data: viewData,
-  //   isLoading: viewIsLoading,
-  //   error: viewError,
-  // } = useExecuteFunctionWithArgs(view_query_state);
-
-  // let view_records = viewData?.data?.find
-  //   ? viewData?.data?.find(
-  //       (item: any) =>
-  //         item?.message?.code === view_query_state?.success_message_code
-  //     )?.data || []
-  //   : null;
-  // let view_record = view_records ? view_records[0] : null;
 
   const [showVariables, setShowVariables] = useState(false);
 
@@ -1127,6 +1071,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     setActionInputFormValues,
   ]);
 
+  const [showSchedule, setShowSchedule] = useState(true);
+
   // if a template field value changes, read the record from the server and update the form values
   // Fetch the template using the existing hook
   // Use useRef to store the previous value of the template
@@ -1621,10 +1567,107 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             }
             return field ? renderField(field) : null;
           })}
+
+        {record?.features && record?.features?.includes("can_schedule") && (
+          <div>
+            {params?.id &&
+              user_session?.userProfile?.permissions?.includes(
+                "schedule_action_input"
+              ) &&
+              !global_developer_mode && (
+                <Tooltip
+                  label={`${
+                    showSchedule ? "hide" : "provide"
+                  } schedule options`}
+                  key="schedule"
+                >
+                  {/* <Indicator
+                    inline
+                    // label={getActiveFiltersCount(action_form_key)}
+                    size={16}
+                    // disabled={getActiveFiltersCount(action_form_key) === 0}
+                    color="blue"
+                    offset={4}
+                  >
+                    <Button
+                      size="compact-sm"
+                      leftSection={<IconClock size={20} />}
+                      variant={showSchedule ? "filled" : "outline"}
+                      onClick={() => setShowSchedule(!showSchedule)}
+                      disabled={!global_developer_mode}
+                    >
+                      Schedule
+                    </Button>
+                  </Indicator> */}
+                  <Button
+                    size="compact-sm"
+                    leftSection={<IconClock size={20} />}
+                    variant={showSchedule ? "filled" : "outline"}
+                    onClick={() => setShowSchedule(!showSchedule)}
+                    disabled={!global_developer_mode}
+                  >
+                    Schedule
+                  </Button>
+                </Tooltip>
+              )}
+            {showSchedule && (
+              <Stack>{scheduleFields.map((field) => renderField(field))}</Stack>
+            )}
+          </div>
+        )}
       </div>
     </form>
   );
 };
+
+// Schedule fields configuration
+export const scheduleFields: Field[] = [
+  // {
+  //   title: "Action Status",
+  //   name: "schedule.action_status",
+  //   component: "TextInput",
+  //   type: "string",
+  //   label: "Action Status",
+  //   placeholder: "Enter action status",
+  //   props: {
+  //     required: true,
+  //   },
+  // },
+  {
+    title: "Frequency (Cron Expression)",
+    name: "schedule.frequency_cron_expression",
+    component: "TextInput",
+    type: "string",
+    label: "Frequency (Cron Expression)",
+    placeholder: "Enter cron expression (e.g., 0 0 * * *)",
+    props: {
+      required: true,
+    },
+  },
+  {
+    title: "Frequency (Natural Language)",
+    name: "schedule.frequency_natural_language",
+    component: "TextInput",
+    type: "string",
+    label: "Frequency (Natural Language)",
+    placeholder:
+      "Enter frequency in natural language (e.g., every day at midnight)",
+    props: {
+      required: true,
+    },
+  },
+  // {
+  //   title: "Schedule ID",
+  //   name: "schedule.id",
+  //   component: "TextInput",
+  //   type: "string",
+  //   label: "Schedule ID",
+  //   placeholder: "Enter schedule ID",
+  //   props: {
+  //     required: true,
+  //   },
+  // },
+];
 
 // export default ActionInput;
 

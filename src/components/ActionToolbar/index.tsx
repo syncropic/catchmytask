@@ -89,6 +89,19 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
             )}
           </>
         )}
+
+        {/* {params?.id && (
+          <>
+            {hasPermission("schedule_action_input") && (
+              <ExternalSubmitButton
+                record={{}}
+                entity_type="sessions"
+                action_form_key={`form_${params.id}`}
+                action="schedule"
+              />
+            )}
+          </>
+        )} */}
         {/* {params?.id && !global_developer_mode && (
           <>
             {hasPermission("queue_action_input") && (
