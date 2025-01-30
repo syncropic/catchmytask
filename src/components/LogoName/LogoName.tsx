@@ -3,6 +3,7 @@ import { IconLetterC, IconMenu2, IconX } from "@tabler/icons-react";
 import Link from "next/link";
 import { useAppStore } from "src/store";
 import { Burger } from "@mantine/core";
+import { useIsMobile } from "@components/Utils";
 
 interface LogoNameProps {
   logoLink: string;
@@ -22,39 +23,55 @@ export function LogoName({
   authenticatedData = {},
 }: LogoNameProps) {
   const { displaySidebar, toggleDisplaySidebar } = useAppStore();
+  const isMobile = useIsMobile();
+
   return (
     // <Anchor component={Link} href={logoLink}>
 
     // </Anchor>
-    <Button
-      variant="transparent"
-      leftSection={
-        authenticatedData?.authenticated ? (
+    <>
+      {!isMobile ? (
+        <Button
+          variant="transparent"
+          leftSection={
+            authenticatedData?.authenticated ? (
+              <Burger
+                opened={displaySidebar}
+                size="sm"
+                // onClick={toggleDisplaySidebar}
+                aria-label="Toggle navigation"
+                color="blue"
+              />
+            ) : null
+          }
+          // leftSection={
+          //   logoURL ? (
+          //     <Avatar src={logoURL} alt="company logo" size="sm" />
+          //   ) : iconName ? (
+          //     <Avatar color="blue" radius="sm">
+          //       <IconLetterC />
+          //     </Avatar>
+          //   ) : (
+          //     <Avatar color="blue" radius="sm">
+          //       <IconLetterC />
+          //     </Avatar>
+          //   )
+          // }
+          onClick={toggleDisplaySidebar}
+        >
+          {isMobile ? null : companyName}
+        </Button>
+      ) : (
+        <div className="p-1">
           <Burger
             opened={displaySidebar}
             size="sm"
-            // onClick={toggleDisplaySidebar}
+            onClick={toggleDisplaySidebar}
             aria-label="Toggle navigation"
             color="blue"
           />
-        ) : null
-      }
-      // leftSection={
-      //   logoURL ? (
-      //     <Avatar src={logoURL} alt="company logo" size="sm" />
-      //   ) : iconName ? (
-      //     <Avatar color="blue" radius="sm">
-      //       <IconLetterC />
-      //     </Avatar>
-      //   ) : (
-      //     <Avatar color="blue" radius="sm">
-      //       <IconLetterC />
-      //     </Avatar>
-      //   )
-      // }
-      onClick={toggleDisplaySidebar}
-    >
-      {companyName}
-    </Button>
+        </div>
+      )}
+    </>
   );
 }

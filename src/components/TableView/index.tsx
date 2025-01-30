@@ -171,6 +171,7 @@ export function TableView<T extends Record<string, any>>({
       {data_items && data_fields && (
         <DataTable<T>
           noHeader={true}
+          // scrollAreaProps={{ type: "scroll" }}
           columns={[
             // First spread the data fields columns
             ...data_fields.map(
@@ -419,18 +420,20 @@ export function TableView<T extends Record<string, any>>({
           // striped={true}
           // selectedRecords={selectedRecords}
           // onSelectedRecordsChange={setSelectedRecords}
-          scrollAreaProps={{
-            type: "auto",
-            offsetScrollbars: false,
-            scrollbarSize: 8,
-            scrollHideDelay: 0,
-            viewportProps: {
-              style: {
-                maxWidth: "100%",
-                overflowX: "auto",
-              },
-            },
-          }}
+          scrollAreaProps={
+            {
+              // type: "never",
+              // offsetScrollbars: false,
+              // scrollbarSize: 8,
+              // scrollHideDelay: 0,
+              // viewportProps: {
+              //   style: {
+              //     maxWidth: "100%",
+              //     overflowX: "auto",
+              //   },
+              // },
+            }
+          }
           {...(view_record?.include_items?.includes("row_expansion")
             ? {
                 rowExpansion: {

@@ -443,7 +443,7 @@ const LargeScreenHeader = ({
       )} */}
 
       {authenticatedData?.authenticated && (
-        <div className="w-[600px] pr-3">
+        <div className="w-full max-w-1=2xl pr-3">
           <SessionsWrapper
             func_name="fetch_system_sessions"
             view_id="views:36xo8keq9tsoyly68shk"
