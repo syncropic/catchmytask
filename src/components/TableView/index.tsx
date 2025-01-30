@@ -170,6 +170,7 @@ export function TableView<T extends Record<string, any>>({
     <Box className="w-full overflow-hidden">
       {data_items && data_fields && (
         <DataTable<T>
+          noHeader={true}
           columns={[
             // First spread the data fields columns
             ...data_fields.map(
