@@ -277,19 +277,27 @@ const Layout = ({
                 visible_sections.map((section: string) => {
                   const Component = getComponentByKey(section as ComponentKey);
                   return (
-                    <Component
-                      title={
-                        application?.titles?.length > 1
-                          ? application["titles"]?.find(
-                              (title: any) =>
-                                title["metadata"]["section"] === `${section}`
-                            )
-                          : ""
-                      }
-                      items={application[section] || []}
-                      entity_type={section}
-                      key={section}
-                    ></Component>
+                    <>
+                      {/* {JSON.stringify(
+                        application["titles"]?.find(
+                          (title: any) =>
+                            title["metadata"]["section"] === `${section}`
+                        )
+                      )} */}
+                      <Component
+                        title={
+                          application?.titles?.length > 0
+                            ? application["titles"]?.find(
+                                (title: any) =>
+                                  title["metadata"]["section"] === `${section}`
+                              )
+                            : ""
+                        }
+                        items={application[section] || []}
+                        entity_type={section}
+                        key={section}
+                      ></Component>
+                    </>
                   );
                 })}
             </>

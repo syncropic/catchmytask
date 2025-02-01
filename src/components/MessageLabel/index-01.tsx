@@ -194,10 +194,10 @@ export const ActionStatusInfo: React.FC<{
 
     return (
       <div className="flex items-center space-x-2">
-        <div className={`p-1 rounded-full ${status_config.bgColor}`}>
-          <StatusIcon className={`w-4 h-4 ${status_config.color}`} stroke={2} />
+        <div className={`p-1 rounded-full ${config.bgColor}`}>
+          <StatusIcon className={`w-4 h-4 ${config.color}`} stroke={2} />
         </div>
-        <span className={`text-sm ${status_config.color} font-medium`}>
+        <span className={`text-sm ${config.color} font-medium`}>
           {record.action_status || "No status"}
         </span>
       </div>
