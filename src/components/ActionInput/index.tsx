@@ -147,6 +147,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     setExpandedRecordIds,
     showVariables,
     showFields,
+    showSchedule,
   } = useAppStore();
 
   let global_input_mode_developer =
@@ -1075,7 +1076,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     setActionInputFormValues,
   ]);
 
-  const [showSchedule, setShowSchedule] = useState(true);
+  // const [showSchedule, setShowSchedule] = useState(true);
 
   // if a template field value changes, read the record from the server and update the form values
   // Fetch the template using the existing hook
@@ -1490,6 +1491,13 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           return field ? renderField(field) : null;
         })()} */}
       <div className="flex flex-col gap-2 p-3">
+        {record?.features && record?.features?.includes("can_schedule") && (
+          <div>
+            {showSchedule && (
+              <Stack>{scheduleFields.map((field) => renderField(field))}</Stack>
+            )}
+          </div>
+        )}
         {showFields && <ActiveViewFields />}
 
         {record?.variables_options?.length > 0 &&
@@ -1578,53 +1586,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             }
             return field ? renderField(field) : null;
           })}
-
-        {record?.features && record?.features?.includes("can_schedule") && (
-          <div>
-            {params?.id &&
-              user_session?.userProfile?.permissions?.includes(
-                "schedule_action_input"
-              ) && (
-                <Tooltip
-                  label={`${
-                    showSchedule ? "hide" : "provide"
-                  } schedule options`}
-                  key="schedule"
-                >
-                  {/* <Indicator
-                    inline
-                    // label={getActiveFiltersCount(action_form_key)}
-                    size={16}
-                    // disabled={getActiveFiltersCount(action_form_key) === 0}
-                    color="blue"
-                    offset={4}
-                  >
-                    <Button
-                      size="compact-sm"
-                      leftSection={<IconClock size={20} />}
-                      variant={showSchedule ? "filled" : "outline"}
-                      onClick={() => setShowSchedule(!showSchedule)}
-                      disabled={!global_developer_mode}
-                    >
-                      Schedule
-                    </Button>
-                  </Indicator> */}
-                  <Button
-                    size="compact-sm"
-                    leftSection={<IconClock size={20} />}
-                    variant={showSchedule ? "filled" : "outline"}
-                    onClick={() => setShowSchedule(!showSchedule)}
-                    // disabled={!global_developer_mode}
-                  >
-                    Schedule
-                  </Button>
-                </Tooltip>
-              )}
-            {showSchedule && (
-              <Stack>{scheduleFields.map((field) => renderField(field))}</Stack>
-            )}
-          </div>
-        )}
 
         {hasRequiredFields &&
           showVariables &&

@@ -352,6 +352,11 @@ export const useAppStore = create(
         set((state) => ({
           showFields: !state.showFields,
         })),
+      showSchedule: false,
+      toggleShowSchedule: () =>
+        set((state) => ({
+          showSchedule: !state.showSchedule,
+        })),
       showSessionWorkingMemory: false,
       toggleShowSessionWorkingMemory: () =>
         set((state) => ({
