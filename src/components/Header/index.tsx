@@ -28,6 +28,7 @@ import {
   IconMenu2,
   IconPlus,
   IconSettingsAutomation,
+  IconTerminal,
 } from "@tabler/icons-react";
 import SearchInput from "@components/SearchInput";
 import Reveal from "@components/Reveal";
@@ -76,6 +77,8 @@ const LargeScreenHeader = ({
     showSessionWorkingMemory,
     global_session_trace_mode,
     toggleGlobalSessionTraceMode,
+    global_input_mode,
+    setGlobalInputMode,
   } = useAppStore();
   const { updateComponentAction } = useUpdateComponentAction();
   let action = focused_entities[activeTask?.id]?.["action"];
@@ -255,10 +258,45 @@ const LargeScreenHeader = ({
                   <Tooltip label={`toggle developer mode`} position="top">
                     <ActionIcon
                       size="sm"
-                      onClick={toggleGlobalDeveloperMode}
-                      variant={global_developer_mode ? "filled" : "outline"}
+                      // onClick={toggleGlobalDeveloperMode}
+                      // variant={global_developer_mode ? "filled" : "outline"}
+                      onClick={() =>
+                        setGlobalInputMode(
+                          global_input_mode === "developer"
+                            ? "user"
+                            : "developer"
+                        )
+                      }
+                      variant={
+                        global_input_mode === "developer" ? "filled" : "outline"
+                      }
                     >
                       <IconCode size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                </div>
+              </div>
+            </div>
+          )}
+
+        {authenticatedData?.authenticated &&
+          hasPermission("has_terminal_mode") && (
+            <div className="hidden lg:block">
+              <div className="flex items-center pl-4 pr-4">
+                <div>
+                  <Tooltip label={`toggle terminal mode`} position="top">
+                    <ActionIcon
+                      size="sm"
+                      onClick={() =>
+                        setGlobalInputMode(
+                          global_input_mode === "terminal" ? "user" : "terminal"
+                        )
+                      }
+                      variant={
+                        global_input_mode === "terminal" ? "filled" : "outline"
+                      }
+                    >
+                      <IconTerminal size={20} />
                     </ActionIcon>
                   </Tooltip>
                 </div>

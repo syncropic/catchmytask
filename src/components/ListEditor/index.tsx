@@ -512,3 +512,223 @@ export const ListEditorFormInput = ({ ...props }: any) => {
     // <div>monaco editor form input</div>
   );
 };
+
+export const ListEditor = ({
+  initial_list,
+  list_id,
+}: {
+  initial_list: any[];
+  list_id: string;
+}) => {
+  // const transformedRecords = props?.value?.map((item: string, index: any) => ({
+  //   id: uuidv4(), // Generate a unique ID for each item
+  //   description: item,
+  //   index: index + 1,
+  // }));
+
+  // // Set transformed records as the initial state
+  // const [records, setRecords] = useState<RecordData[]>(transformedRecords);
+  // const { selectedRecords, setSelectedRecords } = useAppStore();
+
+  // const [records, setRecords] = useState<any[]>([]); // Initialize with an empty array
+  const { selectedRecords, setSelectedRecords } = useAppStore();
+  const { sortedRecords, setSortedRecords } = useAppStore();
+
+  // Update records whenever props.value changes
+  // for id use the item with all spaces replaced with _
+  // useEffect(() => {
+  //   if (props.value && props.value.length > 0) {
+  //     const transformedRecords = props.value.map((item: any) => ({
+  //       ...item,
+  //       id: item?.id || item?.name.replace(/ /g, "_"),
+  //     }));
+  //     // sort by execution order
+  //     transformedRecords.sort((a: any, b: any) => (a.index > b.index ? 1 : -1));
+  //     setRecords(transformedRecords); // Update state with transformed records
+  //     console.log("transformedRecords", transformedRecords);
+  //   }
+  // }, [props.value, records]); // Dependency array ensures effect runs when props.value changes
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const items = Array.from(
+      sortedRecords[`${list_id}`] || transformRecords(initial_list)
+    );
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+    const [reorderedItem] = items.splice(sourceIndex, 1);
+    items.splice(destinationIndex, 0, reorderedItem);
+
+    let items_with_index = items.map((item: any, index: number) => {
+      return { ...item, index: index + 1 };
+    });
+    // get list of sorted records with id, index, name
+    let sorted_records = items_with_index.map((item) => {
+      return { id: item.id, index: item.index, name: item.name };
+    });
+    // set sorted records to form input
+    let new_sorted_records = {
+      ...sortedRecords,
+      [`${list_id}`]: sorted_records,
+    };
+    // set sorted records to global state
+    setSortedRecords(new_sorted_records);
+    // setRecords(items_with_index);
+
+    // notifications.show({
+    //   title: "Table reordered",
+    //   message: `The company named "${
+    //     items[sourceIndex].name
+    //   }" has been moved from position ${sourceIndex + 1} to ${
+    //     destinationIndex + 1
+    //   }.`,
+    //   color: "blue",
+    // });
+  };
+
+  const handleSelectValue = (value: any) => {
+    // console.log("selected value", value);
+    let new_selected_records = {
+      ...selectedRecords,
+      [`${list_id}`]: value,
+    };
+    setSelectedRecords(new_selected_records);
+  };
+  const handleClearFields = () => {
+    let new_selected_records = {
+      ...selectedRecords,
+      [`${list_id}`]: [],
+    };
+    setSelectedRecords(new_selected_records);
+  };
+
+  const columns: DataTableColumn<any>[] = [
+    // add empty header column for the drag handle
+    { accessor: "", hiddenContent: true, width: 30 },
+    { accessor: "name", ellipsis: true },
+    { accessor: "index" },
+  ];
+  // takes a list of items and if item has no id, use the name with all spaces replaced with _ and in loweracase as the id
+  const transformRecords = (items: any[]) => {
+    let transformedRecords = items.map((item: any, index: number) => {
+      return {
+        ...item,
+        id: item?.id || item?.name.replace(/ /g, "_").toLowerCase(),
+        index: item?.index || index + 1,
+      };
+    });
+    // sort by index in ascending order
+    transformedRecords.sort((a: any, b: any) => (a.index > b.index ? 1 : -1));
+    return transformedRecords;
+  };
+  return (
+    <>
+      <div className="p-1">
+        <Button
+          size="compact-xs"
+          onClick={handleClearFields}
+          disabled={selectedRecords[`${list_id}`]?.length > 0 ? false : true}
+        >
+          clear
+        </Button>
+      </div>
+      {/* {props?.schema?.title && (
+        <Text fw={500} size="sm">
+          {props?.schema?.title}
+        </Text>
+      )} */}
+      {/* <div>{JSON.stringify(selectedRecords)}</div> */}
+      {/* <div>{JSON.stringify(props?.action_input_form_values_key)}</div> */}
+      {/* <div>list editor</div> */}
+      {/* <div>{JSON.stringify(props?.value)}</div> */}
+      {/* {props?.value && (
+        <NaturalLanguageEditor
+          // {...props?.schema}
+          // value={props?.value}
+          value={JSON.stringify(props?.value)}
+          setValue={props?.onChange}
+          form={props?.form}
+          isLoading={props?.isLoading}
+          // field={props?.schema.title.toLowerCase().replace(/ /g, "_")}
+          // {...props}
+        />
+      )} */}
+      {initial_list && (
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <DataTable<any>
+            columns={[
+              ...columns,
+              // {
+              //   accessor: "actions",
+              //   title: <Box mr={6}>actions</Box>,
+              //   textAlign: "right",
+              //   width: 80,
+              //   render: (record: any) => (
+              //     // <div>record actions</div>
+              //     <RecordActionsWrapper
+              //       record={record}
+              //       name="action_step"
+              //       query_name="data_model"
+              //       success_message_code="action_input_data_model_schema"
+              //     ></RecordActionsWrapper>
+              //   ),
+              // },
+            ]}
+            records={
+              sortedRecords[`${list_id}`] || transformRecords(initial_list)
+            }
+            withTableBorder
+            withColumnBorders
+            pinFirstColumn
+            // pinLastColumn
+            tableWrapper={({ children }) => (
+              <Droppable droppableId={`${list_id}` || "datatable"}>
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef}>
+                    {children}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            )}
+            styles={{ table: { tableLayout: "fixed" } }}
+            selectedRecords={selectedRecords[`${list_id}`] ?? []}
+            onSelectedRecordsChange={handleSelectValue}
+            rowFactory={({
+              record,
+              index,
+              rowProps,
+              children,
+            }: {
+              record: any;
+              index: number;
+              rowProps: any;
+              children: React.ReactNode;
+            }) => (
+              <Draggable key={record.id} draggableId={record.id} index={index}>
+                {(provided, snapshot) => (
+                  <DataTableDraggableRow
+                    isDragging={snapshot.isDragging}
+                    {...rowProps}
+                    {...provided.draggableProps}
+                  >
+                    <TableTd
+                      {...provided.dragHandleProps}
+                      ref={provided.innerRef}
+                    >
+                      <IconGripVertical size={12} />
+                    </TableTd>
+                    {children}
+                  </DataTableDraggableRow>
+                )}
+              </Draggable>
+            )}
+          />
+        </DragDropContext>
+      )}
+      {/* <MonacoEditor value={props?.value} language="json" height="100vh" /> */}
+    </>
+    // <div>monaco editor form input</div>
+  );
+};

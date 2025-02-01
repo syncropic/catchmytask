@@ -13,6 +13,7 @@ export interface Variable {
   value: string;
   label: string;
   props?: any;
+  location?: string;
   type:
     | "string"
     | "number"
@@ -38,6 +39,7 @@ export interface FilterCondition {
   value: string | number | boolean | Date | null;
   value2?: string | number | Date | null;
   fieldType: Variable["type"];
+  location: Variable["location"];
 }
 
 export interface FilterOutput {
@@ -546,6 +548,7 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
         operator,
         value,
         fieldType: variable.type,
+        location: variable?.location || "pre",
       };
 
       if (operator === "between" && value2 !== null) {

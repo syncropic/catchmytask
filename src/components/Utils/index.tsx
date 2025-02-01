@@ -180,6 +180,7 @@ import { useClickOutside, useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { ListEditorFormInput } from "@components/ListEditor";
 import { VerticalTransformActionsFormInput } from "@components/VerticalTransformActions";
 import { StorageAttachmentActionsFormInput } from "@components/StorageAttachmentActions";
+import ActiveViewFields from "@components/ActiveViewFields";
 
 // Adjusted createColumnDef to fit your use case
 export function createColumnDef<RowDataType extends RowData>(
@@ -394,6 +395,7 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   NumberInput: NumberInput,
   FileInput: FileInput,
   DateTimePicker: DateTimePicker,
+  ActiveViewFields: ActiveViewFields,
   SearchInput: SearchInput,
   trips: ViewTrip,
   bookings: ViewBooking,

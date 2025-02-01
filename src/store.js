@@ -337,6 +337,21 @@ export const useAppStore = create(
           showRequestResponseView: false,
           global_developer_mode: false,
         })),
+      global_input_mode: "user",
+      setGlobalInputMode: (mode) =>
+        set((state) => ({
+          global_input_mode: mode,
+        })),
+      showVariables: true,
+      toggleShowVariables: () =>
+        set((state) => ({
+          showVariables: !state.showVariables,
+        })),
+      showFields: false,
+      toggleShowFields: () =>
+        set((state) => ({
+          showFields: !state.showFields,
+        })),
       showSessionWorkingMemory: false,
       toggleShowSessionWorkingMemory: () =>
         set((state) => ({

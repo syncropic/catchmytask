@@ -78,6 +78,7 @@ import DynamicFilter, {
 import { useSession } from "next-auth/react";
 import { useToggleView } from "@components/hooks/useToggleView";
 import { useExecuteFunctionWithArgs } from "@components/hooks/useExecuteFunctionWithArgs";
+import ActiveViewFields from "@components/ActiveViewFields";
 
 // Function to map class names to ExcelJS ARGB colors
 const getExcelJSStyleFromClass = (className: string) => {
@@ -141,10 +142,19 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     activeInput,
     filter_form_values,
     open_new_items_in_window,
-    global_developer_mode,
+    global_input_mode,
     expandedRecordIds,
     setExpandedRecordIds,
+    showVariables,
+    showFields,
   } = useAppStore();
+
+  let global_input_mode_developer =
+    global_input_mode === "developer" ? true : false;
+  let global_input_mode_user = global_input_mode === "user" ? true : false;
+  let global_input_mode_trace = global_input_mode === "trace" ? true : false;
+  let global_input_mode_terminal =
+    global_input_mode === "terminal" ? true : false;
   const queryClient = useQueryClient();
   const go = useGo(); // Navigation function
   const { toggleView } = useToggleView();
@@ -190,12 +200,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
       mutationKey: ["main_form_request"],
     },
   });
-
-  const [showVariables, setShowVariables] = useState(false);
-
-  const toggleVariables = () => {
-    setShowVariables((prev) => !prev);
-  };
 
   // const globalQuery =
   //   useAppStore(
@@ -1132,26 +1136,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     });
   };
 
-  // Function to count active filters for the current form
-  const getActiveFiltersCount = (formKey: string) => {
-    const filterKey = `${formKey}_filter`;
-    const formValues = filter_form_values[filterKey] || {};
-
-    // Count fields that have a value and aren't null
-    return Object.entries(formValues).reduce((count, [key, value]) => {
-      // Only count main values, not operators or value2
-      if (
-        !key.includes("_operator") &&
-        !key.includes("_value2") &&
-        value !== null &&
-        value !== ""
-      ) {
-        return count + 1;
-      }
-      return count;
-    }, 0);
-  };
-
   // Effect to handle template changes
   useEffect(() => {
     if (
@@ -1505,41 +1489,33 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           const field = data_model?.schema?.properties?.[field_name];
           return field ? renderField(field) : null;
         })()} */}
-      <div className="flex flex-col gap-2 p-3 h-[55vh]">
-        {record?.variables_options?.length > 0 && (
-          <div>
-            {params?.id &&
-              user_session?.userProfile?.permissions?.includes(
-                "filter_action_input"
-              ) &&
-              !global_developer_mode && (
-                <Tooltip
-                  label={`${
-                    showVariables ? "hide" : "provide"
-                  } optional variables`}
-                  key="variables"
-                >
-                  <Indicator
-                    inline
-                    label={getActiveFiltersCount(action_form_key)}
-                    size={16}
-                    disabled={getActiveFiltersCount(action_form_key) === 0}
-                    color="blue"
-                    offset={4}
-                  >
-                    <Button
-                      size="compact-sm"
-                      leftSection={<IconAdjustments size={20} />}
-                      variant={showVariables ? "filled" : "outline"}
-                      onClick={toggleVariables}
-                      disabled={!global_developer_mode}
-                    >
-                      Variables
-                    </Button>
-                  </Indicator>
-                </Tooltip>
-              )}
-            {hasRequiredFields &&
+      <div className="flex flex-col gap-2 p-3">
+        {showFields && <ActiveViewFields />}
+
+        {record?.variables_options?.length > 0 &&
+          showVariables &&
+          !global_input_mode_developer && (
+            <div>
+              {params?.id &&
+                user_session?.userProfile?.permissions?.includes(
+                  "filter_action_input"
+                ) && (
+                  <div>
+                    <DynamicFilter
+                      variables={record?.variables_options?.filter(
+                        (item: any) =>
+                          (
+                            action_input_form_values[
+                              action_input_form_values_key
+                            ]?.variables || []
+                          ).includes(item.value)
+                      )}
+                      action_form_key={action_form_key}
+                      onFilterChange={handleFilterChange}
+                    />
+                  </div>
+                )}
+              {/* {hasRequiredFields &&
               data_model?.schema?.required.map((fieldName: string) => {
                 const field = data_model?.schema?.properties?.[fieldName];
                 if (
@@ -1551,30 +1527,64 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   return null;
                 }
                 return field ? renderField(field) : null;
-              })}
-            {showVariables ||
-              (!global_developer_mode && (
-                <DynamicFilter
-                  variables={record?.variables_options?.filter((item: any) =>
-                    (
-                      action_input_form_values[action_input_form_values_key]
-                        ?.variables || []
-                    ).includes(item.value)
-                  )}
-                  action_form_key={action_form_key}
-                  onFilterChange={handleFilterChange}
-                />
-              ))}
-          </div>
-        )}
+              })} */}
+              {/* {showVariables && (
+              <DynamicFilter
+                variables={record?.variables_options?.filter((item: any) =>
+                  (
+                    action_input_form_values[action_input_form_values_key]
+                      ?.variables || []
+                  ).includes(item.value)
+                )}
+                action_form_key={action_form_key}
+                onFilterChange={handleFilterChange}
+              />
+            )} */}
+            </div>
+          )}
+
+        {/* and mode is developer input mode have that instead of natural language and show developer specific items here */}
+        {/* {record?.variables_options?.length > 0 &&
+          showVariables &&
+          !global_input_mode_developer && (
+            <div>
+              {params?.id &&
+                user_session?.userProfile?.permissions?.includes(
+                  "filter_action_input"
+                ) && (
+                  <div>
+                    <DynamicFilter
+                      variables={record?.variables_options?.filter(
+                        (item: any) =>
+                          (
+                            action_input_form_values[
+                              action_input_form_values_key
+                            ]?.variables || []
+                          ).includes(item.value)
+                      )}
+                      action_form_key={action_form_key}
+                      onFilterChange={handleFilterChange}
+                    />
+                  </div>
+                )}
+            </div>
+          )} */}
+
+        {hasRequiredFields &&
+          data_model?.schema?.required.map((fieldName: string) => {
+            const field = data_model?.schema?.properties?.[fieldName];
+            if (["variables", "variables_value"].includes(fieldName)) {
+              return null;
+            }
+            return field ? renderField(field) : null;
+          })}
 
         {record?.features && record?.features?.includes("can_schedule") && (
           <div>
             {params?.id &&
               user_session?.userProfile?.permissions?.includes(
                 "schedule_action_input"
-              ) &&
-              !global_developer_mode && (
+              ) && (
                 <Tooltip
                   label={`${
                     showSchedule ? "hide" : "provide"
@@ -1604,7 +1614,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                     leftSection={<IconClock size={20} />}
                     variant={showSchedule ? "filled" : "outline"}
                     onClick={() => setShowSchedule(!showSchedule)}
-                    disabled={!global_developer_mode}
+                    // disabled={!global_developer_mode}
                   >
                     Schedule
                   </Button>
@@ -1617,6 +1627,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
         )}
 
         {hasRequiredFields &&
+          showVariables &&
           data_model?.schema?.required.map((fieldName: string) => {
             const field = data_model?.schema?.properties?.[fieldName];
             if (fieldName == "variables") {

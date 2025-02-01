@@ -83,6 +83,7 @@ export type ComponentKey =
   | "Checkbox"
   | "SearchInput"
   | "ListEditorFormInput"
+  | "ActiveViewFields"
   | "VerticalTransformActionsFormInput"
   | "StorageAttachmentActionsFormInput";
 

@@ -101,12 +101,19 @@ const Layout = ({
     sectionIsExpanded,
     setSectionIsExpanded,
     setNavigationHistory,
-    global_developer_mode,
+    global_input_mode,
     global_session_trace_mode,
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
   const { data: user_session } = useSession();
   const { params, pathname } = useParsed();
+  let global_input_mode_developer =
+    global_input_mode === "developer" ? true : false;
+  let global_input_mode_user = global_input_mode === "user" ? true : false;
+  let global_input_mode_trace = global_input_mode === "trace" ? true : false;
+  let global_input_mode_terminal =
+    global_input_mode === "terminal" ? true : false;
+
   const { displaySidebar, toggleDisplaySidebar } = useAppStore();
 
   const { leftSection, centerSection, rightSection } = activeLayout; // Destructure the sections for visibility checks
@@ -440,26 +447,25 @@ const Layout = ({
         ) : (
           // Replace this entire PanelGroup section with:
           <DesktopPanelLayout
-            global_developer_mode={global_developer_mode}
+            global_developer_mode={
+              global_input_mode_developer || global_input_mode_terminal
+            }
             leftSection={{
               isDisplayed: leftSection.isDisplayed,
               children: (
                 <>
                   <div className="sticky top-0 z-10">
-                    {!global_developer_mode &&
-                      !global_session_trace_mode &&
-                      activeSession &&
-                      params?.id && (
-                        <SessionSummaryInfoCard session={activeSession} />
-                      )}
+                    {global_input_mode_user && activeSession && params?.id && (
+                      <SessionSummaryInfoCard session={activeSession} />
+                    )}
                   </div>
-                  {global_session_trace_mode && (
+                  {global_input_mode_trace && (
                     <div>
                       {/* <InteractiveGraph /> */}
                       <div>interactive graph</div>
                     </div>
                   )}
-                  {!global_developer_mode && !global_session_trace_mode && (
+                  {global_input_mode_user && (
                     <div>
                       <ActionInputWrapper
                         data_model="user mode query input"
@@ -471,7 +477,7 @@ const Layout = ({
                       />
                     </div>
                   )}
-                  {global_developer_mode && !global_session_trace_mode && (
+                  {global_input_mode_developer && (
                     <>
                       <ActionToolbar
                         params={params}
@@ -493,12 +499,12 @@ const Layout = ({
                             {/* Left Column - Natural Language Query */}
                             <div className="w-[45%] min-w-0">
                               <ActionInputWrapper
-                                data_model="natural language query input"
+                                data_model="developer mode query input"
                                 query_name="data_model"
                                 record={{ id: params?.id }}
                                 action="query"
                                 action_form_key={`form_${params?.id}`}
-                                success_message_code="natural_language_query_input"
+                                success_message_code="developer_mode_query_input"
                               />
                             </div>
                             {/* Middle Column - Submit Buttons (No spacing) */}
@@ -525,22 +531,22 @@ const Layout = ({
                                 </div>
 
                                 {/* Second section - 25% height */}
-                                <div className="h-[25%] flex flex-col justify-end">
+                                <div className="h-[25%] flex flex-col">
                                   <div className="flex flex-col gap-10">
-                                    <ExternalSubmitButton
+                                    {/* <ExternalSubmitButton
                                       record={{}}
                                       entity_type="sessions"
                                       action_form_key={`form_${params?.id}`}
                                       action="query"
                                       icon={"IconArrowRight"}
-                                    />
-                                    <ExternalSubmitButton
+                                    /> */}
+                                    {/* <ExternalSubmitButton
                                       record={{}}
                                       entity_type="sessions"
                                       action_form_key={`form_${params?.id}`}
                                       action="query"
                                       icon={"IconArrowLeft"}
-                                    />
+                                    /> */}
                                     <ExternalSubmitButton
                                       record={{}}
                                       entity_type="command"
@@ -565,6 +571,118 @@ const Layout = ({
                                 action_form_key={`form_${params?.id}`}
                                 success_message_code="structured_query_input"
                               />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {global_input_mode_terminal && (
+                    <>
+                      {/* <ActionToolbar
+                        params={params}
+                        userSession={user_session}
+                        activeInput={activeInput}
+                        setActiveInput={setActiveInput}
+                        sectionIsExpanded={sectionIsExpanded}
+                        setSectionIsExpanded={setSectionIsExpanded}
+                        closeDisplay={closeDisplay}
+                        includeComponents={["toolbar"]}
+                      /> */}
+                      <div className="min-h-0 flex-1 overflow-y-auto pb-6">
+                        <div className="w-full h-full">
+                          {" "}
+                          {/* Add h-full here */}
+                          <div className="flex w-full h-full">
+                            {" "}
+                            {/* Removed gap-4 */}
+                            {/* Right Column - Structured Query */}
+                            <div className="w-[45%] min-w-0">
+                              {/* <ActionInputWrapper
+                                data_model="structured query input"
+                                query_name="data_model"
+                                record={{ id: params?.id }}
+                                action="query"
+                                action_form_key={`form_${params?.id}`}
+                                success_message_code="structured_query_input"
+                              /> */}
+                              <div>recommendation graph</div>
+                            </div>
+                            {/* Left Column - Natural Language Query */}
+                            <div className="w-[53%] min-w-0">
+                              {/* <ActionInputWrapper
+                                data_model="terminal query input"
+                                query_name="data_model"
+                                record={{ id: params?.id }}
+                                action="query"
+                                action_form_key={`form_${params?.id}`}
+                                success_message_code="terminal_query_input"
+                              /> */}
+                              <ExternalSubmitButton
+                                record={{}}
+                                entity_type="command"
+                                action_form_key={`form_${params?.id}`}
+                                action="command"
+                                actionProps={{
+                                  color: "green",
+                                }}
+                                icon={"IconLocationCode"}
+                              />
+                            </div>
+                            {/* Middle Column - Submit Buttons (No spacing) */}
+                            <div className="w-auto min-w-0 h-full flex-shrink-0">
+                              <div className="flex flex-col h-full">
+                                {/* First section - 75% height */}
+                                <div className="h-[75%] flex flex-col justify-center">
+                                  <div className="flex flex-col gap-10">
+                                    {/* <ExternalSubmitButton
+                                      record={{}}
+                                      entity_type="sessions"
+                                      action_form_key={`form_${params?.id}`}
+                                      action="query"
+                                      icon={"IconArrowRight"}
+                                    /> */}
+                                    {/* <ExternalSubmitButton
+                                      record={{}}
+                                      entity_type="sessions"
+                                      action_form_key={`form_${params?.id}`}
+                                      action="query"
+                                      icon={"IconArrowLeft"}
+                                    /> */}
+                                  </div>
+                                </div>
+
+                                {/* Second section - 25% height */}
+                                <div className="h-[25%] flex flex-col justify-end">
+                                  <div className="flex flex-col gap-10">
+                                    {/* <ExternalSubmitButton
+                                      record={{}}
+                                      entity_type="sessions"
+                                      action_form_key={`form_${params?.id}`}
+                                      action="query"
+                                      icon={"IconArrowRight"}
+                                    />
+                                    <ExternalSubmitButton
+                                      record={{}}
+                                      entity_type="sessions"
+                                      action_form_key={`form_${params?.id}`}
+                                      action="query"
+                                      icon={"IconArrowLeft"}
+                                    /> */}
+                                    {/* <ExternalSubmitButton
+                                      record={{}}
+                                      entity_type="command"
+                                      action_form_key={`form_${params?.id}`}
+                                      action="command"
+                                      actionProps={{
+                                        color: "green",
+                                      }}
+                                      icon={"IconLocationCode"}
+                                    /> */}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
