@@ -459,7 +459,10 @@ export function TableView<T extends Record<string, any>>({
                                 overflowX: "auto",
                               }}
                             >
-                              <ExecutionStatus record={record?.actions} />
+                              <ExecutionStatus
+                                record={record?.actions}
+                                parent_record={record}
+                              />
                             </Box>
                           </div>
                         ) : null}

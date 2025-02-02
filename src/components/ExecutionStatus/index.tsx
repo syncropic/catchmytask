@@ -45,6 +45,7 @@ interface ProcessedItem extends RecordItem {
 }
 
 interface ExecutionStatusProps {
+  parent_record: any;
   record: {
     [key: string]: RecordItem;
   };
@@ -131,6 +132,7 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
 };
 
 const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
+  parent_record,
   record,
   onConnect,
 }) => {
@@ -165,7 +167,10 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         frontend_url: currentUrl,
         session_id: params?.id || activeSession?.id,
         profile_id: params?.profile_id || activeProfile?.id || identity?.email,
+        message_id: String(parent_record?.id),
+        section_title: item.name,
         view_items: params?.view_items,
+        author_id: identity?.email,
       };
 
       url.searchParams.set(
