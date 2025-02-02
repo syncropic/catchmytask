@@ -35,7 +35,8 @@ type ActionStatus =
   | "scheduled"
   | "running"
   | "failed"
-  | "passed";
+  | "passed"
+  | "connect";
 
 interface StatusConfig {
   icon: typeof IconQuestionMark;
@@ -114,6 +115,12 @@ const getStatusConfig = (status?: ActionStatus): StatusConfig => {
       icon: IconCircleCheck,
       color: "text-green-500",
       bgColor: "bg-green-50",
+    },
+    connect: {
+      // Add configuration for connect status
+      icon: IconQuestionMark,
+      color: "text-blue-500",
+      bgColor: "bg-blue-50",
     },
   };
 
