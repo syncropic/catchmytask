@@ -26,6 +26,7 @@ interface RecordItem {
   start_datetime: string;
   end_datetime: string;
   execution_order: number;
+  action_id: string;
   message?: {
     details?: string;
   };
@@ -40,6 +41,7 @@ type StatusConfigs = {
 
 interface ProcessedItem extends RecordItem {
   name: string;
+  action_id: string;
   duration: string;
   endTime: string;
 }
@@ -168,6 +170,7 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         session_id: params?.id || activeSession?.id,
         profile_id: params?.profile_id || activeProfile?.id || identity?.email,
         message_id: String(parent_record?.id),
+        action_id: item.action_id,
         section_title: item.name,
         view_items: params?.view_items,
         author_id: identity?.email,
