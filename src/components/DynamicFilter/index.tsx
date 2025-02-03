@@ -73,10 +73,10 @@ const OPERATOR_MAP: Record<string, Operator[]> = {
   datetime: ["equals", "before", "after", "between"],
   date: ["equals", "before", "after", "between"],
   boolean: ["equals"],
-  select: ["equals"],
-  multiselect: ["equals"],
-  search: ["equals"],
-  multisearch: ["equals"],
+  select: ["equals", "notEquals"],
+  multiselect: ["equals", "notEquals"],
+  search: ["equals", "notEquals"],
+  multisearch: ["equals", "notEquals"],
 };
 
 const OPERATOR_LABELS: Record<Operator, string> = {
@@ -224,9 +224,17 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
     });
   };
 
+  // const handleValueChange = (field: any, value: any, fieldName: string) => {
+  //   // Clear the field if value is empty string
+  //   if (value === "") {
+  //     clearFilterValues(fieldName);
+  //   } else {
+  //     field.handleChange(value);
+  //   }
+  // };
+
   const handleValueChange = (field: any, value: any, fieldName: string) => {
-    // Clear the field if value is empty string
-    if (value === "") {
+    if (value === null || value === "") {
       clearFilterValues(fieldName);
     } else {
       field.handleChange(value);
