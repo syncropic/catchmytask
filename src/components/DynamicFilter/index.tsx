@@ -18,6 +18,7 @@ export interface Variable {
     | "string"
     | "number"
     | "datetime"
+    | "date"
     | "boolean"
     | "select"
     | "multiselect"
@@ -70,6 +71,7 @@ const OPERATOR_MAP: Record<string, Operator[]> = {
   string: ["equals", "notEquals", "contains", "startsWith", "endsWith"],
   number: ["equals", "notEquals", "gt", "lt", "between"],
   datetime: ["equals", "before", "after", "between"],
+  date: ["equals", "before", "after", "between"],
   boolean: ["equals"],
   select: ["equals"],
   multiselect: ["equals"],
@@ -125,6 +127,9 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
         component = "NumberInput";
         break;
       case "datetime":
+        component = "DateInput";
+        break;
+      case "date":
         component = "DateInput";
         break;
       case "select":
@@ -528,6 +533,11 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
         ? value.toISOString().split("T")[0]
         : String(value);
     }
+    if (type === "date") {
+      return value instanceof Date
+        ? value.toISOString().split("T")[0]
+        : String(value);
+    }
 
     return String(value);
   };
@@ -573,7 +583,8 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
         case "between":
           if (value2 === null) return;
           const formattedValue2 = formatValue(value2, variable.type);
-          if (variable.type === "datetime") {
+          if (variable.type === "datetime" || variable.type === "date") {
+            // Update this line
             sqlCondition = `${variable.value} >= '${formattedValue}' AND ${variable.value} <= '${formattedValue2}'`;
           } else {
             sqlCondition = `${variable.value} ${SQL_OPERATORS["between"]} ${
@@ -585,7 +596,9 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
           break;
         default:
           sqlCondition = `${variable.value} ${SQL_OPERATORS[operator]} ${
-            variable.type === "string" || variable.type === "datetime"
+            variable.type === "string" ||
+            variable.type === "datetime" ||
+            variable.type === "date" // Update this line
               ? `'${formattedValue}'`
               : formattedValue
           }`;
