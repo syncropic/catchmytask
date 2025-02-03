@@ -148,6 +148,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     showVariables,
     showFields,
     showSchedule,
+    setDisplaySessionActionInput,
   } = useAppStore();
 
   let global_input_mode_developer =
@@ -937,6 +938,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                         `setExpandedRecordIds : ${String(record?.id)}`
                       );
                       setExpandedRecordIds([String(record?.id)]); // set this to expandd the item
+                      // close the action input on mobile
+                      setDisplaySessionActionInput(false);
                     }
                   });
                 }
@@ -1490,19 +1493,24 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           const field = data_model?.schema?.properties?.[field_name];
           return field ? renderField(field) : null;
         })()} */}
+      {/* <div>{JSON.stringify(data_model?.name)}</div> */}
       <div className="flex flex-col gap-2 p-3">
-        {record?.features && record?.features?.includes("can_schedule") && (
-          <div>
-            {showSchedule && (
-              <Stack>{scheduleFields.map((field) => renderField(field))}</Stack>
-            )}
-          </div>
-        )}
+        {record?.features &&
+          record?.features?.includes("can_schedule") &&
+          data_model?.name !== "structured query input" && (
+            <div>
+              {showSchedule && (
+                <Stack>
+                  {scheduleFields.map((field) => renderField(field))}
+                </Stack>
+              )}
+            </div>
+          )}
         {showFields && <ActiveViewFields />}
 
         {record?.variables_options?.length > 0 &&
           showVariables &&
-          !global_input_mode_developer && (
+          data_model?.name !== "structured query input" && (
             <div>
               {params?.id &&
                 user_session?.userProfile?.permissions?.includes(

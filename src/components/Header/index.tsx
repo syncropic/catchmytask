@@ -71,8 +71,6 @@ const LargeScreenHeader = ({
     setShowRequestResponseView,
     views,
     setMonitorComponents,
-    global_developer_mode,
-    toggleGlobalDeveloperMode,
     toggleShowSessionWorkingMemory,
     showSessionWorkingMemory,
     global_session_trace_mode,
@@ -147,6 +145,37 @@ const LargeScreenHeader = ({
     });
     // setOpened(!opened);
     setMonitorComponents(["messages"]);
+  };
+
+  const handleToggleGlobalInputMode = (mode: any) => {
+    if (mode == "developer") {
+      setGlobalInputMode(
+        global_input_mode === "developer" ? "user" : "developer"
+      );
+
+      setShowRequestResponseView(
+        global_input_mode === "developer" ? false : true
+      );
+    }
+
+    if (mode == "terminal") {
+      setGlobalInputMode(
+        global_input_mode === "terminal" ? "user" : "terminal"
+      );
+    }
+    // console.log("Edit", item);
+    // go({
+    //   to: {
+    //     resource: item?.entity_type,
+    //     action: item?.action_type,
+    //     id: item?.id,
+    //     // meta: navigationHistory?.params,
+    //   },
+    //   // query: navigationHistory?.params,
+    //   type: "push",
+    // });
+    // // setOpened(!opened);
+    // setMonitorComponents(["messages"]);
   };
 
   return (
@@ -258,15 +287,7 @@ const LargeScreenHeader = ({
                   <Tooltip label={`toggle developer mode`} position="top">
                     <ActionIcon
                       size="sm"
-                      // onClick={toggleGlobalDeveloperMode}
-                      // variant={global_developer_mode ? "filled" : "outline"}
-                      onClick={() =>
-                        setGlobalInputMode(
-                          global_input_mode === "developer"
-                            ? "user"
-                            : "developer"
-                        )
-                      }
+                      onClick={() => handleToggleGlobalInputMode("developer")}
                       variant={
                         global_input_mode === "developer" ? "filled" : "outline"
                       }
@@ -287,11 +308,7 @@ const LargeScreenHeader = ({
                   <Tooltip label={`toggle terminal mode`} position="top">
                     <ActionIcon
                       size="sm"
-                      onClick={() =>
-                        setGlobalInputMode(
-                          global_input_mode === "terminal" ? "user" : "terminal"
-                        )
-                      }
+                      onClick={() => handleToggleGlobalInputMode("terminal")}
                       variant={
                         global_input_mode === "terminal" ? "filled" : "outline"
                       }

@@ -100,7 +100,7 @@ export function TableView<T extends Record<string, any>>({
     event: MouseEvent<Element, MouseEvent>;
   }
   const clipboard = useClipboard({ timeout: 500 });
-  const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
+  // const [selectedRecords, setSelectedRecords] = useState<T[]>([]);
   const isMobile = useIsMobile();
 
   let view_ids = Object.keys(views);
@@ -403,7 +403,9 @@ export function TableView<T extends Record<string, any>>({
                   },
                 }),
           })}
-          // onRowClick={handleRowClick}
+          {...(!isMobile && {
+            onRowClick: handleRowClick,
+          })}
           onRowContextMenu={({ record, event }) =>
             showContextMenu([
               {

@@ -324,6 +324,10 @@ export const useAppStore = create(
         set((state) => ({
           displaySessionActionInput: !state.displaySessionActionInput,
         })),
+      setDisplaySessionActionInput: (arg) =>
+        set((state) => ({
+          displaySessionActionInput: arg,
+        })),
       global_developer_mode: false,
       toggleGlobalDeveloperMode: () =>
         set((state) => ({

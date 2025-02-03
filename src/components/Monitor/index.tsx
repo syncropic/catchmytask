@@ -387,54 +387,54 @@ export const MonitorMessages = ({
 
   // actions
 
-  const actions_default_view_record_state = {
-    credential: "surrealdb catchmytask dev",
-    success_message_code: "views:5023b2twax164esuobo3",
-    record: {
-      id: "views:5023b2twax164esuobo3",
-    },
-    read_record_mode: "remote",
-  };
+  // const actions_default_view_record_state = {
+  //   credential: "surrealdb catchmytask dev",
+  //   success_message_code: "views:5023b2twax164esuobo3",
+  //   record: {
+  //     id: "views:5023b2twax164esuobo3",
+  //   },
+  //   read_record_mode: "remote",
+  // };
 
-  const {
-    data: actionsViewData,
-    isLoading: actionsViewIsLoading,
-    error: actionsViewError,
-  } = useReadRecordByState(actions_default_view_record_state);
+  // const {
+  //   data: actionsViewData,
+  //   isLoading: actionsViewIsLoading,
+  //   error: actionsViewError,
+  // } = useReadRecordByState(actions_default_view_record_state);
 
-  const {
-    data: actions,
-    error: actionsError,
-    loading: actionsLoading,
-  } = useLiveQuery<Event>(
-    `SELECT * FROM actions WHERE session_id = ${params?.id} ORDER BY updated_datetime ASC`,
-    "actions"
-  );
+  // const {
+  //   data: actions,
+  //   error: actionsError,
+  //   loading: actionsLoading,
+  // } = useLiveQuery<Event>(
+  //   `SELECT * FROM actions WHERE session_id = ${params?.id} ORDER BY updated_datetime ASC`,
+  //   "actions"
+  // );
 
   // automations
-  const automations_default_view_record_state = {
-    credential: "surrealdb catchmytask dev",
-    success_message_code: "views:5023b2twax164esuobo3",
-    record: {
-      id: "views:5023b2twax164esuobo3",
-    },
-    read_record_mode: "remote",
-  };
+  // const automations_default_view_record_state = {
+  //   credential: "surrealdb catchmytask dev",
+  //   success_message_code: "views:5023b2twax164esuobo3",
+  //   record: {
+  //     id: "views:5023b2twax164esuobo3",
+  //   },
+  //   read_record_mode: "remote",
+  // };
 
-  const {
-    data: automationsViewData,
-    isLoading: automationsViewIsLoading,
-    error: automationsViewError,
-  } = useReadRecordByState(automations_default_view_record_state);
+  // const {
+  //   data: automationsViewData,
+  //   isLoading: automationsViewIsLoading,
+  //   error: automationsViewError,
+  // } = useReadRecordByState(automations_default_view_record_state);
 
-  const {
-    data: automations,
-    error: automationsError,
-    loading: automationsLoading,
-  } = useLiveQuery<Event>(
-    `SELECT * FROM automations WHERE session_id = '${params?.id}' ORDER BY updated_datetime ASC`,
-    "automations"
-  );
+  // const {
+  //   data: automations,
+  //   error: automationsError,
+  //   loading: automationsLoading,
+  // } = useLiveQuery<Event>(
+  //   `SELECT * FROM automations WHERE session_id = '${params?.id}' ORDER BY updated_datetime ASC`,
+  //   "automations"
+  // );
 
   // messages
 
@@ -475,30 +475,30 @@ export const MonitorMessages = ({
     response: any;
   };
 
-  let go = useGo();
+  // let go = useGo();
 
-  const handleClearViews = () => {
-    go({
-      query: {
-        profile_id: String(activeProfile?.id),
-      },
-      type: "push",
-    });
-    setShowRequestResponseView(false);
-    clearViews({});
-  };
+  // const handleClearViews = () => {
+  //   go({
+  //     query: {
+  //       profile_id: String(activeProfile?.id),
+  //     },
+  //     type: "push",
+  //   });
+  //   setShowRequestResponseView(false);
+  //   clearViews({});
+  // };
 
-  const actionsViewRecord = actionsViewData?.data?.find(
-    (item: any) =>
-      item?.message?.code ===
-      actions_default_view_record_state?.success_message_code
-  )?.data[0];
+  // const actionsViewRecord = actionsViewData?.data?.find(
+  //   (item: any) =>
+  //     item?.message?.code ===
+  //     actions_default_view_record_state?.success_message_code
+  // )?.data[0];
 
-  const automationsViewRecord = automationsViewData?.data?.find(
-    (item: any) =>
-      item?.message?.code ===
-      automations_default_view_record_state?.success_message_code
-  )?.data[0];
+  // const automationsViewRecord = automationsViewData?.data?.find(
+  //   (item: any) =>
+  //     item?.message?.code ===
+  //     automations_default_view_record_state?.success_message_code
+  // )?.data[0];
 
   // // Add useEffect for debugging
   // useEffect(() => {
@@ -510,31 +510,14 @@ export const MonitorMessages = ({
   //   });
   // }, [actions, actionsLoading, actionsError, params?.id]);
 
-  if (
-    actionsLoading ||
-    actionsViewIsLoading ||
-    automationsLoading ||
-    automationsViewIsLoading ||
-    messagesViewIsLoading
-  ) {
+  if (messagesViewIsLoading) {
     return <div>Loading...</div>;
   }
 
-  if (
-    actionsError ||
-    actionsViewError ||
-    automationsError ||
-    automationsViewError ||
-    messagesError ||
-    messagesViewError
-  ) {
+  if (messagesError || messagesViewError) {
     return (
       <MonacoEditor
         value={{
-          actionsError: actionsError?.message,
-          actionsViewError: actionsViewError?.response?.data,
-          automationsError: automationsError?.message,
-          automationsViewError: automationsViewError?.response?.data,
           messagesError: messagesError?.message,
           messagesViewError: messagesViewError?.response?.data,
         }}
@@ -595,7 +578,7 @@ export const MonitorMessages = ({
         </>
       )} */}
 
-      {actions &&
+      {/* {actions &&
         actionsViewRecord &&
         monitorComponents?.includes("actions") && (
           <>
@@ -614,7 +597,7 @@ export const MonitorMessages = ({
               view_record={actionsViewRecord}
             />
           </>
-        )}
+        )} */}
       {messages &&
         messagesViewRecord &&
         monitorComponents?.includes("messages") && (
@@ -635,7 +618,7 @@ export const MonitorMessages = ({
             />
           </>
         )}
-      {automations &&
+      {/* {automations &&
         automationsViewRecord &&
         monitorComponents?.includes("automations") && (
           <>
@@ -654,7 +637,7 @@ export const MonitorMessages = ({
               view_record={automationsViewRecord}
             />
           </>
-        )}
+        )} */}
       {/* {user_session?.userProfile?.monitor_options?.includes("memory") && (
         <div>
           <div>

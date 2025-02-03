@@ -61,6 +61,8 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
     return Boolean(userSession?.userProfile?.permissions?.includes(permission));
   };
 
+  let view_items = params?.view_items?.split(",");
+
   const {
     global_input_mode,
     showVariables,
@@ -70,6 +72,7 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
     showSchedule,
     toggleShowSchedule,
     filter_form_values,
+    activeSession,
   } = useAppStore();
 
   let global_input_mode_developer =
@@ -97,8 +100,8 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
       {/* Action Buttons Row */}
       <div className="flex items-center gap-2 w-full md:w-auto">
         {params?.id &&
-          global_input_mode_developer &&
-          hasPermission("query_action_input") && (
+          hasPermission("query_action_input") &&
+          activeSession?.features?.includes("can_query") && (
             <ExternalSubmitButton
               record={{}}
               entity_type="sessions"
@@ -107,75 +110,105 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
             />
           )}
 
-        {params?.id && hasPermission("queue_action_input") && (
-          <ExternalSubmitButton
-            record={{}}
-            entity_type="sessions"
-            action_form_key={`form_${params.id}`}
-            action="queue"
-          />
-        )}
+        {params?.id &&
+          hasPermission("queue_action_input") &&
+          activeSession?.features?.includes("can_queue") && (
+            <ExternalSubmitButton
+              record={{}}
+              entity_type="sessions"
+              action_form_key={`form_${params.id}`}
+              action="queue"
+            />
+          )}
 
-        {params?.id && hasPermission("schedule_action_input") && (
-          <ExternalSubmitButton
-            record={{}}
-            entity_type="sessions"
-            action_form_key={`form_${params.id}`}
-            action="schedule"
-          />
-        )}
+        {params?.id &&
+          hasPermission("schedule_action_input") &&
+          activeSession?.features?.includes("can_schedule") && (
+            <ExternalSubmitButton
+              record={{}}
+              entity_type="sessions"
+              action_form_key={`form_${params.id}`}
+              action="schedule"
+            />
+          )}
       </div>
 
       {/* Utility Buttons Row - No wrapping */}
       <div className="flex items-center gap-2 w-full md:w-auto min-w-0">
         <div className="flex items-center gap-2 w-full justify-start md:justify-end">
-          <Tooltip label={`${showVariables ? "hide" : "show"} variables input`}>
-            <Indicator
-              inline
-              label={getActiveFiltersCount(`form_${params.id}`)}
-              size={16}
-              disabled={getActiveFiltersCount(`form_${params.id}`) === 0}
-              color="blue"
-              offset={4}
+          {activeSession?.variables?.length > 0 && (
+            <Tooltip
+              label={`${showVariables ? "hide" : "show and provide"} variables`}
             >
-              <Button
-                size="compact-xs"
-                leftSection={<IconAdjustments size={14} />}
-                variant="outline"
-                onClick={toggleShowVariables}
+              <Indicator
+                inline
+                label={getActiveFiltersCount(`form_${params.id}`)}
+                size={16}
+                disabled={getActiveFiltersCount(`form_${params.id}`) === 0}
+                color="blue"
+                offset={4}
               >
-                Variables
-              </Button>
-            </Indicator>
-          </Tooltip>
+                <Button
+                  size="compact-xs"
+                  leftSection={<IconAdjustments size={14} />}
+                  variant={showVariables ? "filled" : "outline"}
+                  onClick={toggleShowVariables}
+                >
+                  Variables
+                </Button>
+              </Indicator>
+            </Tooltip>
+          )}
 
-          <Tooltip
-            label={`${showFields ? "hide" : "show"} toggle and reorder fields`}
-          >
-            <Indicator inline size={16} disabled={true} color="blue" offset={4}>
-              <Button
-                size="compact-xs"
-                leftSection={<IconColumns size={14} />}
-                variant="outline"
-                onClick={toggleShowFields}
+          {params?.id && view_items?.length > 0 && (
+            <Tooltip
+              label={`${showFields ? "hide" : "show and reorder"} fields`}
+            >
+              <Indicator
+                inline
+                size={16}
+                disabled={true}
+                color="blue"
+                offset={4}
               >
-                Fields
-              </Button>
-            </Indicator>
-          </Tooltip>
+                <Button
+                  size="compact-xs"
+                  leftSection={<IconColumns size={14} />}
+                  variant={showFields ? "filled" : "outline"}
+                  onClick={toggleShowFields}
+                >
+                  Fields
+                </Button>
+              </Indicator>
+            </Tooltip>
+          )}
 
-          <Tooltip label={`${showSchedule ? "hide" : "show"} schedule`}>
-            <Indicator inline size={16} disabled={true} color="blue" offset={4}>
-              <Button
-                size="compact-xs"
-                leftSection={<IconClock size={14} />}
-                variant="outline"
-                onClick={toggleShowSchedule}
+          {params?.id &&
+            hasPermission("schedule_action_input") &&
+            activeSession?.features?.includes("can_schedule") && (
+              <Tooltip
+                label={`${
+                  showSchedule ? "hide" : "show and configure"
+                } schedule`}
               >
-                Schedule
-              </Button>
-            </Indicator>
-          </Tooltip>
+                <Indicator
+                  inline
+                  size={16}
+                  disabled={true}
+                  color="blue"
+                  offset={4}
+                >
+                  <Button
+                    size="compact-xs"
+                    leftSection={<IconClock size={14} />}
+                    variant={showSchedule ? "filled" : "outline"}
+                    onClick={toggleShowSchedule}
+                  >
+                    Schedule
+                  </Button>
+                </Indicator>
+              </Tooltip>
+            )}
         </div>
       </div>
     </div>
