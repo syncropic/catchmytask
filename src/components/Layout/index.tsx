@@ -60,6 +60,7 @@ import { MenuItems } from "./UserMenu";
 import NavbarSearch from "@components/Navbar";
 import UserMenuMobile from "./UserMenuMobile";
 import SessionActionInput from "@components/SessionActionInput";
+import ShowPageComponent from "pages/sessions/show/ShowPageComponent";
 
 const Layout = ({
   children,
@@ -103,6 +104,7 @@ const Layout = ({
     setNavigationHistory,
     global_input_mode,
     global_session_trace_mode,
+    displaySessionActionInput,
   } = useAppStore(); // Accessing layout state from Zustand
   const { bulkActionSelect } = useBulkActionSelect();
   const { data: user_session } = useSession();
@@ -403,7 +405,10 @@ const Layout = ({
               defaultValue={["action_input", "messages", "views"]}
             >
               {rightSection.isDisplayed && (
-                <MonitorWrapper></MonitorWrapper>
+                <>
+                  <ShowPageComponent />
+                  <MonitorWrapper></MonitorWrapper>
+                </>
                 // <Accordion.Item value={"messages"} key={"messages"}>
                 //   <Accordion.Control icon={null}>messages</Accordion.Control>
                 //   <Accordion.Panel>

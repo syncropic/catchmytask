@@ -29,7 +29,6 @@ const SessionActionInput = () => {
 
   const { params } = useParsed();
   const {
-    displaySessionActionInput,
     toggleDisplaySessionActionInput,
     global_developer_mode,
     global_session_trace_mode,
@@ -40,6 +39,7 @@ const SessionActionInput = () => {
     setSectionIsExpanded,
     activeLayout,
     activeSession,
+    displaySessionActionInput,
   } = useAppStore();
 
   const closeDisplay = (section: string) => {
@@ -103,22 +103,24 @@ const SessionActionInput = () => {
           </div>
         )}
       </Modal>
-      <Affix
-        position={{ bottom: 60, left: "50%" }}
-        style={{ transform: "translateX(-50%)" }}
-      >
-        <div className="flex gap-3">
-          <ActionIcon
-            variant="filled"
-            aria-label="Settings"
-            radius="xl"
-            size="xl"
-            onClick={toggleDisplaySessionActionInput}
-          >
-            <IconBrandLine />
-          </ActionIcon>
-        </div>
-      </Affix>
+      {!displaySessionActionInput && (
+        <Affix
+          position={{ bottom: 60, left: "50%" }}
+          style={{ transform: "translateX(-50%)" }}
+        >
+          <div className="flex gap-3">
+            <ActionIcon
+              variant="filled"
+              aria-label="Settings"
+              radius="xl"
+              size="xl"
+              onClick={toggleDisplaySessionActionInput}
+            >
+              <IconBrandLine />
+            </ActionIcon>
+          </div>
+        </Affix>
+      )}
     </>
   );
 };

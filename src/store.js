@@ -458,7 +458,7 @@ export const useAppStore = create(
         set((state) => ({ ...state, focused_entities: focused_entities })),
       setEntityTypes: (entity_types) => set((state) => ({ entity_types })),
       colorScheme: {
-        scheme: "auto",
+        scheme: "light",
       },
       setColorScheme: (colorScheme) => set((state) => ({ colorScheme })),
 
