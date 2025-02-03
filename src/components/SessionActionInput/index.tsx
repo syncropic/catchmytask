@@ -103,35 +103,16 @@ const SessionActionInput = () => {
           </div>
         )}
       </Modal>
-      <Affix position={{ bottom: 60, right: 20 }}>
+      <Affix
+        position={{ bottom: 60, left: "50%" }}
+        style={{ transform: "translateX(-50%)" }}
+      >
         <div className="flex gap-3">
-          <Menu shadow="md" width={200}>
-            <Menu.Target>
-              <ActionIcon
-                variant="transparent"
-                aria-label="Settings"
-                radius="lg"
-                size="lg"
-              >
-                <IconDots />
-              </ActionIcon>
-            </Menu.Target>
-
-            <Menu.Dropdown>
-              {/* <Menu.Item leftSection={<IconSettings size={14} />}>
-                Settings
-              </Menu.Item> */}
-              <Menu.Item leftSection={<IconCode size={14} />}>
-                Developer Mode
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-
           <ActionIcon
             variant="filled"
             aria-label="Settings"
-            radius="lg"
-            size="lg"
+            radius="xl"
+            size="xl"
             onClick={toggleDisplaySessionActionInput}
           >
             <IconBrandLine />

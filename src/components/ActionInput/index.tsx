@@ -1523,31 +1523,6 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                     />
                   </div>
                 )}
-              {/* {hasRequiredFields &&
-              data_model?.schema?.required.map((fieldName: string) => {
-                const field = data_model?.schema?.properties?.[fieldName];
-                if (
-                  (["variables", "variables_value"].includes(fieldName) &&
-                    !showVariables &&
-                    global_developer_mode) ||
-                  fieldName == "variables"
-                ) {
-                  return null;
-                }
-                return field ? renderField(field) : null;
-              })} */}
-              {/* {showVariables && (
-              <DynamicFilter
-                variables={record?.variables_options?.filter((item: any) =>
-                  (
-                    action_input_form_values[action_input_form_values_key]
-                      ?.variables || []
-                  ).includes(item.value)
-                )}
-                action_form_key={action_form_key}
-                onFilterChange={handleFilterChange}
-              />
-            )} */}
             </div>
           )}
 
@@ -1587,7 +1562,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             return field ? renderField(field) : null;
           })}
 
-        {hasRequiredFields &&
+        {/* {hasRequiredFields &&
           showVariables &&
           data_model?.schema?.required.map((fieldName: string) => {
             const field = data_model?.schema?.properties?.[fieldName];
@@ -1595,7 +1570,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
               return field ? renderField(field) : null;
             }
             return null;
-          })}
+          })} */}
       </div>
     </form>
   );

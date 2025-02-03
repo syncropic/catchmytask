@@ -133,6 +133,17 @@ export function TableView<T extends Record<string, any>>({
     // }
     toggleView(String(record?.id), record);
   };
+
+  interface Record {
+    id?: string | number;
+    entity_type?: string;
+    [key: string]: any;
+  }
+
+  const handleView = (record: Record) => {
+    toggleView(String(record?.id), record);
+  };
+
   const viewportRef = useRef<HTMLDivElement>(null);
 
   // Move scrollToRow inside useEffect to avoid unnecessary recreations
@@ -202,6 +213,7 @@ export function TableView<T extends Record<string, any>>({
                           record={record}
                           onRerun={(record) => console.log("Rerun:", record)}
                           showCollapse={true}
+                          onView={handleView}
                         />
                       );
                     } else if (field?.name === "name") {
@@ -391,7 +403,7 @@ export function TableView<T extends Record<string, any>>({
                   },
                 }),
           })}
-          onRowClick={handleRowClick}
+          // onRowClick={handleRowClick}
           onRowContextMenu={({ record, event }) =>
             showContextMenu([
               {

@@ -63,7 +63,6 @@ interface MessageLabelProps {
   record: MessageLabelRecord;
   onRerun?: (record: MessageLabelRecord) => void;
   onCancel?: (record: MessageLabelRecord) => void;
-  onView?: (record: MessageLabelRecord) => void;
   showCollapse?: boolean;
 }
 
@@ -284,6 +283,67 @@ export const ActionStatusInfo: React.FC<{
   return (
     <div className="flex items-center justify-between gap-2">
       {renderContent()}
+      <div className="flex items-center gap-2">
+        {record?.schedule?.action_status && (
+          <TaskButton
+            state={record?.schedule?.action_status}
+            disabled={scheduleMutationIsLoading}
+            onClick={
+              record?.schedule?.action_status === "running"
+                ? (e: any) => handleTaskSchedule(e, record, "stopped")
+                : (e: any) => handleTaskSchedule(e, record, "running")
+            }
+          ></TaskButton>
+        )}
+
+        {/* {!["running", "pending"].includes(record.action_status || "") &&
+          !isRerunning &&
+          user_session?.userProfile?.permissions?.includes(
+            "execute_action_re_run"
+          ) && (
+            <Button
+              size="xs"
+              variant="light"
+              color="blue"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRerun?.(record);
+              }}
+            >
+              Start/End
+            </Button>
+          )} */}
+        {/* {!["running", "pending"].includes(record.action_status || "") &&
+          !isRerunning &&
+          user_session?.userProfile?.permissions?.includes(
+            "execute_action_re_run"
+          ) && (
+            <Button
+              size="xs"
+              variant="light"
+              color="blue"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRerun?.(record);
+              }}
+            >
+              Re-run
+            </Button>
+          )} */}
+        {record.id && showCollapse && (
+          <Button
+            size="compact-xs"
+            variant={isExpanded ? "filled" : "outline"}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleExpandToggle();
+            }}
+            className="flex items-center gap-1"
+          >
+            steps
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
@@ -292,110 +352,17 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
   record,
   onRerun,
   onCancel,
-  onView,
   showCollapse = true,
 }) => {
-  const { runtimeConfig: config, setRequestResponse } = useAppStore();
-  const { mutate: mutateRerun, isLoading: isRerunning } = useCustomMutation();
+  const { runtimeConfig: config } = useAppStore();
+  const { mutate, isLoading: isRerunning } = useCustomMutation();
   const { params } = useParsed();
   const { data: identity } = useGetIdentity<IIdentity>();
   const isMobile = useIsMobile();
-  const queryClient = useQueryClient();
-
-  const {
-    mutate,
-    data: scheduleMutationData,
-    isLoading: scheduleMutationIsLoading,
-    isError: scheduleMutationIsError,
-    error: scheduleMutationError,
-  } = useCustomMutation({
-    mutationOptions: {
-      mutationKey: ["schedule"],
-    },
-  });
-
-  const handleTaskSchedule = (
-    e: React.MouseEvent,
-    record: TaskRecord,
-    action: string
-  ): Promise<void> => {
-    e.stopPropagation();
-    const action_input_form_values_key = "schedule";
-
-    return new Promise((resolve, reject) => {
-      const requestConfig = {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
-
-      const request_object = {
-        schedule: {
-          action_status: action,
-        },
-        task: {
-          id: record?.task_id,
-        },
-      };
-
-      mutate(
-        {
-          url: `${config.API_URL}/automate`,
-          method: "post",
-          values: request_object,
-          config: requestConfig,
-        },
-        {
-          onError: (error) => {
-            setRequestResponse(error);
-            queryClient.setQueryData(["schedule"], error);
-            reject(error);
-          },
-          onSuccess: (data) => {
-            // success with error message i.e exit_code = 1 *object or list
-            const response_data = data?.data;
-
-            // First, let's ensure we have an array to work with
-            const items = Array.isArray(response_data)
-              ? response_data
-              : [response_data];
-
-            // Check if any item has exit_code = 1
-            const errorItems = items.filter((item) => item.exit_code === 1);
-
-            // Show error notification for each error item
-            errorItems.forEach((item) => {
-              showNotification({
-                title: item?.message?.code,
-                message: JSON.stringify(item?.message?.details),
-                color: "red",
-                autoClose: 10000, // Giving more time to read error messages
-                withCloseButton: true,
-                icon: <IconX size={18} />,
-                position: "top-center",
-              });
-            });
-
-            resolve();
-          },
-        }
-      );
-    });
-  };
-
   const { expandedRecordIds, setExpandedRecordIds } = useAppStore();
 
   const isExpanded =
     String(record.id) && expandedRecordIds.includes(String(record.id));
-
-  const handleExpandToggle = useCallback(() => {
-    if (!record.id) return;
-    if (isExpanded) {
-      setExpandedRecordIds([]);
-    } else {
-      setExpandedRecordIds([String(record.id)]);
-    }
-  }, [record.id, isExpanded, setExpandedRecordIds]);
 
   const {
     views,
@@ -405,7 +372,6 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
     activeView,
     setViews,
   } = useAppStore();
-  let view_ids = Object.keys(views);
 
   const baseData = {
     application: {
@@ -444,7 +410,7 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
 
   const handleRerun = useCallback(() => {
     if (record.variables) {
-      mutateRerun({
+      mutate({
         url: `${config?.API_URL}/re-run`,
         method: "post",
         values: run_task_state,
@@ -454,7 +420,7 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
         onRerun(record);
       }
     }
-  }, [record, mutateRerun, config?.API_URL, onRerun]);
+  }, [record, mutate, config?.API_URL, onRerun]);
 
   const getFirstValid = (...options: (string | undefined)[]): string => {
     return (
@@ -530,24 +496,10 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
       )
     : {};
 
-  // const formatVariables = (variables: Record<string, any>): string => {
-  //   return Object.entries(variables)
-  //     .map(([key, value]) => `${key}: ${value}`)
-  //     .join("\n");
-  // };
-  const formatVariables = (variables: Record<string, any>): string | null => {
-    // Filter out entries with empty values
-    const nonEmptyEntries = Object.entries(variables).filter(
-      ([_, value]) => value !== "" && value !== null && value !== undefined
-    );
-
-    // Return null if no non-empty entries exist
-    if (nonEmptyEntries.length === 0) {
-      return null;
-    }
-
-    // Format only the non-empty entries
-    return nonEmptyEntries.map(([key, value]) => `${key}: ${value}`).join("\n");
+  const formatVariables = (variables: Record<string, any>): string => {
+    return Object.entries(variables)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join("\n");
   };
 
   return (
@@ -572,7 +524,7 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
       }
     >
       <div className="w-full flex flex-col py-2 px-3 gap-2 cursor-pointer hover:bg-gray-50">
-        {/* Row 1: Author and Timestamp */}
+        {/* Author and Timestamp Row */}
         <div className="flex justify-between items-center">
           <Text size="sm" className="text-gray-600 font-medium">
             {formatAuthorId(record.author_id || "")}
@@ -582,7 +534,7 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
           </Text>
         </div>
 
-        {/* Row 2: Heading */}
+        {/* Heading Row */}
         <Text
           size="sm"
           className="font-medium text-gray-900 break-words whitespace-pre-wrap w-full"
@@ -590,7 +542,7 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
           {heading}
         </Text>
 
-        {/* Row 3: Subheading */}
+        {/* Subheading Row */}
         {subheading && (
           <Text
             size="sm"
@@ -600,82 +552,20 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
           </Text>
         )}
 
-        {/* Row 4: Task Button */}
-        <div className="w-full">
-          {record?.schedule?.action_status && (
-            <TaskButton
-              state={record?.schedule?.action_status}
-              disabled={scheduleMutationIsLoading}
-              onClick={
-                record?.schedule?.action_status === "running"
-                  ? (e: any) => handleTaskSchedule(e, record, "stopped")
-                  : (e: any) => handleTaskSchedule(e, record, "running")
-              }
-            ></TaskButton>
-          )}
-        </div>
-
-        {/* Row 5: Action Status and Buttons */}
-        <div className="w-full flex justify-between items-center">
-          {/* Left side: Action Status */}
-          <div className="flex items-center space-x-2">
-            {/* {record.action_status && (
-              <div className={`p-1 rounded-full ${getStatusConfig(record.action_status).bgColor}`}>
-                <StatusIcon className={`w-4 h-4 ${getStatusConfig(record.action_status).color}`} stroke={2} />
-                <span className={`text-sm ${getStatusConfig(record.action_status).color} font-medium ml-2`}>
-                  {record.action_status}
-                </span>
-              </div>
-            )} */}
-            {/* <div>status</div> */}
-            {record.action_status && (
-              <div className="w-full">
-                <ActionStatusInfo
-                  record={record}
-                  onRerun={handleRerun}
-                  onCancel={onCancel}
-                  isRerunning={isRerunning}
-                  showCollapse={showCollapse}
-                />
-              </div>
-            )}
+        {/* Action Status Row */}
+        {record.action_status && (
+          <div className="w-full">
+            <ActionStatusInfo
+              record={record}
+              onRerun={handleRerun}
+              onCancel={onCancel}
+              isRerunning={isRerunning}
+              showCollapse={showCollapse}
+            />
           </div>
+        )}
 
-          {/* Right side: Steps and View buttons */}
-          <div className="flex items-center gap-2">
-            {record.id && showCollapse && (
-              <>
-                <Button
-                  size="compact-xs"
-                  variant={
-                    view_ids.includes(String(record.id)) ? "filled" : "outline"
-                  }
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Add view handling logic here
-                    if (onView) {
-                      onView(record);
-                    }
-                  }}
-                >
-                  view
-                </Button>
-                <Button
-                  size="compact-xs"
-                  variant={isExpanded ? "filled" : "outline"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleExpandToggle();
-                  }}
-                >
-                  steps
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Row 6: Variables */}
+        {/* Variables Row */}
         {Object.keys(filteredVariables).length > 0 && (
           <div className="whitespace-pre-wrap font-mono text-xs text-gray-500 overflow-x-auto">
             {formatVariables(filteredVariables)}

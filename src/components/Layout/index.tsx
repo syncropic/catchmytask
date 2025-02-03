@@ -366,7 +366,7 @@ const Layout = ({
   return (
     <Authenticated key="home" redirectOnFail="/login">
       <AppLayout authenticatedData={authenticatedData}>
-        {isMobile && <SessionActionInput />}
+        {isMobile && activeSession && params?.id && <SessionActionInput />}
 
         <Drawer
           opened={displaySidebar}
@@ -385,7 +385,7 @@ const Layout = ({
             <div className="sticky top-10 z-10">
               <UserMenuMobile />
             </div>
-            {activeSession && (
+            {activeSession && params?.id && (
               <SessionSummaryInfoCard
                 session={activeSession}
                 execlude_components={["toolbar"]}
