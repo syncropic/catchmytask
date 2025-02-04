@@ -163,7 +163,7 @@ export const ShowPageComponent: React.FC = () => {
           activeSession: activeSession,
         }}
       ></MonacoEditor> */}
-      {isMobile && activeSession && (
+      {isMobile && activeSession && params?.id && (
         <div className="w-full overflow-hidden pt-2">
           <Reveal
             trigger="click"
