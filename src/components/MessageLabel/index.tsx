@@ -562,26 +562,7 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
   };
 
   return (
-    <Tooltip
-      multiline
-      position="bottom-start"
-      classNames={{
-        tooltip: "max-w-lg",
-      }}
-      label={
-        <div className="space-y-2 text-white">
-          <div className="font-medium">{heading}</div>
-          {subheading && (
-            <div className="text-sm text-gray-200">{subheading}</div>
-          )}
-          {Object.keys(filteredVariables).length > 0 && (
-            <div className="text-sm text-gray-100 whitespace-pre-wrap font-mono">
-              {formatVariables(filteredVariables)}
-            </div>
-          )}
-        </div>
-      }
-    >
+    <>
       <div className="w-full flex flex-col py-2 px-3 gap-2 cursor-pointer hover:bg-gray-50">
         {/* Row 1: Author and Timestamp */}
         <div className="flex justify-between items-center">
@@ -705,7 +686,7 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
           </div>
         )}
       </div>
-    </Tooltip>
+    </>
   );
 };
 
