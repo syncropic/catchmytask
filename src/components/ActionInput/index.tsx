@@ -838,22 +838,26 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 // console.log(items);
 
                 // // Check if any item has exit_code = 1
-                const errorItems = items.filter((item) => item.exit_code === 1);
+                const errorItems = items?.filter(
+                  (item) => item?.exit_code === 1
+                );
                 // console.log(errorItems);
-
-                // Show error notification for each error item
-                errorItems.forEach((item) => {
-                  showNotification({
-                    title: item?.message?.code,
-                    message: JSON.stringify(item?.message?.details),
-                    color: "red",
-                    autoClose: 10000, // Giving more time to read error messages
-                    // icon: <X size={18} />, // Optional: adds an X icon for errors
-                    withCloseButton: true,
-                    icon: <IconX size={18} />,
-                    position: "top-center",
+                if (errorItems && errorItems?.length > 0) {
+                  // Show error notification for each error item
+                  errorItems.forEach((item) => {
+                    showNotification({
+                      title: item?.message?.code,
+                      message: JSON.stringify(item?.message?.details),
+                      color: "red",
+                      autoClose: 10000, // Giving more time to read error messages
+                      // icon: <X size={18} />, // Optional: adds an X icon for errors
+                      withCloseButton: true,
+                      icon: <IconX size={18} />,
+                      position: "top-center",
+                    });
                   });
-                });
+                }
+
                 // console.log("Mutation success:", data);
                 queryClient.setQueryData(["main_form_request"], data);
                 resolve(data);
