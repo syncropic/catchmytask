@@ -10,7 +10,7 @@ import {
 import TableView from "@components/TableView";
 import ExplorerWrapper from "@components/Explorer";
 import { useEffect, useState } from "react";
-import { useGo, useParsed } from "@refinedev/core";
+import { useGetIdentity, useGo, useParsed } from "@refinedev/core";
 import { IconIconsOff } from "@tabler/icons-react";
 import { useAppStore } from "src/store";
 import MonacoEditor from "@components/MonacoEditor";
@@ -22,6 +22,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import ActionInputWrapper from "@components/ActionInput";
 import ActionToolbar from "@components/ActionToolbar";
 import SessionMemoryToolbar from "@components/SessionMemoryToolbar";
+import { IIdentity } from "@components/interfaces";
 
 interface MonitorWrapperProps {
   display_mode?: string;
@@ -384,6 +385,7 @@ export const MonitorMessages = ({
     monitorComponents,
     setMonitorComponents,
   } = useAppStore();
+  const { data: identity } = useGetIdentity<IIdentity>();
 
   // actions
 
@@ -464,16 +466,16 @@ export const MonitorMessages = ({
     error: messagesError,
     loading: messagesLoading,
   } = useLiveQuery<Event>(
-    `SELECT * FROM messages WHERE session_id = ${params?.id} ORDER BY created_datetime DESC`,
+    `SELECT * FROM messages WHERE session_id = ${params?.id} AND author_id = '${identity?.email}' ORDER BY created_datetime DESC`,
     "messages"
   );
 
-  const queryClient = useQueryClient();
-  // const viewData = queryClient.getQueryData([view_query_key]);
-  const responseData = queryClient.getQueryData(["main_form_request"]) as {
-    data: any;
-    response: any;
-  };
+  // const queryClient = useQueryClient();
+  // // const viewData = queryClient.getQueryData([view_query_key]);
+  // const responseData = queryClient.getQueryData(["main_form_request"]) as {
+  //   data: any;
+  //   response: any;
+  // };
 
   // let go = useGo();
 

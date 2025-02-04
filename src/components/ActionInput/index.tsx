@@ -941,7 +941,14 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                     if (["messages"].includes(record?.entity_type)) {
                       if (!isMobile) {
                         console.log(`toggleView : ${String(record?.id)}`);
-                        toggleView(String(record?.id), record);
+                        let action_context = "request_response";
+                        let current_view_items = params?.view_items;
+                        toggleView(
+                          String(record?.id),
+                          record,
+                          action_context,
+                          current_view_items
+                        );
                         console.log(
                           `setExpandedRecordIds : ${String(record?.id)}`
                         );
@@ -1579,11 +1586,21 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
             return field ? renderField(field) : null;
           })}
 
-        {/* {hasRequiredFields &&
+        {hasRequiredFields &&
           showVariables &&
           data_model?.schema?.required.map((fieldName: string) => {
             const field = data_model?.schema?.properties?.[fieldName];
             if (fieldName == "variables") {
+              return field ? renderField(field) : null;
+            }
+            return null;
+          })}
+
+        {/* {hasRequiredFields &&
+          showVariables &&
+          data_model?.schema?.required.map((fieldName: string) => {
+            const field = data_model?.schema?.properties?.[fieldName];
+            if (fieldName == "variables_value") {
               return field ? renderField(field) : null;
             }
             return null;

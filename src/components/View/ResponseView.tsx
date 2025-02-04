@@ -326,9 +326,9 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
       });
     }
   };
-  if (runTaskDataIsLoading || viewIsLoading) {
-    return <div>loading...</div>;
-  }
+  // if (runTaskDataIsLoading || viewIsLoading) {
+  //   return <div>loading...</div>;
+  // }
 
   if (runTaskDataError || viewError) {
     return (
@@ -347,6 +347,7 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
 
   return (
     <div>
+      {/* ViewItemRunTaskWrapper */}
       {displayJSONView && (
         <div>
           <div>{`${view_item_record?.name} | ${view_item_record?.id}`}</div>
@@ -417,7 +418,7 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
       )}
       {dataItems && view_record && (
         <>
-          <div> dataItems + view_record</div>
+          {/* <div> dataItems + view_record</div> */}
           <ViewItem
             dataItems={dataItems}
             view_record={view_record}
@@ -561,10 +562,6 @@ const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
       });
     }
   };
-
-  if (runTaskDataIsLoading) {
-    return <div>"loading..."</div>;
-  }
 
   if (runTaskDataError) {
     return (

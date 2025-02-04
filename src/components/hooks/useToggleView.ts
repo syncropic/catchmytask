@@ -6,7 +6,12 @@ interface UseToggleViewParams {
 }
 
 interface ToggleViewResult {
-  toggleView: (id: string, record: any) => void;
+  toggleView: (
+    id: string,
+    record: any,
+    action_context?: string,
+    current_view_items?: string
+  ) => void;
   viewIds: string[];
 }
 
@@ -36,13 +41,28 @@ export const useToggleView = ({
     }
   };
 
-  const toggleView = (id: string, record: any) => {
+  const toggleView = (
+    id: string,
+    record: any,
+    action_context?: string,
+    current_view_items?: string
+  ) => {
     const existingView = views[id];
     const newViewIds = toggleItemInList(viewIds, id);
-    console.log(existingView);
-    console.log(newViewIds);
 
-    setDeSelectedRecords([id]);
+    let view_items = current_view_items?.split(",");
+
+    if (action_context === "request_response") {
+      // for when toggling after request
+      setDeSelectedRecords(view_items || []);
+      setViews(id, record);
+    } else if (existingView) {
+      // for when toggling in ui
+      setDeSelectedRecords([id]);
+      setViews(id, null);
+    } else if (!existingView) {
+      setViews(id, record);
+    }
 
     // Construct query parameters
     const queryParams: {
@@ -64,12 +84,6 @@ export const useToggleView = ({
       type: "push",
     });
 
-    if (existingView) {
-      setViews(id, null);
-    } else {
-      setViews(id, record);
-    }
-
     // Call the optional callback if provided
     onViewsChange?.(newViewIds);
   };
@@ -79,10 +93,3 @@ export const useToggleView = ({
     viewIds,
   };
 };
-
-// Usage example:
-// const { toggleView, viewIds } = useToggleView({
-//   onViewsChange: (newViewIds) => {
-//     console.log('Views changed:', newViewIds);
-//   }
-// });

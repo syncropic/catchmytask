@@ -7,12 +7,22 @@ import { useParsed } from "@refinedev/core";
 import ExternalSubmitButton from "@components/SubmitButton";
 import { formatAuthorId } from "@components/Utils";
 
-const SessionSummaryInfoCard = ({
+interface SessionData {
+  id: string;
+  name: string;
+  excerpt: string;
+  author_id: string;
+  created_datetime: string;
+}
+
+interface SessionSummaryInfoCardProps {
+  session: SessionData;
+  execlude_components?: string[];
+}
+
+const SessionSummaryInfoCard: React.FC<SessionSummaryInfoCardProps> = ({
   session,
   execlude_components,
-}: {
-  session: any;
-  execlude_components?: any;
 }) => {
   const {
     sectionIsExpanded,
@@ -21,9 +31,12 @@ const SessionSummaryInfoCard = ({
     setActiveLayout,
     activeInput,
     setActiveInput,
+    action_input_form_values,
   } = useAppStore();
   const { data: user_session } = useSession();
-  const { params, pathname } = useParsed();
+  const { params, pathname } = useParsed<{ id: string }>();
+
+  let action_form_key = `form_${params?.id || "general"}`;
 
   const closeDisplay = (section: string) => {
     if (activeLayout) {
@@ -33,7 +46,7 @@ const SessionSummaryInfoCard = ({
     }
   };
 
-  const formatDate = (dateString: any) => {
+  const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -75,9 +88,24 @@ const SessionSummaryInfoCard = ({
         </div>
       </div>
 
+      {/* Variables value - with enhanced visual hierarchy */}
+      {action_input_form_values[action_form_key]?.variables_value && (
+        <div className="px-4 py-3 bg-white border-t border-gray-100">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-700">
+              Variables
+            </label>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <pre className="text-xs font-mono text-blue-600 whitespace-pre-wrap break-all">
+                {action_input_form_values[action_form_key]?.variables_value ||
+                  ""}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Interaction Actions */}
-      {execlude_components &&
-      execlude_components?.includes("toolbar") ? null : (
+      {execlude_components?.includes("toolbar") ? null : (
         <div className="px-4 py-3 bg-white border-t border-gray-100">
           <div className="min-w-0 w-full">
             <ActionToolbar
