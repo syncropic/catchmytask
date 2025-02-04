@@ -12,6 +12,7 @@ import {
   inferDataTypes,
   sanitizeFilters,
   useFetchQueryDataByState,
+  useIsMobile,
   useQueryByState,
   useReadRecordByState,
   useSearchFilters,
@@ -166,6 +167,8 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   const { setFormSubmitHandler, setFormInstance } = useTransientStore();
   const { searchFilters } = useSearchFilters();
   const { params } = useParsed();
+  const isMobile = useIsMobile(); // Custom hook to check if the screen is mobile
+
   // let actionInputId = record?.id || params?.id;
   // let action_input_form_values_key =
   //   action_form_key || `${action || "query"}_${actionInputId}`;
@@ -936,12 +939,14 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   display_items.map((record: any) => {
                     // console.log(item?.entity_type);
                     if (["messages"].includes(record?.entity_type)) {
-                      console.log(`toggleView : ${String(record?.id)}`);
-                      toggleView(String(record?.id), record);
-                      console.log(
-                        `setExpandedRecordIds : ${String(record?.id)}`
-                      );
-                      setExpandedRecordIds([String(record?.id)]); // set this to expandd the item
+                      if (!isMobile) {
+                        console.log(`toggleView : ${String(record?.id)}`);
+                        toggleView(String(record?.id), record);
+                        console.log(
+                          `setExpandedRecordIds : ${String(record?.id)}`
+                        );
+                        setExpandedRecordIds([String(record?.id)]); // set this to expand the item
+                      }
                       // close the action input on mobile
                       setDisplaySessionActionInput(false);
                     }

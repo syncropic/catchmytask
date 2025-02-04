@@ -510,6 +510,9 @@ export const useAppStore = create(
       activeInvalidateQueryKey: null,
       setActiveInvalidateQueryKey: (item) =>
         set((state) => ({ ...state, activeInvalidateQueryKey: item })),
+      deSelectedRecords: [],
+      setDeSelectedRecords: (records) =>
+        set((state) => ({ ...state, deSelectedRecords: records })),
       selectedRecords: {},
       setSelectedRecords: (records) =>
         set((state) => ({ ...state, selectedRecords: records })),

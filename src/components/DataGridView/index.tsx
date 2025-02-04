@@ -14,6 +14,7 @@ import { ConditionallyFormattedCellTemplate } from "./ConditionallyFormattedCell
 import { useGridData } from "./useGridData";
 import { DetailCellTemplate } from "./DetailCellTemplate";
 import { useAppStore } from "src/store";
+import { useIsMobile } from "@components/Utils";
 
 interface ResultsComponentProps {
   data_fields: any[];
@@ -57,6 +58,7 @@ export function DataGridView({
   useEffect(() => {
     setLocalData(data_items);
   }, [data_items]);
+  const isMobile = useIsMobile(); // Custom hook to check if the screen is mobile
 
   const { rows, columns, handleColumnResize } = useGridData(
     localData,
@@ -136,7 +138,8 @@ export function DataGridView({
   };
 
   return (
-    <div className="h-[75vh] overflow-scroll">
+    // <div className="h-[75vh] overflow-scroll">
+    <div className={`overflow-scroll ${!isMobile ? "h-3/4" : ""}`}>
       {rows.length > 0 && columns?.length > 0 && (
         <ReactGrid
           rows={rows}

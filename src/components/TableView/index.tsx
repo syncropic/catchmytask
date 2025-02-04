@@ -117,7 +117,7 @@ export function TableView<T extends Record<string, any>>({
     let record = record_action?.record;
     let action = record_action.action;
   };
-  const { toggleView } = useToggleView();
+  const { toggleView } = useToggleView({ onViewsChange: setExpandedRecordIds });
 
   // Update the handler to use generic type and match Mantine's expected signature
   const handleRowClick: DataTableRowClickHandler<T> = ({
@@ -139,6 +139,15 @@ export function TableView<T extends Record<string, any>>({
     entity_type?: string;
     [key: string]: any;
   }
+
+  // const handleExpandToggle = useCallback(() => {
+  //   if (!record.id) return;
+  //   if (isExpanded) {
+  //     setExpandedRecordIds([]);
+  //   } else {
+  //     setExpandedRecordIds([String(record.id)]);
+  //   }
+  // }, [record.id, isExpanded, setExpandedRecordIds]);
 
   const handleView = (record: Record) => {
     toggleView(String(record?.id), record);
@@ -507,26 +516,28 @@ export function TableView<T extends Record<string, any>>({
                   },
                   trigger: "never",
                   content: ({ record, collapse }) => (
-                    <div className="ml-6 mr-4 -mt-2 mb-2">
-                      <div className="border-l-2 border-blue-200 pl-4 py-3">
-                        {isMobile && view_ids.includes(String(record?.id)) && (
-                          <div className="w-full max-w-4xl">
-                            <ResponseViewWrapper />
-                          </div>
-                        )}
+                    <>
+                      {isMobile && view_ids.includes(String(record?.id)) && (
+                        <div className="w-full max-w-sm">
+                          <ResponseViewWrapper />
+                        </div>
+                      )}
 
-                        {record?.actions && (
-                          <div className="w-full max-w-4xl">
-                            <Box>
-                              <ExecutionStatus
-                                record={record?.actions}
-                                parent_record={record}
-                              />
-                            </Box>
-                          </div>
-                        )}
+                      <div className="ml-6 mr-4 -mt-2 mb-2">
+                        <div className="border-l-2 border-blue-200 pl-4 py-3">
+                          {record?.actions && (
+                            <div className="w-full max-w-4xl">
+                              <Box>
+                                <ExecutionStatus
+                                  record={record?.actions}
+                                  parent_record={record}
+                                />
+                              </Box>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    </>
                   ),
                 },
               }

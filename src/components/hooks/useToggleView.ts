@@ -15,8 +15,13 @@ export const useToggleView = ({
 }: UseToggleViewParams = {}): ToggleViewResult => {
   const go = useGo();
   const { params } = useParsed();
-  const { activeProfile, setViews, views, open_new_items_in_window } =
-    useAppStore();
+  const {
+    activeProfile,
+    setViews,
+    views,
+    open_new_items_in_window,
+    setDeSelectedRecords,
+  } = useAppStore();
 
   const viewIds = Object.keys(views);
 
@@ -34,12 +39,10 @@ export const useToggleView = ({
   const toggleView = (id: string, record: any) => {
     const existingView = views[id];
     const newViewIds = toggleItemInList(viewIds, id);
+    console.log(existingView);
+    console.log(newViewIds);
 
-    if (existingView) {
-      setViews(id, null);
-    } else {
-      setViews(id, record);
-    }
+    setDeSelectedRecords([id]);
 
     // Construct query parameters
     const queryParams: {
@@ -60,6 +63,12 @@ export const useToggleView = ({
       query: queryParams,
       type: "push",
     });
+
+    if (existingView) {
+      setViews(id, null);
+    } else {
+      setViews(id, record);
+    }
 
     // Call the optional callback if provided
     onViewsChange?.(newViewIds);

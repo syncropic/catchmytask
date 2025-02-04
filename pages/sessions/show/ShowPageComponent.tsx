@@ -13,10 +13,16 @@ import MonacoEditor from "@components/MonacoEditor";
 import { useExecuteFunctionWithArgs } from "@components/hooks/useExecuteFunctionWithArgs";
 import { useToggleView } from "@components/hooks/useToggleView";
 import Reveal from "@components/Reveal";
-import { Tooltip, Text } from "@mantine/core";
+import { Tooltip, Text, Loader } from "@mantine/core";
 
 export const ShowPageComponent: React.FC = () => {
-  const { activeSession, setActiveSession, views, setViews } = useAppStore();
+  const {
+    activeSession,
+    setActiveSession,
+    views,
+    setViews,
+    deSelectedRecords,
+  } = useAppStore();
   const { params } = useParsed();
   const { toggleView } = useToggleView();
   const isMobile = useIsMobile(); // Custom hook to check if the screen is mobile
@@ -39,7 +45,9 @@ export const ShowPageComponent: React.FC = () => {
   } = useReadRecordByState(read_session_state);
 
   // View items fetch logic
-  const missingViewItems = view_items.filter((id: any) => !views[id]);
+  let missingViewItems = view_items
+    .filter((id: any) => !views[id])
+    .filter((id: any) => !deSelectedRecords?.includes(id));
 
   // const {
   //   data: viewItemsData,
@@ -122,6 +130,26 @@ export const ShowPageComponent: React.FC = () => {
   // if (error) {
   //   return <div>Error: {error.message}</div>;
   // }
+
+  // Combine all loading states
+  const isLoading = sessionIsLoading || viewItemsIsLoading;
+  const error = sessionError || viewItemsError;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader size="lg" variant="dots" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen text-red-500">
+        Error: {error.message}
+      </div>
+    );
+  }
 
   return (
     <>

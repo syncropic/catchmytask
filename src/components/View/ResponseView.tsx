@@ -81,6 +81,7 @@ const ResponseViewWrapper = ({}: ResponseViewWrapperProps) => {
         </Accordion>
       )}
       {/* <div>{JSON.stringify(view_items)}</div> */}
+      {/* <div>ResponseViewWrapper - out</div> */}
 
       {view_items &&
         view_items?.map((view_item: any) => {
@@ -89,6 +90,7 @@ const ResponseViewWrapper = ({}: ResponseViewWrapperProps) => {
               key={view_item}
               view_item_id={view_item}
             ></ViewItemWrapper>
+            // <div>ResponseViewWrapper</div>
           );
         })}
     </div>
@@ -109,10 +111,12 @@ const ViewItemWrapper = ({ view_item_id }: { view_item_id: string }) => {
     ["execute_task_id"]?.includes(view_item_record?.message_type)
   ) {
     return (
-      <ViewItemRunTaskWrapper
-        key={view_item_id}
-        view_item_id={view_item_id}
-      ></ViewItemRunTaskWrapper>
+      <>
+        <ViewItemRunTaskWrapper
+          key={view_item_id}
+          view_item_id={view_item_id}
+        ></ViewItemRunTaskWrapper>
+      </>
     );
   } else if (["content_embed_url"]?.includes(view_item_record?.message_type)) {
     return (
@@ -237,20 +241,6 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
     : null;
   let view_record = view_records ? view_records[0] : null;
 
-  if (runTaskDataError) {
-    return (
-      <>
-        <MonacoEditor
-          value={{
-            error: runTaskDataError,
-          }}
-          language="json"
-          height="25vh"
-        ></MonacoEditor>
-      </>
-    );
-  }
-
   let actionItem = runTaskData?.data?.find
     ? runTaskData?.data?.find(
         (item: any) =>
@@ -336,6 +326,24 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
       });
     }
   };
+  if (runTaskDataIsLoading || viewIsLoading) {
+    return <div>loading...</div>;
+  }
+
+  if (runTaskDataError || viewError) {
+    return (
+      <>
+        <MonacoEditor
+          value={{
+            runTaskDataError: runTaskDataError,
+            viewError: viewError,
+          }}
+          language="json"
+          height="25vh"
+        ></MonacoEditor>
+      </>
+    );
+  }
 
   return (
     <div>
@@ -358,7 +366,6 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
           ></MonacoEditor>
         </div>
       )}
-
       {runTaskDataIsLoading && (
         <Accordion multiple>
           <Accordion.Item value={view_item_id} key={view_item_id}>
@@ -391,7 +398,6 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
           </Accordion.Item>
         </Accordion>
       )}
-
       {!runTaskDataIsLoading && !dataItems && !view_record && (
         <Accordion multiple defaultValue={[view_item_id]}>
           <Accordion.Item value={view_item_id} key={view_item_id}>
@@ -409,9 +415,9 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
           </Accordion.Item>
         </Accordion>
       )}
-
       {dataItems && view_record && (
         <>
+          <div> dataItems + view_record</div>
           <ViewItem
             dataItems={dataItems}
             view_record={view_record}
@@ -468,20 +474,6 @@ const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
   //     ></MonacoEditor>
   //   </>
   // );
-
-  if (runTaskDataError) {
-    return (
-      <>
-        <MonacoEditor
-          value={{
-            error: runTaskDataError,
-          }}
-          language="json"
-          height="25vh"
-        ></MonacoEditor>
-      </>
-    );
-  }
 
   // let actionItem = runTaskData?.data?.find
   //   ? runTaskData?.data?.find(
@@ -569,6 +561,24 @@ const ViewItemViewWrapper = ({ view_item_id }: { view_item_id: string }) => {
       });
     }
   };
+
+  if (runTaskDataIsLoading) {
+    return <div>"loading..."</div>;
+  }
+
+  if (runTaskDataError) {
+    return (
+      <>
+        <MonacoEditor
+          value={{
+            runTaskDataError: runTaskDataError,
+          }}
+          language="json"
+          height="25vh"
+        ></MonacoEditor>
+      </>
+    );
+  }
 
   return (
     <div>
@@ -674,6 +684,24 @@ const ViewItemContentEmbed = ({
   } = useLiveQuery<Event>(query, "messages");
 
   let dataItemsRetrieved = dataItems || messages;
+
+  if (messagesLoading) {
+    return <div>"loading..."</div>;
+  }
+
+  if (messagesError) {
+    return (
+      <>
+        <MonacoEditor
+          value={{
+            messagesError: messagesError,
+          }}
+          language="json"
+          height="25vh"
+        ></MonacoEditor>
+      </>
+    );
+  }
 
   return (
     // <>
@@ -785,6 +813,24 @@ const ViewItemContentStreamQuery = ({
       )?.data || []
     : null;
   let view_record = view_records ? view_records[0] : null;
+
+  if (streamDataIsLoading) {
+    return <div>"loading..."</div>;
+  }
+
+  if (streamDataError) {
+    return (
+      <>
+        <MonacoEditor
+          value={{
+            streamDataError: streamDataError,
+          }}
+          language="json"
+          height="25vh"
+        ></MonacoEditor>
+      </>
+    );
+  }
 
   return (
     <>
@@ -999,112 +1045,20 @@ const ViewItem = ({
       });
     }
   };
+  if (!view_item_record) {
+    return null;
+  }
 
   return (
-    <Accordion multiple defaultValue={[view_item_id]}>
-      <Accordion.Item value={view_item_id} key={view_item_id}>
-        <Accordion.Control>
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1">
-              {/* <Loader size={18} /> */}
-              {/* <ActionStatusInfo record={item} isRerunning={true} /> */}
-              {!isMobile &&
-                !view_record?.fields?.length &&
-                dataItems?.map((item: any, index: number) => {
-                  if (
-                    item?.view_id == "embed_url" ||
-                    item?.message_type == "content_embed_url"
-                  ) {
-                    return (
-                      <>
-                        <div>
-                          {
-                            <ActionStatusInfo
-                              record={item}
-                              isRerunning={true}
-                            />
-                          }
-                        </div>
-                      </>
-                    );
-                    // if (item?.action_status == "running") {
-                    //   return <Loader size={18} />;
-                    // } else {
-                    //   return null;
-                    // }
-                  } else {
-                    return null;
-                  }
-                })}
-
-              <div onClick={(e) => e.stopPropagation()}>
-                <Reveal
-                  trigger="click"
-                  target={
-                    <Tooltip
-                      multiline
-                      w={220}
-                      withArrow
-                      transitionProps={{ duration: 200 }}
-                      // label={getTooltipLabel(view_item_record || {})}
-                      label={"click for details"}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex flex-col gap-1">
-                          {/* Main Label - Made larger and bolder */}
-                          <div className="text-sm font-semibold text-blue-600 px-3 break-words max-w-xs sm:max-w-md">
-                            {getLabel(view_item_record || {})}
-                          </div>
-
-                          {/* Subheading - Smaller, lighter color and weight */}
-                          <div
-                            className="text-xs font-normal text-blue-400 truncate overflow-hidden whitespace-nowrap px-3"
-                            // className="text-sm font-normal text-blue-400 truncate"
-                            style={{ maxWidth: width < 500 ? 300 : 500 }}
-                          >
-                            {subheading}
-                          </div>
-                        </div>
-                        <IconInfoCircle
-                          // className="text-blue-500 flex-shrink-0"
-                          size={12}
-                        />
-                      </div>
-                    </Tooltip>
-                  }
-                >
-                  {/* <Documentation record={view_record}></Documentation> */}
-                  <ViewDocumentation
-                    record={view_documentation_record}
-                  ></ViewDocumentation>
-                </Reveal>
-              </div>
-            </div>
-            {include_components?.includes("toolbar") && (
-              <div className="hidden lg:block">
-                <div
-                  className="flex p-3 gap-3"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <ViewItemForm
-                    view_item_record={view_item_record}
-                    action_form_key={`form_${params?.id}_${view_item_id}`}
-                    view_item_id={view_item_id}
-                    query_state={query_state}
-                    view_record={view_record}
-                    view_query_state={view_query_state}
-                  ></ViewItemForm>
-                </div>
-              </div>
-            )}
-          </div>
-          {include_components?.includes("toolbar") && (
-            <div className="block lg:hidden">
-              <div
-                className="flex p-3 gap-3 items-center"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {isMobile &&
+    <>
+      <Accordion multiple defaultValue={[view_item_id]}>
+        <Accordion.Item value={view_item_id} key={view_item_id}>
+          <Accordion.Control>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-1">
+                {/* <Loader size={18} /> */}
+                {/* <ActionStatusInfo record={item} isRerunning={true} /> */}
+                {!isMobile &&
                   !view_record?.fields?.length &&
                   dataItems?.map((item: any, index: number) => {
                     if (
@@ -1132,99 +1086,202 @@ const ViewItem = ({
                       return null;
                     }
                   })}
-                <ExternalSubmitButton
-                  record={{}}
-                  reference_record={{
-                    ...view_item_record,
-                    id: view_item_id,
-                    queryKey: `useRunTask_${JSON.stringify(query_state)}`,
-                    viewQueryKey: `useExecuteFunctionWithArgs_${JSON.stringify(
-                      view_query_state
-                    )}`,
-                  }}
-                  view_item={view_record}
-                  entity_type="view"
-                  action_form_key={`form_${params?.id}_${view_item_id}`}
-                  action={"save"}
-                />
-                <Tooltip label="expand/minimize" key="expand/minimize">
-                  <ActionIcon
-                    variant="default"
-                    size="sm"
-                    aria-label="expand/minimize"
-                    onClick={toggleItemFullWindowDisplay}
-                  >
-                    <IconMaximize />
-                  </ActionIcon>
-                </Tooltip>
 
-                <Tooltip label="close" key="close">
-                  <ActionIcon
-                    variant="default"
-                    size="sm"
-                    aria-label="close"
-                    onClick={() =>
-                      toggleView(String(view_item_record?.id), view_item_record)
+                <div onClick={(e) => e.stopPropagation()}>
+                  <Reveal
+                    trigger="click"
+                    target={
+                      <Tooltip
+                        multiline
+                        w={220}
+                        withArrow
+                        transitionProps={{ duration: 200 }}
+                        // label={getTooltipLabel(view_item_record || {})}
+                        label={"click for details"}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-col gap-1">
+                            {/* Main Label - Made larger and bolder */}
+                            <div className="text-sm font-semibold text-blue-600 px-3 break-words max-w-xs sm:max-w-md">
+                              {getLabel(view_item_record || {})}
+                            </div>
+
+                            {/* Subheading - Smaller, lighter color and weight */}
+                            <div
+                              className="text-xs font-normal text-blue-400 truncate overflow-hidden whitespace-nowrap px-3"
+                              // className="text-sm font-normal text-blue-400 truncate"
+                              style={{ maxWidth: width < 500 ? 300 : 500 }}
+                            >
+                              {subheading}
+                            </div>
+                          </div>
+                          <IconInfoCircle
+                            // className="text-blue-500 flex-shrink-0"
+                            size={12}
+                          />
+                        </div>
+                      </Tooltip>
                     }
                   >
-                    <IconSquareX />
-                  </ActionIcon>
-                </Tooltip>
+                    {/* <Documentation record={view_record}></Documentation> */}
+                    <ViewDocumentation
+                      record={view_documentation_record}
+                    ></ViewDocumentation>
+                  </Reveal>
+                </div>
               </div>
+              {include_components?.includes("toolbar") && (
+                <div className="hidden lg:block">
+                  <div
+                    className="flex p-3 gap-3"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ViewItemForm
+                      view_item_record={view_item_record}
+                      action_form_key={`form_${params?.id}_${view_item_id}`}
+                      view_item_id={view_item_id}
+                      query_state={query_state}
+                      view_record={view_record}
+                      view_query_state={view_query_state}
+                    ></ViewItemForm>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </Accordion.Control>
-        <Accordion.Panel>
-          {dataItems && view_record?.fields?.length > 0 && (
-            <DataGridView
-              data_fields={view_record?.fields || []}
-              data_items={dataItems || []}
-              view_record={view_record}
-            ></DataGridView>
-          )}
-          {/* <DataGridView
+            {include_components?.includes("toolbar") && (
+              <div className="block lg:hidden">
+                <div
+                  className="flex p-3 gap-3 items-center"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {isMobile &&
+                    !view_record?.fields?.length &&
+                    dataItems?.map((item: any, index: number) => {
+                      if (
+                        item?.view_id == "embed_url" ||
+                        item?.message_type == "content_embed_url"
+                      ) {
+                        return (
+                          <>
+                            <div>
+                              {
+                                <ActionStatusInfo
+                                  record={item}
+                                  isRerunning={true}
+                                />
+                              }
+                            </div>
+                          </>
+                        );
+                        // if (item?.action_status == "running") {
+                        //   return <Loader size={18} />;
+                        // } else {
+                        //   return null;
+                        // }
+                      } else {
+                        return null;
+                      }
+                    })}
+                  <ExternalSubmitButton
+                    record={{}}
+                    reference_record={{
+                      ...view_item_record,
+                      id: view_item_id,
+                      queryKey: `useRunTask_${JSON.stringify(query_state)}`,
+                      viewQueryKey: `useExecuteFunctionWithArgs_${JSON.stringify(
+                        view_query_state
+                      )}`,
+                    }}
+                    view_item={view_record}
+                    entity_type="view"
+                    action_form_key={`form_${params?.id}_${view_item_id}`}
+                    action={"save"}
+                  />
+                  <Tooltip label="expand/minimize" key="expand/minimize">
+                    <ActionIcon
+                      variant="default"
+                      size="sm"
+                      aria-label="expand/minimize"
+                      onClick={toggleItemFullWindowDisplay}
+                    >
+                      <IconMaximize />
+                    </ActionIcon>
+                  </Tooltip>
+
+                  <Tooltip label="close" key="close">
+                    <ActionIcon
+                      variant="default"
+                      size="sm"
+                      aria-label="close"
+                      onClick={() =>
+                        toggleView(
+                          String(view_item_record?.id),
+                          view_item_record
+                        )
+                      }
+                    >
+                      <IconSquareX />
+                    </ActionIcon>
+                  </Tooltip>
+                </div>
+              </div>
+            )}
+          </Accordion.Control>
+          <Accordion.Panel>
+            {dataItems && view_record?.fields?.length > 0 && (
+              <DataGridView
+                data_fields={view_record?.fields || []}
+                data_items={dataItems || []}
+                view_record={view_record}
+              ></DataGridView>
+            )}
+            {/* <DataGridView
             data_fields={view_record?.fields || []}
             data_items={dataItems || []}
             view_record={view_record}
           ></DataGridView> */}
-          {/* <div>datagrid</div> */}
-          {/* <MonacoEditor value={dataItems} /> */}
-          {!view_record?.fields?.length &&
-            dataItems?.map((item: any, index: number) => {
-              if (
-                item?.view_id == "embed_url" ||
-                item?.message_type == "content_embed_url"
-              ) {
-                return (
-                  <div key={`embed-${index}`} className="h-[75vh]">
-                    {item?.content?.embed_url
-                      ?.toLowerCase()
-                      .startsWith("http") ? (
-                      <EmbedComponent
-                        embed_url={item?.content?.embed_url}
-                      ></EmbedComponent>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="flex flex-col gap-1 items-center">
-                          <ActionStatusInfo record={item} isRerunning={true} />
-                          <Text c="blue" size="lg">
-                            {item?.content?.execution_message}
-                          </Text>
+            {/* <div>datagrid</div> */}
+            {/* <MonacoEditor value={dataItems} /> */}
+            {!view_record?.fields?.length &&
+              dataItems?.map((item: any, index: number) => {
+                if (
+                  item?.view_id == "embed_url" ||
+                  item?.message_type == "content_embed_url"
+                ) {
+                  return (
+                    <div key={`embed-${index}`} className="h-[75vh]">
+                      {item?.content?.embed_url
+                        ?.toLowerCase()
+                        .startsWith("http") ? (
+                        <EmbedComponent
+                          embed_url={item?.content?.embed_url}
+                        ></EmbedComponent>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="flex flex-col gap-1 items-center">
+                            <ActionStatusInfo
+                              record={item}
+                              isRerunning={true}
+                            />
+                            <Text c="blue" size="lg">
+                              {item?.content?.execution_message}
+                            </Text>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              } else {
-                return (
-                  <div key={`editor-${index}`}>
-                    <MonacoEditor value={item} />
-                  </div>
-                );
-              }
-            })}
-        </Accordion.Panel>
-      </Accordion.Item>
-    </Accordion>
+                      )}
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={`editor-${index}`}>
+                      <MonacoEditor value={item} />
+                    </div>
+                  );
+                }
+              })}
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion>
+    </>
   );
 };
