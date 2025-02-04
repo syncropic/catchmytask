@@ -344,8 +344,8 @@ export function TableView<T extends Record<string, any>>({
           scrollViewportRef={viewportRef}
           height="80vh"
           records={data_items}
-          highlightOnHover={true}
-          withColumnBorders={true}
+          // highlightOnHover={true}
+          // withColumnBorders={true}
           rowBackgroundColor={({ id }) => {
             if (view_ids.includes(String(id))) {
               return {
@@ -354,6 +354,55 @@ export function TableView<T extends Record<string, any>>({
               };
             }
             return undefined;
+          }}
+          styles={{
+            table: {
+              tbody: {
+                tr: {
+                  cursor: "pointer",
+                },
+                'tr[data-selected="true"]': ({ id }: { id: any }) => ({
+                  backgroundColor: view_ids.includes(String(id))
+                    ? "rgb(239 246 255)"
+                    : "white",
+                  transition: "all 0.15s ease-in-out",
+                  boxShadow:
+                    "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.04)",
+                  "&:hover": {
+                    transform: "translateY(-1px)",
+                    boxShadow:
+                      "0 3px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.06)",
+                  },
+                }),
+                td: ({ id }: { id: any }) => ({
+                  border: "none !important",
+                  padding: "1rem !important",
+                  backgroundColor: "transparent !important",
+                  position: "relative",
+                  "&:first-of-type": {
+                    borderTopLeftRadius: "0.5rem",
+                    borderBottomLeftRadius: "0.5rem",
+                    ...(view_ids.includes(String(id)) && {
+                      "&::before": {
+                        content: '""',
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: "4px",
+                        backgroundColor: "#3b82f6",
+                        borderTopLeftRadius: "0.5rem",
+                        borderBottomLeftRadius: "0.5rem",
+                      },
+                    }),
+                  },
+                  "&:last-of-type": {
+                    borderTopRightRadius: "0.5rem",
+                    borderBottomRightRadius: "0.5rem",
+                  },
+                }),
+              },
+            },
           }}
           // rowStyle={({ id }) => {
           //   if (view_ids.includes(String(id))) {
@@ -378,31 +427,31 @@ export function TableView<T extends Record<string, any>>({
           //     },
           //   };
           // }}
-          rowStyle={({ id }) => ({
-            maxWidth: "100%", // Ensure rows don't exceed container width
-            ...(view_ids.includes(String(id))
-              ? {
-                  borderLeft: "4px solid #3b82f6",
-                  fontWeight: 500,
-                  "& td": {
-                    color: "#2563eb !important",
-                    maxWidth: "0", // Enable text truncation
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  },
-                  "&:hover": {
-                    backgroundColor: "#dbeafe !important",
-                    "& td": {
-                      color: "#1e40af !important",
-                    },
-                  },
-                }
-              : {
-                  "&:hover": {
-                    backgroundColor: "#f8fafc !important",
-                  },
-                }),
-          })}
+          // rowStyle={({ id }) => ({
+          //   maxWidth: "100%", // Ensure rows don't exceed container width
+          //   ...(view_ids.includes(String(id))
+          //     ? {
+          //         borderLeft: "4px solid #3b82f6",
+          //         fontWeight: 500,
+          //         "& td": {
+          //           color: "#2563eb !important",
+          //           maxWidth: "0", // Enable text truncation
+          //           overflow: "hidden",
+          //           textOverflow: "ellipsis",
+          //         },
+          //         "&:hover": {
+          //           backgroundColor: "#dbeafe !important",
+          //           "& td": {
+          //             color: "#1e40af !important",
+          //           },
+          //         },
+          //       }
+          //     : {
+          //         "&:hover": {
+          //           backgroundColor: "#f8fafc !important",
+          //         },
+          //       }),
+          // })}
           {...(!isMobile && {
             onRowClick: handleRowClick,
           })}
@@ -458,28 +507,24 @@ export function TableView<T extends Record<string, any>>({
                   },
                   trigger: "never",
                   content: ({ record, collapse }) => (
-                    <div className="overflow-hidden">
-                      <div>
+                    <div className="ml-6 mr-4 -mt-2 mb-2">
+                      <div className="border-l-2 border-blue-200 pl-4 py-3">
                         {isMobile && view_ids.includes(String(record?.id)) && (
-                          <div className="w-96">
+                          <div className="w-full max-w-4xl">
                             <ResponseViewWrapper />
                           </div>
                         )}
-                        {record?.actions ? (
-                          <div className="w-96">
-                            <Box
-                              style={{
-                                maxWidth: "100%",
-                                overflowX: "auto",
-                              }}
-                            >
+
+                        {record?.actions && (
+                          <div className="w-full max-w-4xl">
+                            <Box>
                               <ExecutionStatus
                                 record={record?.actions}
                                 parent_record={record}
                               />
                             </Box>
                           </div>
-                        ) : null}
+                        )}
                       </div>
                     </div>
                   ),

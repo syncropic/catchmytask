@@ -8,7 +8,7 @@ import {
   IconPlugConnected,
 } from "@tabler/icons-react";
 import { format, parseISO } from "date-fns";
-import { Icon } from "@tabler/icons-react";
+import type { Icon } from "@tabler/icons-react";
 import { useGetIdentity, useParsed } from "@refinedev/core";
 import { useAppStore } from "src/store";
 import { IIdentity } from "@components/interfaces";
@@ -52,6 +52,11 @@ interface ExecutionStatusProps {
     [key: string]: RecordItem;
   };
   onConnect?: (itemName: string) => void;
+}
+
+interface ConnectionStatusProps {
+  isConnected: boolean;
+  onConnect?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 const getStatusConfig = (status: StatusType): StatusConfig => {
@@ -105,19 +110,14 @@ const calculateDuration = (start: string, end: string): string => {
   }
 };
 
-interface ConnectionStatusProps {
-  isConnected: boolean;
-  onConnect?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-}
-
 const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   isConnected,
   onConnect,
 }) => {
   if (isConnected) {
     return (
-      <div className="flex items-center cursor-pointer">
-        <IconPlugConnected className="w-4 h-4 text-green-500" />
+      <div className="flex items-center text-[11px] text-green-600">
+        <IconPlugConnected className="w-3 h-3" />
       </div>
     );
   }
@@ -125,9 +125,9 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   return (
     <button
       onClick={onConnect}
-      className="flex items-center gap-2 px-3 py-1 text-xs font-medium text-white bg-blue-500 rounded hover:bg-blue-600 transition-colors cursor-pointer"
+      className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-white bg-blue-500 rounded hover:bg-blue-600 transition-colors"
     >
-      <IconPlugConnected className="w-4 h-4" />
+      <IconPlugConnected className="w-3 h-3" />
       Connect
     </button>
   );
@@ -141,14 +141,17 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
   const { params } = useParsed();
   const { activeSession, activeProfile } = useAppStore();
   const { data: identity } = useGetIdentity<IIdentity>();
-  const sortedItems: ProcessedItem[] = Object.entries(record)
-    .map(([key, value]) => ({
-      name: key,
-      ...value,
-      duration: calculateDuration(value.start_datetime, value.end_datetime),
-      endTime: formatDateTime(value.end_datetime),
-    }))
-    .sort((a, b) => a.execution_order - b.execution_order);
+
+  const sortedItems: ProcessedItem[] = React.useMemo(() => {
+    return Object.entries(record)
+      .map(([key, value]) => ({
+        name: key,
+        ...value,
+        duration: calculateDuration(value.start_datetime, value.end_datetime),
+        endTime: formatDateTime(value.end_datetime),
+      }))
+      .sort((a, b) => a.execution_order - b.execution_order);
+  }, [record]);
 
   const handleConnect = (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -161,7 +164,6 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         ? JSON.parse(decodeURIComponent(stateParam))
         : {};
 
-      // Get current full URL
       const currentUrl = window.location.href;
 
       const newState = {
@@ -186,70 +188,70 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
 
   return (
     <Box className="w-full max-w-4xl">
-      <div className="space-y-2">
-        {sortedItems.map((item) => {
+      <div className="space-y-1">
+        {sortedItems.map((item, index) => {
           const config = getStatusConfig(item.action_status);
           const StatusIcon = config.icon;
-          // const showConnectionStatus = item.needs_connection;
           const showConnectionStatus = true;
 
           return (
             <div
-              key={item.name}
-              className="p-2 rounded-md border bg-white hover:bg-gray-50 transition-colors"
+              key={`${item.name}-${index}`}
+              className="px-2 py-1.5 rounded border border-gray-100 bg-white hover:bg-gray-50 transition-colors"
             >
-              {/* First Row */}
-              <div className="flex items-center gap-3 mb-1">
-                <div className="flex items-center gap-2">
-                  {item.action_status === "running" ? (
-                    <Box pos="relative" className="w-6 h-6">
-                      <LoadingOverlay
-                        visible={true}
-                        zIndex={1000}
-                        overlayProps={{ radius: "sm", blur: 2 }}
-                        loaderProps={{
-                          color: "blue",
-                          size: "xs",
-                          type: "dots",
-                        }}
-                      />
-                    </Box>
-                  ) : (
-                    <div className={`p-1 rounded-full ${config.bgColor}`}>
-                      <StatusIcon
-                        className={`w-4 h-4 ${config.color}`}
-                        stroke={2}
-                      />
-                    </div>
-                  )}
-                  <Text className="text-xs font-medium">
-                    #{item.execution_order}
-                  </Text>
-                </div>
-
+              {/* Row 1: Status, Number, Title */}
+              <div className="flex items-center gap-2 mb-1">
+                {item.action_status === "running" ? (
+                  <Box pos="relative" className="w-4 h-4">
+                    <LoadingOverlay
+                      visible={true}
+                      zIndex={1000}
+                      overlayProps={{ radius: "sm", blur: 2 }}
+                      loaderProps={{
+                        color: "blue",
+                        size: "xs",
+                        type: "dots",
+                      }}
+                    />
+                  </Box>
+                ) : (
+                  <div className={`rounded-full ${config.bgColor} p-0.5`}>
+                    <StatusIcon
+                      className={`w-3 h-3 ${config.color}`}
+                      stroke={2}
+                    />
+                  </div>
+                )}
+                <Text className="text-xs text-gray-500">
+                  #{item.execution_order}
+                </Text>
                 <Text
-                  className="font-medium text-sm truncate flex-1"
+                  className="font-medium text-xs truncate flex-1"
                   title={item.name}
                 >
                   {item.name}
                 </Text>
-
-                <div className="flex items-center gap-3 text-xs text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <IconClock className="w-3 h-3" stroke={1.5} />
-                    <span>{item.duration}</span>
-                  </div>
-                  <Text size="xs" className="text-gray-500">
-                    {item.endTime}
-                  </Text>
-                </div>
               </div>
 
-              {/* Second Row with Message and Connection Status */}
-              <div className="pl-6 flex items-center justify-between">
-                <Text size="xs" className="text-gray-500">
-                  {item?.message?.details}
-                </Text>
+              {/* Row 2: Message (only if exists) */}
+              {item?.message?.details && (
+                <div className="pl-5 mb-1">
+                  <Text
+                    size="xs"
+                    className="text-gray-600 whitespace-normal break-words"
+                  >
+                    {item.message.details}
+                  </Text>
+                </div>
+              )}
+
+              {/* Row 3: Right-aligned metadata and actions */}
+              <div className="pl-5 flex items-center justify-end text-[11px] text-gray-500 gap-3">
+                <div className="flex items-center gap-1">
+                  <IconClock className="w-3 h-3" stroke={1.5} />
+                  <span>{item.duration}</span>
+                </div>
+                <span>{item.endTime}</span>
                 {showConnectionStatus && (
                   <ConnectionStatus
                     isConnected={

@@ -136,7 +136,7 @@ export const ShowPageComponent: React.FC = () => {
         }}
       ></MonacoEditor> */}
       {isMobile && activeSession && (
-        <div className="w-full overflow-hidden ">
+        <div className="w-full overflow-hidden pt-2">
           <Reveal
             trigger="click"
             target={
@@ -147,7 +147,7 @@ export const ShowPageComponent: React.FC = () => {
                 label={getTooltipLabel(activeSession)}
               >
                 <div className="flex max-w-full overflow-hidden justify-center">
-                  <Text size="sm" className="text-blue-500 truncate block px-3">
+                  <Text size="sm" className="text-blue-500 truncate block">
                     {getLabel(activeSession)}
                   </Text>
                 </div>

@@ -28,6 +28,7 @@ import TaskButton from "./TaskButton";
 import ExternalSubmitButton from "@components/SubmitButton";
 import { showNotification } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
+import Asset, { AssetType } from "@components/Visualizations/Asset";
 
 type ActionStatus =
   | "empty"
@@ -51,12 +52,20 @@ interface MessageLabelRecord {
   name?: string;
   excerpt?: string;
   description?: string;
+  heading?: string;
+  subheading?: string;
   author_id?: string;
   task_id?: string;
   action_status?: ActionStatus;
   variables?: Record<string, any>;
   id: string;
   schedule?: any;
+  assets?: Array<{
+    type: AssetType;
+    src?: string;
+    content?: string;
+    id: string; // Adding an id for key prop in mapping
+  }>;
 }
 
 interface MessageLabelProps {
@@ -498,6 +507,7 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
   const formattedTime = formatDateTime(timestamp);
 
   const heading = getFirstValid(
+    record.heading,
     record.title,
     record.name,
     record.excerpt?.slice(0, 40),
@@ -505,6 +515,7 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
   );
 
   const subheading = getFirstValid(
+    record.subheading,
     record.excerpt,
     record.description?.slice(0, 40)
   );
@@ -598,6 +609,18 @@ const MessageLabel: React.FC<MessageLabelProps> = ({
           >
             {subheading}
           </Text>
+        )}
+        {record.assets && record.assets.length > 0 && (
+          <div className="w-full">
+            {record.assets.map((asset) => (
+              <Asset
+                key={asset.id}
+                type={asset.type}
+                src={asset.src}
+                content={asset.content}
+              />
+            ))}
+          </div>
         )}
 
         {/* Row 4: Task Button */}
