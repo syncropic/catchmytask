@@ -23,7 +23,8 @@ export interface Variable {
     | "select"
     | "multiselect"
     | "search"
-    | "multisearch";
+    | "multisearch"
+    | "attachments";
 }
 
 export interface Filter {
@@ -77,6 +78,7 @@ const OPERATOR_MAP: Record<string, Operator[]> = {
   multiselect: ["equals", "notEquals"],
   search: ["equals", "notEquals"],
   multisearch: ["equals", "notEquals"],
+  attachments: ["equals", "notEquals"],
 };
 
 const OPERATOR_LABELS: Record<Operator, string> = {
@@ -143,6 +145,9 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
         break;
       case "multisearch":
         component = "MultiSearchInput";
+        break;
+      case "attachments":
+        component = "FileInput";
         break;
     }
 
@@ -421,7 +426,7 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
                   label: OPERATOR_LABELS[op],
                 }))}
                 placeholder="Select operator"
-                className="w-32"
+                className="w-20"
               />
             </div>
           )}
@@ -547,6 +552,11 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
         : String(value);
     }
 
+    if (type === "attachments") {
+      // Changed from attachment to attachments
+      return value.name || String(value);
+    }
+
     return String(value);
   };
 
@@ -606,7 +616,8 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
           sqlCondition = `${variable.value} ${SQL_OPERATORS[operator]} ${
             variable.type === "string" ||
             variable.type === "datetime" ||
-            variable.type === "date" // Update this line
+            variable.type === "date" ||
+            variable.type === "attachments"
               ? `'${formattedValue}'`
               : formattedValue
           }`;

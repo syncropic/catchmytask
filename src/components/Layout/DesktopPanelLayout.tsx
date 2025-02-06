@@ -50,15 +50,15 @@ const DesktopPanelLayout: React.FC<DesktopPanelLayoutProps> = ({
 
   // State to track current panel sizes
   const [sizes, setSizes] = useState<PanelSizes>({
-    left: 20,
-    center: 60,
+    left: 30,
+    center: 50,
     right: 20,
   });
 
   // Update panel sizes when global_developer_mode changes
   useEffect(() => {
     const newSizes = {
-      left: global_developer_mode ? 60 : 20,
+      left: global_developer_mode ? 60 : 30,
       center: global_developer_mode ? 20 : 60,
       right: 20,
     };

@@ -9,7 +9,12 @@ import {
   useIsMobile,
   useUpdateComponentAction,
 } from "@components/Utils";
-import { useActiveAuthProvider, useGetIdentity, useGo } from "@refinedev/core";
+import {
+  useActiveAuthProvider,
+  useGetIdentity,
+  useGo,
+  useParsed,
+} from "@refinedev/core";
 import { useAppStore } from "src/store";
 import SearchBar from "@components/SearchBar";
 import QuickActionsBar from "@components/QuickActionsBar";
@@ -83,11 +88,14 @@ const LargeScreenHeader = ({
   const { width } = useViewportSize();
   const { data: user_session } = useSession();
   const authProvider = useActiveAuthProvider();
+  const { params } = useParsed();
 
   const { data: user } = useGetIdentity({
     v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
   });
   const isMobile = useIsMobile();
+  let global_input_mode_developer =
+    global_input_mode === "developer" ? true : false;
 
   const hasPermission = (permission: string): boolean => {
     return Boolean(
@@ -496,6 +504,37 @@ const LargeScreenHeader = ({
           </Reveal>
         </div>
       )} */}
+
+      {!isMobile &&
+        activeSession &&
+        params?.id &&
+        global_input_mode_developer && (
+          <div className="w-full overflow-hidden pt-2">
+            <Reveal
+              trigger="click"
+              target={
+                <Tooltip
+                  multiline
+                  withArrow
+                  transitionProps={{ duration: 200 }}
+                  label={getTooltipLabel(activeSession)}
+                >
+                  <div className="flex max-w-full overflow-hidden justify-center">
+                    <Text size="sm" className="text-blue-500 truncate block">
+                      {getLabel(activeSession)}
+                    </Text>
+                  </div>
+                </Tooltip>
+              }
+            >
+              <MonacoEditor
+                value={activeSession}
+                language="json"
+                height="50vh"
+              />
+            </Reveal>
+          </div>
+        )}
 
       {authenticatedData?.authenticated && !isMobile && (
         <div className="w-full max-w-3xl pr-3">

@@ -1588,6 +1588,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
 
         {hasRequiredFields &&
           showVariables &&
+          record?.variables_options?.length > 0 &&
           data_model?.schema?.required.map((fieldName: string) => {
             const field = data_model?.schema?.properties?.[fieldName];
             if (fieldName == "variables") {
