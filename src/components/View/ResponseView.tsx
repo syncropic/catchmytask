@@ -430,6 +430,20 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
           />
         </>
       )}
+      {dataItems && !view_record && (
+        <>
+          {/* <div> dataItems + !view_record</div> */}
+          <ViewItem
+            dataItems={dataItems}
+            view_record={view_record}
+            view_query_state={view_query_state}
+            include_components={include_components}
+            view_item_id={view_item_id}
+            view_item_record={view_item_record}
+            query_state={run_task_state}
+          />
+        </>
+      )}
     </div>
   );
 };
@@ -1240,6 +1254,8 @@ const ViewItem = ({
             {/* <div>datagrid</div> */}
             {/* <MonacoEditor value={dataItems} /> */}
             {!view_record?.fields?.length &&
+              (dataItems[0]?.view_id == "embed_url" ||
+                dataItems[0]?.message_type == "content_embed_url") &&
               dataItems?.map((item: any, index: number) => {
                 if (
                   item?.view_id == "embed_url" ||
@@ -1276,6 +1292,13 @@ const ViewItem = ({
                   );
                 }
               })}
+            {!view_record?.fields?.length &&
+              (dataItems[0]?.view_id !== "embed_url" ||
+                dataItems[0]?.message_type !== "content_embed_url") && (
+                <div key={`editor-${view_ids}`}>
+                  <MonacoEditor value={dataItems} height="75vh" />
+                </div>
+              )}
           </Accordion.Panel>
         </Accordion.Item>
       </Accordion>
