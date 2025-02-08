@@ -23,6 +23,7 @@ import ActionInputWrapper from "@components/ActionInput";
 import ActionToolbar from "@components/ActionToolbar";
 import SessionMemoryToolbar from "@components/SessionMemoryToolbar";
 import { IIdentity } from "@components/interfaces";
+import EmbedComponent from "@components/EmbedComponent";
 
 interface MonitorWrapperProps {
   display_mode?: string;
@@ -60,6 +61,8 @@ export const MonitorWrapper = ({
     setActiveInput,
     activeLayout,
     setActiveLayout,
+    activeSession,
+    displaySessionEmbedMonitor,
   } = useAppStore();
 
   // // actions
@@ -220,8 +223,19 @@ export const MonitorWrapper = ({
   //   );
   // }
 
+  let displaySessionEmbedMonitor_link = activeSession?.links
+    ? activeSession?.links.find(
+        (item: any) => item?.name == "session_embed_monitor"
+      )
+    : null;
+
   return (
     <div className="flex flex-col p-3 gap-2 h-[85vh] overflow-y-auto">
+      {displaySessionEmbedMonitor && (
+        <EmbedComponent
+          embed_url={displaySessionEmbedMonitor_link?.url}
+        ></EmbedComponent>
+      )}
       <MonitorMessages></MonitorMessages>
       {/* {showSessionWorkingMemory && <MonitorMemory></MonitorMemory>} */}
 

@@ -140,6 +140,7 @@ export function DataGridView({
   return (
     // <div className="h-[75vh] overflow-scroll">
     <div className={`overflow-scroll ${!isMobile ? "h-3/4" : ""}`}>
+      {/* {JSON.stringify(data_items)} */}
       {rows.length > 0 && columns?.length > 0 && (
         <ReactGrid
           rows={rows}

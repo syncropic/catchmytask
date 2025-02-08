@@ -3940,3 +3940,19 @@ export const formatAuthorId = (authorId: string): string => {
   }
   return authorId; // Return the original string if it's not an email
 };
+
+export const processDataItems = (items: any) => {
+  if (!Array.isArray(items)) return [];
+
+  return items.map((item, index) => {
+    // If item is null or undefined, create an empty object
+    const processedItem = item || {};
+
+    // If id is missing or null/undefined, assign using index
+    if (!processedItem.id && processedItem.id !== 0) {
+      processedItem.id = `auto_${index + 1}`;
+    }
+
+    return processedItem;
+  });
+};

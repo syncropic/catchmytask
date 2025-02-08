@@ -236,6 +236,8 @@ export const MenuItems = () => {
     setOpenNewItemsInWindow,
     displayJSONView,
     toggleDisplayJSONView,
+    setDisplaySessionEmbedMonitor,
+    displaySessionEmbedMonitor,
   } = useAppStore();
   const { resource, action, id, pathname, params } = useParsed();
   const [opened, setOpened] = useState(false);
@@ -462,6 +464,17 @@ export const MenuItems = () => {
         >
           Toggle Request Response
         </Menu.Item>
+
+        <Menu.Item
+          leftSection={<IconHttpGet size={14} />}
+          className={`${displaySessionEmbedMonitor ? "text-blue-500" : ""}`}
+          onClick={() =>
+            setDisplaySessionEmbedMonitor(!displaySessionEmbedMonitor)
+          }
+        >
+          Toggle Session Embed Monitor
+        </Menu.Item>
+
         <Menu.Item
           leftSection={<IconJson size={14} />}
           className={`${displayJSONView ? "text-blue-500" : ""}`}

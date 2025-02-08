@@ -9,6 +9,7 @@ import {
   extractKeys,
   getLabel,
   getTooltipLabel,
+  processDataItems,
   useIsMobile,
   useQueryByState,
   useRunTask,
@@ -136,6 +137,7 @@ const ViewItemWrapper = ({ view_item_id }: { view_item_id: string }) => {
   ) {
     return (
       <>
+        {/* <div>ViewItemContentStreamQuery</div> */}
         <ViewItemContentStreamQuery
           // dataItems={view_item_record}
           view_item_id={view_item_id}
@@ -248,7 +250,7 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
       )
     : {};
 
-  let dataItems = actionItem?.data;
+  let dataItems = processDataItems(actionItem?.data);
   // either read view from the response or retrieve view from external
 
   // let view_record = actionItem?.view;
@@ -697,7 +699,7 @@ const ViewItemContentEmbed = ({
   let dataItemsRetrieved = dataItems || messages;
 
   if (messagesLoading) {
-    return <div>"loading..."</div>;
+    return <div>loading...</div>;
   }
 
   if (messagesError) {
@@ -826,7 +828,7 @@ const ViewItemContentStreamQuery = ({
   let view_record = view_records ? view_records[0] : null;
 
   if (streamDataIsLoading) {
-    return <div>"loading..."</div>;
+    return <div>loading...</div>;
   }
 
   if (streamDataError) {
@@ -1059,6 +1061,17 @@ const ViewItem = ({
   if (!view_item_record) {
     return null;
   }
+  // return (
+  //   <div>
+  //     <MonacoEditor
+  //       value={{
+  //         title: "View",
+  //         dataItems: dataItems,
+  //         view_record: view_record,
+  //       }}
+  //     ></MonacoEditor>
+  //   </div>
+  // );
 
   return (
     <>
@@ -1184,11 +1197,6 @@ const ViewItem = ({
                             </div>
                           </>
                         );
-                        // if (item?.action_status == "running") {
-                        //   return <Loader size={18} />;
-                        // } else {
-                        //   return null;
-                        // }
                       } else {
                         return null;
                       }
@@ -1242,10 +1250,14 @@ const ViewItem = ({
             {dataItems && view_record?.fields?.length > 0 && (
               <DataGridView
                 data_fields={view_record?.fields || []}
-                data_items={dataItems || []}
+                // data_fields={[]}
+                data_items={processDataItems(dataItems)}
+                // data_items={[]}
+                // view_record={{}}
                 view_record={view_record}
               ></DataGridView>
             )}
+            {/* {JSON.stringify(processDataItems(view_record?.fields))} */}
             {/* <DataGridView
             data_fields={view_record?.fields || []}
             data_items={dataItems || []}
@@ -1292,13 +1304,14 @@ const ViewItem = ({
                   );
                 }
               })}
-            {!view_record?.fields?.length &&
-              (dataItems[0]?.view_id !== "embed_url" ||
-                dataItems[0]?.message_type !== "content_embed_url") && (
+            {/* {!view_record?.fields?.length &&
+              dataItems[0]?.view_id !== "embed_url" &&
+              dataItems[0]?.message_type !== "content_embed_url" && (
                 <div key={`editor-${view_ids}`}>
                   <MonacoEditor value={dataItems} height="75vh" />
+                 
                 </div>
-              )}
+              )} */}
           </Accordion.Panel>
         </Accordion.Item>
       </Accordion>

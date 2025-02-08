@@ -82,6 +82,7 @@ const LargeScreenHeader = ({
     toggleGlobalSessionTraceMode,
     global_input_mode,
     setGlobalInputMode,
+    setDisplaySessionEmbedMonitor,
   } = useAppStore();
   const { updateComponentAction } = useUpdateComponentAction();
   let action = focused_entities[activeTask?.id]?.["action"];
@@ -162,6 +163,9 @@ const LargeScreenHeader = ({
       );
 
       setShowRequestResponseView(
+        global_input_mode === "developer" ? false : true
+      );
+      setDisplaySessionEmbedMonitor(
         global_input_mode === "developer" ? false : true
       );
     }

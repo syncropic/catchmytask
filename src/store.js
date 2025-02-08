@@ -567,6 +567,9 @@ export const useAppStore = create(
       activeApplication: null,
       setActiveApplication: (application) =>
         set((state) => ({ ...state, activeApplication: application })),
+      displaySessionEmbedMonitor: false,
+      setDisplaySessionEmbedMonitor: (value) =>
+        set((state) => ({ ...state, displaySessionEmbedMonitor: value })),
       action_input_form_values: {},
       setActionInputFormValues: (values) =>
         set((state) => ({ ...state, action_input_form_values: values })),

@@ -364,6 +364,11 @@ const Layout = ({
   };
 
   let include_components = ["toolbar"];
+  const toggleDeveloperInputFullWindowDisplay = () => {
+    console.log(
+      "toggleDeveloperInputFullWindowDisplay 1 - natural language, 2 - split, 3 - structured query. display number in icon for feedback"
+    );
+  };
 
   return (
     <Authenticated key="home" redirectOnFail="/login">
@@ -526,6 +531,22 @@ const Layout = ({
                                 {/* First section - 75% height */}
                                 <div className="h-[75%] flex flex-col justify-center">
                                   <div className="flex flex-col gap-10">
+                                    <Tooltip
+                                      label="toggle full window mode 1,2,3"
+                                      key="toggle full window mode 1,2,3"
+                                    >
+                                      <ActionIcon
+                                        variant="default"
+                                        size="sm"
+                                        aria-label="toggle full window mode 1,2,3"
+                                        onClick={
+                                          toggleDeveloperInputFullWindowDisplay
+                                        }
+                                      >
+                                        <IconMaximize />
+                                      </ActionIcon>
+                                    </Tooltip>
+
                                     <ExternalSubmitButton
                                       record={{}}
                                       entity_type="sessions"
