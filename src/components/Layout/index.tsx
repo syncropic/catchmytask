@@ -364,16 +364,26 @@ const Layout = ({
   };
 
   let include_components = ["toolbar"];
-  const toggleDeveloperInputFullWindowDisplay = () => {
-    console.log(
-      "toggleDeveloperInputFullWindowDisplay 1 - natural language, 2 - split, 3 - structured query. display number in icon for feedback"
-    );
-  };
 
   return (
     <Authenticated key="home" redirectOnFail="/login">
       <AppLayout authenticatedData={authenticatedData}>
         {isMobile && activeSession && params?.id && <SessionActionInput />}
+        {/* generic create form used for add_new actions */}
+
+        {/* {user_session?.userProfile?.session_actions?.includes("add_new") && (
+          <div>
+            add new form
+            <ActionInputWrapper
+              data_model="user mode query input"
+              query_name="data_model"
+              record={{ id: params?.id }}
+              action="query"
+              action_form_key={`form_${params?.id}`}
+              success_message_code="user_mode_query_input"
+            />
+          </div>
+        )} */}
 
         <Drawer
           opened={displaySidebar}
@@ -531,36 +541,20 @@ const Layout = ({
                                 {/* First section - 75% height */}
                                 <div className="h-[75%] flex flex-col justify-center">
                                   <div className="flex flex-col gap-10">
-                                    <Tooltip
-                                      label="toggle full window mode 1,2,3"
-                                      key="toggle full window mode 1,2,3"
-                                    >
-                                      <ActionIcon
-                                        variant="default"
-                                        size="sm"
-                                        aria-label="toggle full window mode 1,2,3"
-                                        onClick={
-                                          toggleDeveloperInputFullWindowDisplay
-                                        }
-                                      >
-                                        <IconMaximize />
-                                      </ActionIcon>
-                                    </Tooltip>
-
                                     <ExternalSubmitButton
                                       record={{}}
                                       entity_type="sessions"
                                       action_form_key={`form_${params?.id}`}
-                                      action="query"
+                                      action="query_with_describe"
                                       icon={"IconArrowRight"}
                                     />
-                                    <ExternalSubmitButton
+                                    {/* <ExternalSubmitButton
                                       record={{}}
                                       entity_type="sessions"
                                       action_form_key={`form_${params?.id}`}
                                       action="query"
                                       icon={"IconArrowLeft"}
-                                    />
+                                    /> */}
                                   </div>
                                 </div>
 

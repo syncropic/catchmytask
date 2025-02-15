@@ -20,6 +20,7 @@ import Header from "@components/Header";
 import LayoutToggle from "./LayoutToggle";
 import { useIsMobile } from "@components/Utils";
 import { IconHttpGet, IconIconsOff, IconMail } from "@tabler/icons-react";
+import InputModeToggle from "./InputModeToggle";
 // export default AppLayout;
 export function AppLayout({
   children,
@@ -106,9 +107,12 @@ export function AppLayout({
           {isMobile &&
             authenticatedData?.authenticated &&
             activeLayout?.quickActionsBar?.isDisplayed && (
-              <div className="flex justify-center p-2 gap-3">
+              <div className="flex justify-between p-2 gap-3 px-12">
+                <></>
                 <LayoutToggle />
-                <div>
+
+                <div className="flex gap-4">
+                  <InputModeToggle authenticatedData={authenticatedData} />
                   <Tooltip label={`clear all views`} position="top">
                     <ActionIcon
                       size="sm"

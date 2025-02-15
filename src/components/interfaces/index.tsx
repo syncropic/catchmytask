@@ -1145,6 +1145,7 @@ export interface SearchInputComponentProps<T extends Record<string, any>> {
   handleEdit?: any;
   record?: any;
   query_name?: string;
+  credential_id?: string;
   func_name?: string;
   data_items?: any;
   collections?: string[];

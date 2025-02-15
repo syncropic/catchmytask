@@ -19,6 +19,7 @@ interface ActionProps {
   view_id?: string;
   author_id?: string;
   title?: string;
+  actions?: any;
 }
 
 export const SessionsWrapper = ({
@@ -28,6 +29,7 @@ export const SessionsWrapper = ({
   success_message_code,
   author_id,
   title,
+  actions,
 }: ActionProps) => {
   const {
     activeTask,
@@ -219,9 +221,7 @@ export const SessionsWrapper = ({
           placeholder="sessions"
           handleOptionSubmit={handleSessionSelect}
           data_items={dataItems?.[0]?.items}
-          // include_action_icons={
-          //   user_session?.userProfile?.session_actions || []
-          // }
+          include_action_icons={actions}
           activeFilters={[
             {
               id: 1,

@@ -22,7 +22,7 @@ export function FooterCentered({
   copywright = { url: "https://dpwanjala.com", content: "dpwanjala.com" },
 }: FooterItem) {
   const linkComponents = links?.map((item, index) => (
-    <Anchor href={item.link} key={index}>
+    <Anchor href={item?.link} key={index}>
       <ActionIcon
         size="lg"
         variant="default"
@@ -45,10 +45,11 @@ export function FooterCentered({
         </Anchor>
 
         {/* <Group className={classes.links}>{items}</Group> */}
-
-        <Group gap="xs" justify="flex-end" wrap="nowrap">
-          {linkComponents}
-        </Group>
+        {links.length > 0 && (
+          <Group gap="xs" justify="flex-end" wrap="nowrap">
+            {linkComponents}
+          </Group>
+        )}
       </div>
     </div>
   );

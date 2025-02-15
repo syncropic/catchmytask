@@ -547,6 +547,8 @@ const LargeScreenHeader = ({
             view_id="views:36xo8keq9tsoyly68shk"
             title="monitor"
             display_mode="search_input"
+            actions={user_session?.userProfile?.session_actions || []}
+            // actions={["add_new", "dublicate"]}
             success_message_code="fetch_system_sessions"
           />
         </div>
@@ -558,6 +560,8 @@ const LargeScreenHeader = ({
             func_name="fetch_system_sessions"
             view_id="views:36xo8keq9tsoyly68shk"
             title="monitor"
+            actions={user_session?.userProfile?.session_actions || []}
+            // actions={["add_new", "dublicate"]}
             display_mode="search_input"
             success_message_code="fetch_system_sessions"
           />

@@ -40,6 +40,7 @@ import ViewItemForm from "@components/ViewItemForm";
 import { useLiveQuery } from "@components/Utils/useLiveQuery";
 import { ActionStatusInfo } from "@components/MessageLabel";
 import { useExecuteFunctionWithArgs } from "@components/hooks/useExecuteFunctionWithArgs";
+import InteractiveGraph from "@components/InteractiveGraph";
 
 interface ResponseViewWrapperProps {}
 
@@ -332,6 +333,8 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
   //   return <div>loading...</div>;
   // }
 
+  const pathsToDeserialize = ["TicktingInfo"];
+
   if (runTaskDataError || viewError) {
     return (
       <>
@@ -418,9 +421,8 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
           </Accordion.Item>
         </Accordion>
       )}
-      {dataItems && view_record && (
+      {!runTaskDataIsLoading && dataItems && view_record && (
         <>
-          {/* <div> dataItems + view_record</div> */}
           <ViewItem
             dataItems={dataItems}
             view_record={view_record}
@@ -432,11 +434,16 @@ const ViewItemRunTaskWrapper = ({ view_item_id }: { view_item_id: string }) => {
           />
         </>
       )}
-      {dataItems && !view_record && (
+      {!runTaskDataIsLoading && dataItems && !view_record && (
         <>
-          {/* <div> dataItems + !view_record</div> */}
+          {/* <div>{JSON.stringify(dataItems)}</div> */}
           <ViewItem
-            dataItems={dataItems}
+            dataItems={deserializeByPaths(dataItems, [
+              {
+                path: "TicktingInfo",
+                select: ["BookingRequest", "CustomerID"], // Keep both BookingRequest and CustomerID
+              },
+            ])}
             view_record={view_record}
             view_query_state={view_query_state}
             include_components={include_components}
@@ -1073,6 +1080,12 @@ const ViewItem = ({
   //   </div>
   // );
 
+  const edges = [
+    { in: "A", out: "B", weight: 3 },
+    { in: "B", out: "C", weight: 2 },
+    { in: "C", out: "A", weight: 1 },
+  ];
+
   return (
     <>
       <Accordion multiple defaultValue={[view_item_id]}>
@@ -1247,24 +1260,25 @@ const ViewItem = ({
             )}
           </Accordion.Control>
           <Accordion.Panel>
-            {dataItems && view_record?.fields?.length > 0 && (
-              <DataGridView
-                data_fields={view_record?.fields || []}
-                // data_fields={[]}
-                data_items={processDataItems(dataItems)}
-                // data_items={[]}
-                // view_record={{}}
-                view_record={view_record}
-              ></DataGridView>
-            )}
-            {/* {JSON.stringify(processDataItems(view_record?.fields))} */}
-            {/* <DataGridView
-            data_fields={view_record?.fields || []}
-            data_items={dataItems || []}
-            view_record={view_record}
-          ></DataGridView> */}
-            {/* <div>datagrid</div> */}
-            {/* <MonacoEditor value={dataItems} /> */}
+            {dataItems &&
+              view_record?.fields?.length > 0 &&
+              !["graph_relations"]?.includes(
+                view_record?.config?.component
+              ) && (
+                <DataGridView
+                  data_fields={view_record?.fields || []}
+                  data_items={processDataItems(dataItems)}
+                  view_record={view_record}
+                ></DataGridView>
+              )}
+            {dataItems &&
+              view_record?.fields?.length > 0 &&
+              view_record?.config?.component === "graph_relations" && (
+                <div className="h-[85vh] w-full">
+                  <InteractiveGraph edges={dataItems} />
+                </div>
+              )}
+
             {!view_record?.fields?.length &&
               (dataItems[0]?.view_id == "embed_url" ||
                 dataItems[0]?.message_type == "content_embed_url") &&
@@ -1304,17 +1318,117 @@ const ViewItem = ({
                   );
                 }
               })}
-            {/* {!view_record?.fields?.length &&
+            {!view_record?.fields?.length &&
               dataItems[0]?.view_id !== "embed_url" &&
               dataItems[0]?.message_type !== "content_embed_url" && (
                 <div key={`editor-${view_ids}`}>
                   <MonacoEditor value={dataItems} height="75vh" />
-                 
                 </div>
-              )} */}
+              )}
           </Accordion.Panel>
         </Accordion.Item>
       </Accordion>
     </>
   );
 };
+
+type JsonObject = { [key: string]: any };
+
+type PathConfig = {
+  path: string;
+  select?: string[]; // Optional array of keys to keep
+};
+
+/**
+ * Gets a value from an object using dot notation path
+ */
+function getByPath(obj: any, path: string): any {
+  return path.split(".").reduce((acc, part) => acc?.[part], obj);
+}
+
+/**
+ * Sets a value in an object using dot notation path
+ */
+function setByPath(obj: any, path: string, value: any): void {
+  const parts = path.split(".");
+  const lastPart = parts.pop()!;
+  const target = parts.reduce((acc, part) => {
+    if (!(part in acc)) acc[part] = {};
+    return acc[part];
+  }, obj);
+  target[lastPart] = value;
+}
+
+/**
+ * Recursively attempts to parse JSON strings
+ */
+function deepParseJson(value: any): any {
+  if (typeof value !== "string") {
+    if (Array.isArray(value)) {
+      return value.map(deepParseJson);
+    }
+    if (typeof value === "object" && value !== null) {
+      return Object.fromEntries(
+        Object.entries(value).map(([k, v]) => [k, deepParseJson(v)])
+      );
+    }
+    return value;
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    if (typeof parsed === "object" && parsed !== null) {
+      return deepParseJson(parsed);
+    }
+    return parsed;
+  } catch {
+    return value;
+  }
+}
+
+/**
+ * Filters an object to only keep specified keys
+ */
+function filterKeys(obj: any, keys?: string[]): any {
+  if (!keys || !obj || typeof obj !== "object") return obj;
+
+  return keys.reduce((acc, key) => {
+    if (key in obj) {
+      acc[key] = obj[key];
+    }
+    return acc;
+  }, {} as JsonObject);
+}
+
+/**
+ * Deserializes specific JSON fields in objects using dot notation paths
+ * @param data - Data to process
+ * @param pathConfigs - Array of path configurations specifying what to deserialize and which keys to keep
+ */
+function deserializeByPaths<T extends JsonObject>(
+  data: T[],
+  pathConfigs: (string | PathConfig)[]
+): T[] {
+  // Normalize configs
+  const normalizedConfigs = pathConfigs.map((config) =>
+    typeof config === "string" ? { path: config } : config
+  );
+
+  return data.map((item) => {
+    const newItem = { ...item };
+
+    normalizedConfigs.forEach((config) => {
+      const value = getByPath(newItem, config.path);
+      if (value) {
+        const parsed = deepParseJson(value);
+        // Filter keys if specified
+        const filtered = filterKeys(parsed, config.select);
+        setByPath(newItem, config.path, filtered);
+      }
+    });
+
+    return newItem;
+  });
+}
+
+export { deserializeByPaths, type PathConfig };

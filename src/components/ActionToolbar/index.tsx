@@ -1,11 +1,15 @@
+import { IIdentity } from "@components/interfaces";
 import ExternalSubmitButton from "@components/SubmitButton";
-import { Button, Indicator, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Indicator, Tooltip } from "@mantine/core";
+import { useGetIdentity } from "@refinedev/core";
 import {
   IconAdjustments,
   IconArrowsMaximize,
   IconArrowsMinimize,
   IconClock,
   IconColumns,
+  IconMaximize,
+  IconSquareToggle,
   IconSquareX,
 } from "@tabler/icons-react";
 import React from "react";
@@ -77,6 +81,7 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
 
   let global_input_mode_developer =
     global_input_mode === "developer" ? true : false;
+  const { data: identity } = useGetIdentity<IIdentity>();
 
   const getActiveFiltersCount = (formKey: string) => {
     const filterKey = `${formKey}_filter`;
@@ -95,13 +100,20 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
     }, 0);
   };
 
+  const toggleDeveloperInputFullWindowDisplay = () => {
+    console.log(
+      "toggleDeveloperInputFullWindowDisplay 1 - natural language, 2 - split, 3 - structured query. display number in icon for feedback"
+    );
+  };
+
   return (
     <div className="w-full flex flex-col md:flex-row items-center justify-between bg-gray-50 px-3 py-2 space-y-2 md:space-y-0">
       {/* Action Buttons Row */}
       <div className="flex items-center gap-2 w-full md:w-auto">
         {params?.id &&
-          hasPermission("query_action_input") &&
-          activeSession?.features?.includes("can_query") && (
+          ((hasPermission("query_action_input") &&
+            activeSession?.features?.includes("can_query")) ||
+            activeSession?.author_id === identity?.email) && (
             <ExternalSubmitButton
               record={{}}
               entity_type="sessions"
@@ -111,8 +123,9 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
           )}
 
         {params?.id &&
-          hasPermission("queue_action_input") &&
-          activeSession?.features?.includes("can_queue") && (
+          ((hasPermission("queue_action_input") &&
+            activeSession?.features?.includes("can_queue")) ||
+            activeSession?.author_id === identity?.email) && (
             <ExternalSubmitButton
               record={{}}
               entity_type="sessions"
@@ -136,6 +149,32 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
       {/* Utility Buttons Row - No wrapping */}
       <div className="flex items-center gap-2 w-full md:w-auto min-w-0">
         <div className="flex items-center gap-2 w-full justify-start md:justify-end">
+          {params?.id && global_input_mode_developer && (
+            <Tooltip
+              label="toggle full window mode 1,2,3"
+              key="toggle full window mode 1,2,3"
+            >
+              <Indicator
+                inline
+                // label={getActiveFiltersCount(`form_${params.id}`)}
+                label={1}
+                size={16}
+                // disabled={getActiveFiltersCount(`form_${params.id}`) === 0}
+                color="blue"
+                offset={4}
+              >
+                <ActionIcon
+                  variant="default"
+                  size="sm"
+                  aria-label="toggle full window mode 1,2,3"
+                  onClick={toggleDeveloperInputFullWindowDisplay}
+                >
+                  <IconSquareToggle />
+                </ActionIcon>
+              </Indicator>
+            </Tooltip>
+          )}
+
           {activeSession?.variables?.length > 0 && (
             <Tooltip
               label={`${showVariables ? "hide" : "show and provide"} variables`}

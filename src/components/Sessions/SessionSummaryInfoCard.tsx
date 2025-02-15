@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { IconUser } from "@tabler/icons-react";
 import ActionToolbar from "@components/ActionToolbar";
 import { useAppStore } from "src/store";
@@ -6,11 +6,15 @@ import { useSession } from "next-auth/react";
 import { useParsed } from "@refinedev/core";
 import ExternalSubmitButton from "@components/SubmitButton";
 import { formatAuthorId } from "@components/Utils";
+import { Spoiler } from "@mantine/core";
+import Documentation from "@components/Documentation";
+import RenderMarkdown from "@components/RenderMarkdown";
 
 interface SessionData {
   id: string;
   name: string;
   excerpt: string;
+  description?: string;
   author_id: string;
   created_datetime: string;
 }
@@ -35,6 +39,7 @@ const SessionSummaryInfoCard: React.FC<SessionSummaryInfoCardProps> = ({
   } = useAppStore();
   const { data: user_session } = useSession();
   const { params, pathname } = useParsed<{ id: string }>();
+  const [expanded, setExpanded] = useState(false);
 
   let action_form_key = `form_${params?.id || "general"}`;
 
@@ -65,7 +70,24 @@ const SessionSummaryInfoCard: React.FC<SessionSummaryInfoCardProps> = ({
 
       {/* Excerpt - Light grey background */}
       <div className="bg-gray-50 px-4 py-2 border-b border-gray-100">
-        <p className="text-sm text-gray-600 break-words">{session.excerpt}</p>
+        <Spoiler
+          maxHeight={45}
+          showLabel="more"
+          hideLabel="hide"
+          className="text-sm text-gray-600 break-words"
+          expanded={expanded}
+          onExpandedChange={setExpanded}
+        >
+          {session.excerpt}
+          {/* <p className="text-sm text-gray-600 break-words">
+            {session.description}
+          </p> */}
+          <div className="pt-2">
+            <RenderMarkdown
+              content={session?.description || ""}
+            ></RenderMarkdown>
+          </div>
+        </Spoiler>
       </div>
 
       {/* Author Info + Date */}

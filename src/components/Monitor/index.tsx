@@ -42,7 +42,7 @@ export const MonitorWrapper = ({
   author_id,
   title,
 }: MonitorWrapperProps) => {
-  const { params } = useParsed();
+  const { params, pathname } = useParsed();
   const { data: user_session } = useSession();
   // const [monitorComponents, setMonitorComponents] = useState(["actions"]);
 
@@ -228,15 +228,19 @@ export const MonitorWrapper = ({
         (item: any) => item?.name == "session_embed_monitor"
       )
     : null;
-
+  let displayHomeMessages = true;
   return (
     <div className="flex flex-col p-3 gap-2 h-[85vh] overflow-y-auto">
-      {displaySessionEmbedMonitor && (
+      {/* {displayHomeMessages && pathname == "/home" && (
+        <div>home messages: {JSON.stringify(pathname)}</div>
+      )} */}
+      {displaySessionEmbedMonitor && displaySessionEmbedMonitor_link?.url && (
         <EmbedComponent
           embed_url={displaySessionEmbedMonitor_link?.url}
         ></EmbedComponent>
       )}
-      <MonitorMessages></MonitorMessages>
+      {pathname !== "/home" && <MonitorMessages></MonitorMessages>}
+
       {/* {showSessionWorkingMemory && <MonitorMemory></MonitorMemory>} */}
 
       {/* {user_session?.userProfile?.monitor_options?.length > 1 && (
