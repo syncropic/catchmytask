@@ -521,86 +521,22 @@ const Layout = ({
                         <div className="w-full h-full">
                           {" "}
                           {/* Add h-full here */}
-                          <div className="flex w-full h-full">
-                            {" "}
-                            {/* Removed gap-4 */}
-                            {/* Left Column - Natural Language Query */}
-                            <div className="w-[45%] min-w-0">
-                              <ActionInputWrapper
-                                data_model="developer mode query input"
-                                query_name="data_model"
-                                record={{ id: params?.id }}
-                                action="query"
-                                action_form_key={`form_${params?.id}`}
-                                success_message_code="developer_mode_query_input"
-                              />
-                            </div>
-                            {/* Middle Column - Submit Buttons (No spacing) */}
-                            <div className="w-auto min-w-0 h-full flex-shrink-0">
-                              <div className="flex flex-col h-full">
-                                {/* First section - 75% height */}
-                                <div className="h-[75%] flex flex-col justify-center">
-                                  <div className="flex flex-col gap-10">
-                                    <ExternalSubmitButton
-                                      record={{}}
-                                      entity_type="sessions"
-                                      action_form_key={`form_${params?.id}`}
-                                      action="query_with_describe"
-                                      icon={"IconArrowRight"}
-                                    />
-                                    {/* <ExternalSubmitButton
-                                      record={{}}
-                                      entity_type="sessions"
-                                      action_form_key={`form_${params?.id}`}
-                                      action="query"
-                                      icon={"IconArrowLeft"}
-                                    /> */}
-                                  </div>
-                                </div>
-
-                                {/* Second section - 25% height */}
-                                <div className="h-[25%] flex flex-col">
-                                  <div className="flex flex-col gap-10">
-                                    {/* <ExternalSubmitButton
-                                      record={{}}
-                                      entity_type="sessions"
-                                      action_form_key={`form_${params?.id}`}
-                                      action="query"
-                                      icon={"IconArrowRight"}
-                                    /> */}
-                                    {/* <ExternalSubmitButton
-                                      record={{}}
-                                      entity_type="sessions"
-                                      action_form_key={`form_${params?.id}`}
-                                      action="query"
-                                      icon={"IconArrowLeft"}
-                                    /> */}
-                                    <ExternalSubmitButton
-                                      record={{}}
-                                      entity_type="command"
-                                      action_form_key={`form_${params?.id}`}
-                                      action="command"
-                                      actionProps={{
-                                        color: "green",
-                                      }}
-                                      icon={"IconLocationCode"}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            {/* Right Column - Structured Query */}
-                            <div className="w-[53%] min-w-0">
-                              <ActionInputWrapper
-                                data_model="structured query input"
-                                query_name="data_model"
-                                record={{ id: params?.id }}
-                                action="query"
-                                action_form_key={`form_${params?.id}`}
-                                success_message_code="structured_query_input"
-                              />
-                            </div>
-                          </div>
+                          <ActionInputWrapper
+                            data_model="dynamic editor input"
+                            query_name="data_model"
+                            record={{ id: params?.id }}
+                            action="query"
+                            action_form_key={`form_${params?.id}`}
+                            success_message_code="dynamic_editor_input"
+                          />
+                          <ActionInputWrapper
+                            data_model="structured query input"
+                            query_name="data_model"
+                            record={{ id: params?.id }}
+                            action="query"
+                            action_form_key={`form_${params?.id}`}
+                            success_message_code="structured_query_input"
+                          />
                         </div>
                       </div>
                     </>
@@ -730,7 +666,7 @@ const Layout = ({
                   ) &&
                     ["/home", "/"].includes(parsed?.pathname || "") && (
                       <div className="flex flex-col h-[75vh] items-center justify-center p-4">
-                        <Breadcrumbs />
+                        {/* <Breadcrumbs /> */}
                         <p className="text-sm text-gray-600 text-center max-w-sm">
                           <Highlight
                             component="p"

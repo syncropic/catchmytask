@@ -783,29 +783,6 @@ export function useFetchTaskInputDataByState(state: any) {
     config: {
       payload: {
         ...state,
-        // task_variables: {},
-        // global_variables: {},
-        // include_action_steps: [1],
-        // action_steps: [
-        //   {
-        //     id: "1",
-        //     execution_order: 1,
-        //     description: "get recommendation data",
-        //     name: "recommendation_data",
-        //     job: "get recommendation data",
-        //     action_step_query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
-        //       state
-        //     )}')`,
-        //     method: "get",
-        //     type: "main",
-        //     select: {
-        //       query: `SELECT * FROM fn::execute_query('recommendation_data', '${JSON.stringify(
-        //         state
-        //       )}')`,
-        //       credential: "surrealdb_catchmytask",
-        //     },
-        //   },
-        // ],
       },
     },
     queryOptions: {
@@ -1157,52 +1134,6 @@ export function useRunTask(state: any) {
 
   return { data, isLoading, error, isError };
 }
-
-// export function useListItems(state: any) {
-//   const { runtimeConfig: config } = useAppStore();
-//   // pop out frequently changing search_term or other part of state i don't want to trigger a new fetch/use in queryKey
-//   const { search_term, ...rest } = state;
-
-//   const { data, isLoading, error, isError } = useCustom({
-//     url: `${config?.API_URL}/execute-query`,
-//     method: "post",
-//     config: {
-//       payload: {
-//         task_variables: {},
-//         global_variables: {},
-//         include_action_steps: [1],
-//         action_steps: [
-//           {
-//             id: "1",
-//             execution_order: 1,
-//             description: "query data",
-//             name: "query data",
-//             job: "query data",
-//             action_step_query: `SELECT * FROM fn::execute_query('${
-//               state?.query_name
-//             }', '${JSON.stringify(state)}')`,
-//             method: "get",
-//             type: "main",
-//             credential: "surrealdb catchmytask dev",
-//             success_message_code:
-//               state?.success_message_code ?? "query_success_results",
-//             select: {
-//               query: `SELECT * FROM fn::execute_query('${
-//                 state?.query_name
-//               }', '${JSON.stringify(state)}')`,
-//               credential: "surrealdb catchmytask dev",
-//             },
-//           },
-//         ],
-//       },
-//     },
-//     queryOptions: {
-//       queryKey: [`useFetchQueryDataByState_${JSON.stringify(state)}`],
-//     },
-//   });
-
-//   return { data, isLoading, error, isError };
-// }
 
 export function useFetchSessionById(sessionId: string | null) {
   const { runtimeConfig: config } = useAppStore();
@@ -1990,178 +1921,6 @@ export function useSessionNavigation() {
   return navigateToSession;
 }
 
-// export function useNavigation() {
-//   const { activeApplication, activeSession, activeTask } = useAppStore();
-//   const go = useGo();
-
-//   const navigate = (
-//     record: any
-//     // sessionId: string,
-//     // sessions: { id: string; name: string }[]
-//   ) => {
-//     // const selectedSession = sessions.find(
-//     //   (session) => session.id === sessionId
-//     // );
-
-//     // console.log(`Navigating to session: ${sessionId}`);
-//     // console.log(`Selected session: ${selectedSession}`);
-//     // console.log(sessions);
-
-//     if (record?.entity_type === "tasks") {
-//       // setActiveSession(selectedSession);
-//       go({
-//         to: {
-//           resource: "tasks",
-//           action: "show",
-//           id: record.id,
-//           meta: {
-//             applicationId: activeApplication?.id,
-//             sessionId: activeSession?.id,
-//             taskId: record.id,
-//           },
-//         },
-//         query: {
-//           applicationId: activeApplication?.id,
-//           sessionId: activeSession?.id,
-//         },
-//         // type: "push",
-//       });
-//     }
-//   };
-
-//   return navigate;
-// }
-
-// export function useNavigation() {
-//   const { activeApplication, activeSession, activeTask } = useAppStore();
-//   const go = useGo();
-
-//   const navigate = (record: any) => {
-//     if (record?.entity_type === "tasks") {
-//       // Construct the target URL given the passed record
-//       const targetUrl = record?.id
-//         ? `/tasks/show/${record.id}?applicationId=${activeApplication?.id}&sessionId=${activeSession?.id}`
-//         : "/home";
-
-//       // Check if the current URL is the same as the target URL
-//       if (
-//         window.location.pathname + window.location.search !== targetUrl &&
-//         record?.id
-//       ) {
-//         go({
-//           to: {
-//             resource: "tasks",
-//             action: "show",
-//             id: record.id,
-//             meta: {
-//               applicationId: activeApplication?.id,
-//               sessionId: activeSession?.id,
-//               taskId: record.id,
-//             },
-//           },
-//           query: {
-//             applicationId: activeApplication?.id,
-//             sessionId: activeSession?.id,
-//           },
-//         });
-//       } else if (
-//         window.location.pathname + window.location.search !== targetUrl &&
-//         !record?.id
-//       ) {
-//         go({
-//           to: {
-//             resource: "home",
-//             action: "list",
-//             // id: record.id,
-//             // meta: {
-//             //   applicationId: activeApplication?.id,
-//             //   sessionId: activeSession?.id,
-//             //   taskId: record.id,
-//             // },
-//           },
-//           // query: {
-//           //   applicationId: activeApplication?.id,
-//           //   sessionId: activeSession?.id,
-//           // },
-//         });
-//       } else {
-//         console.log("You are already on this page");
-//       }
-//     }
-//   };
-
-//   return navigate;
-// }
-
-// export function useNavigation() {
-//   const { activeApplication, activeSession, activeTask } = useAppStore();
-//   const go = useGo();
-//   const { push } = useNavigationRefine();
-
-//   const navigate = (record: any) => {
-//     let targetUrl = record?.id
-//       ? `/tasks/show/${record.id}?applicationId=${activeApplication?.id}&sessionId=${activeSession?.id}`
-//       : "/home";
-
-//     if (
-//       window.location.pathname + window.location.search !== targetUrl &&
-//       !record?.id
-//     ) {
-//       go({
-//         to: {
-//           resource: "home",
-//           action: "list",
-//         },
-//       });
-//     } else if (
-//       window.location.pathname + window.location.search !== targetUrl &&
-//       record?.id &&
-//       record?.entity_type === "tasks"
-//     ) {
-//       go({
-//         to: {
-//           resource: "tasks",
-//           action: "show",
-//           id: record.id,
-//           meta: {
-//             applicationId: activeApplication?.id,
-//             sessionId: activeSession?.id,
-//             taskId: record.id,
-//           },
-//         },
-//         query: {
-//           applicationId: activeApplication?.id,
-//           sessionId: activeSession?.id,
-//         },
-//       });
-//     } else if (record?.entity_type === "views") {
-//       // get the current path and append path query viewId to it
-//       // let currentPath = window.location.pathname;
-//       // let currentSearch = window.location.search;
-//       // let currentHash = window.location.hash;
-//       // let currentUrl = `${currentPath}${currentSearch}${currentHash}`;
-//       // let newUrl = `${currentUrl}?viewId=${record.id}`;
-//       // console.log("currentUrl", currentUrl);
-//       // Retrieve the current search parameters
-//       const searchParams = new URLSearchParams(location.search);
-
-//       // Add or update the 'patch' parameter
-//       searchParams.set("viewId", record?.id);
-
-//       // Construct the new URL with the patch parameter
-//       // const newUrl = `${location.pathname}?${searchParams}`;
-//       // console.log("newUrl", newUrl);
-
-//       // Use push to update the browser's URL
-//       // push("/home");
-//     } else {
-//       console.log("You are already on this page");
-//     }
-//   };
-
-//   return navigate;
-// }
-
 export function useNavigation() {
   const go = useGo();
   const { push } = useNavigationRefine();
@@ -2325,37 +2084,6 @@ export const iconMap: Record<string, React.ElementType> = {
   IconUpload: IconUpload,
   IconBrandOnedrive: IconBrandOnedrive,
 };
-
-// export const useDuckDBSchema = () => {
-//   const [tables, setTables] = useState([]);
-//   const dbInstance = useDuckDB();
-
-//   useEffect(() => {
-//     const fetchSchema = async () => {
-//       try {
-//         const result = await dbInstance.query(`
-//           SELECT table_name, column_name
-//           FROM information_schema.columns
-//         `);
-//         const schemaData = result.toArray();
-//         const groupedTables = schemaData.reduce((acc: any, row: any) => {
-//           if (!acc[row.table_name]) {
-//             acc[row.table_name] = [];
-//           }
-//           acc[row.table_name].push(row.column_name);
-//           return acc;
-//         }, {});
-//         setTables(groupedTables);
-//       } catch (error) {
-//         console.error("Error fetching schema from DuckDB:", error);
-//       }
-//     };
-
-//     fetchSchema();
-//   }, [dbInstance]);
-
-//   return tables;
-// };
 
 export function createIssueIdSubquery(subquery: string): string {
   // Extract the FROM clause and optional WHERE clause from the subquery
@@ -2590,86 +2318,6 @@ export function getReactGridCellStyle(className: string): CellStyle {
       };
   }
 }
-
-// export function useActionStepsData(action_steps: any[]) {
-//   const { activeTask, activeApplication, activeSession } = useAppStore();
-//   const dbInstance = useDuckDB(); // Get DuckDB instance from context
-
-//   const [dataItems, setDataItems] = useState<[]>([]);
-//   const [isLoading, setIsLoading] = useState(true);
-
-//   useEffect(() => {
-//     if (action_steps?.length > 0) {
-//       fetchAndJoinActionSteps();
-//     }
-
-//     async function fetchAndJoinActionSteps() {
-//       try {
-//         await Promise.all(
-//           action_steps.map(async (step) => {
-//             const state = {
-//               success_message_code: step.success_message_code,
-//               id: step.id,
-//               action_steps: [step],
-//               application: {
-//                 id: activeApplication?.id,
-//                 name: activeApplication?.name,
-//               },
-//               session: {
-//                 id: activeSession?.id,
-//                 name: activeSession?.name,
-//               },
-//               task: { id: activeTask?.id, name: activeTask?.name },
-//               input_values: {},
-//               include_action_steps: [step.execution_order || 0],
-//             };
-
-//             const { isLocalDBSuccess } = useReadByState(state);
-//             if (!isLocalDBSuccess) {
-//               throw new Error(`Failed to load data for step ${step.id}`);
-//             }
-//           })
-//         );
-
-//         // Execute the dynamic join once all steps are processed
-//         await executeDynamicOuterJoin();
-//       } catch (error) {
-//         console.error("Error fetching and joining action steps:", error);
-//       } finally {
-//         setIsLoading(false);
-//       }
-//     }
-
-//     async function executeDynamicOuterJoin() {
-//       try {
-//         const joinClauses = action_steps
-//           .map((step) => `step_${step.id}`)
-//           .join(" FULL OUTER JOIN ");
-
-//         const query = `
-//           SELECT *
-//           FROM ${joinClauses} USING (issue_id);
-//         `;
-
-//         console.log("Executing dynamic outer join query:", query);
-//         const result = await dbInstance.query(query);
-//         setDataItems(result.toArray());
-//       } catch (error) {
-//         console.error("Error executing dynamic join query:", error);
-//       }
-//     }
-//   }, [action_steps, dbInstance, activeTask, activeApplication, activeSession]);
-
-//   return { dataItems, isLoading };
-// }
-
-// export function generateTableAlias(tableName: string): string {
-//   const parts = tableName.split("_");
-//   if (parts.length === 1) {
-//     return tableName.slice(0, 2); // First two letters if it's a single word
-//   }
-//   return parts.map((part) => part[0]).join(""); // First letter of each word
-// }
 
 export function generateTableAlias(tableName: string): string {
   const parts = tableName.split("_");
@@ -2958,39 +2606,6 @@ export const isEmptyOrNull = (value: any): boolean => {
   return false;
 };
 
-// export const formatSQLIdentifier = (str: string): string => {
-//   if (!str) return '""';
-//   return `"${str.replace(/"/g, '""')}"`;
-// };
-
-// export const formatDateValue = (value: any): string => {
-//   try {
-//     const date = new Date(value);
-//     if (isNaN(date.getTime())) {
-//       throw new Error("Invalid date");
-//     }
-//     return `DATE '${date.toISOString().split("T")[0]}'`;
-//   } catch (error) {
-//     throw new Error(`Invalid date value: ${value}`);
-//   }
-// };
-
-// export const formatNumberValue = (value: any): string => {
-//   const num = Number(value);
-//   if (isNaN(num)) {
-//     throw new Error(`Invalid number value: ${value}`);
-//   }
-//   return num.toString();
-// };
-
-// export const formatBooleanValue = (value: any): string => {
-//   return Boolean(value) ? "TRUE" : "FALSE";
-// };
-
-// export const formatStringValue = (value: string): string => {
-//   return `'${value.toString().replace(/'/g, "''")}'`;
-// };
-
 export const guessValueType = (value: any): SQLValueType => {
   if (value === null || value === undefined) return "string";
   if (value instanceof Date) return "date";
@@ -3021,19 +2636,6 @@ export const sanitizeFilters = (filters: any[]): SQLFilter[] => {
       type: filter.type || guessValueType(filter.value),
     }));
 };
-
-// const formatSQLValue = (value: any, type?: string): string => {
-//   switch (type?.toLowerCase()) {
-//     case "date":
-//       return formatDateValue(value);
-//     case "number":
-//       return formatNumberValue(value);
-//     case "boolean":
-//       return formatBooleanValue(value);
-//     default:
-//       return formatStringValue(value);
-//   }
-// };
 
 export const formatSQLIdentifier = (str: string): string => {
   if (!str) return '""';
@@ -3084,27 +2686,6 @@ export const formatSQLValue = (value: any, type?: string): string => {
       return formatStringValue(value);
   }
 };
-
-// const buildComparisonClause = (
-//   filter: SQLFilter,
-//   options: SQLTemplateOptions
-// ): string | null => {
-//   if (isEmptyOrNull(filter.value)) {
-//     return null;
-//   }
-
-//   const column = formatSQLIdentifier(filter.name);
-
-//   if (filter.operator.toUpperCase() === "LIKE") {
-//     const value = formatSQLValue(filter.value, "string");
-//     return options.caseSensitive
-//       ? `${column} LIKE ${value}`
-//       : `LOWER(${column}) LIKE LOWER(${value})`;
-//   }
-
-//   const value = formatSQLValue(filter.value, filter.type);
-//   return `${column} ${filter.operator} ${value}`;
-// };
 
 const buildComparisonClause = (
   filter: SQLFilter,
@@ -3673,17 +3254,6 @@ export const toTitleCase = (text: string) => {
     })
     .join(" ");
 };
-
-// export const replaceGlobalSearchQuery = (
-//   sqlQuery: string,
-//   newQueryValue: string
-// ) => {
-//   // Using a regular expression to match {{globalSearchQuery}} with optional whitespace
-//   const regex = /\{\{\s*globalSearchQuery\s*\}\}/g;
-
-//   // Replace all occurrences with the new value
-//   return sqlQuery.replace(regex, newQueryValue);
-// };
 
 export const replaceGlobalSearchQuery = (
   sqlQuery: string,

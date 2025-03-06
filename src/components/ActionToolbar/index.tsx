@@ -113,7 +113,8 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
         {params?.id &&
           ((hasPermission("query_action_input") &&
             activeSession?.features?.includes("can_query")) ||
-            activeSession?.author_id === identity?.email) && (
+            activeSession?.author_id === identity?.email ||
+            hasPermission("super_admin")) && (
             <ExternalSubmitButton
               record={{}}
               entity_type="sessions"
@@ -149,7 +150,7 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
       {/* Utility Buttons Row - No wrapping */}
       <div className="flex items-center gap-2 w-full md:w-auto min-w-0">
         <div className="flex items-center gap-2 w-full justify-start md:justify-end">
-          {params?.id && global_input_mode_developer && (
+          {/* {params?.id && global_input_mode_developer && (
             <Tooltip
               label="toggle full window mode 1,2,3"
               key="toggle full window mode 1,2,3"
@@ -173,7 +174,7 @@ const ActionToolbar: React.FC<ActionToolbarProps> = ({
                 </ActionIcon>
               </Indicator>
             </Tooltip>
-          )}
+          )} */}
 
           {activeSession?.variables?.length > 0 && (
             <Tooltip

@@ -17,6 +17,7 @@ interface SessionData {
   description?: string;
   author_id: string;
   created_datetime: string;
+  updated_datetime: string;
 }
 
 interface SessionSummaryInfoCardProps {
@@ -99,7 +100,7 @@ const SessionSummaryInfoCard: React.FC<SessionSummaryInfoCardProps> = ({
           </span>
         </div>
         <span className="text-gray-500">
-          {formatDate(session.created_datetime)}
+          {formatDate(session.updated_datetime)}
         </span>
       </div>
 

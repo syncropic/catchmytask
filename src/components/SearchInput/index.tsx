@@ -402,7 +402,7 @@ function SearchInput<T extends Record<string, any>>({
   };
 
   return (
-    <div className="flex items-end w-full space-x-2">
+    <div className="flex w-full space-x-2 items-center">
       {/* <div>{JSON.stringify(autocompleteData)}</div> */}
       {/* <div>{JSON.stringify(state)}</div> */}
 

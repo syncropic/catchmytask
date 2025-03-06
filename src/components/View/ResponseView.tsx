@@ -1086,6 +1086,42 @@ const ViewItem = ({
     { in: "C", out: "A", weight: 1 },
   ];
 
+  // In parent component
+  // const handleDataChange = (allData: any, changedRows: any) => {
+  //   // Update your local state with all data
+  //   // setAllData(allData);
+
+  //   // Optional: You can also submit changes immediately if needed
+  //   if (changedRows.length > 0) {
+  //     // submitToApi(changedRows);
+  //     console.log("submitToApi", changedRows);
+  //   }
+  // };
+
+  const handleDataChange = (allData, changedRows, changedFields) => {
+    // Update your local state with all data
+    // setAllData(allData);
+
+    // For immediate API submission, you can use the detailed change information
+    if (changedRows.length > 0) {
+      const changePayload = changedRows.map((row, index) => {
+        const rowId = Object.keys(changedFields)[index];
+        return {
+          id: row.id, // Assuming each row has an ID
+          changedFields: changedFields[rowId],
+          // You could also create an object with only changed values
+          changedValues: changedFields[rowId].reduce((obj, field) => {
+            obj[field] = row[field];
+            return obj;
+          }, {}),
+        };
+      });
+
+      // submitToApi(changePayload);
+      console.log("submitToApi", changePayload);
+    }
+  };
+
   return (
     <>
       <Accordion multiple defaultValue={[view_item_id]}>
@@ -1269,6 +1305,7 @@ const ViewItem = ({
                   data_fields={view_record?.fields || []}
                   data_items={processDataItems(dataItems)}
                   view_record={view_record}
+                  onDataChange={handleDataChange}
                 ></DataGridView>
               )}
             {dataItems &&

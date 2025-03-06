@@ -509,6 +509,34 @@ const LargeScreenHeader = ({
         </div>
       )} */}
 
+      {authenticatedData?.authenticated && !isMobile && (
+        <div className="w-full max-w-3xl pr-3">
+          <SessionsWrapper
+            func_name="fetch_system_sessions"
+            view_id="views:36xo8keq9tsoyly68shk"
+            title="monitor"
+            display_mode="search_input"
+            actions={user_session?.userProfile?.session_actions || []}
+            // actions={["add_new", "dublicate"]}
+            success_message_code="fetch_system_sessions"
+          />
+        </div>
+      )}
+
+      {authenticatedData?.authenticated && isMobile && (
+        <div className="w-full pr-8">
+          <SessionsWrapper
+            func_name="fetch_system_sessions"
+            view_id="views:36xo8keq9tsoyly68shk"
+            title="monitor"
+            actions={user_session?.userProfile?.session_actions || []}
+            // actions={["add_new", "dublicate"]}
+            display_mode="search_input"
+            success_message_code="fetch_system_sessions"
+          />
+        </div>
+      )}
+
       {!isMobile &&
         activeSession &&
         params?.id &&
@@ -539,34 +567,6 @@ const LargeScreenHeader = ({
             </Reveal>
           </div>
         )}
-
-      {authenticatedData?.authenticated && !isMobile && (
-        <div className="w-full max-w-3xl pr-3">
-          <SessionsWrapper
-            func_name="fetch_system_sessions"
-            view_id="views:36xo8keq9tsoyly68shk"
-            title="monitor"
-            display_mode="search_input"
-            actions={user_session?.userProfile?.session_actions || []}
-            // actions={["add_new", "dublicate"]}
-            success_message_code="fetch_system_sessions"
-          />
-        </div>
-      )}
-
-      {authenticatedData?.authenticated && isMobile && (
-        <div className="w-full pr-8">
-          <SessionsWrapper
-            func_name="fetch_system_sessions"
-            view_id="views:36xo8keq9tsoyly68shk"
-            title="monitor"
-            actions={user_session?.userProfile?.session_actions || []}
-            // actions={["add_new", "dublicate"]}
-            display_mode="search_input"
-            success_message_code="fetch_system_sessions"
-          />
-        </div>
-      )}
 
       {isMobile ||
       (applicationData?.disabled_sections &&

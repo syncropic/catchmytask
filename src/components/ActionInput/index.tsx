@@ -1524,7 +1524,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
           )}
         {showFields && <ActiveViewFields />}
 
-        {record?.variables_options?.length > 0 &&
+        {/* {record?.variables_options?.length > 0 &&
           showVariables &&
           data_model?.name !== "structured query input" && (
             <div>
@@ -1548,7 +1548,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                   </div>
                 )}
             </div>
-          )}
+          )} */}
 
         {/* and mode is developer input mode have that instead of natural language and show developer specific items here */}
         {/* {record?.variables_options?.length > 0 &&
