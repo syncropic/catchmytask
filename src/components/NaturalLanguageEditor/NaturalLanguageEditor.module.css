@@ -61,3 +61,109 @@
     }
   }
 }
+
+/* Add to NaturalLanguageEditor.module.css */
+.embedded-component {
+  display: inline-block;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.03);
+  margin: 2px 4px;
+  vertical-align: middle;
+}
+
+.embedded-component-container {
+  min-height: 24px;
+  min-width: 100px;
+}
+
+.embedded-component:focus-within {
+  outline: 2px solid var(--primary-color, #1c7ed6);
+  outline-offset: 2px;
+}
+
+/* Filter Triplet styling */
+.embedded-component .filter-triplet-compact {
+  display: inline-flex;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+  padding: 4px 6px;
+  margin: 0 2px;
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.embedded-component .filter-triplet-standard {
+  background-color: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 8px;
+  margin: 4px 0;
+}
+
+.embedded-component .field-name {
+  font-weight: 500;
+  font-size: 0.8rem;
+  margin-right: 4px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* SearchInput filter item styling */
+.filter-search-item {
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.filter-search-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.filter-search-item.selected {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.filter-search-item-icon {
+  color: #228be6;
+  margin-right: 8px;
+}
+
+.filter-search-item-badge {
+  background-color: #228be6;
+  color: white;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* Dark mode adjustments */
+.dark-mode .embedded-component .filter-triplet-compact,
+.dark-mode .embedded-component .filter-triplet-standard {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .embedded-component .field-name {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Enhanced visibility for active filters */
+.embedded-component .filter-triplet-compact.has-value,
+.embedded-component .filter-triplet-standard.has-value {
+  background-color: rgba(34, 139, 230, 0.05);
+  border-color: rgba(34, 139, 230, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .embedded-component .filter-triplet-compact {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 6px;
+  }
+
+  .embedded-component .filter-triplet-compact .field-name {
+    margin-bottom: 4px;
+  }
+}
