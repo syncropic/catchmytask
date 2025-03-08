@@ -1,17 +1,12 @@
+/* Enhanced CSS for NaturalLanguageEditor.module.css */
 .mention {
   color: blueviolet;
-  /* display: none; */
-  /* background-color: aquamarine; */
   /* background-color: var(--purple-light);
   border-radius: 0.4rem;
   box-decoration-break: clone;
   color: var(--purple);
   padding: 0.1rem 0.3rem; */
 }
-
-/* .tiptap :first-child {
-  margin-top: 0;
-} */
 
 /* Basic editor styles */
 .tiptap {
@@ -62,7 +57,7 @@
   }
 }
 
-/* Add to NaturalLanguageEditor.module.css */
+/* Embedded component styling - enhanced */
 .embedded-component {
   display: inline-block;
   padding: 2px 4px;
@@ -70,19 +65,48 @@
   background-color: rgba(0, 0, 0, 0.03);
   margin: 2px 4px;
   vertical-align: middle;
+  /* Add a subtle border to make components more visible */
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  /* Prevent text selection inside components */
+  user-select: none;
+  /* Improve interaction */
+  position: relative;
+  z-index: 1;
+}
+
+/* Specific styling for filter triplets */
+.filter-triplet-wrapper {
+  /* Add specific styles for triplet wrappers */
+  display: inline-flex;
+  align-items: center;
+  min-width: 200px;
 }
 
 .embedded-component-container {
   min-height: 24px;
   min-width: 100px;
+  /* Make sure inputs receive clicks */
+  pointer-events: auto;
+  /* Prevent the component container from being editable by the editor */
+  -webkit-user-modify: read-only;
+  -moz-user-modify: read-only;
+  user-modify: read-only;
 }
 
+/* Focus state with better visibility */
 .embedded-component:focus-within {
   outline: 2px solid var(--primary-color, #1c7ed6);
   outline-offset: 2px;
+  /* Add box shadow for more emphasis */
+  box-shadow: 0 0 0 3px rgba(28, 126, 214, 0.1);
 }
 
-/* Filter Triplet styling */
+/* Hover state to indicate interactivity */
+.embedded-component:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Filter Triplet styling - enhanced */
 .embedded-component .filter-triplet-compact {
   display: inline-flex;
   background-color: rgba(0, 0, 0, 0.03);
@@ -91,6 +115,8 @@
   margin: 0 2px;
   align-items: center;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  /* Make it more prominent */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .embedded-component .filter-triplet-standard {
@@ -99,6 +125,8 @@
   border-radius: 4px;
   padding: 8px;
   margin: 4px 0;
+  /* Add box shadow for depth */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .embedded-component .field-name {
@@ -153,6 +181,12 @@
 .embedded-component .filter-triplet-standard.has-value {
   background-color: rgba(34, 139, 230, 0.05);
   border-color: rgba(34, 139, 230, 0.3);
+}
+
+/* Fix for dropdown menus to ensure they appear above the editor */
+.mantine-Select-dropdown,
+.mantine-DatePicker-dropdown {
+  z-index: 1000 !important;
 }
 
 /* Responsive adjustments */

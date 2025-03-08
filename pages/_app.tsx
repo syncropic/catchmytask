@@ -48,9 +48,9 @@ import { QueryClient, useQueryClient } from "@tanstack/react-query";
 // import { initializeParser, parseNSTLQuery } from "@components/Utils/ntslParser";
 
 // Registering Syncfusion license key
-registerLicense(
-  "Ngo9BigBOggjHTQxAR8/V1NBaF5cXmZCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdnWXlfcnRdRGZfU0NyX0o="
-);
+// registerLicense(
+//   "Ngo9BigBOggjHTQxAR8/V1NBaF5cXmZCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdnWXlfcnRdRGZfU0NyX0o="
+// );
 
 // Ensure that customTitleHandlerProps has the correct types
 interface customTitleHandlerProps {
@@ -303,6 +303,40 @@ function MyApp({
   Component,
   pageProps: { session, ...pageProps },
 }: ExtendedAppProps): JSX.Element {
+  // Make Zustand store available globally for component registration - MODIFIED
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Test localStorage accessibility
+      try {
+        localStorage.setItem("zustand-test", "test");
+        const testValue = localStorage.getItem("zustand-test");
+        localStorage.removeItem("zustand-test");
+
+        if (testValue !== "test") {
+          console.warn("LocalStorage test failed - persistence may not work");
+        } else {
+          console.log("LocalStorage is accessible");
+        }
+      } catch (e) {
+        console.error("LocalStorage error:", e);
+      }
+
+      // Attach store to window with a better property that won't conflict
+      window.__ZUSTAND_STORE__ = useAppStore;
+
+      // Also expose debug helper for troubleshooting
+      window.debugZustandStore = () => {
+        const state = useAppStore.getState();
+        console.log("Current Zustand store state:", {
+          editor_components: state.editor_components,
+          action_input_form_values: state.action_input_form_values,
+        });
+        return state;
+      };
+
+      console.log("Zustand store initialized on window object");
+    }
+  }, []);
   return (
     <SessionProvider session={session}>
       <App>

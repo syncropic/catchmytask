@@ -2,6 +2,20 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+import { isEqual } from "lodash";
+
+/**
+ * Editor Component Registry -
+ * For persisting embedded components in the Natural Language Editor
+ * @typedef {Object} EditorComponentRegistry
+ * @property {Object.<string, Object>} components - Map of component ID to component data
+ * @property {Object.<string, Object>} editorContent - Map of editor ID to editor content
+ */
+
+/**
+ * Extend the existing AppStore with editor component registry
+ */
+
 /**
  * @typedef {Object} CommentRange
  * @property {number} from - Starting position of comment
@@ -31,33 +45,186 @@ import { persist, createJSONStorage } from "zustand/middleware";
  * @typedef {Object.<string, Object.<string, Comment>>} CommentsState
  */
 
-export const useTransientStore = create((set, get) => ({
-  forms: {}, // This will store form instances and their submit functions
+/**
+ * Helper function to enhance content with stored values
+ * This function should be placed directly in your store.js file before the useAppStore definition,
+ * or you can export it as a separate utility function and import it into your store.js
+ *
+ * @param {Object} content - The editor content to enhance
+ * @param {Object} state - The current store state
+ * @returns {Object} - Enhanced content with values from the store
+ */
+/**
+ * Helper function to enhance content with stored values
+ * This function ensures that editor content is properly enhanced with the latest component values
+ */
+const enhanceContentWithValues = (content, state) => {
+  // Safety check
+  if (!content || typeof content !== "object") {
+    console.warn("Invalid content passed to enhanceContentWithValues");
+    return content;
+  }
 
-  // Set the submit handler for a specific form
-  setFormSubmitHandler: (formId, submitForm) =>
-    set((state) => ({
-      forms: {
-        ...state.forms,
-        [formId]: {
-          ...state.forms[formId],
-          submitForm,
-        },
-      },
-    })),
+  // Clone content to avoid mutating the original
+  const enhancedContent = JSON.parse(JSON.stringify(content));
 
-  // Set the form instance for a specific form
-  setFormInstance: (formId, formInstance) =>
-    set((state) => ({
-      forms: {
-        ...state.forms,
-        [formId]: {
-          ...state.forms[formId],
-          formInstance,
-        },
-      },
-    })),
-}));
+  // Function to process nodes recursively
+  const processNode = (node) => {
+    // Check if this is an embedded component node
+    if (node.type === "embeddedComponent" && node.attrs) {
+      const { id, type, props, formKey } = node.attrs;
+
+      // Skip if component is marked as deleted
+      const deletedComponentIds = state.editor_deleted_components || {};
+      const editorId = node.attrs.editorId || "default";
+      const isDeleted = deletedComponentIds[editorId]?.includes(id);
+
+      if (isDeleted) {
+        return;
+      }
+
+      // Handle FilterInputTriplet components
+      if (type === "FilterInputTriplet" && props?.variable?.value) {
+        const actualFormKey = formKey || `embedded-component-${id}`;
+        const tripletFormKey = `${actualFormKey}_${props.variable.value}`;
+
+        // Logging
+        if (process.env.NODE_ENV !== "production") {
+          console.log(
+            `Enhancing FilterInputTriplet component ${id} with formKey ${tripletFormKey}`
+          );
+        }
+
+        // Check multiple locations for values (in order of freshness priority)
+        // 1. Check action_input_form_values - primary storage for form values
+        const storedValues = state.action_input_form_values?.[tripletFormKey];
+
+        // 2. Check componentValues in editor_components - backup storage for values
+        const componentValues =
+          state.editor_components?.componentValues?.[tripletFormKey];
+
+        // 3. Check if component itself already has values in props
+        const hasExistingValues =
+          props.values && Object.keys(props.values).length > 0;
+
+        if (storedValues && Object.keys(storedValues).length > 0) {
+          // Clone to avoid reference issues
+          const safeValues = JSON.parse(JSON.stringify(storedValues));
+
+          // Add metadata to track the source of these values
+          safeValues._metadata = {
+            ...(safeValues._metadata || {}),
+            source: "action_input_form_values",
+            enhancedAt: new Date().toISOString(),
+          };
+
+          // Store values in component props
+          node.attrs.props = {
+            ...props,
+            values: safeValues,
+          };
+
+          if (process.env.NODE_ENV !== "production") {
+            console.log(
+              `Enhanced component ${id} with values from action_input_form_values`
+            );
+          }
+        }
+        // If not in action_input_form_values, try componentValues
+        else if (componentValues && Object.keys(componentValues).length > 0) {
+          // Clone to avoid reference issues
+          const safeValues = JSON.parse(JSON.stringify(componentValues));
+
+          // Add metadata to track the source of these values
+          safeValues._metadata = {
+            ...(safeValues._metadata || {}),
+            source: "editor_components.componentValues",
+            enhancedAt: new Date().toISOString(),
+          };
+
+          // Store values in component props
+          node.attrs.props = {
+            ...props,
+            values: safeValues,
+          };
+
+          if (process.env.NODE_ENV !== "production") {
+            console.log(
+              `Enhanced component ${id} with values from componentValues`
+            );
+          }
+        }
+        // Keep existing values if they exist
+        else if (hasExistingValues) {
+          if (process.env.NODE_ENV !== "production") {
+            console.log(`Component ${id} already has values, keeping them`);
+          }
+        }
+        // No values found anywhere, create default values
+        else {
+          const defaultValues = {
+            field: props.variable.value,
+            operator: "equals",
+            value: null,
+            value2: null,
+            _metadata: {
+              createdAt: new Date().toISOString(),
+              source: "defaultValues",
+            },
+          };
+
+          // Store default values in component props
+          node.attrs.props = {
+            ...props,
+            values: defaultValues,
+          };
+
+          if (process.env.NODE_ENV !== "production") {
+            console.log(`Created default values for component ${id}`);
+          }
+        }
+
+        // Ensure formKey is properly set
+        if (!node.attrs.formKey) {
+          node.attrs.formKey = `embedded-component-${id}`;
+        }
+      }
+      // Handle other component types if needed
+      else if (
+        type === "DateInput" ||
+        type === "NumberInput" ||
+        type === "Select"
+      ) {
+        // Similar logic for other component types
+        const actualFormKey = formKey || `embedded-component-${id}`;
+        const storedValue =
+          state.action_input_form_values?.[actualFormKey]?.value;
+
+        if (storedValue !== undefined) {
+          node.attrs.props = {
+            ...props,
+            value: storedValue,
+          };
+        }
+      }
+    }
+
+    // Process children recursively
+    if (node.content && Array.isArray(node.content)) {
+      node.content.forEach(processNode);
+    }
+  };
+
+  // Process the content recursively
+  if (enhancedContent.content && Array.isArray(enhancedContent.content)) {
+    enhancedContent.content.forEach(processNode);
+  }
+
+  return enhancedContent;
+};
+
+// Export the function if you're placing it in a separate file
+export { enhanceContentWithValues };
 
 export const useAppStore = create(
   persist(
@@ -571,8 +738,79 @@ export const useAppStore = create(
       setDisplaySessionEmbedMonitor: (value) =>
         set((state) => ({ ...state, displaySessionEmbedMonitor: value })),
       action_input_form_values: {},
-      setActionInputFormValues: (values) =>
-        set((state) => ({ ...state, action_input_form_values: values })),
+      /**
+       * Improved version of setActionInputFormValues with better persistence
+       */
+      setActionInputFormValues: (values) => {
+        set((state) => {
+          let newValues;
+
+          // Handle function or object updates
+          if (typeof values === "function") {
+            newValues = values(state.action_input_form_values);
+          } else {
+            newValues = values;
+          }
+
+          // Enhanced logging in development mode
+          if (process.env.NODE_ENV !== "production") {
+            // Find FilterInputTriplet form keys (they follow the pattern embedded-component-*_*)
+            const tripletKeys = Object.keys(newValues).filter(
+              (key) =>
+                key.startsWith("embedded-component-") && key.includes("_")
+            );
+
+            if (tripletKeys.length > 0) {
+              console.log(
+                `Updating ${tripletKeys.length} filter triplet values in store`
+              );
+            }
+          }
+
+          // Update the main form values
+          const updatedActionInputFormValues = {
+            ...state.action_input_form_values,
+            ...newValues,
+          };
+
+          // Also synchronize with editor_components.componentValues for better persistence
+          const updatedComponentValues = {
+            ...state.editor_components.componentValues,
+          };
+
+          // Check for filter triplet values and copy them to componentValues
+          Object.entries(newValues).forEach(([key, value]) => {
+            if (key.startsWith("embedded-component-") && key.includes("_")) {
+              // This is likely a filter triplet form key - extract the component ID
+              const [formKeyPart, variableValue] = key.split("_");
+              const componentId = formKeyPart.replace(
+                "embedded-component-",
+                ""
+              );
+
+              if (componentId && variableValue) {
+                // Store in component values with metadata
+                updatedComponentValues[key] = {
+                  ...value,
+                  _persistence: {
+                    lastUpdated: new Date().toISOString(),
+                    formKey: key,
+                    componentId,
+                  },
+                };
+              }
+            }
+          });
+
+          return {
+            action_input_form_values: updatedActionInputFormValues,
+            editor_components: {
+              ...state.editor_components,
+              componentValues: updatedComponentValues,
+            },
+          };
+        });
+      },
 
       action_input_form_fields: {},
       showRequestResponseView: false,
@@ -733,10 +971,536 @@ export const useAppStore = create(
             },
           };
         }),
+
+      // NEW: Add tracking for deleted components
+      editor_deleted_components: {},
+
+      /**
+       * Store deleted component IDs to prevent their restoration after refresh
+       * @param {string} editorId - ID of the editor
+       * @param {string[]} componentIds - Array of component IDs that were deleted
+       */
+      setEditorDeletedComponents: (editorId, componentIds) =>
+        set((state) => ({
+          editor_deleted_components: {
+            ...state.editor_deleted_components,
+            [editorId]: componentIds,
+          },
+        })),
+
+      /**
+       * Get deleted components for an editor
+       * @param {string} editorId - ID of the editor
+       * @returns {string[]} - Array of deleted component IDs
+       */
+      getEditorDeletedComponents: (editorId) => {
+        const state = get();
+        return state.editor_deleted_components[editorId] || [];
+      },
+
+      // PART 1: Enhance the editor_components state
+      editor_components: {
+        components: {}, // Map of component ID to component data
+        editorContent: {}, // Map of editor ID to editor content
+        // NEW: Add values storage specifically for components
+        componentValues: {}, // Map of componentId_variableValue to component values
+      },
+
+      /**
+       * Improved version of registerEditorComponent with better value handling
+       * @param {string} editorId - Unique ID for the editor instance
+       * @param {string} componentId - Unique ID for the component
+       * @param {string} type - Component type (e.g., 'FilterInputTriplet', 'DateInput')
+       * @param {Object} props - Component properties
+       */
+      registerEditorComponent: (editorId, componentId, type, props) => {
+        try {
+          set((state) => {
+            const currentComponents = state.editor_components?.components || {};
+
+            // Check for value data specifically for FilterInputTriplet components
+            let enhancedProps = props;
+
+            if (type === "FilterInputTriplet" && props?.variable?.value) {
+              // Check if we have stored values for this triplet
+              const tripletFormKey = `embedded-component-${componentId}_${props.variable.value}`;
+              const existingValues =
+                state.action_input_form_values?.[tripletFormKey];
+
+              if (existingValues && Object.keys(existingValues).length > 0) {
+                // If the component already has values in props, prefer those
+                if (!props.values || Object.keys(props.values).length === 0) {
+                  // Clone values to avoid reference issues
+                  enhancedProps = {
+                    ...props,
+                    values: JSON.parse(JSON.stringify(existingValues)),
+                  };
+
+                  console.log(
+                    `Found and attached values for component ${componentId} from form store`
+                  );
+                }
+              }
+            }
+
+            // Only update if the component doesn't exist or props have changed
+            if (
+              !currentComponents[componentId] ||
+              !isEqual(currentComponents[componentId].props, enhancedProps)
+            ) {
+              console.log(
+                `Registering component ${componentId} for editor ${editorId}`
+              );
+
+              // Store in main component registry
+              const updatedComponents = {
+                ...currentComponents,
+                [componentId]: {
+                  editorId,
+                  type,
+                  props: JSON.parse(JSON.stringify(enhancedProps || {})),
+                  lastUpdated: new Date().toISOString(),
+                },
+              };
+
+              // Store special value mapping for filter triplets
+              let updatedComponentValues = {
+                ...state.editor_components.componentValues,
+              };
+
+              if (
+                type === "FilterInputTriplet" &&
+                enhancedProps?.variable?.value
+              ) {
+                const tripletFormKey = `embedded-component-${componentId}_${enhancedProps.variable.value}`;
+
+                // If component has values, also store them in the special values storage
+                if (enhancedProps.values) {
+                  updatedComponentValues[tripletFormKey] = {
+                    ...JSON.parse(JSON.stringify(enhancedProps.values)),
+                    _persistence: {
+                      lastUpdated: new Date().toISOString(),
+                      componentId,
+                      editorId,
+                    },
+                  };
+                }
+              }
+
+              return {
+                editor_components: {
+                  ...state.editor_components,
+                  components: updatedComponents,
+                  componentValues: updatedComponentValues,
+                },
+              };
+            }
+            return state;
+          });
+        } catch (error) {
+          console.error(`Error registering component ${componentId}:`, error);
+        }
+      },
+
+      /**
+       * Get all components for a specific editor with improved error handling
+       * @param {string} editorId - Editor instance ID
+       * @returns {Array} Array of component objects
+       */
+      getEditorComponents: (editorId) => {
+        try {
+          const state = get();
+          const allComponents = state.editor_components?.components || {};
+
+          return Object.entries(allComponents)
+            .filter(([_, component]) => component.editorId === editorId)
+            .map(([id, component]) => ({
+              id,
+              ...component,
+            }));
+        } catch (error) {
+          console.error(
+            `Error getting components for editor ${editorId}:`,
+            error
+          );
+          return []; // Return empty array on error
+        }
+      },
+
+      /**
+       * Enhanced getSavedEditorContent with explicit deletion handling
+       * @param {string} editorId - Editor instance ID
+       * @returns {Object|null} Saved editor content or null
+       */
+      getSavedEditorContent: (editorId) => {
+        try {
+          const state = get();
+          const savedContent =
+            state.editor_components?.editorContent?.[editorId]?.content || null;
+
+          if (!savedContent) return null;
+
+          // Find all embedded components in the content
+          const enhancedContent = enhanceContentWithValues(savedContent, state);
+
+          // Remove any deleted components from the content
+          const deletedComponentIds =
+            state.editor_deleted_components[editorId] || [];
+          if (deletedComponentIds.length > 0 && enhancedContent.content) {
+            enhancedContent.content = removeDeletedComponentsFromContent(
+              enhancedContent.content,
+              deletedComponentIds
+            );
+          }
+
+          return enhancedContent;
+        } catch (error) {
+          console.error(
+            `Error getting saved content for editor ${editorId}:`,
+            error
+          );
+          return null;
+        }
+      },
+
+      /**
+       * Enhanced saveEditorContent with better error handling and persistence guarantees
+       * @param {string} editorId - Editor instance ID
+       * @param {Object} content - Editor content to save
+       */
+      saveEditorContent: (editorId, content) => {
+        try {
+          // Skip if content is null or undefined
+          if (!content) return;
+
+          // Ensure we're saving a clean copy
+          const contentToSave = JSON.parse(JSON.stringify(content));
+
+          // Ensure deleted components are actually removed from the content
+          const state = get();
+          const deletedComponentIds =
+            state.editor_deleted_components[editorId] || [];
+
+          if (deletedComponentIds.length > 0 && contentToSave.content) {
+            contentToSave.content = removeDeletedComponentsFromContent(
+              contentToSave.content,
+              deletedComponentIds
+            );
+          }
+
+          set((state) => ({
+            editor_components: {
+              ...(state.editor_components || {}),
+              editorContent: {
+                ...(state.editor_components?.editorContent || {}),
+                [editorId]: {
+                  content: contentToSave,
+                  lastSaved: new Date().toISOString(),
+                },
+              },
+            },
+          }));
+
+          // Log successful save in development mode
+          if (process.env.NODE_ENV !== "production") {
+            console.log(`Editor ${editorId} content saved successfully`);
+          }
+        } catch (error) {
+          console.error(`Error saving content for editor ${editorId}:`, error);
+        }
+      },
+
+      /**
+       * Improved removeEditorComponent that ensures complete cleanup and deletion tracking
+       * @param {string} componentId - Component ID to remove
+       */
+      removeEditorComponent: (componentId) => {
+        try {
+          set((state) => {
+            // Get the current state
+            const editorComponents = state.editor_components || {};
+            const components = editorComponents.components || {};
+            const componentValues = editorComponents.componentValues || {};
+            const actionInputFormValues = state.action_input_form_values || {};
+
+            // Get the component data before removing it
+            const component = components[componentId];
+            console.log(`Removing component ${componentId} from store`);
+
+            // Early exit if component doesn't exist
+            if (!component) {
+              return state;
+            }
+
+            // Get editor ID to track deletion
+            const editorId = component.editorId || "default";
+
+            // Create new objects to avoid mutating state
+            const newComponents = { ...components };
+            const newComponentValues = { ...componentValues };
+            const newActionInputFormValues = { ...actionInputFormValues };
+
+            // 1. Remove the component from components registry
+            delete newComponents[componentId];
+
+            // 2. Clean up component values
+            // Find and remove all componentValues entries related to this component
+            Object.keys(newComponentValues).forEach((key) => {
+              if (key.includes(componentId)) {
+                delete newComponentValues[key];
+              }
+            });
+
+            // 3. Clean up form values
+            // FormKeys for components follow the pattern: embedded-component-{componentId}
+            // For filter triplets, we have embedded-component-{componentId}_{variableName}
+            const formKeyPattern = `embedded-component-${componentId}`;
+
+            Object.keys(newActionInputFormValues).forEach((key) => {
+              if (key.startsWith(formKeyPattern)) {
+                delete newActionInputFormValues[key];
+              }
+            });
+
+            // 4. Add to deleted components tracking
+            const currentDeletedComponents =
+              state.editor_deleted_components[editorId] || [];
+            const updatedDeletedComponents = [...currentDeletedComponents];
+
+            if (!updatedDeletedComponents.includes(componentId)) {
+              updatedDeletedComponents.push(componentId);
+            }
+
+            // 5. Update editor content to remove the deleted component
+            const editorContent = state.editor_components?.editorContent || {};
+            const editorData = editorContent[editorId];
+
+            if (editorData && editorData.content) {
+              // Deep clone to avoid mutation issues
+              const updatedContent = JSON.parse(
+                JSON.stringify(editorData.content)
+              );
+
+              // Filter out the deleted component
+              if (
+                updatedContent.content &&
+                Array.isArray(updatedContent.content)
+              ) {
+                updatedContent.content = removeDeletedComponentsFromContent(
+                  updatedContent.content,
+                  [componentId]
+                );
+
+                // Update the stored editor content
+                editorContent[editorId] = {
+                  ...editorData,
+                  content: updatedContent,
+                  lastSaved: new Date().toISOString(),
+                };
+              }
+            }
+
+            console.log(
+              `Component ${componentId} cleanup complete, marked as deleted`
+            );
+
+            // Return updated state
+            return {
+              editor_components: {
+                ...editorComponents,
+                components: newComponents,
+                componentValues: newComponentValues,
+                editorContent: editorContent,
+              },
+              action_input_form_values: newActionInputFormValues,
+              editor_deleted_components: {
+                ...state.editor_deleted_components,
+                [editorId]: updatedDeletedComponents,
+              },
+            };
+          });
+        } catch (error) {
+          console.error(`Error removing component ${componentId}:`, error);
+        }
+      },
     }),
     {
       name: "dpw-store",
       storage: createJSONStorage(() => localStorage),
+
+      // Don't use partialize to ensure entire state is saved
+      // This way everything is persisted except what the serializer excludes
+
+      // Add better logging for debugging
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          console.log("Zustand state successfully rehydrated");
+          console.log(
+            "Editor components:",
+            Object.keys(state.editor_components?.components || {}).length
+          );
+        } else {
+          console.warn("Failed to rehydrate Zustand state");
+        }
+      },
+
+      // Improved serializer with better error handling
+      serializer: {
+        serialize: (state) => {
+          try {
+            return JSON.stringify(state, (key, value) => {
+              // Skip functions - they can't be serialized
+              if (typeof value === "function") {
+                return undefined;
+              }
+
+              // Handle Date objects
+              if (value instanceof Date) {
+                return { __isDate: true, iso: value.toISOString() };
+              }
+
+              return value;
+            });
+          } catch (error) {
+            console.error("Zustand serialization error:", error);
+            return "{}";
+          }
+        },
+        deserialize: (str) => {
+          try {
+            return JSON.parse(str, (key, value) => {
+              // Restore Date objects
+              if (
+                value &&
+                typeof value === "object" &&
+                value.__isDate === true
+              ) {
+                return new Date(value.iso);
+              }
+              return value;
+            });
+          } catch (error) {
+            console.error("Zustand deserialization error:", error);
+            return {};
+          }
+        },
+      },
     }
   )
 );
+
+/**
+ * Helper function to remove deleted components from content
+ * Works recursively through the content structure
+ */
+function removeDeletedComponentsFromContent(content, deletedIds) {
+  if (!content || !Array.isArray(content) || deletedIds.length === 0) {
+    return content;
+  }
+
+  // Filter out deleted components at this level
+  const filteredContent = content.filter((node) => {
+    if (
+      node.type === "embeddedComponent" &&
+      node.attrs &&
+      deletedIds.includes(node.attrs.id)
+    ) {
+      return false; // Remove this node
+    }
+    return true; // Keep this node
+  });
+
+  // Process children recursively
+  filteredContent.forEach((node) => {
+    if (node.content && Array.isArray(node.content)) {
+      node.content = removeDeletedComponentsFromContent(
+        node.content,
+        deletedIds
+      );
+    }
+  });
+
+  return filteredContent;
+}
+
+// Create a diagnostic helper function to check store health
+const checkZustandStore = () => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    // Check if the store is available
+    if (!window.__ZUSTAND_STORE__) {
+      console.error("Zustand store not found on window");
+      return { error: "Store not found" };
+    }
+
+    // Get current state
+    const state = window.__ZUSTAND_STORE__.getState();
+
+    // Check localStorage
+    let localStorageState = null;
+    try {
+      const storeData = localStorage.getItem("dpw-store");
+      localStorageState = storeData ? JSON.parse(storeData) : null;
+    } catch (e) {
+      console.error("Error reading localStorage:", e);
+    }
+
+    // Return diagnostic information
+    return {
+      memoryState: {
+        hasComponents: !!state.editor_components,
+        componentCount: Object.keys(state.editor_components?.components || {})
+          .length,
+        editorCount: Object.keys(state.editor_components?.editorContent || {})
+          .length,
+      },
+      localStorageState: {
+        exists: !!localStorageState,
+        version: localStorageState?.version,
+        hasComponents: !!localStorageState?.state?.editor_components,
+        componentCount: Object.keys(
+          localStorageState?.state?.editor_components?.components || {}
+        ).length,
+        editorCount: Object.keys(
+          localStorageState?.state?.editor_components?.editorContent || {}
+        ).length,
+      },
+    };
+  } catch (e) {
+    console.error("Error checking store:", e);
+    return { error: e.message };
+  }
+};
+
+// Only attach to window in browser environment
+if (typeof window !== "undefined") {
+  window.checkZustandStore = checkZustandStore;
+}
+
+// Export the transient store (already in your code)
+export const useTransientStore = create((set, get) => ({
+  forms: {}, // This will store form instances and their submit functions
+
+  setFormSubmitHandler: (formId, submitForm) =>
+    set((state) => ({
+      forms: {
+        ...state.forms,
+        [formId]: {
+          ...state.forms[formId],
+          submitForm,
+        },
+      },
+    })),
+
+  setFormInstance: (formId, formInstance) =>
+    set((state) => ({
+      forms: {
+        ...state.forms,
+        [formId]: {
+          ...state.forms[formId],
+          formInstance,
+        },
+      },
+    })),
+}));

@@ -61,6 +61,7 @@ import NavbarSearch from "@components/Navbar";
 import UserMenuMobile from "./UserMenuMobile";
 import SessionActionInput from "@components/SessionActionInput";
 import ShowPageComponent from "pages/sessions/show/ShowPageComponent";
+import NaturalLanguageEditor from "@components/NaturalLanguageEditor";
 
 const Layout = ({
   children,
@@ -519,7 +520,6 @@ const Layout = ({
                       />
                       <div className="min-h-0 flex-1 overflow-y-auto pb-6">
                         <div className="w-full h-full">
-                          {" "}
                           {/* Add h-full here */}
                           <ActionInputWrapper
                             data_model="dynamic editor input"
