@@ -5,6 +5,7 @@ import React, {
   useState,
   Ref,
 } from "react";
+import styles from "./MentionList.module.css";
 
 interface MentionListProps {
   items: string[];
@@ -67,11 +68,19 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
     }));
 
     return (
-      <div className="dropdown-menu">
+      <div className={styles.dropdownMenu}>
         {props.items.length ? (
           props.items.map((item, index) => (
             <button
-              className={index === selectedIndex ? "is-selected" : ""}
+              className={`${styles.dropdownMenuButton} ${
+                index === selectedIndex
+                  ? styles.dropdownMenuButtonIsSelected
+                  : ""
+              } ${
+                index === selectedIndex
+                  ? styles.dropdownMenuButtonHoverIsSelected
+                  : ""
+              }`}
               key={index}
               onClick={() => selectItem(index)}
             >
@@ -79,7 +88,7 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
             </button>
           ))
         ) : (
-          <div className="item">No result</div>
+          <div className={styles.dropdownItem}>No result</div>
         )}
       </div>
     );

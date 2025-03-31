@@ -176,8 +176,8 @@ export const getAllComponents = (
   }
 
   return [
-    ...predefinedComponents,
-    ...generateInputComponents(variables),
-    ...generateFilterTriplets(variables), // Add filter triplets
+    // ...predefinedComponents,
+    // ...generateInputComponents(variables),
+    // ...generateFilterTriplets(variables), // Add filter triplets
   ];
 };

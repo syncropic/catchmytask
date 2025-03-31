@@ -425,6 +425,7 @@ export const componentMapping: Record<ComponentKey, React.ElementType> = {
   email_list_signup: EmailBanner,
   VerticalTransformActionsFormInput: VerticalTransformActionsFormInput,
   StorageAttachmentActionsFormInput: StorageAttachmentActionsFormInput,
+  // FileTree: FileTree,
   // MediaPlayerController: MediaPlayerController,
   // MediaPlayerTimeline: MediaPlayerTimeline,
 };

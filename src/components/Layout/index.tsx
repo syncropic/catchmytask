@@ -15,6 +15,7 @@ import Breadcrumbs from "@components/Breadcrumbs";
 import AppLayout from "./AppLayout";
 import { useAppStore } from "src/store"; // Zustand store
 import { useSession } from "next-auth/react";
+
 import {
   useComputedColorScheme,
   Highlight,
@@ -62,6 +63,11 @@ import UserMenuMobile from "./UserMenuMobile";
 import SessionActionInput from "@components/SessionActionInput";
 import ShowPageComponent from "pages/sessions/show/ShowPageComponent";
 import NaturalLanguageEditor from "@components/NaturalLanguageEditor";
+import SearchResults from "@components/SearchResults";
+import SelectedItems from "@components/SelectedItems";
+import TreeExample from "@components/FilteTree/TreeExample";
+import ExecutionSteps from "@components/ExecutionSteps";
+import TaskEditor from "@components/ExecutionSteps/TaskEditor";
 
 const Layout = ({
   children,
@@ -106,7 +112,12 @@ const Layout = ({
     global_input_mode,
     global_session_trace_mode,
     displaySessionActionInput,
+    focusedEditor,
+    setFocusedEditor,
+    show,
+    searchBoxFocused,
   } = useAppStore(); // Accessing layout state from Zustand
+
   const { bulkActionSelect } = useBulkActionSelect();
   const { data: user_session } = useSession();
   const { params, pathname } = useParsed();
@@ -135,6 +146,31 @@ const Layout = ({
   const leftRef = useRef<HTMLDivElement>(null);
   const centerRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
+
+  // Add this to your Layout component
+
+  // Define height configurations
+  const editorHeights = {
+    expanded: "60vh",
+    compact: "20vh",
+  };
+
+  // Dynamically determine editor heights based on focused state
+  const getEditorHeights = () => {
+    return {
+      natural_language_query:
+        focusedEditor === "natural_language_query"
+          ? editorHeights.expanded
+          : editorHeights.compact,
+      structured_query:
+        focusedEditor === "structured_query"
+          ? editorHeights.expanded
+          : editorHeights.compact,
+    };
+  };
+
+  // Get the current height configuration
+  const currentHeights = getEditorHeights();
 
   // State for managing scroll hint visibility
   const [showScrollHint, setShowScrollHint] = useState(true);
@@ -342,9 +378,12 @@ const Layout = ({
   const item =
     nullIndex !== -1 ? select_or_create_to_continue_items_map[nullIndex] : null;
 
-  const message = item
-    ? `Create or select a profile and session to continue`
-    : null;
+  // const message = item
+  //   ? `Create or select a profile and session to continue`
+  //   : null;
+
+  // const message = "catchmytask";
+  const message = "view";
 
   const handleClearViews = () => {
     go({
@@ -365,6 +404,11 @@ const Layout = ({
   };
 
   let include_components = ["toolbar"];
+
+  // Function to check if section is selected
+  const isSectionSelected = (sectionId: string) => {
+    return show?.selected_items?.includes(sectionId) || false;
+  };
 
   return (
     <Authenticated key="home" redirectOnFail="/login">
@@ -483,6 +527,11 @@ const Layout = ({
               isDisplayed: leftSection.isDisplayed,
               children: (
                 <>
+                  {(isSectionSelected("search_results") ||
+                    searchBoxFocused) && <SearchResults />}
+
+                  {/* <TreeExample /> */}
+
                   <div className="sticky top-0 z-10">
                     {global_input_mode_user && activeSession && params?.id && (
                       <SessionSummaryInfoCard session={activeSession} />
@@ -508,7 +557,7 @@ const Layout = ({
                   )}
                   {global_input_mode_developer && (
                     <>
-                      <ActionToolbar
+                      {/* <ActionToolbar
                         params={params}
                         userSession={user_session}
                         activeInput={activeInput}
@@ -517,14 +566,26 @@ const Layout = ({
                         setSectionIsExpanded={setSectionIsExpanded}
                         closeDisplay={closeDisplay}
                         includeComponents={["toolbar"]}
-                      />
+                      /> */}
                       <div className="min-h-0 flex-1 overflow-y-auto pb-6">
                         <div className="w-full h-full">
+                          {/* {JSON.stringify(
+                            currentHeights.natural_language_query
+                          )} */}
                           {/* Add h-full here */}
                           <ActionInputWrapper
                             data_model="dynamic editor input"
                             query_name="data_model"
-                            record={{ id: params?.id }}
+                            record={{
+                              id: params?.id,
+                            }}
+                            options={{
+                              id: params?.id,
+                              focusedEditor,
+                              setFocusedEditor,
+                              editorHeight:
+                                currentHeights.natural_language_query,
+                            }}
                             action="query"
                             action_form_key={`form_${params?.id}`}
                             success_message_code="dynamic_editor_input"
@@ -532,11 +593,21 @@ const Layout = ({
                           <ActionInputWrapper
                             data_model="structured query input"
                             query_name="data_model"
-                            record={{ id: params?.id }}
+                            record={{
+                              id: params?.id,
+                            }}
+                            options={{
+                              id: params?.id,
+                              focusedEditor,
+                              setFocusedEditor,
+                              editorHeight: currentHeights.structured_query,
+                            }}
                             action="query"
                             action_form_key={`form_${params?.id}`}
                             success_message_code="structured_query_input"
                           />
+
+                          {/* <TaskEditor /> */}
                         </div>
                       </div>
                     </>
@@ -660,6 +731,8 @@ const Layout = ({
               isDisplayed: centerSection.isDisplayed,
               children: (
                 <>
+                  {isSectionSelected("active_item") && <div>active item</div>}
+
                   {children}
                   {select_or_create_to_continue_items.some(
                     (item) => item === null
@@ -684,7 +757,14 @@ const Layout = ({
             rightSection={{
               isDisplayed: rightSection.isDisplayed,
               // children: null,
-              children: <MonitorWrapper />,
+              children: (
+                <>
+                  {(isSectionSelected("selected_items") ||
+                    searchBoxFocused) && <SelectedItems maxHeight={800} />}
+
+                  <MonitorWrapper />
+                </>
+              ),
             }}
             effectiveScheme={effectiveScheme}
             layoutStorage={layoutStorage}

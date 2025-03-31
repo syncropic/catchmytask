@@ -4,10 +4,6 @@ import {
   MultiSelect,
   Select,
   Tooltip,
-  Group,
-  Text,
-  Box,
-  Badge,
 } from "@mantine/core";
 import { useState, useEffect, useRef } from "react";
 import { debounce } from "lodash";
@@ -32,18 +28,6 @@ import {
   IconSquareRoundedPlusFilled,
   IconTrash,
   IconX,
-  IconBrandTailwind,
-  IconComponents,
-  IconForms,
-  IconCalendar,
-  IconFilter,
-  IconNumber,
-  IconSelect,
-  IconCheckbox,
-  IconSearch,
-  IconLetterT,
-  IconList,
-  IconAt,
 } from "@tabler/icons-react";
 import FilterComponent from "@components/Filter";
 import {
@@ -60,178 +44,65 @@ import { useSession } from "next-auth/react";
 import { useExecuteFunctionWithArgs } from "@components/hooks/useExecuteFunctionWithArgs";
 import { useQueryClient } from "@tanstack/react-query";
 import { showNotification } from "@mantine/notifications";
-import variablesService from "src/services/variablesService";
-import { Variable } from "@components/DynamicFilter";
 
-// Import the component registry types and functions
-import {
-  getAllComponents,
-  EmbeddableComponent,
-} from "../NaturalLanguageEditor/componentRegistry";
+// Try to import the component registry if available
+let getAllComponents;
+try {
+  // Using dynamic import to avoid errors if the module doesn't exist
+  const componentRegistry = require("../NaturalLanguageEditor/componentRegistry");
+  getAllComponents = componentRegistry.getAllComponents;
+} catch (error) {
+  // If the module doesn't exist, create a fallback
+  getAllComponents = () => [];
+}
 
-/**
- * Helper function to get an appropriate icon for a variable type
- */
-const getVariableIcon = (type: string) => {
-  switch (type) {
-    case "date":
-    case "datetime":
-      return <IconCalendar size={16} />;
-    case "number":
-      return <IconNumber size={16} />;
-    case "string":
-      return <IconLetterT size={16} />;
-    case "select":
-    case "multiselect":
-      return <IconList size={16} />;
-    case "boolean":
-      return <IconCheckbox size={16} />;
-    default:
-      return <IconFilter size={16} />;
+function SearchInput<T extends Record<string, any>>(
+  props: SearchInputComponentProps<T> & {
+    includeComponents?: boolean;
+    autoFocus?: boolean;
+    compact?: boolean;
   }
-};
-
-/**
- * Helper function to get the appropriate icon for component types
- */
-const getComponentIcon = (componentType: string) => {
-  switch (componentType) {
-    case "DateInput":
-      return <IconCalendar size={16} />;
-    case "NumberInput":
-      return <IconNumber size={16} />;
-    case "TextInput":
-      return <IconForms size={16} />;
-    case "Select":
-      return <IconSelect size={16} />;
-    case "MultiSelect":
-      return <IconSelect size={16} />;
-    case "Checkbox":
-      return <IconCheckbox size={16} />;
-    case "DynamicFilter":
-      return <IconFilter size={16} />;
-    case "SearchInput":
-      return <IconSearch size={16} />;
-    case "FilterInputTriplet":
-      return <IconFilter size={16} />;
-    default:
-      return <IconComponents size={16} />;
-  }
-};
-
-/**
- * Enhanced render function for components
- */
-const renderComponent = (props: any) => {
+) {
   const {
-    option,
-    checked,
-    onMouseOver,
-    onMouseDown,
-    className,
-    classNames,
-    styles,
-    ...others
+    activeFilters,
+    success_message_code,
+    placeholder = "Search",
+    label,
+    credential_id,
+    description,
+    onChange,
+    handleOptionSubmit,
+    value,
+    disabled,
+    include_action_icons,
+    schema,
+    size,
+    navigateOnSelect,
+    navigateOnClear,
+    multiselect,
+    withinPortal = true,
+    ref,
+    handleEdit = () => console.log("Edit"),
+    record,
+    data_items,
+    query_name,
+    func_name,
+    collections,
+    action_form_key,
+    // New props
+    includeComponents = false,
+    autoFocus = false,
+    compact = false,
   } = props;
 
-  const isFilterTriplet = option.componentType === "FilterInputTriplet";
-
-  return (
-    <Box
-      className={className}
-      onMouseOver={onMouseOver}
-      onMouseDown={onMouseDown}
-      sx={{
-        padding: "8px 12px",
-        borderRadius: "4px",
-        cursor: "pointer",
-        backgroundColor: checked ? "rgba(0, 0, 0, 0.08)" : "transparent",
-        "&:hover": {
-          backgroundColor: "rgba(0, 0, 0, 0.05)",
-        },
-      }}
-      {...others}
-    >
-      <Group position="apart" noWrap spacing="xs">
-        <Group noWrap spacing="xs">
-          {option.icon || getComponentIcon(option.componentType)}
-          <div>
-            <Text size="sm" weight={500}>
-              {option.label}
-            </Text>
-            <Text size="xs" color="dimmed">
-              {option.description}
-            </Text>
-          </div>
-        </Group>
-        {isFilterTriplet ? (
-          <Badge color="blue" size="xs">
-            Filter
-          </Badge>
-        ) : (
-          <Badge color="green" size="xs">
-            Component
-          </Badge>
-        )}
-      </Group>
-    </Box>
-  );
-};
-
-/**
- * Enhanced render function combining both regular items and components
- */
-const renderSearchOrComponentItem = (props: any) => {
-  const { option } = props;
-
-  // If it's a component, use the component renderer
-  if (option.resultType === "component") {
-    return renderComponent(props);
-  }
-
-  // Otherwise use the regular search item renderer
-  return renderSearchItem(props);
-};
-
-/**
- * SearchInput component with support for embedding components
- */
-function SearchInput<T extends Record<string, any>>({
-  activeFilters,
-  success_message_code,
-  placeholder = "Search",
-  label,
-  credential_id,
-  description,
-  onChange,
-  handleOptionSubmit,
-  value,
-  disabled,
-  include_action_icons,
-  schema,
-  size,
-  navigateOnSelect,
-  navigateOnClear,
-  multiselect,
-  withinPortal = true,
-  ref,
-  handleEdit = () => console.log("Edit"),
-  record,
-  data_items,
-  query_name,
-  func_name,
-  collections,
-  action_form_key,
-  // New prop for component embedding
-  includeComponents = false,
-}: SearchInputComponentProps<T> & { includeComponents?: boolean }) {
   const { data: user_session } = useSession();
   const [query, setQuery] = useState(value?.value || "");
   const go = useGo();
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [autocompleteData, setAutocompleteData] = useState<any[]>([]);
-  const [componentData, setComponentData] = useState<EmbeddableComponent[]>([]);
+  const [componentData, setComponentData] = useState<any[]>([]);
   const abortController = useRef<AbortController>();
+  const inputRef = useRef<HTMLInputElement>(null);
   const { data: identity } = useGetIdentity<IIdentity>();
   const { params } = useParsed();
   const [componentSelectedItem, setComponentSelectedItem] = useState<any>(null);
@@ -268,48 +139,6 @@ function SearchInput<T extends Record<string, any>>({
     );
   };
 
-  /**
-   * Load filter variables from the service
-   */
-  const loadFilterVariables = async () => {
-    try {
-      // If record already has variables_options, use those instead of fetching
-      if (
-        record?.variables_options &&
-        Array.isArray(record.variables_options)
-      ) {
-        return createFilterComponents(record.variables_options);
-      }
-
-      // Otherwise, get filter variables from service
-      const variables = await variablesService.getFilterVariables();
-      return createFilterComponents(variables);
-    } catch (error) {
-      console.error("Error loading filter variables:", error);
-      return [];
-    }
-  };
-
-  /**
-   * Convert variables to component format
-   */
-  const createFilterComponents = (variables: Variable[]) => {
-    return variables.map((variable) => ({
-      id: `filter-triplet-${variable.value}`,
-      value: `filter-triplet-${variable.value}`,
-      label: `${variable.label} Filter`,
-      description: `Filter by ${variable.label}`,
-      componentType: "FilterInputTriplet",
-      resultType: "component",
-      componentProps: {
-        variable,
-        compact: true,
-      },
-      icon: getVariableIcon(variable.type),
-      variableType: variable.type,
-    }));
-  };
-
   const {
     mutate,
     data: createMutationData,
@@ -334,56 +163,14 @@ function SearchInput<T extends Record<string, any>>({
     };
   }, [query]);
 
-  // Load filter variables when includeComponents is true
+  // Auto-focus input when requested
   useEffect(() => {
-    if (includeComponents) {
-      // Load filter variable components
-      loadFilterVariables().then((filterComponents) => {
-        setComponentData((prevData) => {
-          // Avoid duplicates by filtering out existing items
-          const newData = [...prevData];
-          filterComponents.forEach((comp) => {
-            if (!newData.some((existing) => existing.id === comp.id)) {
-              newData.push(comp);
-            }
-          });
-          return newData;
-        });
-      });
+    if (autoFocus && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 10);
     }
-  }, [includeComponents, record?.variables_options]);
-
-  // Load standard components when includeComponents is true
-  useEffect(() => {
-    if (includeComponents) {
-      // Get available standard components from registry (excluding filter triplets which we handle separately)
-      const standardComponents = getAllComponents([]).filter(
-        (comp) => comp.componentType !== "FilterInputTriplet"
-      );
-
-      // Filter components based on search query
-      const filteredComponents = debouncedQuery
-        ? standardComponents.filter(
-            (comp) =>
-              comp.label.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-              comp.description
-                .toLowerCase()
-                .includes(debouncedQuery.toLowerCase())
-          )
-        : standardComponents;
-
-      // Update component data with standard components
-      setComponentData((prevData) => {
-        // Keep filter triplet components
-        const filterComponents = prevData.filter(
-          (comp) => comp.componentType === "FilterInputTriplet"
-        );
-
-        // Add standard components
-        return [...filterComponents, ...filteredComponents];
-      });
-    }
-  }, [includeComponents, debouncedQuery]);
+  }, [autoFocus]);
 
   // Setup selected filters
   const selected_filters = activeFilters || [];
@@ -424,7 +211,6 @@ function SearchInput<T extends Record<string, any>>({
           value: item.id,
           label: item.name,
           resultType: "mention",
-          icon: <IconAt size={16} />,
         }))
       );
     } else if (data) {
@@ -439,16 +225,56 @@ function SearchInput<T extends Record<string, any>>({
             value: item.id,
             label: item.name,
             resultType: "mention",
-            icon: <IconAt size={16} />,
           })) || [];
       setAutocompleteData(results);
     }
   }, [data, data_items, state?.success_message_code]);
 
-  // Combine autocomplete data with component data if includeComponents is true
-  const combinedData = includeComponents
-    ? [...autocompleteData, ...componentData]
-    : autocompleteData;
+  // Load components if includeComponents is true
+  useEffect(() => {
+    if (includeComponents) {
+      try {
+        // Get standard components
+        const components = getAllComponents([]);
+
+        // Set components in state
+        setComponentData(
+          components.map((comp: any) => ({
+            ...comp,
+            resultType: "component",
+          }))
+        );
+
+        // Add filter variables if available
+        if (
+          record?.variables_options &&
+          Array.isArray(record.variables_options)
+        ) {
+          const filterComponents = record.variables_options.map(
+            (variable: any) => ({
+              id: `filter-triplet-${variable.value}`,
+              // value: "values",
+              value: `${variable.value}`,
+              label: `${variable.label}`,
+              // description: `${variable.label}`,
+              description: "description",
+              componentType: "FilterInputTriplet",
+              resultType: "component",
+              componentProps: {
+                variable,
+                compact: true,
+              },
+              variableType: variable.type,
+            })
+          );
+
+          setComponentData((prevData) => [...prevData, ...filterComponents]);
+        }
+      } catch (error) {
+        console.error("Error loading components:", error);
+      }
+    }
+  }, [includeComponents, record?.variables_options]);
 
   /**
    * Handle selection for single select
@@ -471,52 +297,47 @@ function SearchInput<T extends Record<string, any>>({
         }
       }, 0);
       return;
-    } else {
-      // Find the selected item
-      let selectedItem = combinedData.find((item) => item.value === value);
-      if (selectedItem) {
-        setComponentSelectedItem(selectedItem);
+    }
 
-        // Special handling for component items
-        if (selectedItem.resultType === "component") {
-          // Special case for dynamic-filter
-          if (
-            selectedItem.id === "dynamic-filter" &&
-            record?.variables_options
-          ) {
-            // Modify the component props to include the variables from the record
-            const enhancedItem = {
-              ...selectedItem,
-              componentProps: {
-                ...selectedItem.componentProps,
-                variables: record.variables_options,
-              },
-            };
-            if (handleOptionSubmit) handleOptionSubmit(enhancedItem);
-          }
-          // Special case for filter triplets
-          else if (selectedItem.componentType === "FilterInputTriplet") {
-            if (handleOptionSubmit) handleOptionSubmit(selectedItem);
-          }
-          // Any other component
-          else {
-            if (handleOptionSubmit) handleOptionSubmit(selectedItem);
-          }
+    // Find the selected item
+    const combinedData = [...autocompleteData, ...componentData];
+    let selectedItem =
+      combinedData.find((item) => item.value === value) || option;
+
+    if (selectedItem) {
+      setComponentSelectedItem(selectedItem);
+
+      // Special handling for component items
+      if (selectedItem.resultType === "component") {
+        // Special case for dynamic-filter
+        if (selectedItem.id === "dynamic-filter" && record?.variables_options) {
+          const enhancedItem = {
+            ...selectedItem,
+            componentProps: {
+              ...selectedItem.componentProps,
+              variables: record.variables_options,
+            },
+          };
+          if (handleOptionSubmit) handleOptionSubmit(enhancedItem);
         }
-        // Handle regular mentions
+        // Handle other component types
         else {
           if (handleOptionSubmit) handleOptionSubmit(selectedItem);
         }
-
-        if (onChange) onChange(selectedItem?.value);
-
-        // Navigate if needed
-        setTimeout(() => {
-          if (navigateOnSelect) {
-            navigate(navigateOnSelect);
-          }
-        }, 0);
       }
+      // Handle regular mentions/items
+      else {
+        if (handleOptionSubmit) handleOptionSubmit(selectedItem);
+      }
+
+      if (onChange) onChange(selectedItem?.value);
+
+      // Navigate if needed
+      setTimeout(() => {
+        if (navigateOnSelect) {
+          navigate(navigateOnSelect);
+        }
+      }, 0);
     }
   };
 
@@ -524,17 +345,20 @@ function SearchInput<T extends Record<string, any>>({
    * Handle selection for multi-select
    */
   const enhancedHandleOnChangeMultiple = (value: string[]) => {
-    if (value === null || value?.length == 0) {
+    if (value === null || value?.length === 0) {
       if (handleOptionSubmit) handleOptionSubmit([]);
       return;
-    } else {
-      const selectedItems = combinedData.filter((item: any) =>
-        value?.includes(item.value)
-      );
-      if (selectedItems) {
-        setComponentSelectedItems(selectedItems);
-        if (handleOptionSubmit) handleOptionSubmit(selectedItems);
-      }
+    }
+
+    // Combine both autocomplete data and component data for selection
+    const combinedData = [...autocompleteData, ...componentData];
+    const selectedItems = combinedData.filter((item: any) =>
+      value?.includes(item.value)
+    );
+
+    if (selectedItems.length > 0) {
+      setComponentSelectedItems(selectedItems);
+      if (handleOptionSubmit) handleOptionSubmit(selectedItems);
     }
   };
 
@@ -672,11 +496,11 @@ function SearchInput<T extends Record<string, any>>({
   /**
    * Filter combined data based on entity types from active filters
    */
-  const getFilteredData = () => {
-    // Safety check for combinedData
-    if (!combinedData || !Array.isArray(combinedData)) {
-      return [];
-    }
+  const getCombinedData = () => {
+    // Combine autocomplete data with component data if includeComponents is true
+    const combinedData = includeComponents
+      ? [...autocompleteData, ...componentData]
+      : autocompleteData;
 
     // If no filters or using data_items directly, return all data
     if (data_items || selected_filters?.length < 1) {
@@ -687,9 +511,6 @@ function SearchInput<T extends Record<string, any>>({
     return combinedData.filter((item) => {
       // Always include component items if includeComponents is true
       if (item.resultType === "component") return true;
-
-      // Safety check for selected_filters
-      if (!Array.isArray(selected_filters)) return true;
 
       // Check if entity type matches
       const entityTypeMatch = selected_filters
@@ -711,69 +532,9 @@ function SearchInput<T extends Record<string, any>>({
     });
   };
 
-  /**
-   * Group results by type
-   */
-  const getGroupedData = () => {
-    const filteredData = getFilteredData();
-
-    // Safety check
-    if (!includeComponents || !filteredData || filteredData.length === 0) {
-      return filteredData;
-    }
-
-    // Add groups for Select component
-    const dataWithGroups = [];
-
-    // Add regular items with a group header
-    const regularItems = filteredData.filter(
-      (item) => item.resultType !== "component"
-    );
-    if (regularItems.length > 0) {
-      dataWithGroups.push({
-        group: "Results",
-        disabled: true,
-        value: "group-results",
-      });
-      dataWithGroups.push(...regularItems);
-    }
-
-    // Add filter triplet components
-    const filterItems = filteredData.filter(
-      (item) =>
-        item.resultType === "component" &&
-        item.componentType === "FilterInputTriplet"
-    );
-    if (filterItems.length > 0) {
-      dataWithGroups.push({
-        group: "Filters",
-        disabled: true,
-        value: "group-filters",
-      });
-      dataWithGroups.push(...filterItems);
-    }
-
-    // Add other components
-    const otherComponents = filteredData.filter(
-      (item) =>
-        item.resultType === "component" &&
-        item.componentType !== "FilterInputTriplet"
-    );
-    if (otherComponents.length > 0) {
-      dataWithGroups.push({
-        group: "Components",
-        disabled: true,
-        value: "group-components",
-      });
-      dataWithGroups.push(...otherComponents);
-    }
-
-    return dataWithGroups;
-  };
-
   // Render the component
   return (
-    <div className="flex w-full space-x-2 items-center">
+    <div className="flex space-x-2 items-center">
       <div className="flex-grow">
         {multiselect ? (
           <MultiSelect
@@ -782,8 +543,8 @@ function SearchInput<T extends Record<string, any>>({
             searchable={true}
             clearable={true}
             comboboxProps={{ withinPortal: withinPortal }}
-            data={getFilteredData()}
-            renderOption={(props) => renderSearchOrComponentItem(props)}
+            data={getCombinedData()}
+            renderOption={(props) => renderSearchItem(props)}
             rightSection={isLoading ? <Loader size="xs" /> : null}
             placeholder={placeholder}
             label={label}
@@ -792,6 +553,7 @@ function SearchInput<T extends Record<string, any>>({
             size={size}
             maxDropdownHeight={300}
             disabled={disabled}
+            ref={inputRef}
           />
         ) : (
           <Select
@@ -800,9 +562,9 @@ function SearchInput<T extends Record<string, any>>({
             clearable={true}
             onChange={enhancedHandleOnChange}
             comboboxProps={{ withinPortal: withinPortal }}
-            ref={ref}
-            data={getGroupedData()}
-            renderOption={(props) => renderSearchOrComponentItem(props)}
+            ref={inputRef}
+            data={getCombinedData()}
+            renderOption={(props) => renderSearchItem(props)}
             rightSection={isLoading ? <Loader size="xs" /> : null}
             placeholder={placeholder}
             label={label}

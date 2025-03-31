@@ -1,0 +1,102 @@
+/* Custom styling for rc-tree to better integrate with Tailwind */
+
+/* Override default styles for the tree */
+.rc-tree {
+  font-family: inherit; /* Use your project's font */
+  font-size: 0.875rem; /* Equivalent to text-sm in Tailwind */
+}
+
+/* Selected node styling */
+.rc-tree-node-selected {
+  background-color: rgba(
+    59,
+    130,
+    246,
+    0.1
+  ) !important; /* Light blue bg (tailwind blue-500 with opacity) */
+  color: #3b82f6 !important; /* blue-500 */
+  font-weight: 500 !important;
+}
+
+/* Node content container */
+.rc-tree-node-content-wrapper {
+  transition: all 0.2s ease;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 0.25rem;
+}
+
+.rc-tree-node-content-wrapper:hover {
+  background-color: rgba(243, 244, 246, 1) !important; /* gray-100 */
+}
+
+/* Remove the default icon */
+.rc-tree-icon__customize {
+  display: none;
+}
+
+/* Spacing for checkbox */
+.rc-tree-checkbox {
+  margin-right: 0.375rem;
+}
+
+/* Override checkbox styles */
+.rc-tree-checkbox-checked .rc-tree-checkbox-inner {
+  background-color: #3b82f6 !important; /* blue-500 */
+  border-color: #3b82f6 !important; /* blue-500 */
+}
+
+/* Switcher (expand/collapse) icon */
+.rc-tree-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* For the tree lines */
+.rc-tree-show-line .rc-tree-switcher-line-icon {
+  color: #9ca3af; /* gray-400 */
+}
+
+/* Drag and drop styling */
+.rc-tree-node-content-wrapper.draggable {
+  cursor: grab;
+}
+
+.rc-tree-node-content-wrapper.draggable:active {
+  cursor: grabbing;
+}
+
+/* Drop indicator */
+.rc-tree-drop-indicator {
+  background-color: #3b82f6; /* blue-500 */
+  height: 2px;
+}
+
+/* Loading icon */
+.rc-tree-switcher_loading-icon {
+  color: #3b82f6; /* blue-500 */
+}
+
+/* When a node is disabled */
+.rc-tree-node-disabled > .rc-tree-node-content-wrapper {
+  color: #9ca3af !important; /* gray-400 */
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Checkbox partially checked state */
+.rc-tree-checkbox-indeterminate .rc-tree-checkbox-inner {
+  background-color: #f3f4f6 !important; /* gray-100 */
+  border-color: #3b82f6 !important; /* blue-500 */
+}
+
+.rc-tree-checkbox-indeterminate .rc-tree-checkbox-inner::after {
+  content: " ";
+  position: absolute;
+  top: 50%;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background-color: #3b82f6; /* blue-500 */
+  transform: translateY(-50%);
+}

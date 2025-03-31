@@ -85,7 +85,8 @@ export type ComponentKey =
   | "ListEditorFormInput"
   | "ActiveViewFields"
   | "VerticalTransformActionsFormInput"
-  | "StorageAttachmentActionsFormInput";
+  | "StorageAttachmentActionsFormInput"
+  | "FileTree";
 
 export type CellTemplateKey = "detail" | "conditionallyformatted" | "text";
 
@@ -163,6 +164,7 @@ export interface ActionInputWrapperProps {
   action_type?: string;
   entity?: string;
   record?: any;
+  options?: any;
   record_query?: any;
   exclude_components?: string[];
   children?: any;
@@ -1212,6 +1214,7 @@ export interface DynamicFormProps {
   name?: string;
   action?: any;
   children?: any;
+  options?: any;
   nested_component?: any;
   setExpandedRecordIds?: (ids: string[]) => void;
   invalidate_queries_on_submit_success?: string[];

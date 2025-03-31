@@ -1,155 +1,263 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { throttle } from "lodash";
 import Surreal, { LiveHandler, Uuid } from "surrealdb";
-import { getDb } from "src/surreal";
-
-type LiveQueryResult<T> = {
-  data: T[];
-  error: Error | null;
-  loading: boolean;
-};
+import { getDb, registerQuery, unregisterQuery } from "src/surreal";
 
 type Action = "CREATE" | "UPDATE" | "DELETE" | "CLOSE";
 type CloseResult = "killed" | "disconnected";
-type SortOrder = "ASC" | "DESC";
 
-interface SortConfig<T> {
-  field: keyof T;
-  order: SortOrder;
+export interface LiveQueryOptions {
+  throttleTime?: number;
+  limit?: number;
+  fields?: string[];
+  connectionId?: string;
+  includeMetadata?: boolean;
 }
 
-const DEBUG = false;
-
-function parseOrderByClause<T extends Record<string, any>>(
-  query: string,
-  sampleData?: T // Optional sample data to validate field
-): SortConfig<T> | null {
-  const orderByMatch = query.match(/ORDER BY\s+(\w+)(?:\s+(ASC|DESC))?/i);
-  if (!orderByMatch) return null;
-
-  const fieldName = orderByMatch[1];
-  const order = (orderByMatch[2]?.toUpperCase() as SortOrder) || "ASC";
-
-  // Runtime check if sample data is provided
-  if (sampleData && !(fieldName in sampleData)) {
-    console.warn(`Warning: Field "${fieldName}" not found in data structure`);
-    return null;
-  }
-
-  return {
-    field: fieldName as keyof T,
-    order,
+export interface LiveQueryResult<T> {
+  data: T[];
+  error: Error | null;
+  loading: boolean;
+  meta: {
+    total: number;
+    hasMore: boolean;
+    page: number;
   };
+  refresh: () => Promise<void>;
+  loadMore: () => Promise<void>;
 }
 
-function sortData<T extends Record<string, any>>(
-  data: T[],
-  sortConfig: SortConfig<T>
-): T[] {
-  return [...data].sort((a, b) => {
-    const aVal = a[sortConfig.field];
-    const bVal = b[sortConfig.field];
+const DEFAULT_OPTIONS: LiveQueryOptions = {
+  throttleTime: 300,
+  limit: 20,
+  fields: ["*"],
+  connectionId: "default",
+  includeMetadata: true,
+};
 
-    if (aVal === null || aVal === undefined)
-      return sortConfig.order === "ASC" ? -1 : 1;
-    if (bVal === null || bVal === undefined)
-      return sortConfig.order === "ASC" ? 1 : -1;
-
-    const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-    return sortConfig.order === "ASC" ? comparison : -comparison;
-  });
-}
-
+/**
+ * Enhanced useLiveQuery hook with pagination, connection pooling, and performance optimizations
+ */
 export function useLiveQuery<T extends Record<string, any>>(
-  query: string,
-  table: string
+  baseQuery: string,
+  table: string,
+  options: LiveQueryOptions = {}
 ): LiveQueryResult<T> {
+  // Merge default options
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+
+  // State
   const [data, setData] = useState<T[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
-  const dbRef = useRef<Surreal | null>(null);
-  const sortConfig = parseOrderByClause(query);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
+  // Refs to maintain between renders
+  const queryUuidRef = useRef<Uuid | null>(null);
+  const connectionIdRef = useRef<string>(opts.connectionId || "default");
+  const isRefreshingRef = useRef<boolean>(false);
+
+  // Prepare query with proper fields and pagination
+  const getFormattedQuery = useCallback(
+    (pageNum: number = 1) => {
+      // Parse the base query to detect if it already has ORDER BY, LIMIT, etc.
+      const hasOrderBy = baseQuery.toUpperCase().includes("ORDER BY");
+      const hasLimit = baseQuery.toUpperCase().includes("LIMIT");
+      const hasStart = baseQuery.toUpperCase().includes("START");
+
+      // Start with the base query
+      let query = baseQuery;
+
+      // Add ORDER BY if not present (defaulting to created_datetime DESC)
+      if (!hasOrderBy && table !== "") {
+        query += " ORDER BY created_datetime DESC";
+      }
+
+      // Calculate offset
+      const start = (pageNum - 1) * opts.limit!;
+
+      // Add pagination
+      if (!hasLimit && !hasStart) {
+        query += ` LIMIT ${opts.limit} START ${start}`;
+      }
+
+      return query;
+    },
+    [baseQuery, opts.limit, table]
+  );
+
+  // Throttled update function to prevent too many re-renders
+  const throttledSetData = useCallback(
+    throttle((updater: (prev: T[]) => T[]) => {
+      setData((prev) => updater(prev));
+    }, opts.throttleTime),
+    [opts.throttleTime]
+  );
+
+  // Function to refresh data
+  const refresh = useCallback(async () => {
+    if (isRefreshingRef.current) return;
+    isRefreshingRef.current = true;
+
+    try {
+      setLoading(true);
+      const db = await getDb(connectionIdRef.current);
+
+      // Count total records
+      const countQuery = `SELECT count() FROM ${table} WHERE ${
+        baseQuery.includes("WHERE")
+          ? baseQuery.split("WHERE")[1].split("ORDER BY")[0].trim()
+          : "1=1"
+      }`;
+
+      // Execute query with pagination
+      const [countResult, dataResult] = await Promise.all([
+        db.query(countQuery),
+        db.query<T[]>(getFormattedQuery(1)),
+      ]);
+
+      // Set total count and data
+      const count = countResult?.[0]?.count || 0;
+      setTotal(count);
+      setHasMore(count > opts.limit!);
+
+      // Process data
+      const processedData = Array.isArray(dataResult)
+        ? (dataResult[0].map((item: any) => ({
+            ...item,
+            id: String(item.id),
+          })) as T[])
+        : [];
+
+      setData(processedData);
+      setPage(1);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error refreshing data:", err);
+      setError(
+        err instanceof Error ? err : new Error("Failed to refresh data")
+      );
+      setLoading(false);
+    }
+
+    isRefreshingRef.current = false;
+  }, [baseQuery, getFormattedQuery, opts.limit, table]);
+
+  // Function to load more data
+  const loadMore = useCallback(async () => {
+    if (!hasMore || loading) return;
+
+    try {
+      const nextPage = page + 1;
+      const db = await getDb(connectionIdRef.current);
+
+      const [result] = await db.query<T[]>(getFormattedQuery(nextPage));
+
+      // Process and append new data
+      if (Array.isArray(result) && result.length > 0) {
+        const processedData = result.map((item: any) => ({
+          ...item,
+          id: String(item.id),
+        })) as T[];
+
+        setData((prev) => [...prev, ...processedData]);
+        setPage(nextPage);
+        setHasMore(processedData.length === opts.limit);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error("Error loading more data:", err);
+      setError(
+        err instanceof Error ? err : new Error("Failed to load more data")
+      );
+    }
+  }, [getFormattedQuery, hasMore, loading, opts.limit, page]);
+
+  // Setup live query
   useEffect(() => {
-    let queryUuid: Uuid;
     let mounted = true;
+    const queryId = `${table}_live_${Date.now()}`;
 
-    const startLiveQuery = async () => {
+    const setupLiveQuery = async () => {
       try {
-        dbRef.current = await getDb();
-        const db = dbRef.current;
+        setLoading(true);
 
-        DEBUG && console.log("SurrealDB connection established:", db);
-        DEBUG && console.log("Executing query:", query);
+        // Get connection from pool
+        const db = await getDb(connectionIdRef.current);
+        registerQuery(connectionIdRef.current, queryId);
 
-        const [result] = await db.query<T[]>(query);
+        // Execute initial query
+        const formattedQuery = getFormattedQuery();
+        const [result] = await db.query<T[]>(formattedQuery);
+
+        if (!mounted) return;
+
+        // Count total records
+        const countQuery = `SELECT count() FROM ${table} WHERE ${
+          baseQuery.includes("WHERE")
+            ? baseQuery.split("WHERE")[1].split("ORDER BY")[0].trim()
+            : "1=1"
+        }`;
+
+        const [countResult] = await db.query(countQuery);
+        const count = countResult?.[0]?.count || 0;
+
+        // Set total count
         if (mounted) {
-          if (Array.isArray(result)) {
-            DEBUG && console.log("Initial data loaded:", result);
-            const processedResult = result.map((item) => ({
-              ...item,
-              id: String(item.id),
-            })) as T[];
-            setData(processedResult);
-          } else if (result) {
-            DEBUG && console.log("Initial single record loaded:", result);
-            const processedResult = {
-              ...result,
-              id: String((result as T).id),
-            } as T;
-            setData([processedResult]);
-          } else {
-            setData([]);
-          }
+          setTotal(count);
+          setHasMore(count > opts.limit!);
+        }
+
+        // Process initial data
+        if (mounted && Array.isArray(result)) {
+          const processedData = result.map((item: any) => ({
+            ...item,
+            id: String(item.id),
+          })) as T[];
+
+          setData(processedData);
           setLoading(false);
         }
 
-        DEBUG && console.log("Starting live query for table:", table);
-
-        queryUuid = await db.live<T>(
+        // Set up live query
+        queryUuidRef.current = await db.live(
           table,
           (action: Action, result: T | CloseResult) => {
             if (!mounted) return;
 
-            DEBUG &&
-              console.log("Live query notification received:", {
-                action,
-                result,
-              });
-
             switch (action) {
               case "CREATE":
-                setData((prevData) => {
+                throttledSetData((prevData) => {
+                  // Only add if it would appear on the first page
+                  // This assumes sorting by created_datetime DESC
                   const newRecord = {
                     ...(result as T),
                     id: String((result as T).id),
                   } as T;
-                  DEBUG && console.log("Adding new record:", newRecord);
-                  const newData = [...prevData, newRecord];
-                  return sortConfig ? sortData(newData, sortConfig) : newData;
+                  return [newRecord, ...prevData].slice(0, prevData.length);
                 });
                 break;
 
               case "UPDATE":
-                setData((prevData) => {
+                throttledSetData((prevData) => {
                   const updatedRecord = {
                     ...(result as T),
                     id: String((result as T).id),
                   } as T;
-                  DEBUG && console.log("Updating record:", updatedRecord);
-                  const newData = prevData.map((item) =>
+                  return prevData.map((item) =>
                     String(item.id) === String(updatedRecord.id)
                       ? updatedRecord
                       : item
                   );
-                  return sortConfig ? sortData(newData, sortConfig) : newData;
                 });
                 break;
 
               case "DELETE":
-                setData((prevData) => {
-                  const deletedRecord = result as T;
-                  const deletedId = String(deletedRecord.id);
-                  DEBUG && console.log("Deleting record:", deletedRecord);
+                throttledSetData((prevData) => {
+                  const deletedId = String((result as T).id);
                   return prevData.filter(
                     (item) => String(item.id) !== deletedId
                   );
@@ -157,17 +265,14 @@ export function useLiveQuery<T extends Record<string, any>>(
                 break;
 
               case "CLOSE":
-                DEBUG && console.log(`Live query ${result as CloseResult}`);
+                // Handle connection close
+                console.log(`Live query ${result as CloseResult}`);
                 break;
             }
           }
         );
-
-        DEBUG && console.log("Live query started with UUID:", queryUuid);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Live query failed";
-        console.error("Live query error:", errorMessage);
+        console.error("Live query error:", err);
         if (mounted) {
           setError(err instanceof Error ? err : new Error("Live query failed"));
           setLoading(false);
@@ -175,17 +280,19 @@ export function useLiveQuery<T extends Record<string, any>>(
       }
     };
 
-    startLiveQuery();
+    setupLiveQuery();
 
+    // Cleanup
     return () => {
-      DEBUG && console.log("Cleaning up live query...");
       mounted = false;
+      throttledSetData.cancel();
 
       const cleanup = async () => {
-        if (queryUuid && dbRef.current) {
+        if (queryUuidRef.current) {
           try {
-            await dbRef.current.kill(queryUuid);
-            DEBUG && console.log("Live query killed successfully");
+            const db = await getDb(connectionIdRef.current);
+            await db.kill(queryUuidRef.current);
+            unregisterQuery(connectionIdRef.current, queryId);
           } catch (error) {
             console.error("Error killing live query:", error);
           }
@@ -194,7 +301,18 @@ export function useLiveQuery<T extends Record<string, any>>(
 
       cleanup();
     };
-  }, [query, table]);
+  }, [baseQuery, getFormattedQuery, opts.limit, table, throttledSetData]);
 
-  return { data, error, loading };
+  return {
+    data,
+    error,
+    loading,
+    meta: {
+      total,
+      hasMore,
+      page,
+    },
+    refresh,
+    loadMore,
+  };
 }

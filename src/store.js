@@ -229,6 +229,217 @@ export { enhanceContentWithValues };
 export const useAppStore = create(
   persist(
     (set, get) => ({
+      // Filters state
+      filters: {
+        active_filters: [],
+        search_results: [],
+        available_items: [
+          { id: "date_created", label: "Date Created", type: "date" },
+          { id: "date_modified", label: "Date Modified", type: "date" },
+          {
+            id: "status",
+            label: "Status",
+            type: "select",
+            options: ["Active", "Archived", "Draft"],
+          },
+          {
+            id: "type",
+            label: "Type",
+            type: "select",
+            options: ["Document", "Script", "Function"],
+          },
+          { id: "owner", label: "Owner", type: "text" },
+        ],
+      },
+
+      // Filters functions
+      setFilters: (filtersData) => {
+        if (typeof filtersData === "function") {
+          set((state) => ({ filters: filtersData(state.filters) }));
+        } else {
+          set({ filters: filtersData });
+        }
+      },
+
+      toggleFilter: (filterId) => {
+        set((state) => {
+          const isActive = state.filters.active_filters.some(
+            (f) => f.id === filterId
+          );
+
+          if (isActive) {
+            // Remove filter if active
+            return {
+              filters: {
+                ...state.filters,
+                active_filters: state.filters.active_filters.filter(
+                  (f) => f.id !== filterId
+                ),
+              },
+            };
+          } else {
+            // Add filter if not active
+            const filterItem = state.filters.available_items.find(
+              (item) => item.id === filterId
+            );
+            const defaultValue =
+              filterItem?.type === "select" && filterItem.options
+                ? filterItem.options[0]
+                : "";
+
+            return {
+              filters: {
+                ...state.filters,
+                active_filters: [
+                  ...state.filters.active_filters,
+                  { id: filterId, value: defaultValue },
+                ],
+              },
+            };
+          }
+        });
+      },
+      // Add this to the main state object
+      searchBoxFocused: false,
+
+      // Add this to your store actions
+      setSearchBoxFocused: (isFocused) =>
+        set((state) => ({
+          searchBoxFocused: isFocused,
+        })),
+      // Enhanced show, switches, and createItems state with better structure
+      show: {
+        selected_items: [], // IDs of currently selected sections
+        search_results: [], // IDs of sections matching search query
+        available_items: [
+          { id: "selected_items", label: "Selected Items" },
+          { id: "search_results", label: "Search Results" },
+          { id: "active_item", label: "Active Item" },
+        ],
+      },
+
+      // Set or update show state
+      setShow: (updatedShow) =>
+        set((state) => ({
+          show: {
+            ...state.show,
+            ...(typeof updatedShow === "function"
+              ? updatedShow(state.show)
+              : updatedShow),
+          },
+        })),
+
+      // Add a section to selected items
+      addSelectedSection: (sectionId) =>
+        set((state) => {
+          if (state.show.selected_items.includes(sectionId)) return state;
+
+          return {
+            show: {
+              ...state.show,
+              selected_items: [...state.show.selected_items, sectionId],
+            },
+          };
+        }),
+
+      // Remove a section from selected items
+      removeSelectedSection: (sectionId) =>
+        set((state) => ({
+          show: {
+            ...state.show,
+            selected_items: state.show.selected_items.filter(
+              (id) => id !== sectionId
+            ),
+          },
+        })),
+
+      // Toggle a section's selection state
+      toggleSelectedSection: (sectionId) =>
+        set((state) => {
+          const isSelected = state.show.selected_items.includes(sectionId);
+          return {
+            show: {
+              ...state.show,
+              selected_items: isSelected
+                ? state.show.selected_items.filter((id) => id !== sectionId)
+                : [...state.show.selected_items, sectionId],
+            },
+          };
+        }),
+
+      // Enhanced feature switches state
+      switches: {
+        enabled_items: [], // IDs of enabled features
+        search_results: [], // IDs of features matching search query
+        available_items: [
+          { id: "developer", label: "Developer Mode", icon: "IconCode" },
+        ],
+      },
+
+      // Set or update switches state
+      setSwitches: (updatedSwitches) =>
+        set((state) => ({
+          switches: {
+            ...state.switches,
+            ...(typeof updatedSwitches === "function"
+              ? updatedSwitches(state.switches)
+              : updatedSwitches),
+          },
+        })),
+
+      // Toggle a feature's enabled state
+      toggleFeature: (featureId) =>
+        set((state) => {
+          const isEnabled = state.switches.enabled_items.includes(featureId);
+          return {
+            switches: {
+              ...state.switches,
+              enabled_items: isEnabled
+                ? state.switches.enabled_items.filter((id) => id !== featureId)
+                : [...state.switches.enabled_items, featureId],
+            },
+          };
+        }),
+
+      // Enhanced create items state
+      createItems: {
+        recent_items: [], // Recently created item types
+        count: 0, // Total count of items created
+        available_items: [
+          { id: "document", label: "Session", icon: "IconDatabase" },
+          { id: "script", label: "Function", icon: "IconTerminal" },
+        ],
+      },
+
+      // Set or update createItems state
+      setCreateItems: (updatedCreateItems) =>
+        set((state) => ({
+          createItems: {
+            ...state.createItems,
+            ...(typeof updatedCreateItems === "function"
+              ? updatedCreateItems(state.createItems)
+              : updatedCreateItems),
+          },
+        })),
+
+      // Track a newly created item
+      trackCreatedItem: (itemId) =>
+        set((state) => {
+          // Keep track of recently created items, limit to last 5
+          const newRecentItems = [
+            itemId,
+            ...(state.createItems.recent_items || []),
+          ].slice(0, 5);
+
+          return {
+            createItems: {
+              ...state.createItems,
+              recent_items: newRecentItems,
+              count: (state.createItems.count || 0) + 1,
+            },
+          };
+        }),
+
       activeLayout: {
         leftSection: {
           isDisplayed: true,
@@ -731,6 +942,9 @@ export const useAppStore = create(
             [key]: newData,
           },
         })),
+      focusedEditor: "structured_query", // 'natural_language_query', 'structured_query', or null
+      // Add a setter for the focused editor
+      setFocusedEditor: (editorName) => set({ focusedEditor: editorName }),
       activeApplication: null,
       setActiveApplication: (application) =>
         set((state) => ({ ...state, activeApplication: application })),

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAppStore } from "src/store";
 import { Burger } from "@mantine/core";
 import { useIsMobile } from "@components/Utils";
+import { useActiveAuthProvider, useGetIdentity } from "@refinedev/core";
 
 interface LogoNameProps {
   logoLink: string;
@@ -22,8 +23,14 @@ export function LogoName({
   iconName,
   authenticatedData = {},
 }: LogoNameProps) {
-  const { displaySidebar, toggleDisplaySidebar } = useAppStore();
+  const { displaySidebar, toggleDisplaySidebar, activeProfile } = useAppStore();
   const isMobile = useIsMobile();
+
+  const authProvider = useActiveAuthProvider();
+
+  const { data: user } = useGetIdentity({
+    v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+  });
 
   return (
     // <Anchor component={Link} href={logoLink}>
@@ -92,7 +99,9 @@ export function LogoName({
           // }
           onClick={toggleDisplaySidebar}
         >
-          {isMobile ? null : companyName}
+          {/* {isMobile ? null : companyName} */}
+
+          {isMobile ? null : activeProfile?.name || user?.email}
         </Button>
       )}
 

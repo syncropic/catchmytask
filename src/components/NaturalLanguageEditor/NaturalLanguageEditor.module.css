@@ -1,11 +1,69 @@
 /* Enhanced CSS for NaturalLanguageEditor.module.css */
+
+/* Dropdown menu styling */
+.dropdown-menu {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow: auto;
+  padding: 4px;
+  z-index: 9999;
+}
+
+.dropdown-menu button {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  text-align: left;
+  transition: background-color 0.2s ease;
+  width: 100%;
+}
+
+.dropdown-menu button:hover,
+.dropdown-menu button.is-selected {
+  background-color: rgba(28, 126, 214, 0.1);
+  cursor: pointer;
+}
+
+.dropdown-menu .item {
+  padding: 8px 12px;
+  color: #757575;
+  font-size: 0.9rem;
+}
+
+/* Mention styling */
 .mention {
-  color: blueviolet;
-  /* background-color: var(--purple-light);
-  border-radius: 0.4rem;
-  box-decoration-break: clone;
-  color: var(--purple);
-  padding: 0.1rem 0.3rem; */
+  color: #1c7ed6;
+  background-color: rgba(28, 126, 214, 0.08);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.3rem;
+  display: inline;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Search input styling improvements */
+.search-input-option {
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-input-option:hover,
+.search-input-selected {
+  background-color: rgba(28, 126, 214, 0.05);
+}
+
+.mention-item-selected {
+  background-color: rgba(28, 126, 214, 0.1) !important;
 }
 
 /* Basic editor styles */
@@ -57,147 +115,153 @@
   }
 }
 
-/* Embedded component styling - enhanced */
+/* 
+ * IMPROVED: Embedded component styling for better text flow 
+ * - Set to display: inline-flex for better text integration
+ * - Reduced margins for tighter text flow
+ * - Adjusted vertical alignment to match text
+ */
 .embedded-component {
-  display: inline-block;
-  padding: 2px 4px;
+  display: inline-flex;
+  padding: 0 2px;
+  margin: 0 2px;
   border-radius: 4px;
   background-color: rgba(0, 0, 0, 0.03);
-  margin: 2px 4px;
   vertical-align: middle;
-  /* Add a subtle border to make components more visible */
   border: 1px solid rgba(0, 0, 0, 0.08);
-  /* Prevent text selection inside components */
   user-select: none;
-  /* Improve interaction */
   position: relative;
   z-index: 1;
+  line-height: normal; /* Prevent line-height inheritance issues */
+  max-width: 100%; /* Prevent overflow */
 }
 
-/* Specific styling for filter triplets */
+/* Dark mode support */
+.dark .embedded-component {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Specific styling for filter triplets - make them inline */
 .filter-triplet-wrapper {
-  /* Add specific styles for triplet wrappers */
   display: inline-flex;
   align-items: center;
-  min-width: 200px;
+  margin: 0;
+  padding: 0;
 }
 
+/* Container should be inline for better flow */
 .embedded-component-container {
+  display: inline-flex;
+  align-items: center;
   min-height: 24px;
-  min-width: 100px;
-  /* Make sure inputs receive clicks */
+  min-width: auto;
   pointer-events: auto;
-  /* Prevent the component container from being editable by the editor */
+  user-modify: read-only;
   -webkit-user-modify: read-only;
   -moz-user-modify: read-only;
-  user-modify: read-only;
 }
 
-/* Focus state with better visibility */
+/* Focused state - improved appearance */
 .embedded-component:focus-within {
-  outline: 2px solid var(--primary-color, #1c7ed6);
-  outline-offset: 2px;
-  /* Add box shadow for more emphasis */
-  box-shadow: 0 0 0 3px rgba(28, 126, 214, 0.1);
+  outline: 2px solid #1c7ed6;
+  outline-offset: 1px;
+  box-shadow: 0 0 0 2px rgba(28, 126, 214, 0.1);
 }
 
-/* Hover state to indicate interactivity */
+/* Hover state - subtle highlight */
 .embedded-component:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
+.dark .embedded-component:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
 
-/* Filter Triplet styling - enhanced */
+/*
+ * Inline compact filter triplet styling
+ * - Minimal space usage
+ * - Better text integration
+ */
 .embedded-component .filter-triplet-compact {
   display: inline-flex;
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: rgba(0, 0, 0, 0.02);
   border-radius: 4px;
-  padding: 4px 6px;
-  margin: 0 2px;
+  padding: 2px 4px;
+  margin: 0;
   align-items: center;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  /* Make it more prominent */
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.02);
+  font-size: 0.95em;
+  white-space: nowrap;
 }
 
+/* Standard (non-compact) triplet styling */
 .embedded-component .filter-triplet-standard {
   background-color: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 4px;
-  padding: 8px;
-  margin: 4px 0;
-  /* Add box shadow for depth */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 4px 6px;
+  margin: 2px 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
+/* Field name styling */
 .embedded-component .field-name {
   font-weight: 500;
   font-size: 0.8rem;
   margin-right: 4px;
   color: rgba(0, 0, 0, 0.7);
 }
-
-/* SearchInput filter item styling */
-.filter-search-item {
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.filter-search-item:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.filter-search-item.selected {
-  background-color: rgba(0, 0, 0, 0.08);
-}
-
-.filter-search-item-icon {
-  color: #228be6;
-  margin-right: 8px;
-}
-
-.filter-search-item-badge {
-  background-color: #228be6;
-  color: white;
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  border-radius: 3px;
-}
-
-/* Dark mode adjustments */
-.dark-mode .embedded-component .filter-triplet-compact,
-.dark-mode .embedded-component .filter-triplet-standard {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.dark-mode .embedded-component .field-name {
+.dark .embedded-component .field-name {
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* Enhanced visibility for active filters */
-.embedded-component .filter-triplet-compact.has-value,
-.embedded-component .filter-triplet-standard.has-value {
-  background-color: rgba(34, 139, 230, 0.05);
-  border-color: rgba(34, 139, 230, 0.3);
+/* 
+ * Fix for dropdown menus to ensure they appear above the editor
+ * This is critical for proper interaction with embedded components
+ */
+.mantine-Select-dropdown,
+.mantine-DatePicker-dropdown,
+.mantine-Popover-dropdown {
+  z-index: 1000 !important;
 }
 
-/* Fix for dropdown menus to ensure they appear above the editor */
-.mantine-Select-dropdown,
-.mantine-DatePicker-dropdown {
-  z-index: 1000 !important;
+/* 
+ * Active component styling - make them stand out when they have values 
+ */
+.embedded-component .filter-triplet-compact.has-value,
+.embedded-component .filter-triplet-standard.has-value {
+  background-color: rgba(28, 126, 214, 0.05);
+  border-color: rgba(28, 126, 214, 0.2);
+}
+
+/* Tooltip styling improvements */
+.mantine-Tooltip-tooltip {
+  z-index: 1001;
+}
+
+/* Enhanced input elements inside components */
+.embedded-component-container input,
+.embedded-component-container select {
+  border: none;
+  background: transparent;
+  font-size: 0.9em;
+  padding: 2px 4px;
+  min-width: 60px;
+  margin: 0;
+  outline: none;
+}
+
+.embedded-component-container input:focus,
+.embedded-component-container select:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .embedded-component .filter-triplet-compact {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 6px;
-  }
-
-  .embedded-component .filter-triplet-compact .field-name {
-    margin-bottom: 4px;
+    max-width: 100%;
+    overflow: hidden;
   }
 }

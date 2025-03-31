@@ -20,6 +20,8 @@ interface IEditor {
   field?: string;
   id?: string;
   isDarkMode?: boolean;
+  onFocus?: () => void; // Add this
+  onBlur?: () => void; // Add this
 }
 
 const MonacoEditor: React.FC<IEditor> = ({
@@ -30,6 +32,8 @@ const MonacoEditor: React.FC<IEditor> = ({
   field = "query",
   id: providedId,
   isDarkMode = true,
+  onFocus, // Add this
+  onBlur, // Add this
 }) => {
   const monaco = useMonaco();
   const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -219,6 +223,15 @@ const MonacoEditor: React.FC<IEditor> = ({
     editorRef.current = editor;
     editor.layout();
 
+    // Register focus and blur handlers
+    editor.onDidFocusEditorWidget(() => {
+      if (onFocus) onFocus();
+    });
+
+    editor.onDidBlurEditorWidget(() => {
+      if (onBlur) onBlur();
+    });
+
     const theme = isDarkMode ? "vs-dark-custom" : "vs-light-custom";
     monaco?.editor.setTheme(theme);
   }
@@ -256,6 +269,7 @@ const MonacoEditor: React.FC<IEditor> = ({
         boxShadow: isDarkMode
           ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)"
           : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+        transition: "height 0.3s ease", // Add smooth transition
       }}
       data-editor-id={editorId.current}
     >
@@ -323,22 +337,52 @@ const MonacoEditor: React.FC<IEditor> = ({
 export default MonacoEditor;
 
 export const MonacoEditorFormInput = ({ isDarkMode = true, ...props }: any) => {
+  // Extract the field name for focus identification
+  const fieldName =
+    props?.schema?.title?.toLowerCase().replace(/ /g, "_") || props?.label;
+
+  // Prepare focus and blur handlers
+  const handleFocus = () => {
+    props.onFocus(fieldName);
+  };
+
+  const handleBlur = () => {
+    // Optional: You can uncomment this if you want to reset focus when the editor loses focus
+    // if (props.record?.setFocusedEditor) {
+    //   props.record.setFocusedEditor(null);
+    // }
+  };
+
+  // Use the dynamic height from props.record.editorHeight or fall back to schema height
+  const editorHeight =
+    props?.height ||
+    props.record?.editorHeight ||
+    props?.schema?.props?.height ||
+    props?.height ||
+    "20vh";
+
   return (
-    <div style={{ width: "100%", maxWidth: "100vw" }}>
-      {props?.title && <div>{props?.title}</div>}
+    <div
+      style={{
+        width: "100%",
+        maxWidth: "100vw",
+        transition: "height 0.3s ease", // Add transition for smooth height changes
+      }}
+    >
+      {/* {props?.title && <div>{props?.title}</div>} */}
+      {/* {props?.height} */}
       <MonacoEditor
         {...props?.schema}
         value={props?.value}
         setValue={props?.onChange}
-        field={
-          props?.schema.title?.toLowerCase().replace(/ /g, "_") || props?.label
-        }
-        id={`${props?.action_input_form_values_key}_${
-          props?.schema.title?.toLowerCase().replace(/ /g, "_") || props?.label
-        }`}
+        field={fieldName}
+        id={`${props?.action_input_form_values_key}_${fieldName}`}
         {...props}
         language={props?.language || "json"}
         isDarkMode={isDarkMode}
+        height={editorHeight} // Apply the dynamic height
+        onFocus={handleFocus} // Pass focus handler
+        onBlur={handleBlur} // Pass blur handler
       />
     </div>
   );

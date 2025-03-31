@@ -11,17 +11,41 @@ import { EmbeddedComponent } from "./EmbeddedComponent";
 import styles from "./NaturalLanguageEditor.module.css";
 import suggestion from "./suggestion";
 import { useAppStore } from "src/store";
-import { useParsed } from "@refinedev/core";
+import { useGetIdentity, useParsed } from "@refinedev/core";
 import { StoragePersistenceExtension } from "./storage-persistence";
 import { isEqual, debounce, cloneDeep } from "lodash";
 import { createPersistenceDebugger } from "./debug-tools";
 import { createDebugPersistenceTool } from "./debug-persistence";
 import { TextSelection } from "prosemirror-state"; // Import from prosemirror-state instead of @tiptap/react
+import {
+  Button,
+  Group,
+  Indicator,
+  Modal,
+  Popover,
+  Select,
+  Tooltip,
+} from "@mantine/core";
+import {
+  IconAdjustments,
+  IconClock,
+  IconList,
+  IconPlayerPlay,
+} from "@tabler/icons-react";
+import { useSession } from "next-auth/react";
+import ExternalSubmitButton from "@components/SubmitButton";
+import { IIdentity } from "@components/interfaces";
+import { useDisclosure } from "@mantine/hooks";
+import { useContextMenu } from "mantine-contextmenu";
+import { TimeInput } from "@mantine/dates";
 
 interface NaturalLanguageEditorProps {
   record?: Record<string, any>;
   height: string;
   action_input_form_values_key?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  onChange?: (content: any) => void;
 }
 
 interface MentionListRef {
@@ -112,6 +136,9 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
   record,
   height = "50vh",
   action_input_form_values_key = "nlEditor",
+  onFocus,
+  onBlur,
+  onChange,
 }) => {
   // Get form values and persistence methods from Zustand store
   const {
@@ -124,7 +151,20 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
     getSavedEditorContent,
     getEditorDeletedComponents,
     setEditorDeletedComponents,
+    activeSession,
+    showVariables,
+    toggleShowVariables,
+    showSchedule,
+    toggleShowSchedule,
   } = useAppStore();
+
+  const { data: user_session } = useSession();
+
+  const hasPermission = (permission: string): boolean => {
+    return Boolean(
+      user_session?.userProfile?.permissions?.includes(permission)
+    );
+  };
 
   // Generate a stable ID for this editor instance
   const editorIdRef = useRef<string>(
@@ -141,6 +181,15 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
   const [initialContentRestored, setInitialContentRestored] =
     useState<boolean>(false);
   const [editorReady, setEditorReady] = useState<boolean>(false);
+
+  const { data: identity } = useGetIdentity<IIdentity>();
+  const [schedulePopoverOpened, setSchedulePopoverOpened] = useState(false);
+
+  // For the schedule modal
+  const [scheduleModalOpened, scheduleModalHandlers] = useDisclosure(false);
+
+  // For context menus
+  const { showContextMenu } = useContextMenu();
 
   // Refs for managing editor state and preventing loops
   const editorUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -782,6 +831,11 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
           // Process before saving
           const processedContent = processContentForSave(content);
 
+          // Call the onChange prop if provided
+          if (props.onChange) {
+            props.onChange(processedContent);
+          }
+
           // Save to Zustand
           saveEditorContent(editorId, processedContent);
           setLastSavedContent(processedContent);
@@ -804,6 +858,7 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
       saveEditorContent,
       synchronizeComponentsWithStore,
       logEditorAction,
+      onChange,
     ]
   );
 
@@ -886,6 +941,14 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
         manualEditInProgressRef.current = true;
         lastTextChangeTimestampRef.current = Date.now();
 
+        // Get current content
+        const content = editor.getJSON();
+
+        // Call the onChange prop if provided
+        if (onChange) {
+          onChange(content);
+        }
+
         // Always save content changes immediately when document changes
         debouncedContentSaver(editor, true);
 
@@ -905,6 +968,35 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
       if (typeof window !== "undefined") {
         window.currentEditorId = editorId;
       }
+
+      // Add to the onFocus event handler in the onCreate method
+      editor.on("focus", () => {
+        editorLastFocusedRef.current = Date.now();
+        manualEditInProgressRef.current = true;
+
+        // Forward the focus event to the provided onFocus callback
+        if (onFocus) {
+          console.log(`NaturalLanguageEditor focused: ${editorId}`);
+          onFocus();
+        }
+      });
+
+      // Step 1: Add a blur event handler to the editor
+      editor.on("blur", () => {
+        // Handle the blur event
+        if (onBlur) {
+          console.log(`NaturalLanguageEditor blurred: ${editorId}`);
+          onBlur();
+        }
+
+        // You might want to save content here as well
+        const content = editor.getJSON();
+        if (content) {
+          const processedContent = processContentForSave(content);
+          saveEditorContent(editorId, processedContent);
+          logEditorAction("Content saved on blur");
+        }
+      });
 
       // Force an initial content save to ensure persistence is initialized
       setTimeout(() => {
@@ -1668,9 +1760,26 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
   }, [editor, editorReady, editorId]);
 
   // Access store state
-  const { activeTask, focused_entities } = useAppStore();
+  const { activeTask, focused_entities, filter_form_values } = useAppStore();
   let action = focused_entities[activeTask?.id]?.[`action`];
   const { params } = useParsed();
+
+  const getActiveFiltersCount = (formKey: string) => {
+    const filterKey = `${formKey}_filter`;
+    const formValues = filter_form_values[filterKey] || {};
+
+    return Object.entries(formValues).reduce((count, [key, value]) => {
+      if (
+        !key.includes("_operator") &&
+        !key.includes("_value2") &&
+        value !== null &&
+        value !== ""
+      ) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+  };
 
   return (
     <div style={{ height, display: "flex", flexDirection: "column" }}>
@@ -1683,9 +1792,340 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
         }}
       >
         <RichTextEditor.Toolbar sticky>
+          {/* Left Group - Navigation arrows */}
           <RichTextEditor.ControlsGroup>
             <RichTextEditor.Undo />
             <RichTextEditor.Redo />
+          </RichTextEditor.ControlsGroup>
+
+          {/* Middle Group - Variables */}
+          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+            <RichTextEditor.ControlsGroup>
+              {activeSession?.variables?.length > 0 && (
+                <Tooltip
+                  // label={`${
+                  //   showVariables ? "hide" : "show and provide"
+                  // } variables`}
+                  label="clear, generate variables"
+                >
+                  <Indicator
+                    inline
+                    label={getActiveFiltersCount(`form_${params.id}`)}
+                    size={16}
+                    disabled={getActiveFiltersCount(`form_${params.id}`) === 0}
+                    color="blue"
+                    offset={4}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+
+                      // Show context menu for variables
+                      showContextMenu([
+                        {
+                          key: "clear",
+                          onClick: () => {
+                            // Handle clear variables
+                            console.log("Clear variables");
+                          },
+                        },
+                        {
+                          key: "default",
+                          onClick: () => {
+                            // Handle clear variables
+                            console.log("Use default variables");
+                          },
+                        },
+                        {
+                          key: "generate",
+                          onClick: () => {
+                            // Handle generate variables
+                            console.log("Generate variables");
+                          },
+                        },
+                      ])(event);
+                    }}
+                  >
+                    <Button
+                      size="compact-xs"
+                      leftSection={<IconAdjustments size={14} />}
+                      variant="outline"
+                    >
+                      Variables
+                    </Button>
+                  </Indicator>
+                </Tooltip>
+              )}
+            </RichTextEditor.ControlsGroup>
+          </div>
+
+          {/* Right Group - Execution Steps, Schedule, and Query */}
+          <RichTextEditor.ControlsGroup>
+            {/* Execution Steps button with ContextMenu */}
+            <div className="flex gap-2 items-end">
+              <Tooltip
+                // label={`${
+                //   showVariables ? "hide" : "show and provide"
+                // } variables`}
+                label="execute step by step"
+              >
+                <Button
+                  size="compact-xs"
+                  variant="outline"
+                  leftSection={<IconList size={14} />}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    // Show context menu for execution steps
+                    showContextMenu([
+                      {
+                        key: "brainstorm",
+                        onClick: () => {
+                          // Handle brainstorm action
+                          console.log("Brainstorm action");
+                        },
+                      },
+                      {
+                        key: "plan",
+                        onClick: () => {
+                          // Handle plan action
+                          console.log("Plan action");
+                        },
+                      },
+                      {
+                        key: "execute plan",
+                        onClick: () => {
+                          // Handle plan action
+                          console.log("Execute action plan");
+                        },
+                      },
+                    ])(event);
+                  }}
+                >
+                  Step
+                </Button>
+              </Tooltip>
+
+              {(params?.id || true) &&
+                hasPermission("schedule_action_input") &&
+                activeSession?.features?.includes("can_schedule") && (
+                  <Popover
+                    opened={schedulePopoverOpened}
+                    onChange={setSchedulePopoverOpened}
+                    width={320}
+                    position="bottom-start"
+                    shadow="md"
+                    withArrow
+                    trapFocus // Add this
+                    closeOnEscape={false} // Add this
+                    closeOnClickOutside={false} // Add this - important to prevent closing when interacting with inputs
+                  >
+                    <Popover.Target>
+                      <Tooltip
+                        label={`${
+                          showSchedule ? "hide" : "show and configure"
+                        } schedule`}
+                      >
+                        <Indicator
+                          inline
+                          size={16}
+                          disabled={true}
+                          color="blue"
+                          offset={4}
+                        >
+                          <Button
+                            size="compact-xs"
+                            leftSection={<IconClock size={14} />}
+                            variant={showSchedule ? "filled" : "outline"}
+                            onClick={() => setSchedulePopoverOpened((o) => !o)}
+                          >
+                            Schedule
+                          </Button>
+                        </Indicator>
+                      </Tooltip>
+                    </Popover.Target>
+
+                    <Popover.Dropdown>
+                      <div>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: "10px",
+                          }}
+                        >
+                          <h3 style={{ marginTop: 0, marginBottom: 0 }}>
+                            Configure Schedule
+                          </h3>
+                          {/* Add explicit close button */}
+                          <Button
+                            size="compact-xs"
+                            variant="subtle"
+                            onClick={() => setSchedulePopoverOpened(false)}
+                            style={{ marginLeft: "auto" }}
+                          >
+                            ✕
+                          </Button>
+                        </div>
+
+                        <Select
+                          label="Frequency"
+                          placeholder="Select frequency"
+                          data={[
+                            { value: "hourly", label: "Hourly" },
+                            { value: "daily", label: "Daily" },
+                            { value: "weekly", label: "Weekly" },
+                            { value: "monthly", label: "Monthly" },
+                          ]}
+                        />
+
+                        <TimeInput
+                          label="Time"
+                          placeholder="Select time"
+                          mt="md"
+                        />
+
+                        <Group justify="flex-end" mt="xl">
+                          <Button
+                            variant="default"
+                            onClick={() => setSchedulePopoverOpened(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            color="blue"
+                            onClick={() => {
+                              console.log("Schedule submitted");
+                              setSchedulePopoverOpened(false);
+                              toggleShowSchedule();
+                            }}
+                          >
+                            Submit
+                          </Button>
+                        </Group>
+                      </div>
+                    </Popover.Dropdown>
+                  </Popover>
+                )}
+
+              {/* Query button as icon */}
+              {/* {(params?.id || true) &&
+                ((hasPermission("query_action_input") &&
+                  activeSession?.features?.includes("can_query")) ||
+                  activeSession?.author_id === identity?.email ||
+                  hasPermission("super_admin")) && (
+                  <Tooltip label="submit">
+                    <Button
+                      size="compact-xs"
+                      variant="filled"
+                      color="green"
+                      onClick={() => {
+                        const formKey = `form_${params?.id}`;
+                      }}
+                    >
+                      <ExternalSubmitButton
+                        record={{}}
+                        entity_type="sessions"
+                        action_form_key={`form_${params?.id}`}
+                        action="query"
+                      />
+                    </Button>
+                  </Tooltip>
+                )} */}
+              {(params?.id || true) &&
+                ((hasPermission("query_action_input") &&
+                  activeSession?.features?.includes("can_queue")) ||
+                  activeSession?.author_id === identity?.email ||
+                  hasPermission("super_admin")) && (
+                  <Tooltip label="submit">
+                    <Button
+                      size="compact-xs"
+                      variant="filled"
+                      color="green"
+                      onClick={() => {
+                        const formKey = `form_${params?.id}`;
+                      }}
+                    >
+                      <ExternalSubmitButton
+                        record={{}}
+                        entity_type="sessions"
+                        action_form_key={`form_${params?.id}`}
+                        action="queue"
+                      />
+                    </Button>
+                  </Tooltip>
+                )}
+              {(params?.id || true) &&
+                ((hasPermission("query_action_input") &&
+                  activeSession?.features?.includes("can_query")) ||
+                  activeSession?.author_id === identity?.email ||
+                  hasPermission("super_admin")) && (
+                  <Tooltip label="submit">
+                    <Button
+                      size="compact-xs"
+                      variant="filled"
+                      color="green"
+                      onClick={() => {
+                        const formKey = `form_${params?.id}`;
+                      }}
+                    >
+                      <ExternalSubmitButton
+                        record={{}}
+                        entity_type="sessions"
+                        action_form_key={`form_${params?.id}`}
+                        action="query"
+                      />
+                    </Button>
+                  </Tooltip>
+                )}
+              {(params?.id || true) &&
+                ((hasPermission("query_action_input") &&
+                  activeSession?.features?.includes("can_query")) ||
+                  activeSession?.author_id === identity?.email ||
+                  hasPermission("super_admin")) && (
+                  <Tooltip label="submit">
+                    <Button
+                      size="compact-xs"
+                      variant="filled"
+                      color="green"
+                      onClick={() => {
+                        const formKey = `form_${params?.id}`;
+                      }}
+                    >
+                      <ExternalSubmitButton
+                        record={{}}
+                        entity_type="sessions"
+                        action_form_key={`form_${params?.id}`}
+                        action="nlq"
+                      />
+                    </Button>
+                  </Tooltip>
+                )}
+              {(params?.id || true) &&
+                ((hasPermission("query_action_input") &&
+                  activeSession?.features?.includes("can_query")) ||
+                  activeSession?.author_id === identity?.email ||
+                  hasPermission("super_admin")) && (
+                  <Tooltip label="submit">
+                    <Button
+                      size="compact-xs"
+                      variant="filled"
+                      color="green"
+                      onClick={() => {
+                        const formKey = `form_${params?.id}`;
+                      }}
+                    >
+                      <ExternalSubmitButton
+                        record={{}}
+                        entity_type="sessions"
+                        action_form_key={`form_${params?.id}`}
+                        action="plan"
+                      />
+                    </Button>
+                  </Tooltip>
+                )}
+            </div>
           </RichTextEditor.ControlsGroup>
         </RichTextEditor.Toolbar>
 
@@ -1715,9 +2155,9 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
       </RichTextEditor>
 
       {/* Debug component - only in development */}
-      {process.env.NODE_ENV !== "production" && (
+      {/* {process.env.NODE_ENV !== "production" && (
         <EditorDebugInfo editor={editor} />
-      )}
+      )} */}
     </div>
   );
 };
@@ -1725,14 +2165,31 @@ const NaturalLanguageEditor: React.FC<NaturalLanguageEditorProps> = ({
 export default NaturalLanguageEditor;
 
 export const NaturalLanguageEditorFormInput = (props: any): JSX.Element => {
+  const fieldName =
+    props?.schema?.title?.toLowerCase().replace(/ /g, "_") || props?.label;
+
+  // Prepare focus and blur handlers
+  const handleFocus = () => {
+    props.onFocus(fieldName);
+  };
+
+  const handleBlur = () => {
+    if (props.onBlur) {
+      props.onBlur(fieldName);
+    }
+  };
+
   return (
     <>
-      {props?.title && <div>{props?.title}</div>}
+      {/* {props?.title && <div>{props?.title}</div>} */}
 
       <NaturalLanguageEditor
         record={props?.record}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         height={props?.height || "200px"}
         action_input_form_values_key={props?.action_input_form_values_key}
+        onChange={props?.onChange}
       />
     </>
   );
@@ -1756,75 +2213,4 @@ declare global {
     currentEditorId?: string;
     editorPersistenceDebugger: any;
   }
-}
-
-// Debug component for real-time monitoring
-function EditorDebugInfo({
-  editor,
-}: {
-  editor: Editor | null;
-}): JSX.Element | null {
-  const [debugState, setDebugState] = useState<DebugState>({
-    isEmpty: true,
-    contentLength: 0,
-    hasParagraph: false,
-    updatingRef: false,
-    selectionFrom: 0,
-    selectionTo: 0,
-  });
-
-  useEffect(() => {
-    if (!editor) return;
-
-    // Set up periodic state check
-    const interval = setInterval(() => {
-      const content = editor.getJSON();
-      const isEmpty =
-        !content || !content.content || content.content.length === 0;
-      const hasParagraph = content?.content?.some(
-        (node) => node.type === "paragraph"
-      );
-      const { from, to } = editor.state.selection;
-
-      setDebugState({
-        isEmpty,
-        contentLength: content?.content?.length || 0,
-        hasParagraph: hasParagraph || false,
-        updatingRef:
-          (window as any).editorInstance?.isUpdatingRef?.current || false,
-        selectionFrom: from,
-        selectionTo: to,
-      });
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, [editor]);
-
-  if (!editor) return null;
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: "10px",
-        right: "10px",
-        backgroundColor: "rgba(0,0,0,0.8)",
-        color: "white",
-        padding: "10px",
-        borderRadius: "4px",
-        fontSize: "12px",
-        zIndex: 9999,
-      }}
-    >
-      <div>Editor ready: {editor ? "✅" : "❌"}</div>
-      <div>isEmpty: {debugState.isEmpty ? "✅" : "❌"}</div>
-      <div>contentLength: {debugState.contentLength}</div>
-      <div>hasParagraph: {debugState.hasParagraph ? "✅" : "❌"}</div>
-      <div>updatingRef: {debugState.updatingRef ? "✅" : "❌"}</div>
-      <div>
-        selection: {debugState.selectionFrom}-{debugState.selectionTo}
-      </div>
-      <button onClick={() => console.log(editor.getJSON())}>Log Content</button>
-    </div>
-  );
 }

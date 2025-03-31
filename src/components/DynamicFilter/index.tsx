@@ -24,7 +24,8 @@ export interface Variable {
     | "multiselect"
     | "search"
     | "multisearch"
-    | "attachments";
+    | "attachments"
+    | "file";
 }
 
 export interface Filter {
@@ -148,6 +149,8 @@ const DynamicFilter: React.FC<DynamicFilterProps> = ({
         break;
       case "attachments":
         component = "FileInput";
+      case "file":
+        component = "FileTree";
         break;
     }
 

@@ -197,6 +197,9 @@ const FilterInputTriplet = React.memo(
         case "attachments":
           componentType = "FileInput";
           break;
+        case "string":
+          componentType = "TextInput";
+          break;
         default:
           componentType = "TextInput";
       }
@@ -488,8 +491,52 @@ const FilterInputTriplet = React.memo(
 
     // Event handler to aggressively stop propagation
     const stopPropagation = (e: React.SyntheticEvent) => {
-      e.stopPropagation();
-      e.preventDefault(); // Also prevent default if necessary
+      e.stopPropagation(); // Always stop propagation
+
+      // Check if the event target is an input field
+      const target = e.target as HTMLElement;
+      const isInputField =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      // Only prevent default if not clicking on an input field
+      if (!isInputField) {
+        e.preventDefault();
+      }
+    };
+
+    // Helper function to handle changes for different input types
+    const handleInputChange = (newValue: any, fieldHandler: any) => {
+      // Skip if we're already updating
+      if (isUpdatingRef.current) return;
+
+      // Extract the appropriate value based on input type
+      let processedValue = newValue;
+
+      // Handle TextInput event objects (currentTarget.value)
+      if (
+        variable.type === "string" &&
+        typeof newValue === "object" &&
+        newValue !== null &&
+        "currentTarget" in newValue
+      ) {
+        processedValue = newValue.currentTarget.value;
+      }
+      // Handle SearchInput event objects (target.value)
+      else if (
+        (variable.type === "search" || variable.type === "multisearch") &&
+        typeof newValue === "object" &&
+        newValue !== null &&
+        "target" in newValue
+      ) {
+        processedValue = newValue.target.value;
+      }
+      // Handle direct values (Select, DateInput, etc.)
+      // No transformation needed
+
+      // Pass the processed value to field handler
+      fieldHandler(processedValue);
     };
 
     // Compact mode renders differently
@@ -523,6 +570,10 @@ const FilterInputTriplet = React.memo(
               {(field) => {
                 const isDateType =
                   variable.type === "date" || variable.type === "datetime";
+                const isTextType = variable.type === "string";
+                const isSearchType =
+                  variable.type === "search" || variable.type === "multisearch";
+
                 const processedValue = isDateType
                   ? field.state.value
                     ? safeParseDate(field.state.value)
@@ -534,10 +585,7 @@ const FilterInputTriplet = React.memo(
                     size="xs"
                     value={processedValue}
                     onChange={(newValue) => {
-                      // If we're not currently updating, proceed with the change
-                      if (!isUpdatingRef.current) {
-                        field.handleChange(newValue);
-                      }
+                      handleInputChange(newValue, field.handleChange);
                     }}
                     {...(variable.props || {})}
                     {...(isDateType
@@ -547,6 +595,7 @@ const FilterInputTriplet = React.memo(
                           popoverProps: { withinPortal: true },
                         }
                       : {})}
+                    data-field="value"
                     onClick={stopPropagation}
                     onMouseDown={stopPropagation}
                   />
@@ -572,10 +621,7 @@ const FilterInputTriplet = React.memo(
                           size="xs"
                           value={processedValue}
                           onChange={(newValue) => {
-                            // If we're not currently updating, proceed with the change
-                            if (!isUpdatingRef.current) {
-                              field.handleChange(newValue);
-                            }
+                            handleInputChange(newValue, field.handleChange);
                           }}
                           {...(variable.props || {})}
                           {...(isDateType
@@ -640,6 +686,10 @@ const FilterInputTriplet = React.memo(
             {(field) => {
               const isDateType =
                 variable.type === "date" || variable.type === "datetime";
+              const isTextType = variable.type === "string";
+              const isSearchType =
+                variable.type === "search" || variable.type === "multisearch";
+
               const processedValue = isDateType
                 ? field.state.value
                   ? safeParseDate(field.state.value)
@@ -652,10 +702,7 @@ const FilterInputTriplet = React.memo(
                     <Component
                       value={processedValue}
                       onChange={(newValue) => {
-                        // If we're not currently updating, proceed with the change
-                        if (!isUpdatingRef.current) {
-                          field.handleChange(newValue);
-                        }
+                        handleInputChange(newValue, field.handleChange);
                       }}
                       {...(variable.props || {})}
                       {...(isDateType
@@ -666,6 +713,7 @@ const FilterInputTriplet = React.memo(
                           }
                         : {})}
                       size="sm"
+                      data-field="value"
                       onClick={stopPropagation}
                       onMouseDown={stopPropagation}
                     />
@@ -709,10 +757,7 @@ const FilterInputTriplet = React.memo(
                       <Component
                         value={processedValue}
                         onChange={(newValue) => {
-                          // If we're not currently updating, proceed with the change
-                          if (!isUpdatingRef.current) {
-                            field.handleChange(newValue);
-                          }
+                          handleInputChange(newValue, field.handleChange);
                         }}
                         {...(variable.props || {})}
                         {...(isDateType

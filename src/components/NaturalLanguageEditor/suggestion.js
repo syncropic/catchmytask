@@ -3,7 +3,7 @@ import { ReactRenderer } from "@tiptap/react";
 import tippy from "tippy.js";
 import SearchInput from "src/components/SearchInput";
 import variablesService from "src/services/variablesService";
-import { isEqual, cloneDeep } from "lodash"; // Added missing import
+import { isEqual, cloneDeep } from "lodash";
 import { getAllComponents } from "./componentRegistry";
 
 // Sample fallback variables if service fails
@@ -88,8 +88,8 @@ export default {
           (props) => {
             return (
               <SearchInput
-                placeholder="Search filters or elements"
-                description="Insert filter fields or other components"
+                placeholder="search elements"
+                description=""
                 handleOptionSubmit={(selectedItem) => {
                   if (!selectedItem) {
                     console.log("No item selected, closing popup");
@@ -266,6 +266,16 @@ export default {
                           );
                         }
 
+                        // IMPORTANT: First delete the trigger character from the document
+                        // This ensures the "/" is removed before component insertion
+                        if (from > 0) {
+                          props.editor
+                            .chain()
+                            .focus()
+                            .deleteRange({ from: from - 1, to: from })
+                            .run();
+                        }
+
                         // ENHANCED: Insert component with proper form key
                         if (isFilterTriplet) {
                           // Insert filter triplet with formKey
@@ -300,6 +310,70 @@ export default {
                           console.log(
                             `Component ${componentId} exists after insertion: ${componentExists}`
                           );
+
+                          // Auto-focus the inserted component
+                          // Auto-focus the inserted component
+                          try {
+                            // Find the newly inserted component in the DOM
+                            const componentElement = document.querySelector(
+                              `[data-component-id="${componentId}"]`
+                            );
+
+                            if (componentElement) {
+                              // TARGET VALUE INPUT SPECIFICALLY - try different selectors in this order:
+
+                              // 1. Try to find an input with a data attribute related to value field
+                              let valueInput = componentElement.querySelector(
+                                '[data-field="value"]'
+                              );
+
+                              // 2. If not found, try to find input inside the value field container
+                              if (!valueInput) {
+                                const valueFieldContainer =
+                                  componentElement.querySelector(
+                                    ".form-field-value"
+                                  );
+                                if (valueFieldContainer) {
+                                  valueInput =
+                                    valueFieldContainer.querySelector(
+                                      "input, textarea"
+                                    );
+                                }
+                              }
+
+                              // 3. If still not found, try more generic selectors based on structure
+                              if (!valueInput) {
+                                // Try getting the second input element (assumes operator is first, value is second)
+                                const inputs =
+                                  componentElement.querySelectorAll(
+                                    'input, textarea, [contenteditable="true"]'
+                                  );
+                                if (inputs.length >= 2) {
+                                  valueInput = inputs[1]; // Second input is likely the value input
+                                }
+                              }
+
+                              // 4. If all else fails, find a textbox-like input as they're usually the value inputs
+                              if (!valueInput) {
+                                valueInput = componentElement.querySelector(
+                                  'input[type="text"], input:not([type="checkbox"]), textarea'
+                                );
+                              }
+
+                              if (valueInput) {
+                                // Focus and click the value input element
+                                setTimeout(() => {
+                                  valueInput.focus();
+                                  valueInput.click();
+                                }, 100); // Slightly longer timeout to ensure component is fully rendered
+                              }
+                            }
+                          } catch (e) {
+                            console.warn(
+                              "Error auto-focusing component value field:",
+                              e
+                            );
+                          }
 
                           // Keep block in place longer for filter triplets
                           const blockDuration = isFilterTriplet ? 1000 : 500;
@@ -388,7 +462,16 @@ export default {
                           }, blockDuration);
                         }, 100);
                       } else {
-                        // Handle as a regular mention
+                        // For regular mentions, we still need to remove the trigger character
+                        if (from > 0) {
+                          props.editor
+                            .chain()
+                            .focus()
+                            .deleteRange({ from: from - 1, to: from })
+                            .run();
+                        }
+
+                        // Then insert the selection
                         props.command(selectedItem);
                         insertionInProgressFlag = false;
                       }
@@ -407,6 +490,8 @@ export default {
                 }}
                 query_name="fetch elements"
                 data_items={[]}
+                autoFocus={true} // Auto-focus the search input when dropdown opens
+                compact={true} // Use compact view for dropdown items
               />
             );
           },
@@ -431,6 +516,19 @@ export default {
             console.log("Tippy popup hidden");
           },
         });
+
+        // Explicitly focus the search input after popup is shown
+        setTimeout(() => {
+          try {
+            // Find the search input in the popup
+            const searchInput = popup[0]?.popper?.querySelector("input");
+            if (searchInput) {
+              searchInput.focus();
+            }
+          } catch (e) {
+            console.warn("Error focusing search input:", e);
+          }
+        }, 50);
       },
 
       onUpdate(props) {
@@ -452,6 +550,18 @@ export default {
         popup[0].setProps({
           getReferenceClientRect: props.clientRect,
         });
+
+        // Re-focus the search input on every update
+        setTimeout(() => {
+          try {
+            const searchInput = popup[0]?.popper?.querySelector("input");
+            if (searchInput) {
+              searchInput.focus();
+            }
+          } catch (e) {
+            console.warn("Error re-focusing search input:", e);
+          }
+        }, 10);
       },
 
       onKeyDown(props) {

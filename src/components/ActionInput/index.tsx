@@ -105,6 +105,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
   success_message_code = "query_success_results",
   fields,
   title,
+  options,
   action_form_key = "general",
 }) => {
   const {
@@ -150,6 +151,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     showFields,
     showSchedule,
     setDisplaySessionActionInput,
+    setFocusedEditor,
   } = useAppStore();
 
   let global_input_mode_developer =
@@ -1389,6 +1391,44 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
     const fieldName =
       fieldData.name || fieldData?.title.toLowerCase().replace(/ /g, "_");
 
+    // Determine if this field is an editor and needs focus handling
+    const isEditor = [
+      "MonacoEditorFormInput",
+      "NaturalLanguageEditorFormInput",
+    ].includes(fieldData.component);
+
+    // Prepare focus handler for editor components
+    const handleFocus = isEditor
+      ? () => {
+          console.log(`Focus on ${fieldName}`); // Add this for debugging
+          // if (record?.setFocusedEditor && fieldName) {
+          //   record.setFocusedEditor(fieldName);
+          // }
+          setFocusedEditor(fieldName);
+        }
+      : undefined;
+
+    // Prepare focus handler for editor components
+    const handleBlur = isEditor
+      ? () => {
+          console.log(`Blur on ${fieldName}`); // Add this for debugging
+          // if (record?.setFocusedEditor && fieldName) {
+          //   record.setFocusedEditor(fieldName);
+          // }
+          setFocusedEditor("null");
+        }
+      : undefined;
+
+    // Dynamically override height for editor components
+    const dynamicProps = { height: options?.editorHeight };
+    // if (
+    //   isEditor &&
+    //   record?.editorHeight &&
+    //   ["natural_language_query", "structured_query"].includes(fieldName)
+    // ) {
+    //   dynamicProps.height = record.editorHeight;
+    //   console.log(`Setting height for ${fieldName} to ${record.editorHeight}`); // Debug log
+    // }
     return (
       <div key={fieldData.key || fieldData.title} className="mb-4">
         <form.Field
@@ -1423,7 +1463,11 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 //     ? new Date(field.state.value)
                 //     : field.state.value
                 // }
-                onBlur={field.handleBlur}
+                onBlur={(e: any) => {
+                  field.handleBlur();
+                  if (handleBlur) handleBlur();
+                }}
+                onFocus={handleFocus}
                 action_input_form_values_key={action_input_form_values_key}
                 form_id={formId}
                 record={record}
@@ -1445,6 +1489,7 @@ export const ActionInputForm: React.FC<DynamicFormProps> = ({
                 form={form}
                 isLoading={mutationIsLoading}
                 {...(fieldData.props || {})}
+                {...dynamicProps}
                 {...(!["MultiSelect", "DateInput"].includes(fieldData.component)
                   ? { value: field.state.value }
                   : {})}
@@ -1669,6 +1714,7 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   action_type,
   entity,
   record,
+  options,
   collection,
   record_query,
   exclude_components = [],
@@ -1685,7 +1731,7 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   action,
   include_form_components,
   focused_item,
-  read_record_mode,
+  read_record_mode = "remote",
   action_form_key,
 }) => {
   // let data_model_state = {
@@ -1742,10 +1788,13 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
   //     />
   //   );
   // if (dataModelIsLoading || recordIsLoading) return <div>Loading...</div>;
-  let record_data = read_record_mode
-    ? recordData
-    : recordData?.data?.find((item: any) => item?.message?.code === record?.id)
-        ?.data[0];
+  // let record_data = read_record_mode
+  //   ? recordData
+  //   : recordData?.data?.find((item: any) => item?.message?.code === record?.id)
+  //       ?.data[0];
+  let record_data = recordData?.data?.find(
+    (item: any) => item?.message?.code === record?.id
+  )?.data[0];
   // let data_model_data = dataModelData
   //   ? dataModelData?.data?.find(
   //       (item: any) =>
@@ -1774,6 +1823,7 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
         value={{
           // record: record,
           // recordData: recordData,
+          // read_record_mode: read_record_mode,
           record_data: record_data,
           // data_model_data: data_model_data,
           // record_data: record_data?.variables,
@@ -1799,6 +1849,7 @@ export const ActionInputWrapper: React.FC<ActionInputWrapperProps> = ({
             data_model={data_model_data}
             record={record_data}
             records={records}
+            options={options}
             action={action}
             children={children}
             focused_item={focused_item}

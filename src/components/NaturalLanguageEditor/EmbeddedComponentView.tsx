@@ -806,13 +806,18 @@ export const EmbeddedComponentView = React.memo(
     }, [isFilterTriplet, componentProps, formKey, id]);
 
     const handleContainerEvents = useCallback((e: React.SyntheticEvent) => {
-      // Only stop propagation for click and mouse events to prevent editor selection issues
-      // DO NOT prevent propagation for keyboard events which are needed for typing
+      // Check if the event target is an input field
+      const target = e.target as HTMLElement;
+      const isInputField =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
       if (e.type === "click" || e.type === "mousedown") {
-        e.stopPropagation();
-        // Only prevent default for mousedown to avoid selection issues
-        // but allow other events to behave normally
-        if (e.type === "mousedown") {
+        e.stopPropagation(); // Always stop propagation
+
+        // Only prevent default if not clicking on an input field
+        if (e.type === "mousedown" && !isInputField) {
           e.preventDefault();
         }
       }
