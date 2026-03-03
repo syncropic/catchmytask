@@ -1,0 +1,13 @@
+pub mod cli;
+pub mod config;
+pub mod error;
+pub mod model;
+pub mod parser;
+pub mod storage;
+pub mod state_machine;
+pub mod index;
+pub mod format;
+pub mod git;
+pub mod discovery;
+pub mod registry;
+pub mod commands;
