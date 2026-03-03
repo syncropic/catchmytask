@@ -1,6 +1,0 @@
-- name: deployment
-  hosts: sst-automations-vm-001
-  become: yes
-
-  roles:
-    - stormy

@@ -1,8 +1,0 @@
-.viewport {
-  display: flex;
-  flex-direction: column-reverse; /* Reverses the scroll direction */
-}
-
-.horizontalScrollbar {
-  order: -1; /* Moves the horizontal scrollbar to the top */
-}
