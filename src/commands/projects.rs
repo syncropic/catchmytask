@@ -52,14 +52,15 @@ fn list_projects(current_work_dir: Option<&Path>, json: bool) -> Result<()> {
     }
 
     if registry.projects.is_empty() {
-        eprintln!("No projects registered. Use 'work projects add <path>' or 'work init' to register.");
+        eprintln!("No projects registered. Use 'cmt projects add <path>' or 'cmt init' to register.");
         return Ok(());
     }
 
     // Table header
+    let headers = ["", "NAME", "PREFIX", "ITEMS", "PATH"];
     println!(
         "{:<2} {:<20} {:<8} {:<6} {}",
-        "", "NAME", "PREFIX", "ITEMS", "PATH"
+        headers[0], headers[1], headers[2], headers[3], headers[4]
     );
     println!("{}", "-".repeat(72));
 

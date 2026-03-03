@@ -28,7 +28,8 @@ export function AppPage() {
     if (mode === 'local') {
       hasConfig().then((exists) => setShowOnboarding(!exists))
     } else {
-      setShowOnboarding(false)
+      // Remote mode never shows onboarding
+      Promise.resolve().then(() => setShowOnboarding(false))
     }
   }, [mode])
 

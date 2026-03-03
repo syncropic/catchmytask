@@ -84,6 +84,7 @@ impl Registry {
     }
 
     /// Find a project by name.
+    #[allow(dead_code)]
     pub fn find_by_name(&self, name: &str) -> Option<&ProjectEntry> {
         self.projects.iter().find(|p| p.name == name)
     }
