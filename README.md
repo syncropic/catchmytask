@@ -11,19 +11,19 @@ A work management system for humans and AI agents.
 
 ```bash
 # Quick install (Linux/macOS)
-curl -fsSL https://raw.githubusercontent.com/dpwanjala/catchmytask/master/install.sh | sh
+curl -fsSL https://get.syncropic.com/cmt | sh
 
 # Install a specific version
-curl -fsSL https://raw.githubusercontent.com/dpwanjala/catchmytask/master/install.sh | VERSION=v0.1.0 sh
+curl -fsSL https://get.syncropic.com/cmt | VERSION=v0.1.0 sh
 
 # Install to /usr/local/bin instead of ~/.local/bin
-curl -fsSL https://raw.githubusercontent.com/dpwanjala/catchmytask/master/install.sh | sh -s -- --global
+curl -fsSL https://get.syncropic.com/cmt | sh -s -- --global
 
 # From source (requires Rust toolchain)
-cargo install --git https://github.com/dpwanjala/catchmytask.git
+cargo install --git https://github.com/syncropic/catchmytask.git
 ```
 
-Pre-built binaries are available for Linux (x86_64, aarch64), macOS (x86_64, aarch64), and Windows (x86_64) on the [Releases](https://github.com/dpwanjala/catchmytask/releases) page.
+Pre-built binaries are available for Linux (x86_64, aarch64), macOS (x86_64, aarch64), and Windows (x86_64) on the [Releases](https://github.com/syncropic/catchmytask/releases) page.
 
 ## Quick Start
 

@@ -1,13 +1,13 @@
 #!/bin/sh
 # Install script for catchmytask (cmt)
-# Usage: curl -fsSL https://raw.githubusercontent.com/dpwanjala/catchmytask/master/install.sh | sh
+# Usage: curl -fsSL https://get.syncropic.com/cmt | sh
 #
 # Options (via environment variables):
 #   VERSION          - version to install (default: latest)
 #   CMT_INSTALL_DIR - install directory (default: ~/.local/bin)
 set -eu
 
-REPO="dpwanjala/catchmytask"
+REPO="syncropic/catchmytask"
 BINARY="cmt"
 VERSION="${VERSION:-latest}"
 INSTALL_DIR="${CMT_INSTALL_DIR:-}"

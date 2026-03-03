@@ -10,24 +10,23 @@ export function Install() {
         </div>
 
         <div className="space-y-4">
-          {/* From source */}
+          {/* Quick install */}
           <div className="bg-bg-secondary border border-border-default rounded-lg p-4 space-y-2">
             <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-              Build from source
+              Quick install (Linux / macOS)
             </h3>
             <pre className="text-xs font-mono text-green-400 bg-bg-primary rounded p-3 overflow-x-auto">
-              cargo install --path .
+              curl -fsSL https://get.syncropic.com/cmt | sh
             </pre>
           </div>
 
-          {/* From GitHub */}
+          {/* From source */}
           <div className="bg-bg-secondary border border-border-default rounded-lg p-4 space-y-2">
             <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-              From GitHub releases
+              From source
             </h3>
             <pre className="text-xs font-mono text-green-400 bg-bg-primary rounded p-3 overflow-x-auto">
-{`# Download the latest release for your platform
-# https://github.com/AiWorkManager/catchmytask/releases`}
+              cargo install --git https://github.com/syncropic/catchmytask.git
             </pre>
           </div>
 
