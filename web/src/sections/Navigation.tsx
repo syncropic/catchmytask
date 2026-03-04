@@ -31,7 +31,7 @@ function ThemeToggle() {
 
 export function Navigation() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-bg-primary/80 backdrop-blur-md border-b border-border-subtle">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-bg-primary border-b border-border-subtle">
       <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
         <a href="/" className="flex items-center gap-2">
           <div className="w-6 h-6 rounded bg-accent flex items-center justify-center text-white text-xs font-bold">
