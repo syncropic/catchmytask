@@ -44,7 +44,7 @@ $ cmt serve  # Launch web UI`}
           </div>
 
           {/* Browser */}
-          <div className="bg-gradient-to-r from-blue-950/50 to-purple-950/50 border border-blue-800/50 rounded-lg p-4 space-y-2">
+          <div className="bg-blue-950/50 border border-blue-800/50 rounded-lg p-4 space-y-2">
             <h3 className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
               Or just use the browser
             </h3>

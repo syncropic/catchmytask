@@ -10,7 +10,7 @@ export function Hero() {
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary leading-tight tracking-tight">
           Work management for
           <br />
-          <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <span className="text-blue-400">
             humans and AI agents
           </span>
         </h1>
