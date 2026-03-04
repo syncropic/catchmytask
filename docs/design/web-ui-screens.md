@@ -193,7 +193,7 @@ Normal:          Hover:           Selected:        Agent-active:
 │                     │   [+ Create your first item]     │                       │
 │                     │                                  │                       │
 │                     │   or from the CLI:               │                       │
-│                     │   $ work add "Fix the bug" -p h  │                       │
+│                     │   $ cmt add "Fix the bug" -p h  │                       │
 │                     │                                  │                       │
 │                     └──────────────────────────────────┘                       │
 │                                                                                │
@@ -696,8 +696,8 @@ Three modes: default (search everything), `>` prefix (commands only),
 │    ▸ Create new item                                    C       │
 │    ▸ Switch to Board                                   ⌘1      │
 │    ▸ Switch to List                                    ⌘2      │
-│    ▸ Validate project (work check)                              │
-│    ▸ Rebuild index (work reindex)                               │
+│    ▸ Validate project (cmt check)                              │
+│    ▸ Rebuild index (cmt reindex)                               │
 │                                                                 │
 │  ── Saved Views ────────────────────────────────────────────    │
 │    ▸ My items                                                   │
@@ -822,17 +822,17 @@ Changes propagate to UI via WebSocket file watcher.
 │                                                                             │
 │  CatchMyTask Terminal                                    [Clear] [↗ Pop]  │
 │                                                                             │
-│  $ work list -s active --json                                               │
+│  $ cmt list -s active --json                                               │
 │  [                                                                          │
 │    {"id": "CMT-0045", "title": "Refactor storage layer", ...},              │
 │    {"id": "CMT-0046", "title": "Index performance", ...},                   │
 │    ...                                                                      │
 │  ]                                                                          │
 │                                                                             │
-│  $ work status CMT-0045 blocked --actor alice                               │
+│  $ cmt status CMT-0045 blocked --actor alice                               │
 │  Status changed: active → blocked                                          │
 │                                                                             │
-│  $ work add "Review agent output for CMT-0041" -p high --tag review         │
+│  $ cmt add "Review agent output for CMT-0041" -p high --tag review         │
 │  Created CMT-0055: Review agent output for CMT-0041                          │
 │                                                                             │
 │  $ █                                                                        │
@@ -861,7 +861,7 @@ like VS Code's Problems panel. Can coexist with main content.
 │  ❌ CMT-0047  blocked_reason is required when status is "blocked"     [▸]  │
 │  ⚠ CMT-0052  No assignee (recommended before leaving inbox)          [▸]   │
 │                                                                            │
-│  Run: work check --fix to auto-fix where possible                          │
+│  Run: cmt check --fix to auto-fix where possible                          │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 

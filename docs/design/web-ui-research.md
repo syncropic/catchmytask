@@ -5,7 +5,7 @@
 The CLI is the primary interface for agents and power users. But work management is
 inherently collaborative and visual. A web UI serves actors that the CLI cannot:
 
-- **Non-technical stakeholders** who need visibility into work status
+- **Non-technical stakeholders** who need visibility into cmt status
 - **Managers/leads** who need dashboards and cross-cutting views
 - **Teams** who need shared boards, filters, and real-time updates
 - **Mobile users** who need quick status checks and triage on the go
@@ -302,7 +302,7 @@ operating conditions, not crashes. The UI shows clear diagnostics and recovery a
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  Browser     │────▶│  work serve  │────▶│  .cmt/      │
+│  Browser     │────▶│  cmt serve  │────▶│  .cmt/      │
 │  (React SPA) │◀────│  (Rust HTTP) │◀────│  files + db  │
 └──────────────┘     └──────────────┘     └──────────────┘
      Static SPA       localhost:4200       Source of truth
@@ -321,19 +321,19 @@ operating conditions, not crashes. The UI shows clear diagnostics and recovery a
 The API mirrors the CLI exactly:
 
 ```
-GET  /api/items                    → work list --json
-GET  /api/items/:id                → work show :id --json
-POST /api/items                    → work add --json (body = fields)
-PUT  /api/items/:id                → work edit :id --json (body = changes)
-PUT  /api/items/:id/status/:state  → work status :id :state --json
-PUT  /api/items/:id/done           → work done :id --json
-DEL  /api/items/:id                → work delete :id --json
-POST /api/items/:id/archive        → work archive :id --json
-GET  /api/search?q=...             → work search "..." --json
-GET  /api/config                   → work config --json
-GET  /api/events/:id               → work log :id --json
-POST /api/check                    → work check --json
-POST /api/reindex                  → work reindex --json
+GET  /api/items                    → cmt list --json
+GET  /api/items/:id                → cmt show :id --json
+POST /api/items                    → cmt add --json (body = fields)
+PUT  /api/items/:id                → cmt edit :id --json (body = changes)
+PUT  /api/items/:id/status/:state  → cmt status :id :state --json
+PUT  /api/items/:id/done           → cmt done :id --json
+DEL  /api/items/:id                → cmt delete :id --json
+POST /api/items/:id/archive        → cmt archive :id --json
+GET  /api/search?q=...             → cmt search "..." --json
+GET  /api/config                   → cmt config --json
+GET  /api/events/:id               → cmt log :id --json
+POST /api/check                    → cmt check --json
+POST /api/reindex                  → cmt reindex --json
 ```
 
 WebSocket endpoint for live updates:

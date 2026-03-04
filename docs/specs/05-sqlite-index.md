@@ -172,16 +172,16 @@ The following indexes accelerate the most common query patterns. They are create
 the tables during initial setup.
 
 ```sql
--- Status is the most common filter (work list --status active)
+-- Status is the most common filter (cmt list --status active)
 CREATE INDEX idx_items_status ON items(status);
 
--- Type filter (work list --type bug)
+-- Type filter (cmt list --type bug)
 CREATE INDEX idx_items_type ON items(type);
 
--- Priority filter and sort (work list --priority high, work list --sort priority)
+-- Priority filter and sort (cmt list --priority high, cmt list --sort priority)
 CREATE INDEX idx_items_priority ON items(priority);
 
--- Assignee filter (work list --assignee alice)
+-- Assignee filter (cmt list --assignee alice)
 CREATE INDEX idx_items_assignee ON items(assignee);
 
 -- Parent lookup for hierarchy queries (find all children of CMT-10)
@@ -193,17 +193,17 @@ CREATE INDEX idx_items_archived ON items(archived);
 -- Created timestamp for date-range filtering and default sort order
 CREATE INDEX idx_items_created ON items(created_at);
 
--- Due date for deadline queries (work list --overdue, work list --due-before 2026-03-01)
+-- Due date for deadline queries (cmt list --overdue, cmt list --due-before 2026-03-01)
 CREATE INDEX idx_items_due ON items(due);
 
 -- Compound index for the most common default query:
 -- "list active (non-archived) items sorted by created date"
 CREATE INDEX idx_items_active_created ON items(archived, status, created_at);
 
--- Tag lookups by namespace (work list --tag team:backend)
+-- Tag lookups by namespace (cmt list --tag team:backend)
 CREATE INDEX idx_item_tags_tag ON item_tags(tag);
 
--- Tag lookups by namespace alone (work list --tag-ns team)
+-- Tag lookups by namespace alone (cmt list --tag-ns team)
 CREATE INDEX idx_item_tags_namespace ON item_tags(namespace);
 
 -- Dependency reverse lookup: "what items depend on X?" (blocks query)
@@ -349,7 +349,7 @@ When the CLI modifies a work item, it writes to both the file and the index in a
 operation. The file write happens first; if it fails, the index is not updated.
 
 ```
-CLI command (e.g., work status CMT-42 done)
+CLI command (e.g., cmt status CMT-42 done)
   |
   v
 1. Read file from disk
@@ -959,7 +959,7 @@ If the `id_counters` table becomes inconsistent (e.g., a counter falls behind th
 maximum ID), `cmt reindex` resets all counters by scanning every item:
 
 ```sql
--- During work reindex, step 11
+-- During cmt reindex, step 11
 DELETE FROM id_counters;
 INSERT INTO id_counters (prefix, next_number)
 SELECT
@@ -1035,7 +1035,7 @@ Agents should set `CMT_ACTOR=agent-name` in their environment for proper attribu
 ### 8.5 Querying Events
 
 ```sql
--- Get all events for an item (work log CMT-42)
+-- Get all events for an item (cmt log CMT-42)
 SELECT timestamp, actor, action, detail
 FROM events
 WHERE item_id = ?1
@@ -1259,7 +1259,7 @@ If any schema issue arises that migrations cannot resolve, the user can always:
 
 ```bash
 rm .cmt/.index.db
-work reindex
+cmt reindex
 ```
 
 This is safe because the index is entirely derived from files. The `cmt reindex` command

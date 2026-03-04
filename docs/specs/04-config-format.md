@@ -372,9 +372,9 @@ and `false`, `0`, `no` (falsy). Case-insensitive.
 CLI flags override everything. They are documented in spec 03 (CLI Interface). Examples:
 
 ```bash
-work add "Fix bug" --priority high      # overrides defaults.priority
-work add "New feature" --type feature   # overrides defaults.type
-work list --dir /other/project/.work    # overrides CMT_DIR
+cmt add "Fix bug" --priority high      # overrides defaults.priority
+cmt add "New feature" --type feature   # overrides defaults.type
+cmt list --dir /other/project/.work    # overrides CMT_DIR
 ```
 
 ### 4.3 Resolution Example
@@ -421,16 +421,16 @@ follows the progressive capability principle: zero-friction start, power feature
 ### 5.2 `cmt init` Options
 
 ```bash
-work init                          # Basic init, infer project name from directory
-work init --name "My Project"       # Set project name
-work init --prefix PROJ             # Set custom prefix
-work init --name "Bug Tracker" --prefix BUG
+cmt init                          # Basic init, infer project name from directory
+cmt init --name "My Project"       # Set project name
+cmt init --prefix PROJ             # Set custom prefix
+cmt init --name "Bug Tracker" --prefix BUG
 ```
 
 ### 5.3 `cmt init` Behavior
 
 1. Check if `.cmt/` already exists. If so, print error and exit: `"A .cmt/ directory
-   already exists. Use 'work init --force' to reinitialize (preserves existing items)."`.
+   already exists. Use 'cmt init --force' to reinitialize (preserves existing items)."`.
 2. Create the `.cmt/` directory and subdirectories.
 3. Write `config.yml` with version and project section.
 4. Write `.gitignore` inside `.cmt/`.
@@ -450,7 +450,7 @@ After `cmt init`, the `.cmt/` directory contains:
 
 ```
 .cmt/
-  config.yml           # Project configuration (created by work init)
+  config.yml           # Project configuration (created by cmt init)
   items/               # Active work items (empty after init)
   archive/             # Completed/cancelled items (empty after init)
   templates/           # Work item templates (empty after init)

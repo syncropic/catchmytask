@@ -85,7 +85,7 @@ Creates the `.cmt/` directory structure and a minimal `config.yml`.
 #### Syntax
 
 ```
-work init [options]
+cmt init [options]
 ```
 
 #### Options
@@ -137,7 +137,7 @@ the YAML frontmatter and optional body.
 #### Syntax
 
 ```
-work add <title> [options]
+cmt add <title> [options]
 ```
 
 The `<title>` argument is required and positional. It is the work item title (max 200 characters,
@@ -213,7 +213,7 @@ List work items with filtering, sorting, and format options.
 #### Syntax
 
 ```
-work list [options]
+cmt list [options]
 ```
 
 #### Filter Options
@@ -322,7 +322,7 @@ Displays the full content of a work item, including metadata and body.
 #### Syntax
 
 ```
-work show <ID> [options]
+cmt show <ID> [options]
 ```
 
 #### Options
@@ -405,7 +405,7 @@ the command line).
 #### Syntax
 
 ```
-work edit <ID> [options]
+cmt edit <ID> [options]
 ```
 
 When invoked with no options other than the ID, the work item file is opened in `$EDITOR`.
@@ -483,7 +483,7 @@ Shorthand for transitioning one or more items to the `done` state.
 #### Syntax
 
 ```
-work done <ID> [<ID>...] [options]
+cmt done <ID> [<ID>...] [options]
 ```
 
 Accepts one or more IDs as positional arguments.
@@ -533,7 +533,7 @@ management.
 #### Syntax
 
 ```
-work status <ID> <new-status> [options]
+cmt status <ID> <new-status> [options]
 ```
 
 #### Options
@@ -590,7 +590,7 @@ Move items in terminal states from `.cmt/items/` to `.cmt/archive/`.
 #### Syntax
 
 ```
-work archive [<ID>...] [options]
+cmt archive [<ID>...] [options]
 ```
 
 #### Options
@@ -634,7 +634,7 @@ Search work item titles, bodies, and metadata using the SQLite FTS5 index.
 #### Syntax
 
 ```
-work search <query> [options]
+cmt search <query> [options]
 ```
 
 #### Options
@@ -693,7 +693,7 @@ or after manual file edits outside the `cmt` CLI.
 #### Syntax
 
 ```
-work reindex [options]
+cmt reindex [options]
 ```
 
 #### Options
@@ -737,7 +737,7 @@ Validate the entire `.cmt/` directory for consistency errors.
 #### Syntax
 
 ```
-work check [options]
+cmt check [options]
 ```
 
 #### Options
@@ -791,7 +791,7 @@ Permanently delete one or more work items from `.cmt/items/` or `.cmt/archive/`.
 #### Syntax
 
 ```
-work delete <ID> [<ID>...] [options]
+cmt delete <ID> [<ID>...] [options]
 ```
 
 #### Options
@@ -837,9 +837,9 @@ View and modify `.cmt/config.yml` settings.
 #### Syntax
 
 ```
-work config show [<section>]
-work config set <key> <value>
-work config get <key>
+cmt config show [<section>]
+cmt config set <key> <value>
+cmt config get <key>
 ```
 
 #### Subcommands
@@ -882,7 +882,7 @@ Display the history of changes for a work item, derived from git history.
 #### Syntax
 
 ```
-work log <ID> [options]
+cmt log <ID> [options]
 ```
 
 #### Options
@@ -941,7 +941,7 @@ Generate shell completion scripts for the specified shell.
 #### Syntax
 
 ```
-work completions <shell>
+cmt completions <shell>
 ```
 
 Where `<shell>` is one of: `bash`, `zsh`, `fish`, `powershell`, `elvish`.
@@ -964,13 +964,13 @@ Printed to stderr along with the completion script:
 
 ```
 # Bash: Add to ~/.bashrc:
-eval "$(work completions bash)"
+eval "$(cmt completions bash)"
 
 # Zsh: Add to ~/.zshrc:
-eval "$(work completions zsh)"
+eval "$(cmt completions zsh)"
 
 # Fish: Run once:
-work completions fish > ~/.config/fish/completions/work.fish
+cmt completions fish > ~/.config/fish/completions/work.fish
 ```
 
 ---
@@ -1003,7 +1003,7 @@ for piping to `awk`, `cut`, `grep`, `sort`, and other Unix text processing tools
 
 Example pipeline:
 ```bash
-work list -f simple | grep active | cut -f1 | xargs -I{} work done {}
+cmt list -f simple | grep active | cut -f1 | xargs -I{} cmt done {}
 ```
 
 ### 4.3 `json`
@@ -1146,7 +1146,7 @@ How `cmt` finds the `.cmt/` directory on startup.
 
 4. **Not found**: If no `.cmt/` directory is found, print a helpful error and exit with code 1:
    ```
-   error: No .cmt/ directory found. Run 'work init' to create one, or use --dir to specify a path.
+   error: No .cmt/ directory found. Run 'cmt init' to create one, or use --dir to specify a path.
    ```
 
 ### Init Exception
@@ -1182,7 +1182,7 @@ work:
 
 ```python
 # 1. Discover available work
-result = run("work list --json --status ready --assignee none --sort priority")
+result = run("cmt list --json --status ready --assignee none --sort priority")
 items = json.loads(result.stdout)
 
 if not items:
@@ -1192,25 +1192,25 @@ if not items:
 
 # 2. Claim a work item
 item = items[0]
-run(f"work edit {item['id']} --set assignee=agent-01")
+run(f"cmt edit {item['id']} --set assignee=agent-01")
 
 # 3. Transition to active
-result = run(f"work status {item['id']} active")
+result = run(f"cmt status {item['id']} active")
 if result.exit_code != 0:
     # Transition failed (item may have been claimed by another actor)
     log_error(result.stderr)
     continue
 
 # 4. Gather context
-result = run(f"work show {item['id']} --json")
+result = run(f"cmt show {item['id']} --json")
 item_detail = json.loads(result.stdout)
 
 # Check dependencies
 for dep_id in item_detail.get("depends_on", []):
-    dep = json.loads(run(f"work show {dep_id} --json").stdout)
+    dep = json.loads(run(f"cmt show {dep_id} --json").stdout)
     if dep["status"] not in ["done", "cancelled"]:
         # Dependency not met, block this item
-        run(f"work status {item['id']} blocked --reason 'Waiting on {dep_id}'")
+        run(f"cmt status {item['id']} blocked --reason 'Waiting on {dep_id}'")
         continue
 
 # 5. Execute the work
@@ -1218,13 +1218,13 @@ for dep_id in item_detail.get("depends_on", []):
 work_result = execute_work(item_detail)
 
 # 6. Update the item with results
-run(f"work edit {item['id']} --append '{work_result.summary}'")
+run(f"cmt edit {item['id']} --append '{work_result.summary}'")
 
 # 7. Mark as done
 if work_result.success:
-    run(f"work done {item['id']}")
+    run(f"cmt done {item['id']}")
 else:
-    run(f"work status {item['id']} blocked --reason '{work_result.error}'")
+    run(f"cmt status {item['id']} blocked --reason '{work_result.error}'")
 ```
 
 ### Agent-Friendly Error Messages
@@ -1743,21 +1743,21 @@ A single developer using `cmt` for personal task management with zero configurat
 
 ```bash
 # Initialize a project
-$ work init
+$ cmt init
 Initialized catchmytask in .cmt/ with prefix WM
 
 # Add some tasks
-$ work add "Fix the login bug"
+$ cmt add "Fix the login bug"
 CMT-0001
 
-$ work add "Update API documentation" --priority low
+$ cmt add "Update API documentation" --priority low
 CMT-0002
 
-$ work add "Implement password reset" --priority high --due 2026-03-01
+$ cmt add "Implement password reset" --priority high --due 2026-03-01
 CMT-0003
 
 # List active tasks
-$ work list
+$ cmt list
 ID        STATUS   PRI    TITLE
 CMT-0003   inbox    high   Implement password reset
 CMT-0001   inbox    none   Fix the login bug
@@ -1766,23 +1766,23 @@ CMT-0002   inbox    low    Update API documentation
 3 items
 
 # Triage: move to ready
-$ work status CMT-0001 ready
+$ cmt status CMT-0001 ready
 CMT-0001: inbox -> ready
 
 # Start work
-$ work status CMT-0001 active
+$ cmt status CMT-0001 active
 CMT-0001: ready -> active
 
 # Complete
-$ work done CMT-0001
+$ cmt done CMT-0001
 CMT-0001: active -> done
 
 # Archive completed items
-$ work archive --done
+$ cmt archive --done
 Archived CMT-0001 (done)
 
 # Check what's left
-$ work list
+$ cmt list
 ID        STATUS   PRI    TITLE
 CMT-0003   inbox    high   Implement password reset
 CMT-0002   inbox    low    Update API documentation
@@ -1796,29 +1796,29 @@ A developer on a team using typed items, tags, and dependencies.
 
 ```bash
 # Initialize with custom prefix
-$ work init --prefix ACME --name "acme-backend"
+$ cmt init --prefix ACME --name "acme-backend"
 Initialized catchmytask in .cmt/ with prefix ACME
 
 # Add a feature with tags
-$ work add "User profile page" --type feature --priority medium \
+$ cmt add "User profile page" --type feature --priority medium \
     --tag team:frontend --tag sprint:2026-w09 \
     --depends-on ACME-0010 --assignee alice
 FEAT-0001
 
 # Add a bug with high priority
-$ work add "Login crash on special characters" --type bug --priority critical \
+$ cmt add "Login crash on special characters" --type bug --priority critical \
     --assignee bob --tag team:backend
 BUG-0001
 
 # List items filtered by team
-$ work list --tag "team:frontend"
+$ cmt list --tag "team:frontend"
 ID          STATUS   PRI    TITLE                  ASSIGNEE
 FEAT-0001   inbox    med    User profile page      alice
 
 1 item
 
 # List items sorted by due date
-$ work list --sort due
+$ cmt list --sort due
 ID          STATUS   PRI      TITLE                              DUE
 BUG-0001    inbox    critical Login crash on special characters   --
 FEAT-0001   inbox    med      User profile page                  --
@@ -1826,20 +1826,20 @@ FEAT-0001   inbox    med      User profile page                  --
 2 items
 
 # Transition with blocked reason
-$ work status FEAT-0001 ready
+$ cmt status FEAT-0001 ready
 FEAT-0001: inbox -> ready
 
-$ work status FEAT-0001 active
+$ cmt status FEAT-0001 active
 FEAT-0001: ready -> active
 
-$ work status FEAT-0001 blocked --reason "Waiting on ACME-0010 API endpoints"
+$ cmt status FEAT-0001 blocked --reason "Waiting on ACME-0010 API endpoints"
 FEAT-0001: active -> blocked
 
 # Unblock and complete
-$ work status FEAT-0001 active
+$ cmt status FEAT-0001 active
 FEAT-0001: blocked -> active
 
-$ work done FEAT-0001
+$ cmt done FEAT-0001
 FEAT-0001: active -> done
 ```
 
@@ -1849,7 +1849,7 @@ An AI agent using the CLI programmatically with JSON mode.
 
 ```bash
 # Agent discovers available work
-$ work list --json --status ready --assignee none --sort priority
+$ cmt list --json --status ready --assignee none --sort priority
 [
   {
     "id": "CMT-0042",
@@ -1870,11 +1870,11 @@ $ work list --json --status ready --assignee none --sort priority
 ]
 
 # Agent claims the highest-priority item
-$ work edit CMT-0042 --set assignee=claude-agent-01
+$ cmt edit CMT-0042 --set assignee=claude-agent-01
 Updated CMT-0042
 
 # Agent transitions to active
-$ work status CMT-0042 active --json
+$ cmt status CMT-0042 active --json
 {
   "id": "CMT-0042",
   "from": "ready",
@@ -1885,7 +1885,7 @@ $ work status CMT-0042 active --json
 # Exit code: 0
 
 # Agent retrieves full context
-$ work show CMT-0042 --json
+$ cmt show CMT-0042 --json
 {
   "id": "CMT-0042",
   "title": "Implement JWT authentication",
@@ -1903,21 +1903,21 @@ $ work show CMT-0042 --json
 }
 
 # Agent adds work notes
-$ work edit CMT-0042 --append "## Agent Log
+$ cmt edit CMT-0042 --append "## Agent Log
 
 - 2026-02-23T14:30:00Z: Picked up by claude-agent-01
 - 2026-02-23T14:35:00Z: Implementing JWT token generation
 - 2026-02-23T15:00:00Z: Implementation complete, all tests passing"
 
 # Agent marks as done
-$ work done CMT-0042 --json
+$ cmt done CMT-0042 --json
 [
   { "id": "CMT-0042", "from": "active", "to": "done", "success": true }
 ]
 # Exit code: 0
 
 # Agent handles an error case
-$ work status CMT-0043 done --json
+$ cmt status CMT-0043 done --json
 {
   "id": "CMT-0043",
   "error": "Cannot transition from 'ready' to 'done'. Valid transitions from 'ready': active, cancelled",
@@ -1932,7 +1932,7 @@ An experienced user leveraging advanced features.
 
 ```bash
 # Create a complex investigation
-$ work add "Investigate points discrepancy for CS-P-310455" \
+$ cmt add "Investigate points discrepancy for CS-P-310455" \
     --type investigation \
     --priority high \
     --assignee dpwanjala \
@@ -1948,7 +1948,7 @@ $ ls .cmt/items/INV-0001/
 item.md    evidence/    queries/    handover/
 
 # Full-text search across all items
-$ work search "points discrepancy"
+$ cmt search "points discrepancy"
 ID          STATUS   TITLE                                         MATCH
 INV-0001    inbox    Investigate points discrepancy for CS-P-31... ...[points] [discrepancy] for CS-P-310455...
 INV-0003    active   Alayna points investigation                   ...multiple [points] [discrepancy] cases...
@@ -1956,33 +1956,33 @@ INV-0003    active   Alayna points investigation                   ...multiple [
 2 results
 
 # Search with status filter
-$ work search "authentication" --status active
+$ cmt search "authentication" --status active
 ID        STATUS   TITLE                           MATCH
 CMT-0042   active   Implement JWT authentication    ...JWT-based [authentication] for the API...
 
 1 result
 
 # Reindex after manual file edits
-$ work reindex
+$ cmt reindex
 Reindexed 45 items (5 archived) in 23ms
 
 # Validate entire project
-$ work check
+$ cmt check
 warning: INV-0003.md: depends_on references INV-0099 which does not exist
 warning: BUG-0012.md: tag 'urgent' does not follow namespace:value convention
 ok: 45 items checked, 0 errors, 2 warnings
 
 # Batch operations with shell pipelines
-$ work list -f simple -s inbox | cut -f1 | xargs -I{} work status {} ready
+$ cmt list -f simple -s inbox | cut -f1 | xargs -I{} cmt status {} ready
 CMT-0044: inbox -> ready
 CMT-0045: inbox -> ready
 CMT-0046: inbox -> ready
 
 # CSV export for spreadsheet analysis
-$ work list --format csv --fields id,title,status,priority,assignee,due --all > report.csv
+$ cmt list --format csv --fields id,title,status,priority,assignee,due --all > report.csv
 
 # Generate shell completions
-$ work completions zsh > ~/.zsh/completions/_work
+$ cmt completions zsh > ~/.zsh/completions/_work
 ```
 
 ---
@@ -1995,7 +1995,7 @@ When `cmt` cannot locate a `.cmt/` directory:
 - Commands that require it (`add`, `list`, `show`, `edit`, `done`, `status`, `archive`,
   `search`, `reindex`, `check`) print an error and exit with code 1:
   ```
-  error: No .cmt/ directory found. Run 'work init' to create one, or use --dir to specify a path.
+  error: No .cmt/ directory found. Run 'cmt init' to create one, or use --dir to specify a path.
   ```
 - Commands that do not require it (`init`, `completions`, `--version`, `--help`) work normally.
 

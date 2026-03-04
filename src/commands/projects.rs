@@ -102,7 +102,7 @@ fn add_project(path: &Path, json: bool, quiet: bool) -> Result<()> {
 
     if !work_dir.exists() {
         return Err(WorkError::General(format!(
-            "No .cmt/ directory found at '{}'. Run 'work init' there first.",
+            "No .cmt/ directory found at '{}'. Run 'cmt init' there first.",
             canonical.display()
         )));
     }

@@ -15,7 +15,7 @@ fn init_work_dir(dir: &Path) {
         .success();
 }
 
-// ============ work init ============
+// ============ cmt init ============
 
 #[test]
 fn test_init_creates_work_dir() {
@@ -99,7 +99,7 @@ fn test_init_invalid_prefix() {
         .stderr(predicate::str::contains("Invalid prefix"));
 }
 
-// ============ work --version / --help ============
+// ============ cmt --version / --help ============
 
 #[test]
 fn test_version() {
@@ -119,7 +119,7 @@ fn test_help() {
         .stdout(predicate::str::contains("work management system"));
 }
 
-// ============ work add ============
+// ============ cmt add ============
 
 #[test]
 fn test_add_basic() {
@@ -210,7 +210,7 @@ fn test_add_complex() {
     assert!(tmp.path().join(".cmt/items/CMT-1/handover").is_dir());
 }
 
-// ============ work show ============
+// ============ cmt show ============
 
 #[test]
 fn test_show_basic() {
@@ -367,7 +367,7 @@ fn test_show_not_found() {
         .code(3);
 }
 
-// ============ work status ============
+// ============ cmt status ============
 
 #[test]
 fn test_status_valid_transition() {
@@ -448,7 +448,7 @@ fn test_status_force() {
         .stderr(predicate::str::contains("Forced transition"));
 }
 
-// ============ work done ============
+// ============ cmt done ============
 
 #[test]
 fn test_done_from_active() {
@@ -480,7 +480,7 @@ fn test_done_invalid() {
         .code(4);
 }
 
-// ============ work list ============
+// ============ cmt list ============
 
 #[test]
 fn test_list_empty() {
@@ -558,7 +558,7 @@ fn test_list_excludes_done() {
         .stdout(predicate::str::contains("Done item").not());
 }
 
-// ============ work delete ============
+// ============ cmt delete ============
 
 #[test]
 fn test_delete_with_force() {
@@ -576,7 +576,7 @@ fn test_delete_with_force() {
     assert!(!tmp.path().join(".cmt/items/CMT-1.md").exists());
 }
 
-// ============ work reindex ============
+// ============ cmt reindex ============
 
 #[test]
 fn test_reindex() {
@@ -593,7 +593,7 @@ fn test_reindex() {
         .stderr(predicate::str::contains("Reindexed 2 items"));
 }
 
-// ============ work check ============
+// ============ cmt check ============
 
 #[test]
 fn test_check_valid_project() {
@@ -609,7 +609,7 @@ fn test_check_valid_project() {
         .stderr(predicate::str::contains("1 items checked"));
 }
 
-// ============ work completions ============
+// ============ cmt completions ============
 
 #[test]
 fn test_completions_bash() {
@@ -635,7 +635,7 @@ fn test_no_work_dir() {
         .stderr(predicate::str::contains("No .cmt/ directory found"));
 }
 
-// ============ work edit ============
+// ============ cmt edit ============
 
 #[test]
 fn test_edit_set_field() {
@@ -670,7 +670,7 @@ fn test_edit_add_tag() {
     assert!(content.contains("team:backend"));
 }
 
-// ============ work archive ============
+// ============ cmt archive ============
 
 #[test]
 fn test_archive_done_items() {
@@ -692,7 +692,7 @@ fn test_archive_done_items() {
     assert!(!tmp.path().join(".cmt/items/CMT-1.md").exists());
 }
 
-// ============ work config ============
+// ============ cmt config ============
 
 #[test]
 fn test_config_show() {
@@ -735,7 +735,7 @@ fn test_config_set() {
     assert!(config.contains("medium"));
 }
 
-// ============ work search ============
+// ============ cmt search ============
 
 #[test]
 fn test_search_basic() {
@@ -752,7 +752,7 @@ fn test_search_basic() {
         .stdout(predicate::str::contains("authentication").or(predicate::str::contains("Implement")));
 }
 
-// ============ work log ============
+// ============ cmt log ============
 
 #[test]
 fn test_log_with_events() {
@@ -813,7 +813,7 @@ fn test_log_limit() {
         .success();
 }
 
-// ============ work init --global ============
+// ============ cmt init --global ============
 
 #[test]
 fn test_init_global() {
@@ -903,7 +903,7 @@ fn test_config_gitignore_includes_local() {
     assert!(gitignore.contains("config.local.yml"));
 }
 
-// ============ work help-agent ============
+// ============ cmt help-agent ============
 
 #[test]
 fn test_help_agent_overview() {
@@ -1339,7 +1339,7 @@ fn test_delete_path_traversal_id() {
         .stderr(predicate::str::contains("not found"));
 }
 
-// ============ work setup ============
+// ============ cmt setup ============
 
 #[test]
 fn test_setup_list_json() {

@@ -3,6 +3,9 @@ name = "catchmytask"
 version = "0.1.1"
 edition = "2021"
 description = "A work management system for humans and agents — CatchMyTask"
+license = "MIT"
+repository = "https://github.com/syncropic/catchmytask"
+homepage = "https://catchmytask.com"
 
 [[bin]]
 name = "cmt"
@@ -24,7 +27,7 @@ owo-colors = "4"
 is-terminal = "0.4"
 tempfile = "3"
 
-# Web server (work serve)
+# Web server (cmt serve)
 tokio = { version = "1", features = ["full"] }
 axum = { version = "0.8", features = ["ws"] }
 tower = "0.5"

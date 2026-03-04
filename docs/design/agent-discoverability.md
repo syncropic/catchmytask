@@ -259,7 +259,7 @@ grep for it.
 ### 4.3 Auto-Generated Discovery Files
 
 ```
-work init / work config set
+cmt init / cmt config set
          |
          v
     Config::load()
@@ -341,7 +341,7 @@ Rate the implementation against these criteria:
 | Tier 0 token budget | < 300 tokens (~1200 bytes) | `cmt help-agent --json \| wc -c` | 759 bytes |
 | Tier 1 token budget | < 400 tokens (~1500 bytes) | `cmt help-agent add --json \| wc -c` | 1353 bytes |
 | Zero-maintenance flags | New flags auto-appear | Add a flag, run help-agent, verify | PASS |
-| Works without .cmt/ | help-agent succeeds in empty dir | `cd /tmp && work help-agent --json` | PASS |
+| Works without .cmt/ | help-agent succeeds in empty dir | `cd /tmp && cmt help-agent --json` | PASS |
 | Discovery file freshness | Config changes propagate | `cmt config set ...` then `cat CONVENTIONS.md` | PASS |
 | JSON compactness | Single-line output | `cmt help-agent --json \| wc -l` == 1 | PASS |
 | Alias resolution | `ls` resolves to `list` | `cmt help-agent ls --json` | PASS |

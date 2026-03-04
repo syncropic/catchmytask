@@ -59,7 +59,7 @@ fn output_overview(json: bool) -> Result<()> {
             "commands": command_names,
             "global_flags": global_flags,
             "usage": "cmt <command> [OPTIONS] --json",
-            "quick_start": "cmt init && work add \"Fix bug\" -p high && work list --json",
+            "quick_start": "cmt init && cmt add \"Fix bug\" -p high && cmt list --json",
             "tip": "cmt help-agent <cmd> --json for details. Set CMT_ACTOR env to identify yourself."
         });
         println!("{}", serde_json::to_string(&output)?);
@@ -89,10 +89,10 @@ fn output_overview(json: bool) -> Result<()> {
         }
         println!();
         println!("Quick start:");
-        println!("  work init");
-        println!("  work add \"Fix the bug\" -p high");
-        println!("  work list");
-        println!("  work done CMT-0001");
+        println!("  cmt init");
+        println!("  cmt add \"Fix the bug\" -p high");
+        println!("  cmt list");
+        println!("  cmt done CMT-0001");
         println!();
         println!("Tip: Set CMT_ACTOR env to identify yourself in event logs.");
     }

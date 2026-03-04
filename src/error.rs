@@ -26,16 +26,16 @@ pub enum WorkError {
     #[error("{0}")]
     ConfigValidation(String),
 
-    #[error("Config version {found} is not supported. Maximum supported version is {max_supported}. Please upgrade work.")]
+    #[error("Config version {found} is not supported. Maximum supported version is {max_supported}. Please upgrade cmt.")]
     UnsupportedVersion { found: u32, max_supported: u32 },
 
     #[error("Config version {0} is not valid. Minimum version is 1.")]
     InvalidVersion(u32),
 
-    #[error("No .cmt/ directory found. Run 'work init' to create one, or use --dir to specify a path.")]
+    #[error("No .cmt/ directory found. Run 'cmt init' to create one, or use --dir to specify a path.")]
     WorkDirNotFound,
 
-    #[error("A .cmt/ directory already exists. Use 'work init --force' to reinitialize (preserves existing items).")]
+    #[error("A .cmt/ directory already exists. Use 'cmt init --force' to reinitialize (preserves existing items).")]
     AlreadyInitialized,
 
     #[error("Item '{0}' not found")]

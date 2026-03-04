@@ -619,7 +619,7 @@ impl Config {
         std::borrow::Cow::Borrowed(machine)
     }
 
-    /// Write a minimal config.yml for work init.
+    /// Write a minimal config.yml for cmt init.
     pub fn write_minimal(work_dir: &Path, name: &str, prefix: &str) -> Result<()> {
         let content = format!(
             "version: 1\n\nproject:\n  name: \"{}\"\n  prefix: \"{}\"\n",

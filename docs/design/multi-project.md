@@ -18,7 +18,7 @@ everything?" or "what's blocked anywhere?"
 
 ### Scenarios That Must Work
 
-1. **Single project** — `cd ~/repos/app-a && work list` — works today, must not regress
+1. **Single project** — `cd ~/repos/app-a && cmt list` — works today, must not regress
 2. **Personal work** — `cmt add "Read DDIA chapter 5"` from `~` — needs `~/.cmt/`
 3. **Cross-project overview** — "show all my active items everywhere"
 4. **Monorepo** — one `.cmt/` at root covers all packages (no nesting)
@@ -89,9 +89,9 @@ other project.
 
 ```bash
 cd ~
-work init --prefix ME
-work add "Read DDIA chapter 5" --tag reading
-work add "Update resume" --tag career -p high
+cmt init --prefix ME
+cmt add "Read DDIA chapter 5" --tag reading
+cmt add "Update resume" --tag career -p high
 ```
 
 ---
@@ -104,7 +104,7 @@ work add "Update resume" --tag career -p high
 
 ```bash
 cd ~/repos/new-service
-work init --prefix SVC
+cmt init --prefix SVC
 # Creates .cmt/ in current directory
 # Appends to ~/.config/cmt/projects.yml automatically
 ```
@@ -120,14 +120,14 @@ in project registry").
 New flag: `--all` (or `-a`). Queries every project in the registry.
 
 ```bash
-$ work list --all -s active
+$ cmt list --all -s active
 PROJECT    ID         TITLE                    STATUS  PRI  ASSIGNEE
 app-a      API-0012   Fix auth middleware      active  ●H   alice
 app-b      WEB-0045   Update dashboard         active  ●M   alice
 infra      INFRA-003  Rotate certificates      active  ●H   🤖agent
 personal   ME-0007    Read DDIA chapter 5      active  ●L   —
 
-$ work list --all -s blocked --json
+$ cmt list --all -s blocked --json
 [
   {"project": "app-a", "id": "API-0015", "title": "...", ...},
   {"project": "infra", "id": "INFRA-007", "title": "...", ...}
@@ -143,11 +143,11 @@ The `--dir` flag and `CMT_DIR` env already handle explicit project targeting:
 
 ```bash
 # From anywhere, operate on a specific project
-work list --dir ~/repos/infra/.work -s blocked
+cmt list --dir ~/repos/infra/.work -s blocked
 
 # Or set for a session
 export CMT_DIR=~/repos/infra/.work
-work list -s blocked
+cmt list -s blocked
 ```
 
 No new mechanism needed. The existing `--dir` flag is the escape hatch.
@@ -156,20 +156,20 @@ No new mechanism needed. The existing `--dir` flag is the escape hatch.
 
 ```bash
 # List registered projects
-work projects
+cmt projects
   app-a       API    ~/repos/app-a/.work        (24 items, 8 active)
   app-b       WEB    ~/repos/app-b/.work        (12 items, 3 active)
   infra       INFRA  ~/repos/infra/.work        (9 items, 2 active)
   personal    ME     ~/.work                    (15 items, 5 active)
 
 # Register an existing project (if auto-registration missed it)
-work projects add ~/repos/legacy-app/.work
+cmt projects add ~/repos/legacy-app/.work
 
 # Remove a project from registry (does NOT delete .cmt/)
-work projects remove legacy-app
+cmt projects remove legacy-app
 
 # Show current project
-work projects current
+cmt projects current
   app-a (API) — ~/repos/app-a/.work
 ```
 
@@ -179,16 +179,16 @@ One `.cmt/` at the repo root. Use **tags** for package scoping:
 
 ```bash
 cd ~/repos/monorepo
-work init --prefix MONO
+cmt init --prefix MONO
 
 # Scope with tags
-work add "Fix auth bug" --tag package:auth
-work add "Update dashboard" --tag package:web
-work add "Shared types" --tag package:core
+cmt add "Fix auth bug" --tag package:auth
+cmt add "Update dashboard" --tag package:web
+cmt add "Shared types" --tag package:core
 
 # Filter by package
-work list --tag package:auth
-work list --tag package:web
+cmt list --tag package:auth
+cmt list --tag package:web
 ```
 
 The tag namespace `package:` is conventional, not enforced. The web UI sidebar
@@ -257,7 +257,7 @@ The Dashboard view in `--all` mode shows per-project breakdowns:
 
 ```
                     ┌──────────────────────┐
-                    │   work serve --all   │
+                    │   cmt serve --all   │
                     │   (single process)   │
                     └───────┬──────────────┘
                             │ reads
@@ -339,7 +339,7 @@ Just a list of paths and independent projects that can be queried together.
 
 **Q: What if I move a project directory?**
 A: The registry path becomes stale. `cmt projects` detects this and shows
-"(not found)". Fix with `cmt projects remove old-name && work projects add /new/path`.
+"(not found)". Fix with `cmt projects remove old-name && cmt projects add /new/path`.
 Auto-cleanup: `cmt projects --prune` removes stale entries.
 
 **Q: What about teams? Does the registry sync via git?**

@@ -1,19 +1,19 @@
 # Agent Platform Integrations
 
-This directory contains integration adapters for agent platforms. Each subdirectory holds the files needed to register `work` with a specific platform.
+This directory contains integration adapters for agent platforms. Each subdirectory holds the files needed to register `cmt` with a specific platform.
 
 ## Available Integrations
 
 | Platform | Directory | Install Command |
 |----------|-----------|-----------------|
-| Claude Code | `claude-code/` | `work setup --claude-code` |
+| Claude Code | `claude-code/` | `cmt setup --claude-code` |
 
 ## How It Works
 
-Integration files are **embedded in the `work` binary** at compile time via `include_str!()`. This means:
+Integration files are **embedded in the `cmt` binary** at compile time via `include_str!()`. This means:
 
 - The binary is self-contained — no runtime dependency on these files
-- `work setup` writes the embedded content to the correct location
+- `cmt setup` writes the embedded content to the correct location
 - Updates ship with new binary versions
 
 ## Adding a New Integration
@@ -30,4 +30,4 @@ Integration files are **embedded in the `work` binary** at compile time via `inc
 
 The `claude-code/SKILL.md` file follows the Claude Code skill format with YAML frontmatter. When installed, it's placed at `~/.claude/skills/managing-work/SKILL.md`.
 
-The skill teaches Claude Code how to use the `work` CLI for managing work items, including the command table, agent workflow, state machine, and key flags.
+The skill teaches Claude Code how to use the `cmt` CLI for managing work items, including the command table, agent workflow, state machine, and key flags.
