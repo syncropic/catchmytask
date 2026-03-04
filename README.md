@@ -7,6 +7,11 @@ A work management system for humans and AI agents.
 - **Agent-first**: AI agents and humans are equal first-class actors
 - **Self-contained**: Single binary CLI. No runtime dependencies, no accounts, no SaaS
 
+## Documentation
+
+- [AGENT.md](AGENT.md) — universal agent entry point (start here if you're an AI agent)
+- [Online Docs](https://catchmytask.com/docs) — comprehensive reference with commands, state machine, file format, and configuration
+
 ## Install
 
 ```bash
@@ -111,6 +116,8 @@ cmt setup --remove claude-code
 ```
 
 ## For AI Agents
+
+> **Agents**: See [AGENT.md](AGENT.md) for a concise, structured entry point with everything you need to get started.
 
 Set `CMT_ACTOR` to identify yourself in event logs:
 
