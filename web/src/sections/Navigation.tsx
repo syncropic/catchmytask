@@ -46,6 +46,7 @@ export function Navigation() {
           <a href="/#principles" className="hover:text-text-primary transition-colors">Principles</a>
           <a href="/#install" className="hover:text-text-primary transition-colors">Install</a>
           <a href="/docs" className="hover:text-text-primary transition-colors">Docs</a>
+          <a href="https://github.com/syncropic/catchmytask" target="_blank" rel="noopener noreferrer" className="hover:text-text-primary transition-colors">GitHub</a>
         </div>
 
         <div className="flex items-center gap-2">

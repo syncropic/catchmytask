@@ -4,7 +4,7 @@ export function Hero() {
       <div className="max-w-4xl mx-auto text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bg-tertiary border border-border-default text-xs text-text-secondary">
           <span className="w-1.5 h-1.5 rounded-full bg-status-active animate-pulse" />
-          Open source &middot; Local-first &middot; v0.1.1
+          Open source &middot; Local-first
         </div>
 
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary leading-tight tracking-tight">
