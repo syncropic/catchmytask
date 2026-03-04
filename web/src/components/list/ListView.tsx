@@ -49,7 +49,7 @@ export function ListView({ config }: Props) {
         <div>No work items yet</div>
         <button
           onClick={openCreateDrawer}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded text-xs font-medium transition-colors"
+          className="bg-accent hover:bg-accent-hover text-white px-4 py-1.5 rounded text-xs font-medium transition-colors"
         >
           Create first item
         </button>

@@ -88,8 +88,8 @@ export function DashboardView({ config }: Props) {
         {/* Summary cards */}
         <div className="grid grid-cols-4 gap-4">
           <StatCard label="Total" value={allItems.length} />
-          <StatCard label="Open" value={openCount} accent="text-blue-400" />
-          <StatCard label="Closed" value={closedCount} accent="text-green-400" />
+          <StatCard label="Open" value={openCount} accent="text-accent-text" />
+          <StatCard label="Closed" value={closedCount} accent="text-code" />
           <StatCard
             label="Overdue"
             value={overdue.length}

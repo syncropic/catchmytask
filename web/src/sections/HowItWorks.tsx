@@ -41,27 +41,27 @@ Implement JWT-based authentication.
             <div className="bg-bg-primary border border-border-default rounded-lg p-4 space-y-4 text-xs font-mono">
               <div>
                 <div className="text-text-muted"># Initialize a project</div>
-                <div className="text-green-400">$ cmt init</div>
+                <div className="text-code">$ cmt init</div>
               </div>
               <div>
                 <div className="text-text-muted"># Add a work item</div>
-                <div className="text-green-400">$ cmt add "Fix login timeout bug" -p high -t bug</div>
+                <div className="text-code">$ cmt add "Fix login timeout bug" -p high -t bug</div>
               </div>
               <div>
                 <div className="text-text-muted"># List items by status</div>
-                <div className="text-green-400">$ cmt list --status active</div>
+                <div className="text-code">$ cmt list --status active</div>
               </div>
               <div>
                 <div className="text-text-muted"># Transition status</div>
-                <div className="text-green-400">$ cmt done CMT-0042</div>
+                <div className="text-code">$ cmt done CMT-0042</div>
               </div>
               <div>
                 <div className="text-text-muted"># Search across items</div>
-                <div className="text-green-400">$ cmt search "authentication"</div>
+                <div className="text-code">$ cmt search "authentication"</div>
               </div>
               <div>
                 <div className="text-text-muted"># Launch web UI</div>
-                <div className="text-green-400">$ cmt serve</div>
+                <div className="text-code">$ cmt serve</div>
               </div>
             </div>
           </div>

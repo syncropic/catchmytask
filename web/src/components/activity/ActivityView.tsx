@@ -113,9 +113,9 @@ export function ActivityView({ config }: Props) {
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 const EVENT_META: Record<string, { icon: string; color: string; label: string }> = {
-  created: { icon: '+', color: 'text-blue-400 bg-blue-400/10', label: 'created' },
-  started: { icon: '▶', color: 'text-green-400 bg-green-400/10', label: 'started' },
-  completed: { icon: '✓', color: 'text-green-400 bg-green-400/10', label: 'completed' },
+  created: { icon: '+', color: 'text-accent-text bg-accent/10', label: 'created' },
+  started: { icon: '▶', color: 'text-code bg-code/10', label: 'started' },
+  completed: { icon: '✓', color: 'text-code bg-code/10', label: 'completed' },
   blocked: { icon: '!', color: 'text-red-400 bg-red-400/10', label: 'blocked' },
   updated: { icon: '~', color: 'text-text-muted bg-bg-tertiary', label: 'updated' },
 }

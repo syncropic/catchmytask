@@ -63,7 +63,7 @@ export function CreateDrawer({ config }: Props) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="What needs to be done?"
-            className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-accent transition-colors"
           />
         </FormField>
 
@@ -73,7 +73,7 @@ export function CreateDrawer({ config }: Props) {
               value={type}
               onChange={(e) => setType(e.target.value)}
               placeholder="task"
-              className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-accent transition-colors"
             />
           </FormField>
 
@@ -81,7 +81,7 @@ export function CreateDrawer({ config }: Props) {
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
-              className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-accent transition-colors"
             >
               <option value="none">None</option>
               <option value="low">Low</option>
@@ -97,7 +97,7 @@ export function CreateDrawer({ config }: Props) {
             value={assignee}
             onChange={(e) => setAssignee(e.target.value)}
             placeholder="Who is doing this?"
-            className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-accent transition-colors"
           />
         </FormField>
 
@@ -106,7 +106,7 @@ export function CreateDrawer({ config }: Props) {
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             placeholder="Comma-separated tags"
-            className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-accent transition-colors"
           />
         </FormField>
 
@@ -115,7 +115,7 @@ export function CreateDrawer({ config }: Props) {
             type="date"
             value={due}
             onChange={(e) => setDue(e.target.value)}
-            className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-accent transition-colors"
           />
         </FormField>
 
@@ -125,7 +125,7 @@ export function CreateDrawer({ config }: Props) {
             onChange={(e) => setBody(e.target.value)}
             placeholder="Describe the work..."
             rows={6}
-            className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-blue-500 transition-colors resize-y"
+            className="w-full bg-bg-tertiary border border-border-default rounded px-3 py-1.5 text-xs text-text-primary outline-none focus:border-accent transition-colors resize-y"
           />
         </FormField>
 
@@ -139,7 +139,7 @@ export function CreateDrawer({ config }: Props) {
           <button
             type="submit"
             disabled={!title.trim() || createMutation.isPending}
-            className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-4 py-1.5 rounded text-xs font-medium transition-colors"
+            className="bg-accent hover:bg-accent-hover disabled:opacity-50 text-white px-4 py-1.5 rounded text-xs font-medium transition-colors"
           >
             {createMutation.isPending ? 'Creating...' : 'Create'}
           </button>

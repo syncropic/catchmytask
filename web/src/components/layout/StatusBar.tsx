@@ -28,7 +28,7 @@ export function StatusBar({ config }: Props) {
   return (
     <footer className="h-7 flex-shrink-0 bg-bg-secondary border-t border-border-default flex items-center px-3 text-[11px] text-text-muted gap-4">
       <span>
-        <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1" />
+        <span className="inline-block w-2 h-2 rounded-full bg-status-active mr-1" />
         {config?.project.name ?? '...'}
       </span>
 

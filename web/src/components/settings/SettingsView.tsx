@@ -105,7 +105,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
             }}
             className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
               mode === 'local'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-accent text-white'
                 : 'bg-bg-tertiary text-text-secondary hover:bg-bg-hover'
             }`}
           >
@@ -118,7 +118,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
             }}
             className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
               mode === 'remote'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-accent text-white'
                 : 'bg-bg-tertiary text-text-secondary hover:bg-bg-hover'
             }`}
           >
@@ -134,7 +134,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
                 value={remoteUrl}
                 onChange={(e) => setRemoteUrl(e.target.value)}
                 placeholder="http://localhost:3170"
-                className="flex-1 px-3 py-1.5 bg-bg-tertiary border border-border-default rounded text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-blue-500"
+                className="flex-1 px-3 py-1.5 bg-bg-tertiary border border-border-default rounded text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
               />
               <button
                 onClick={testConnection}
@@ -144,7 +144,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
               </button>
             </div>
             {testResult && (
-              <p className={`text-xs ${testResult.startsWith('Connected') ? 'text-green-400' : 'text-red-400'}`}>
+              <p className={`text-xs ${testResult.startsWith('Connected') ? 'text-code' : 'text-red-400'}`}>
                 {testResult}
               </p>
             )}
@@ -173,7 +173,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
                   setProjectDesc(config?.project.description ?? '')
                   setEditingConfig(true)
                 }}
-                className="text-xs text-blue-400 hover:text-blue-300"
+                className="text-xs text-accent-text hover:text-accent-hover"
               >
                 Edit
               </button>
@@ -187,7 +187,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
                 <input
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-bg-tertiary border border-border-default rounded text-xs text-text-primary focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-1.5 bg-bg-tertiary border border-border-default rounded text-xs text-text-primary focus:outline-none focus:border-accent"
                 />
               </div>
               <div>
@@ -196,7 +196,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
                   value={projectPrefix}
                   onChange={(e) => setProjectPrefix(e.target.value.toUpperCase())}
                   maxLength={8}
-                  className="w-32 px-3 py-1.5 bg-bg-tertiary border border-border-default rounded text-xs text-text-primary font-mono focus:outline-none focus:border-blue-500"
+                  className="w-32 px-3 py-1.5 bg-bg-tertiary border border-border-default rounded text-xs text-text-primary font-mono focus:outline-none focus:border-accent"
                 />
               </div>
               <div>
@@ -204,13 +204,13 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
                 <input
                   value={projectDesc}
                   onChange={(e) => setProjectDesc(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-bg-tertiary border border-border-default rounded text-xs text-text-primary focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-1.5 bg-bg-tertiary border border-border-default rounded text-xs text-text-primary focus:outline-none focus:border-accent"
                 />
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={handleSaveConfig}
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-500 transition-colors"
+                  className="px-3 py-1.5 bg-accent text-white rounded text-xs font-medium hover:bg-accent-hover transition-colors"
                 >
                   Save
                 </button>
@@ -256,9 +256,9 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
                   key={name}
                   className={`px-2 py-0.5 rounded text-xs font-mono ${
                     info.initial
-                      ? 'bg-blue-900/40 text-blue-400 border border-blue-800'
+                      ? 'bg-accent/15 text-accent-text border border-accent/30'
                       : info.terminal
-                        ? 'bg-gray-800/40 text-gray-400 border border-gray-700'
+                        ? 'bg-bg-hover text-text-muted border border-border-default'
                         : 'bg-bg-hover text-text-secondary border border-border-default'
                   }`}
                 >
@@ -327,7 +327,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
             )}
           </div>
           {importStatus && (
-            <p className={`text-xs ${importStatus.startsWith('Error') ? 'text-red-400' : 'text-green-400'}`}>
+            <p className={`text-xs ${importStatus.startsWith('Error') ? 'text-red-400' : 'text-code'}`}>
               {importStatus}
             </p>
           )}

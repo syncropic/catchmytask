@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>CatchMyTask</title>
+    <script>
+      // Apply theme before first paint to prevent FOUC (default: dark)
+      (function() {
+        var t = localStorage.getItem('cmt-theme');
+        var light = t === 'light' || (t === 'system' && !window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (!light) document.documentElement.classList.add('dark');
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

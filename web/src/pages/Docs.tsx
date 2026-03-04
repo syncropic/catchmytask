@@ -16,7 +16,7 @@ function TOC() {
         <a
           key={id}
           href={`#${id}`}
-          className="px-3 py-1.5 bg-bg-tertiary border border-border-default rounded hover:border-blue-500/50 hover:text-blue-400 text-text-secondary transition-colors"
+          className="px-3 py-1.5 bg-bg-tertiary border border-border-default rounded hover:border-accent/50 hover:text-accent-text text-text-secondary transition-colors"
         >
           {label}
         </a>
@@ -35,7 +35,7 @@ function SectionHeading({ id, children }: { id: string; children: React.ReactNod
 
 function CodeBlock({ children }: { children: string }) {
   return (
-    <pre className="text-xs font-mono text-green-400 bg-bg-primary border border-border-default rounded-lg p-4 overflow-x-auto leading-relaxed">
+    <pre className="text-xs font-mono text-code bg-bg-primary border border-border-default rounded-lg p-4 overflow-x-auto leading-relaxed">
       {children}
     </pre>
   )
@@ -46,8 +46,8 @@ function Overview() {
     <div className="space-y-4">
       <SectionHeading id="overview">Overview</SectionHeading>
       <p className="text-sm text-text-secondary leading-relaxed">
-        CatchMyTask (<code className="text-blue-400">cmt</code>) is a file-first work management CLI built in Rust.
-        Work items are Markdown files with YAML frontmatter stored in <code className="text-blue-400">.cmt/items/</code>.
+        CatchMyTask (<code className="text-accent-text">cmt</code>) is a file-first work management CLI built in Rust.
+        Work items are Markdown files with YAML frontmatter stored in <code className="text-accent-text">.cmt/items/</code>.
         Git is the history layer. AI agents and humans are equal first-class actors.
       </p>
       <div className="bg-bg-secondary border border-border-default rounded-lg p-4">
@@ -97,8 +97,8 @@ function Commands() {
     <div className="space-y-4">
       <SectionHeading id="commands">Commands</SectionHeading>
       <p className="text-sm text-text-secondary">
-        All commands support <code className="text-blue-400">--json</code> for structured output
-        and <code className="text-blue-400">--quiet</code> to suppress non-essential messages.
+        All commands support <code className="text-accent-text">--json</code> for structured output
+        and <code className="text-accent-text">--quiet</code> to suppress non-essential messages.
       </p>
       <div className="overflow-x-auto border border-border-default rounded-lg">
         <table className="w-full text-xs">
@@ -113,10 +113,10 @@ function Commands() {
           <tbody className="divide-y divide-border-default">
             {COMMANDS.map((cmd) => (
               <tr key={cmd.name} className="hover:bg-bg-hover transition-colors">
-                <td className="px-3 py-2 font-mono text-blue-400">{cmd.name}</td>
+                <td className="px-3 py-2 font-mono text-accent-text">{cmd.name}</td>
                 <td className="px-3 py-2 text-text-secondary">{cmd.description}</td>
                 <td className="px-3 py-2 text-text-muted font-mono hidden md:table-cell">{cmd.flags}</td>
-                <td className="px-3 py-2 text-green-400 font-mono hidden lg:table-cell">{cmd.example}</td>
+                <td className="px-3 py-2 text-code font-mono hidden lg:table-cell">{cmd.example}</td>
               </tr>
             ))}
           </tbody>
@@ -132,7 +132,7 @@ function StateMachine() {
       <SectionHeading id="state-machine">State Machine</SectionHeading>
       <p className="text-sm text-text-secondary">
         Items follow a configurable state machine. Transitions are validated at runtime.
-        Custom machines can be defined per item type in <code className="text-blue-400">config.yml</code>.
+        Custom machines can be defined per item type in <code className="text-accent-text">config.yml</code>.
       </p>
       <div className="bg-bg-secondary border border-border-default rounded-lg p-4">
         <pre className="text-xs text-text-secondary font-mono text-center leading-loose">
@@ -163,7 +163,7 @@ function StateMachine() {
               ['cancelled', 'terminal', '—'],
             ].map(([state, type, transitions]) => (
               <tr key={state} className="hover:bg-bg-hover transition-colors">
-                <td className="px-3 py-2 font-mono text-blue-400">{state}</td>
+                <td className="px-3 py-2 font-mono text-accent-text">{state}</td>
                 <td className="px-3 py-2 text-text-muted">{type}</td>
                 <td className="px-3 py-2 text-text-secondary">{transitions}</td>
               </tr>
@@ -181,7 +181,7 @@ function FileFormat() {
       <SectionHeading id="file-format">File Format</SectionHeading>
       <p className="text-sm text-text-secondary">
         Work items are Markdown files with YAML frontmatter. Everything is a file — read them,
-        edit them, <code className="text-blue-400">grep</code> them, <code className="text-blue-400">git log</code> them.
+        edit them, <code className="text-accent-text">grep</code> them, <code className="text-accent-text">git log</code> them.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -241,7 +241,7 @@ function AgentQuickstart() {
     <div className="space-y-4">
       <SectionHeading id="agent-quickstart">Agent Quickstart</SectionHeading>
       <p className="text-sm text-text-secondary">
-        See <a href="https://github.com/syncropic/catchmytask/blob/main/AGENT.md" className="text-blue-400 hover:underline">AGENT.md</a> in
+        See <a href="https://github.com/syncropic/catchmytask/blob/main/AGENT.md" className="text-accent-text hover:underline">AGENT.md</a> in
         the repo root for the complete agent entry point.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -269,7 +269,7 @@ cmt done CMT-1 --json`}
             ].map(([tier, cmd, desc]) => (
               <div key={tier} className="px-3 py-2 flex flex-col gap-0.5">
                 <span className="text-text-primary font-semibold">{tier}</span>
-                <span className="font-mono text-blue-400">{cmd}</span>
+                <span className="font-mono text-accent-text">{cmd}</span>
                 <span className="text-text-muted">{desc}</span>
               </div>
             ))}

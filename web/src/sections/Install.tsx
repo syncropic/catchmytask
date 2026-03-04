@@ -15,7 +15,7 @@ export function Install() {
             <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
               Quick install (Linux / macOS)
             </h3>
-            <pre className="text-xs font-mono text-green-400 bg-bg-primary rounded p-3 overflow-x-auto">
+            <pre className="text-xs font-mono text-code bg-bg-primary rounded p-3 overflow-x-auto">
               curl -fsSL https://get.syncropic.com/cmt | sh
             </pre>
           </div>
@@ -25,7 +25,7 @@ export function Install() {
             <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
               From source
             </h3>
-            <pre className="text-xs font-mono text-green-400 bg-bg-primary rounded p-3 overflow-x-auto">
+            <pre className="text-xs font-mono text-code bg-bg-primary rounded p-3 overflow-x-auto">
               cargo install --git https://github.com/syncropic/catchmytask.git
             </pre>
           </div>
@@ -35,7 +35,7 @@ export function Install() {
             <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
               Quick start
             </h3>
-            <pre className="text-xs font-mono text-green-400 bg-bg-primary rounded p-3 overflow-x-auto leading-relaxed">
+            <pre className="text-xs font-mono text-code bg-bg-primary rounded p-3 overflow-x-auto leading-relaxed">
 {`$ cmt init
 $ cmt add "My first task" --priority high
 $ cmt list
@@ -44,8 +44,8 @@ $ cmt serve  # Launch web UI`}
           </div>
 
           {/* Browser */}
-          <div className="bg-blue-950/50 border border-blue-800/50 rounded-lg p-4 space-y-2">
-            <h3 className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
+          <div className="bg-accent/8 border border-accent/20 rounded-lg p-4 space-y-2">
+            <h3 className="text-xs font-semibold text-accent-text uppercase tracking-wider">
               Or just use the browser
             </h3>
             <p className="text-xs text-text-secondary">
@@ -54,7 +54,7 @@ $ cmt serve  # Launch web UI`}
             </p>
             <a
               href="/app"
-              className="inline-block mt-2 px-4 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-500 transition-colors"
+              className="inline-block mt-2 px-4 py-1.5 bg-accent text-white rounded text-xs font-medium hover:bg-accent-hover transition-colors"
             >
               Open App
             </a>

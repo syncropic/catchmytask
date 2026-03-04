@@ -117,7 +117,7 @@ export function OnboardingDrawer({ onComplete }: Props) {
             <input
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
-              className="w-full px-3 py-2 bg-bg-tertiary border border-border-default rounded text-sm text-text-primary focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 bg-bg-tertiary border border-border-default rounded text-sm text-text-primary focus:outline-none focus:border-accent"
               autoFocus
             />
           </div>
@@ -128,7 +128,7 @@ export function OnboardingDrawer({ onComplete }: Props) {
               onChange={(e) => setPrefix(e.target.value.toUpperCase())}
               maxLength={8}
               placeholder="CMT"
-              className="w-32 px-3 py-2 bg-bg-tertiary border border-border-default rounded text-sm text-text-primary font-mono focus:outline-none focus:border-blue-500"
+              className="w-32 px-3 py-2 bg-bg-tertiary border border-border-default rounded text-sm text-text-primary font-mono focus:outline-none focus:border-accent"
             />
             <p className="text-[10px] text-text-muted mt-1">
               Items will be numbered {prefix || 'CMT'}-0001, {prefix || 'CMT'}-0002, etc.
@@ -140,7 +140,7 @@ export function OnboardingDrawer({ onComplete }: Props) {
           <button
             onClick={() => handleStart(true)}
             disabled={loading || !projectName.trim()}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-500 disabled:opacity-50 transition-colors"
+            className="flex-1 px-4 py-2 bg-accent text-white rounded text-sm font-medium hover:bg-accent-hover disabled:opacity-50 transition-colors"
           >
             {loading ? 'Setting up...' : 'Start with samples'}
           </button>

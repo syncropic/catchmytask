@@ -3,14 +3,14 @@ export function Hero() {
     <section className="pt-32 pb-20 px-6">
       <div className="max-w-4xl mx-auto text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bg-tertiary border border-border-default text-xs text-text-secondary">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-status-active animate-pulse" />
           Open source &middot; Local-first &middot; v0.1.1
         </div>
 
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary leading-tight tracking-tight">
           Work management for
           <br />
-          <span className="text-blue-400">
+          <span className="text-accent-text">
             humans and AI agents
           </span>
         </h1>
@@ -24,7 +24,7 @@ export function Hero() {
         <div className="flex items-center justify-center gap-3 pt-4">
           <a
             href="/app"
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 transition-colors"
+            className="px-6 py-2.5 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors"
           >
             Try in Browser
           </a>

@@ -236,7 +236,7 @@ function EditableTitle({ value, onSave }: { value: string; onSave: (v: string) =
         if (e.key === 'Enter') commit()
         if (e.key === 'Escape') { setDraft(value); setEditing(false) }
       }}
-      className="w-full text-sm font-medium text-text-primary bg-bg-tertiary border border-blue-500 rounded px-1 -mx-1 py-0.5 outline-none"
+      className="w-full text-sm font-medium text-text-primary bg-bg-tertiary border border-accent rounded px-1 -mx-1 py-0.5 outline-none"
     />
   )
 }
@@ -285,7 +285,7 @@ function EditableText({
         if (e.key === 'Escape') { setDraft(value); setEditing(false) }
       }}
       placeholder={placeholder}
-      className="bg-bg-tertiary border border-blue-500 rounded px-1 py-0.5 text-xs text-text-primary outline-none w-full"
+      className="bg-bg-tertiary border border-accent rounded px-1 py-0.5 text-xs text-text-primary outline-none w-full"
     />
   )
 }
@@ -342,7 +342,7 @@ function EditableTags({
               if (e.key === 'Escape') { setDraft(''); setAdding(false) }
             }}
             placeholder="tag name"
-            className="bg-bg-tertiary border border-blue-500 rounded px-1.5 py-0.5 text-[10px] text-text-primary outline-none w-20"
+            className="bg-bg-tertiary border border-accent rounded px-1.5 py-0.5 text-[10px] text-text-primary outline-none w-20"
           />
         ) : (
           <button
@@ -375,7 +375,7 @@ const markdownComponents: Record<string, React.ComponentType<any>> = {
     )
   },
   input: ({ checked }) => (
-    <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded border flex-shrink-0 mt-[3px] ${checked ? 'bg-blue-500 border-blue-500' : 'border-text-muted/40 bg-transparent'}`}>
+    <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded border flex-shrink-0 mt-[3px] ${checked ? 'bg-accent border-accent' : 'border-text-muted/40 bg-transparent'}`}>
       {checked && <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
     </span>
   ),
@@ -390,7 +390,7 @@ const markdownComponents: Record<string, React.ComponentType<any>> = {
     <pre className="text-[11px] bg-bg-tertiary rounded-md border border-border-subtle px-3 py-2 my-2 overflow-x-auto">{children}</pre>
   ),
   a: ({ href, children }) => (
-    <a href={href} onClick={(e) => e.stopPropagation()} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 hover:decoration-blue-300/50 transition-colors">{children}</a>
+    <a href={href} onClick={(e) => e.stopPropagation()} target="_blank" rel="noopener noreferrer" className="text-accent-text hover:text-accent-hover underline decoration-accent/30 hover:decoration-accent-hover/50 transition-colors">{children}</a>
   ),
   blockquote: ({ children }) => (
     <blockquote className="border-l-2 border-text-muted/25 pl-3 my-2 text-text-muted italic [&>p]:text-text-muted">{children}</blockquote>
@@ -457,12 +457,12 @@ function EditableBody({ value, onSave }: { value: string; onSave: (v: string) =>
             onKeyDown={(e) => {
               if (e.key === 'Escape') { setDraft(value); setEditing(false) }
             }}
-            className="w-full bg-bg-tertiary border border-blue-500 rounded px-2 py-1.5 text-xs text-text-primary outline-none resize-y min-h-[80px] font-sans leading-relaxed"
+            className="w-full bg-bg-tertiary border border-accent rounded px-2 py-1.5 text-xs text-text-primary outline-none resize-y min-h-[80px] font-sans leading-relaxed"
           />
           <div className="flex gap-2 mt-2">
             <button
               onClick={commit}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+              className="bg-accent hover:bg-accent-hover text-white px-3 py-1 rounded text-xs font-medium transition-colors"
             >
               Save
             </button>

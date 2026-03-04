@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useUIStore } from '@/stores/ui'
 import { useProjectStore } from '@/stores/project'
+import { useThemeStore } from '@/stores/theme'
 import type { ProjectConfig, ProjectsResponse } from '@/types'
 
 interface Props {
@@ -15,6 +16,7 @@ export function Header({ config, projects }: Props) {
   const openCreateDrawer = useUIStore((s) => s.openCreateDrawer)
   const currentProject = useProjectStore((s) => s.currentProject)
   const setCurrentProject = useProjectStore((s) => s.setCurrentProject)
+  const { resolved: theme, toggle: toggleTheme } = useThemeStore()
 
   const projectName = config?.project.name ?? '...'
   const prefix = config?.project.prefix ?? ''
@@ -74,8 +76,20 @@ export function Header({ config, projects }: Props) {
       </button>
 
       <button
+        onClick={() => {
+          document.documentElement.classList.add('transitioning')
+          toggleTheme()
+          setTimeout(() => document.documentElement.classList.remove('transitioning'), 300)
+        }}
+        className="text-text-muted hover:text-text-primary transition-colors"
+        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      >
+        {theme === 'dark' ? '☀' : '☾'}
+      </button>
+
+      <button
         onClick={openCreateDrawer}
-        className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+        className="bg-accent hover:bg-accent-hover text-white px-3 py-1 rounded text-xs font-medium transition-colors"
       >
         + New
       </button>

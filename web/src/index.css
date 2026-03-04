@@ -1,42 +1,102 @@
 @import "tailwindcss";
 
+/*
+ * Syncropic Brand Color System
+ * ─────────────────────────────
+ * Light mode: warm cream backgrounds (#faf8f5), warm darks for text
+ * Dark mode: warm near-blacks (#0c0c0c), warm whites for text
+ * Accent: Governance Blue (#0ea5e9 dark / #0284c7 light)
+ * Warm stone-based neutrals throughout
+ */
+
 @theme {
-  /* Color tokens — neutral palette */
-  --color-bg-primary: #0f1117;
-  --color-bg-secondary: #161922;
-  --color-bg-tertiary: #1c1f2b;
-  --color-bg-hover: #232736;
-  --color-bg-active: #2a2e3f;
+  /* Light mode defaults — overridden by .dark below */
 
-  --color-border-default: #2a2e3f;
-  --color-border-subtle: #1f2230;
+  /* Backgrounds */
+  --color-bg-primary: #faf8f5;
+  --color-bg-secondary: #f3eeea;
+  --color-bg-tertiary: #ebe5df;
+  --color-bg-hover: #e4ddd6;
+  --color-bg-active: #ddd5cc;
 
-  --color-text-primary: #e4e4e7;
-  --color-text-secondary: #a1a1aa;
-  --color-text-muted: #71717a;
+  /* Borders */
+  --color-border-default: #d6d3d1;
+  --color-border-subtle: #e8e3de;
 
-  /* Status colors */
+  /* Text */
+  --color-text-primary: #1c1917;
+  --color-text-secondary: #57534e;
+  --color-text-muted: #78716c;
+
+  /* Accent — Earth Minerals Copper */
+  --color-accent: #b45309;
+  --color-accent-hover: #92400e;
+  --color-accent-text: #92400e;
+
+  /* Code / terminal output */
+  --color-code: #059669;
+
+  /* Status */
+  --color-status-inbox: #78716c;
+  --color-status-ready: #b45309;
+  --color-status-active: #059669;
+  --color-status-blocked: #dc2626;
+  --color-status-done: #57534e;
+  --color-status-cancelled: #78716c;
+
+  /* Priority */
+  --color-priority-critical: #dc2626;
+  --color-priority-high: #ea580c;
+  --color-priority-medium: #ca8a04;
+  --color-priority-low: #1d4ed8;
+  --color-priority-none: #78716c;
+
+  /* Agent */
+  --color-agent: #7c3aed;
+
+  /* Fonts */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ── Dark mode ──────────────────────────────────────────────────────────── */
+.dark {
+  --color-bg-primary: #0c0c0c;
+  --color-bg-secondary: #141210;
+  --color-bg-tertiary: #1c1917;
+  --color-bg-hover: #262220;
+  --color-bg-active: #302b27;
+
+  --color-border-default: #2a2520;
+  --color-border-subtle: #1e1a17;
+
+  --color-text-primary: #faf8f5;
+  --color-text-secondary: #a8a29e;
+  --color-text-muted: #78716c;
+
+  --color-accent: #d97706;
+  --color-accent-hover: #f59e0b;
+  --color-accent-text: #f59e0b;
+
+  --color-code: #34d399;
+
   --color-status-inbox: #71717a;
-  --color-status-ready: #3b82f6;
+  --color-status-ready: #d97706;
   --color-status-active: #22c55e;
   --color-status-blocked: #ef4444;
   --color-status-done: #6b7280;
   --color-status-cancelled: #6b7280;
 
-  /* Priority colors */
   --color-priority-critical: #ef4444;
   --color-priority-high: #f97316;
   --color-priority-medium: #eab308;
-  --color-priority-low: #3b82f6;
+  --color-priority-low: #1d4ed8;
   --color-priority-none: #71717a;
 
-  /* Agent accent */
   --color-agent: #a855f7;
-
-  /* Font */
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
+
+/* ── Base styles ────────────────────────────────────────────────────────── */
 
 * {
   box-sizing: border-box;
@@ -52,7 +112,8 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar */
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -68,9 +129,26 @@ html, body, #root {
   background: var(--color-text-muted);
 }
 
-/* Markdown prose in detail panel */
+/* ── Selection ──────────────────────────────────────────────────────────── */
+
+::selection {
+  background: var(--color-accent);
+  color: white;
+}
+
+/* ── Markdown prose in detail panel ─────────────────────────────────────── */
+
 .prose-detail {
   overflow-wrap: break-word;
   word-break: break-word;
   min-width: 0;
+}
+
+/* ── Smooth transitions for theme switching ─────────────────────────────── */
+
+html.transitioning,
+html.transitioning *,
+html.transitioning *::before,
+html.transitioning *::after {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
 }
