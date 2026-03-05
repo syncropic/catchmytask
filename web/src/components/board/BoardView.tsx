@@ -15,12 +15,17 @@ interface Props {
 export function BoardView({ config }: Props) {
   const queryClient = useQueryClient()
   const currentProject = useProjectStore((s) => s.currentProject)
+  const filterTag = useUIStore((s) => s.filterTag)
   const [activeItem, setActiveItem] = useState<WorkItem | null>(null)
 
-  const { data: items, isLoading } = useQuery({
+  const { data: allItems, isLoading } = useQuery({
     queryKey: ['items', currentProject],
     queryFn: () => api.items.list(),
   })
+
+  const items = filterTag
+    ? allItems?.filter((i) => i.tags.includes(filterTag))
+    : allItems
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>

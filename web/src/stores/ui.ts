@@ -8,6 +8,12 @@ interface UIState {
   activeView: View
   setActiveView: (view: View) => void
 
+  filterStatus: string | null
+  setFilterStatus: (status: string | null) => void
+
+  filterTag: string | null
+  setFilterTag: (tag: string | null) => void
+
   selectedItemId: string | null
   setSelectedItemId: (id: string | null) => void
 
@@ -29,6 +35,12 @@ export const useUIStore = create<UIState>((set) => ({
 
   activeView: 'board',
   setActiveView: (view) => set({ activeView: view }),
+
+  filterStatus: null,
+  setFilterStatus: (status) => set({ filterStatus: status }),
+
+  filterTag: null,
+  setFilterTag: (tag) => set({ filterTag: tag }),
 
   selectedItemId: null,
   setSelectedItemId: (id) => set({ selectedItemId: id }),

@@ -9,6 +9,7 @@ const SECTIONS = [
   ['file-format', 'File Format'],
   ['agent-quickstart', 'Agent Quickstart'],
   ['configuration', 'Configuration'],
+  ['web-ui', 'Web UI'],
   ['workflow', 'Multi-Context Workflow'],
   ['doctor', 'Doctor'],
 ] as const
@@ -76,9 +77,11 @@ function Overview() {
     <div className="space-y-4">
       <SectionHeading id="overview">Overview</SectionHeading>
       <p className="text-sm text-text-secondary leading-relaxed">
-        CatchMyTask (<code className="text-accent-text">cmt</code>) is a file-first work management CLI built in Rust.
+        CatchMyTask (<code className="text-accent-text">cmt</code>) is a file-first work management system built in Rust.
         Work items are Markdown files with YAML frontmatter stored in <code className="text-accent-text">.cmt/items/</code>.
         Git is the history layer. AI agents and humans are equal first-class actors.
+        Use it via the CLI, or <a href="/app" className="text-accent-text hover:underline font-medium">try the web UI</a> right
+        in your browser — no installation needed.
       </p>
       <div className="bg-bg-secondary border border-border-default rounded-lg p-4">
         <pre className="text-xs text-text-secondary font-mono text-center leading-loose">
@@ -346,6 +349,100 @@ cmt config set defaults.priority high`}
   )
 }
 
+function WebUI() {
+  return (
+    <div className="space-y-4">
+      <SectionHeading id="web-ui">Web UI</SectionHeading>
+      <p className="text-sm text-text-secondary leading-relaxed">
+        CatchMyTask includes a browser-based UI that works in two modes — <strong className="text-text-primary">local-first</strong> (no
+        server needed, data in your browser) and <strong className="text-text-primary">remote</strong> (connected
+        to <code className="text-accent-text">cmt serve</code>).
+      </p>
+
+      <div className="bg-bg-secondary border border-border-default rounded-lg p-4 space-y-3">
+        <h3 className="text-sm font-semibold text-text-primary">Quick Start (No Installation)</h3>
+        <p className="text-sm text-text-secondary">
+          Visit <a href="/app" className="text-accent-text hover:underline font-medium">catchmytask.com/app</a> to
+          start immediately. Your data stays in your browser via IndexedDB — nothing is sent to any server.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+          {[
+            ['1. Open /app', 'Set your project name and prefix in the onboarding flow'],
+            ['2. Create items', 'Click + New or press Ctrl+K to open the command palette'],
+            ['3. Manage work', 'Drag items on the board, filter from sidebar, click to edit'],
+          ].map(([title, desc]) => (
+            <div key={title} className="bg-bg-primary border border-border-default rounded p-2 space-y-1">
+              <div className="font-semibold text-accent-text">{title}</div>
+              <div className="text-text-muted">{desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <h3 className="text-sm font-semibold text-text-primary pt-2">Features</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {[
+          ['Board View', 'Kanban board with drag-and-drop between status columns. Items auto-organize by state machine.'],
+          ['List View', 'Table view with inline status dropdowns, priority badges, and sidebar filtering by status and tags.'],
+          ['Dashboard', 'Summary stats, status/priority distribution, overdue items, recent activity at a glance.'],
+          ['Activity Feed', 'Timeline of all events (created, started, completed, blocked) grouped by day.'],
+          ['Detail Panel', 'Click any item to edit title, status, priority, type, assignee, due date, tags, and Markdown body.'],
+          ['Search', 'Ctrl/Cmd+K opens a command palette with full-text search across all items.'],
+          ['Dark/Light Mode', 'Toggle via the theme button in the header. Persists to localStorage.'],
+          ['Export/Import', 'Export your data as a .cmt zip, import into another browser or restore from backup.'],
+        ].map(([title, desc]) => (
+          <div key={title} className="border border-border-default rounded-lg p-3 space-y-1">
+            <h4 className="text-xs font-semibold text-text-primary">{title}</h4>
+            <p className="text-xs text-text-muted">{desc}</p>
+          </div>
+        ))}
+      </div>
+
+      <h3 className="text-sm font-semibold text-text-primary pt-2">Connected Mode</h3>
+      <p className="text-sm text-text-secondary leading-relaxed">
+        To connect the UI to your local <code className="text-accent-text">.cmt/</code> directory:
+      </p>
+      <CodeBlock>
+{`# Start the backend server
+cmt serve --open
+
+# Or with a custom port
+cmt serve --port 8080
+
+# The UI opens automatically and syncs with your .cmt/ files`}
+      </CodeBlock>
+      <p className="text-sm text-text-secondary">
+        In the app, go to <strong className="text-text-primary">Settings → Connection Mode → Remote Server</strong> and
+        enter <code className="text-accent-text">http://localhost:3170</code>. Click Test to verify.
+      </p>
+
+      <h3 className="text-sm font-semibold text-text-primary pt-2">Keyboard Shortcuts</h3>
+      <div className="overflow-x-auto border border-border-default rounded-lg">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-bg-tertiary text-text-secondary text-left">
+              <th className="px-3 py-2 font-semibold">Shortcut</th>
+              <th className="px-3 py-2 font-semibold">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-default">
+            {[
+              ['Ctrl/Cmd + K', 'Open command palette / search'],
+              ['Ctrl/Cmd + B', 'Toggle sidebar'],
+              ['Escape', 'Close panel / drawer / palette'],
+            ].map(([key, action]) => (
+              <tr key={key} className="hover:bg-bg-hover transition-colors">
+                <td className="px-3 py-2 font-mono text-accent-text">{key}</td>
+                <td className="px-3 py-2 text-text-secondary">{action}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 function Workflow() {
   return (
     <div className="space-y-4">
@@ -551,6 +648,7 @@ export function DocsPage() {
           <FileFormat />
           <AgentQuickstart />
           <Configuration />
+          <WebUI />
           <Workflow />
           <Doctor />
         </main>

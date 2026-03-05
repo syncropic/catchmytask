@@ -21,10 +21,18 @@ export function ListView({ config }: Props) {
   const currentProject = useProjectStore((s) => s.currentProject)
   const openDetailPanel = useUIStore((s) => s.openDetailPanel)
   const openCreateDrawer = useUIStore((s) => s.openCreateDrawer)
+  const filterStatus = useUIStore((s) => s.filterStatus)
+  const filterTag = useUIStore((s) => s.filterTag)
 
-  const { data: items, isLoading } = useQuery({
+  const { data: allItems, isLoading } = useQuery({
     queryKey: ['items', currentProject],
     queryFn: () => api.items.list(),
+  })
+
+  const items = allItems?.filter((i) => {
+    if (filterStatus && i.status !== filterStatus) return false
+    if (filterTag && !i.tags.includes(filterTag)) return false
+    return true
   })
 
   const statusMutation = useMutation({

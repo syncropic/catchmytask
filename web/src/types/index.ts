@@ -92,7 +92,7 @@ export interface ProjectsResponse {
   default_project: string
 }
 
-export type View = 'board' | 'list' | 'timeline' | 'graph' | 'dashboard' | 'activity' | 'settings' | 'terminal'
+export type View = 'board' | 'list' | 'dashboard' | 'activity' | 'settings'
 
 export type Priority = 'critical' | 'high' | 'medium' | 'low' | 'none'
 

@@ -22,6 +22,10 @@ export function Sidebar({ config, projects }: Props) {
   const queryClient = useQueryClient()
   const currentProject = useProjectStore((s) => s.currentProject)
   const setCurrentProject = useProjectStore((s) => s.setCurrentProject)
+  const filterStatus = useUIStore((s) => s.filterStatus)
+  const setFilterStatus = useUIStore((s) => s.setFilterStatus)
+  const filterTag = useUIStore((s) => s.filterTag)
+  const setFilterTag = useUIStore((s) => s.setFilterTag)
 
   const { data: items } = useQuery({
     queryKey: ['items', currentProject],
@@ -90,7 +94,12 @@ export function Sidebar({ config, projects }: Props) {
         <h3 className="text-text-muted text-[11px] uppercase tracking-wider font-medium px-2 mb-1.5">
           Status
         </h3>
-        <button className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-bg-hover text-text-secondary text-xs transition-colors">
+        <button
+          onClick={() => setFilterStatus(null)}
+          className={`w-full flex items-center gap-2 px-2 py-1 rounded text-xs transition-colors ${
+            filterStatus === null ? 'bg-bg-hover text-text-primary' : 'hover:bg-bg-hover text-text-secondary'
+          }`}
+        >
           <span className="w-2 h-2 rounded-full bg-text-muted" />
           All
           <span className="ml-auto text-text-muted">{totalItems}</span>
@@ -98,7 +107,10 @@ export function Sidebar({ config, projects }: Props) {
         {states.map((state) => (
           <button
             key={state}
-            className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-bg-hover text-text-secondary text-xs transition-colors"
+            onClick={() => setFilterStatus(filterStatus === state ? null : state)}
+            className={`w-full flex items-center gap-2 px-2 py-1 rounded text-xs transition-colors ${
+              filterStatus === state ? 'bg-bg-hover text-text-primary' : 'hover:bg-bg-hover text-text-secondary'
+            }`}
           >
             <span className={`w-2 h-2 rounded-full ${STATUS_COLORS[state] ?? 'bg-text-muted'}`} />
             {state}
@@ -118,7 +130,10 @@ export function Sidebar({ config, projects }: Props) {
             .map(([tag, count]) => (
               <button
                 key={tag}
-                className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-bg-hover text-text-secondary text-xs transition-colors"
+                onClick={() => setFilterTag(filterTag === tag ? null : tag)}
+                className={`w-full flex items-center gap-2 px-2 py-1 rounded text-xs transition-colors ${
+                  filterTag === tag ? 'bg-bg-hover text-text-primary' : 'hover:bg-bg-hover text-text-secondary'
+                }`}
               >
                 <span className="text-text-muted">#</span>
                 {tag}
