@@ -31,6 +31,21 @@ function loadPersistedState(): { mode: 'local' | 'remote'; remoteUrl: string } {
 // Returns a promise that resolves when detection is complete.
 let _detectPromise: Promise<void> | null = null
 
+const LOCALHOST_URL = 'http://127.0.0.1:3170'
+
+async function probeHealth(baseUrl: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${baseUrl}/api/health`, { signal: AbortSignal.timeout(2000) })
+    if (res.ok) {
+      const data = await res.json()
+      return data.status === 'ok' && !!data.version
+    }
+  } catch {
+    // Not available
+  }
+  return false
+}
+
 export function detectBackend(): Promise<void> {
   if (_detectPromise) return _detectPromise
   _detectPromise = (async () => {
@@ -38,18 +53,19 @@ export function detectBackend(): Promise<void> {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) return
 
-    try {
-      const res = await fetch('/api/health', { signal: AbortSignal.timeout(2000) })
-      if (res.ok) {
-        const data = await res.json()
-        if (data.status === 'ok' && data.version) {
-          // Backend detected on first visit — auto-connect
-          useConnectionStore.getState().setMode('remote')
-          useConnectionStore.getState().setRemoteUrl('')
-        }
-      }
-    } catch {
-      // No backend available, stay in local mode
+    // 1. Try same-origin (works when served by cmt serve)
+    if (await probeHealth('')) {
+      useConnectionStore.getState().setMode('remote')
+      useConnectionStore.getState().setRemoteUrl('')
+      return
+    }
+
+    // 2. Try localhost:3170 (works from catchmytask.com or any other origin)
+    //    Browsers allow HTTPS → HTTP localhost requests (W3C mixed content exception)
+    if (await probeHealth(LOCALHOST_URL)) {
+      useConnectionStore.getState().setMode('remote')
+      useConnectionStore.getState().setRemoteUrl(LOCALHOST_URL)
+      return
     }
   })()
   return _detectPromise
