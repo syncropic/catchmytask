@@ -4,7 +4,7 @@ import { api } from '@/lib/api'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { useUIStore } from '@/stores/ui'
 import { useProjectStore } from '@/stores/project'
-import { useConnectionStore } from '@/stores/connection'
+import { useConnectionStore, detectBackend } from '@/stores/connection'
 import { hasConfig } from '@/lib/storage/config-store'
 import { ActivityRail } from '@/components/layout/ActivityRail'
 import { Header } from '@/components/layout/Header'
@@ -23,14 +23,16 @@ export function AppPage() {
   const currentProject = useProjectStore((s) => s.currentProject)
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null)
 
-  // Check if we need onboarding (only in local mode)
+  // Wait for backend auto-detection, then check if we need onboarding
   useEffect(() => {
-    if (mode === 'local') {
-      hasConfig().then((exists) => setShowOnboarding(!exists))
-    } else {
-      // Remote mode never shows onboarding
-      Promise.resolve().then(() => setShowOnboarding(false))
-    }
+    detectBackend().then(() => {
+      const currentMode = useConnectionStore.getState().mode
+      if (currentMode === 'local') {
+        hasConfig().then((exists) => setShowOnboarding(!exists))
+      } else {
+        setShowOnboarding(false)
+      }
+    })
   }, [mode])
 
   const { data: projectsData } = useQuery({
