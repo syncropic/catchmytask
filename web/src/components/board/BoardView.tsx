@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { DndContext, DragOverlay, closestCorners, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
 import { useState } from 'react'
 import { api } from '@/lib/api'
 import { useUIStore } from '@/stores/ui'
@@ -15,17 +15,21 @@ interface Props {
 export function BoardView({ config }: Props) {
   const queryClient = useQueryClient()
   const currentProject = useProjectStore((s) => s.currentProject)
+  const filterStatus = useUIStore((s) => s.filterStatus)
   const filterTag = useUIStore((s) => s.filterTag)
   const [activeItem, setActiveItem] = useState<WorkItem | null>(null)
 
   const { data: allItems, isLoading } = useQuery({
     queryKey: ['items', currentProject],
     queryFn: () => api.items.list(),
+    placeholderData: keepPreviousData,
   })
 
-  const items = filterTag
-    ? allItems?.filter((i) => i.tags.includes(filterTag))
-    : allItems
+  const items = allItems?.filter((i) => {
+    if (filterStatus && i.status !== filterStatus) return false
+    if (filterTag && !i.tags.includes(filterTag)) return false
+    return true
+  })
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
@@ -78,6 +82,10 @@ export function BoardView({ config }: Props) {
     statusMutation.mutate({ id: itemId, status: targetStatus })
   }
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  )
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-full text-text-muted">Loading items...</div>
   }
@@ -87,7 +95,7 @@ export function BoardView({ config }: Props) {
   }
 
   return (
-    <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex gap-4 p-4 h-full overflow-x-auto">
         {orderedStates.map((state) => (
           <BoardColumn

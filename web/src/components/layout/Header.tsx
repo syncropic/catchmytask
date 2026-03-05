@@ -50,15 +50,15 @@ export function Header({ config, projects }: Props) {
         >
           {projects.projects.map((p) => (
             <option key={p.name} value={p.name}>
-              {p.name} [{p.prefix}]
+              {p.name} [{p.prefix}] ({p.item_count})
             </option>
           ))}
         </select>
       ) : (
-        <span className="text-text-secondary">
+        <span className="text-text-secondary text-xs">
           {projectName}
           {prefix && (
-            <span className="ml-1.5 text-xs text-text-muted bg-bg-tertiary px-1.5 py-0.5 rounded">
+            <span className="ml-1.5 text-text-muted bg-bg-tertiary px-1.5 py-0.5 rounded">
               {prefix}
             </span>
           )}

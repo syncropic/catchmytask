@@ -4,11 +4,12 @@ use crate::error::{Result, WorkError};
 use crate::model::WorkItem;
 use crate::parser;
 
-/// Resolve an item ID to a file path using the detection order:
-/// 1. .cmt/items/{ID}.md
-/// 2. .cmt/items/{ID}/item.md
-/// 3. .cmt/archive/{ID}.md
-/// 4. .cmt/archive/{ID}/item.md
+/// Resolve an item ID to a file path.
+///
+/// Supports both old-style (`CMT-1.md`) and slugified (`CMT-1-fix-login-bug.md`) filenames.
+/// Detection order per directory (items, archive):
+/// 1. Exact match: `{ID}.md` or `{ID}/item.md`
+/// 2. Slugified match: `{ID}-*.md` or `{ID}-*/item.md`
 pub fn resolve_item_path(work_dir: &Path, id: &str) -> Result<PathBuf> {
     // Validate ID doesn't contain path traversal characters
     if id.contains('/') || id.contains('\\') || id.contains("..") {
@@ -18,7 +19,6 @@ pub fn resolve_item_path(work_dir: &Path, id: &str) -> Result<PathBuf> {
     }
 
     // Normalize padded IDs: PROJ-0001 -> PROJ-1 (the storage format).
-    // Try both the user-supplied form and the normalized form so both work.
     let mut ids_to_try = vec![id.to_string()];
     if let Ok(parsed) = crate::model::WorkItemId::parse(id) {
         let normalized = format!("{}-{}", parsed.prefix, parsed.number);
@@ -28,29 +28,58 @@ pub fn resolve_item_path(work_dir: &Path, id: &str) -> Result<PathBuf> {
     }
 
     for try_id in &ids_to_try {
-        let candidates = [
-            work_dir.join("items").join(format!("{}.md", try_id)),
-            work_dir.join("items").join(try_id).join("item.md"),
-            work_dir.join("archive").join(format!("{}.md", try_id)),
-            work_dir.join("archive").join(try_id).join("item.md"),
-        ];
+        for subdir in &["items", "archive"] {
+            let dir = work_dir.join(subdir);
+            if !dir.exists() {
+                continue;
+            }
 
-        for candidate in &candidates {
-            if candidate.exists() {
-                // Verify the resolved path is inside work_dir
-                if let (Ok(canonical_work), Ok(canonical_candidate)) =
-                    (std::fs::canonicalize(work_dir), std::fs::canonicalize(candidate))
-                {
-                    if !canonical_candidate.starts_with(&canonical_work) {
-                        return Err(WorkError::PathTraversal(candidate.clone()));
+            // Try exact matches first
+            let exact_file = dir.join(format!("{}.md", try_id));
+            if exact_file.exists() {
+                return verify_path(work_dir, &exact_file);
+            }
+            let exact_dir = dir.join(try_id).join("item.md");
+            if exact_dir.exists() {
+                return verify_path(work_dir, &exact_dir);
+            }
+
+            // Try slugified matches: {ID}-*.md or {ID}-*/item.md
+            let prefix_with_dash = format!("{}-", try_id);
+            if let Ok(entries) = std::fs::read_dir(&dir) {
+                for entry in entries.flatten() {
+                    let name = entry.file_name();
+                    let name_str = name.to_string_lossy();
+                    if !name_str.starts_with(&prefix_with_dash) {
+                        continue;
+                    }
+                    let path = entry.path();
+                    if path.is_file() && name_str.ends_with(".md") {
+                        return verify_path(work_dir, &path);
+                    }
+                    if path.is_dir() {
+                        let item_file = path.join("item.md");
+                        if item_file.exists() {
+                            return verify_path(work_dir, &item_file);
+                        }
                     }
                 }
-                return Ok(candidate.clone());
             }
         }
     }
 
     Err(WorkError::ItemNotFound(id.to_string()))
+}
+
+fn verify_path(work_dir: &Path, path: &Path) -> Result<PathBuf> {
+    if let (Ok(canonical_work), Ok(canonical_path)) =
+        (std::fs::canonicalize(work_dir), std::fs::canonicalize(path))
+    {
+        if !canonical_path.starts_with(&canonical_work) {
+            return Err(WorkError::PathTraversal(path.to_path_buf()));
+        }
+    }
+    Ok(path.to_path_buf())
 }
 
 /// Read and parse a work item from disk.
@@ -141,6 +170,15 @@ fn scan_dir_recursive(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
+/// Extract the numeric ID from a filename like "CMT-42" or "CMT-42-fix-bug".
+/// Returns the number if the name starts with the given prefix.
+fn extract_id_number(name: &str, prefix_with_dash: &str) -> Option<u32> {
+    let after_prefix = name.strip_prefix(prefix_with_dash)?;
+    // The number is the first segment before a '-' (or the whole thing)
+    let num_str = after_prefix.split('-').next()?;
+    num_str.parse::<u32>().ok()
+}
+
 /// Get the next available ID number by scanning files.
 pub fn next_id_from_files(work_dir: &Path, prefix: &str) -> Result<u32> {
     let files = scan_item_files(work_dir)?;
@@ -159,11 +197,9 @@ pub fn next_id_from_files(work_dir: &Path, prefix: &str) -> Result<u32> {
                 stem
             };
 
-            if let Some(num_str) = name.strip_prefix(&prefix_with_dash) {
-                if let Ok(num) = num_str.parse::<u32>() {
-                    if num > max_number {
-                        max_number = num;
-                    }
+            if let Some(num) = extract_id_number(name, &prefix_with_dash) {
+                if num > max_number {
+                    max_number = num;
                 }
             }
         }

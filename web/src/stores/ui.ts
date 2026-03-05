@@ -33,7 +33,7 @@ export const useUIStore = create<UIState>((set) => ({
   sidebarOpen: true,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
 
-  activeView: 'board',
+  activeView: 'list',
   setActiveView: (view) => set({ activeView: view }),
 
   filterStatus: null,

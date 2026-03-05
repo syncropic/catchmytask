@@ -3,6 +3,7 @@ pub mod config;
 pub mod error;
 pub mod model;
 pub mod parser;
+pub mod slug;
 pub mod storage;
 pub mod state_machine;
 pub mod index;

@@ -1,7 +1,7 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 fn work_cmd() -> Command {
     Command::cargo_bin("cmt").unwrap()
@@ -13,6 +13,44 @@ fn init_work_dir(dir: &Path) {
         .args(["init", "--prefix", "CMT", "--name", "test-project"])
         .assert()
         .success();
+}
+
+/// Find an item file by its ID prefix (e.g. "CMT-1") in items/ or archive/.
+/// Handles both old-style (CMT-1.md) and slugified (CMT-1-fix-login.md) filenames.
+fn find_item_file(base: &Path, id: &str, subdir: &str) -> PathBuf {
+    let dir = base.join(".cmt").join(subdir);
+    let prefix = format!("{}-", id);
+    // Try exact match first
+    let exact = dir.join(format!("{}.md", id));
+    if exact.exists() { return exact; }
+    // Try slugified
+    for entry in std::fs::read_dir(&dir).unwrap() {
+        let entry = entry.unwrap();
+        let name = entry.file_name().to_string_lossy().to_string();
+        if name.starts_with(&prefix) && name.ends_with(".md") {
+            return entry.path();
+        }
+        // Complex item directory
+        if name.starts_with(&prefix) || name == id {
+            let item_md = entry.path().join("item.md");
+            if item_md.exists() { return item_md; }
+        }
+    }
+    panic!("Item file not found for {} in {}/", id, subdir);
+}
+
+/// Find a complex item directory by its ID prefix.
+fn find_item_dir(base: &Path, id: &str) -> PathBuf {
+    let dir = base.join(".cmt/items");
+    let prefix = format!("{}-", id);
+    for entry in std::fs::read_dir(&dir).unwrap() {
+        let entry = entry.unwrap();
+        let name = entry.file_name().to_string_lossy().to_string();
+        if (name.starts_with(&prefix) || name == id) && entry.path().is_dir() {
+            return entry.path();
+        }
+    }
+    panic!("Item directory not found for {}", id);
 }
 
 // ============ cmt init ============
@@ -133,8 +171,10 @@ fn test_add_basic() {
         .success()
         .stdout(predicate::str::contains("CMT-0001"));
 
-    // Verify file exists
-    assert!(tmp.path().join(".cmt/items/CMT-1.md").exists());
+    // Verify file exists (slugified filename)
+    let path = find_item_file(tmp.path(), "CMT-1", "items");
+    assert!(path.exists());
+    assert!(path.to_string_lossy().contains("CMT-1-fix-login-bug"));
 }
 
 #[test]
@@ -153,7 +193,8 @@ fn test_add_with_options() {
         .assert()
         .success();
 
-    let content = std::fs::read_to_string(tmp.path().join(".cmt/items/CMT-1.md")).unwrap();
+    let path = find_item_file(tmp.path(), "CMT-1", "items");
+    let content = std::fs::read_to_string(path).unwrap();
     assert!(content.contains("priority: high"));
     assert!(content.contains("team:backend"));
     assert!(content.contains("2026-03-01"));
@@ -204,10 +245,11 @@ fn test_add_complex() {
         .assert()
         .success();
 
-    assert!(tmp.path().join(".cmt/items/CMT-1/item.md").exists());
-    assert!(tmp.path().join(".cmt/items/CMT-1/evidence").is_dir());
-    assert!(tmp.path().join(".cmt/items/CMT-1/queries").is_dir());
-    assert!(tmp.path().join(".cmt/items/CMT-1/handover").is_dir());
+    let dir = find_item_dir(tmp.path(), "CMT-1");
+    assert!(dir.join("item.md").exists());
+    assert!(dir.join("evidence").is_dir());
+    assert!(dir.join("queries").is_dir());
+    assert!(dir.join("handover").is_dir());
 }
 
 // ============ cmt show ============
@@ -320,7 +362,7 @@ fn test_edit_padded_id() {
         .assert()
         .success();
 
-    let content = std::fs::read_to_string(tmp.path().join(".cmt/items/CMT-1.md")).unwrap();
+    let content = std::fs::read_to_string(find_item_file(tmp.path(), "CMT-1", "items")).unwrap();
     assert!(content.contains("priority: high"));
 }
 
@@ -350,7 +392,11 @@ fn test_delete_padded_id() {
         .assert()
         .success();
 
-    assert!(!tmp.path().join(".cmt/items/CMT-1.md").exists());
+    // Item should be gone - no file matching CMT-1 in items
+    let items_dir = tmp.path().join(".cmt/items");
+    assert!(!std::fs::read_dir(&items_dir).unwrap().any(|e| {
+        e.unwrap().file_name().to_string_lossy().starts_with("CMT-1")
+    }));
 }
 
 #[test]
@@ -430,7 +476,7 @@ fn test_status_blocked_with_reason() {
         .success();
 
     // Verify blocked_reason is set in file
-    let content = std::fs::read_to_string(tmp.path().join(".cmt/items/CMT-1.md")).unwrap();
+    let content = std::fs::read_to_string(find_item_file(tmp.path(), "CMT-1", "items")).unwrap();
     assert!(content.contains("blocked_reason: Waiting on API"));
 }
 
@@ -573,7 +619,10 @@ fn test_delete_with_force() {
         .success()
         .stderr(predicate::str::contains("Deleted CMT-1"));
 
-    assert!(!tmp.path().join(".cmt/items/CMT-1.md").exists());
+    let items_dir = tmp.path().join(".cmt/items");
+    assert!(!std::fs::read_dir(&items_dir).unwrap().any(|e| {
+        e.unwrap().file_name().to_string_lossy().starts_with("CMT-1")
+    }));
 }
 
 // ============ cmt reindex ============
@@ -650,7 +699,7 @@ fn test_edit_set_field() {
         .success()
         .stderr(predicate::str::contains("Updated CMT-1"));
 
-    let content = std::fs::read_to_string(tmp.path().join(".cmt/items/CMT-1.md")).unwrap();
+    let content = std::fs::read_to_string(find_item_file(tmp.path(), "CMT-1", "items")).unwrap();
     assert!(content.contains("priority: high"));
 }
 
@@ -666,7 +715,7 @@ fn test_edit_add_tag() {
         .assert()
         .success();
 
-    let content = std::fs::read_to_string(tmp.path().join(".cmt/items/CMT-1.md")).unwrap();
+    let content = std::fs::read_to_string(find_item_file(tmp.path(), "CMT-1", "items")).unwrap();
     assert!(content.contains("team:backend"));
 }
 
@@ -688,8 +737,12 @@ fn test_archive_done_items() {
         .success()
         .stderr(predicate::str::contains("Archived CMT-1"));
 
-    assert!(tmp.path().join(".cmt/archive/CMT-1.md").exists());
-    assert!(!tmp.path().join(".cmt/items/CMT-1.md").exists());
+    let archived = find_item_file(tmp.path(), "CMT-1", "archive");
+    assert!(archived.exists());
+    let items_dir = tmp.path().join(".cmt/items");
+    assert!(!std::fs::read_dir(&items_dir).unwrap().any(|e| {
+        e.unwrap().file_name().to_string_lossy().starts_with("CMT-1")
+    }));
 }
 
 // ============ cmt config ============

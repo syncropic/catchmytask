@@ -2,10 +2,10 @@ import { useUIStore } from '@/stores/ui'
 import type { View } from '@/types'
 
 const VIEW_ITEMS: { view: View; icon: string; label: string }[] = [
-  { view: 'board', icon: '▦', label: 'Board' },
   { view: 'list', icon: '≡', label: 'List' },
-  { view: 'dashboard', icon: '▣', label: 'Dashboard' },
   { view: 'activity', icon: '↕', label: 'Activity' },
+  { view: 'board', icon: '▦', label: 'Board' },
+  { view: 'dashboard', icon: '▣', label: 'Dashboard' },
 ]
 
 const BOTTOM_ITEMS: { view: View; icon: string; label: string }[] = [

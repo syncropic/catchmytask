@@ -124,6 +124,7 @@ const COMMANDS = [
   { name: 'setup', description: 'Configure agent integrations', flags: '--claude-code, --list, --all', example: 'cmt setup --claude-code' },
   { name: 'serve', description: 'Start the web UI server', flags: '--port, --host', example: 'cmt serve' },
   { name: 'projects', description: 'Manage project registry', flags: 'list, add, remove', example: 'cmt projects list' },
+  { name: 'slugify', description: 'Rename item files to include title slugs', flags: '--dry-run', example: 'cmt slugify --dry-run' },
 ]
 
 function Commands() {
@@ -214,8 +215,9 @@ function FileFormat() {
     <div className="space-y-4">
       <SectionHeading id="file-format">File Format</SectionHeading>
       <p className="text-sm text-text-secondary">
-        Work items are Markdown files with YAML frontmatter. Everything is a file — read them,
-        edit them, <code className="text-accent-text">grep</code> them, <code className="text-accent-text">git log</code> them.
+        Work items are Markdown files with YAML frontmatter. Filenames include a title slug for
+        readability (e.g., <code className="text-accent-text">CMT-42-fix-login-bug.md</code>).
+        Everything is a file — read them, edit them, <code className="text-accent-text">grep</code> them, <code className="text-accent-text">git log</code> them.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">

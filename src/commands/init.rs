@@ -59,8 +59,10 @@ pub fn execute(args: &InitArgs, json: bool, quiet: bool) -> Result<()> {
 
     let abs_work_dir = std::fs::canonicalize(work_dir)?;
 
-    // Auto-register in global project registry (non-fatal)
+    // Auto-register in global project registry (non-fatal, skip temp dirs)
     let name = resolve_name(args);
+    let skip_registry = abs_work_dir.starts_with("/tmp");
+    if !skip_registry {
     if let Ok(mut registry) = crate::registry::Registry::load() {
         let entry = crate::registry::ProjectEntry {
             name: name.clone(),
@@ -74,6 +76,7 @@ pub fn execute(args: &InitArgs, json: bool, quiet: bool) -> Result<()> {
                 crate::registry::Registry::registry_path().display()
             );
         }
+    }
     }
 
     if json {

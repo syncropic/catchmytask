@@ -6,6 +6,7 @@ use crate::error::{Result, WorkError};
 use crate::format;
 use crate::index::Index;
 use crate::model::{Assignee, WorkItem, WorkItemId};
+use crate::slug;
 use crate::storage;
 
 pub fn execute(
@@ -130,16 +131,26 @@ pub fn execute(
     // Validate the constructed item
     item.validate()?;
 
+    // Generate slug for filename
+    let item_slug = match &args.slug {
+        Some(s) => {
+            slug::validate_slug(s).map_err(|e| WorkError::ValidationError(e))?;
+            s.clone()
+        }
+        None => slug::slugify(&args.title, 50),
+    };
+    let slugged_name = format!("{}-{}", id_str, item_slug);
+
     // Write file
     let file_path = if args.complex {
-        let dir = work_dir.join("items").join(&id_str);
+        let dir = work_dir.join("items").join(&slugged_name);
         std::fs::create_dir_all(&dir)?;
         std::fs::create_dir_all(dir.join("evidence"))?;
         std::fs::create_dir_all(dir.join("queries"))?;
         std::fs::create_dir_all(dir.join("handover"))?;
         dir.join("item.md")
     } else {
-        work_dir.join("items").join(format!("{}.md", id_str))
+        work_dir.join("items").join(format!("{}.md", slugged_name))
     };
 
     storage::write_item(&file_path, &item, &body)?;

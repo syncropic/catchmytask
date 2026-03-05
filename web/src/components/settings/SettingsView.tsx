@@ -16,7 +16,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
   const [testResult, setTestResult] = useState<string | null>(null)
   const [editingConfig, setEditingConfig] = useState(false)
   const [projectName, setProjectName] = useState(config?.project.name ?? '')
-  const [projectPrefix, setProjectPrefix] = useState(config?.project.prefix ?? 'WM')
+  const [projectPrefix, setProjectPrefix] = useState(config?.project.prefix ?? 'CMT')
   const [projectDesc, setProjectDesc] = useState(config?.project.description ?? '')
   const [importStatus, setImportStatus] = useState<string | null>(null)
   const [resetConfirm, setResetConfirm] = useState(false)
@@ -169,7 +169,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
               <button
                 onClick={() => {
                   setProjectName(config?.project.name ?? '')
-                  setProjectPrefix(config?.project.prefix ?? 'WM')
+                  setProjectPrefix(config?.project.prefix ?? 'CMT')
                   setProjectDesc(config?.project.description ?? '')
                   setEditingConfig(true)
                 }}

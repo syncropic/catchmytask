@@ -6,6 +6,7 @@ mod config;
 mod error;
 mod model;
 mod parser;
+mod slug;
 mod storage;
 mod state_machine;
 mod index;
@@ -134,6 +135,10 @@ fn run(cli: &Cli) -> error::Result<()> {
         Commands::Doctor(args) => {
             let work_dir = resolve_work_dir(cli).ok();
             commands::doctor::execute(args, work_dir.as_deref(), cli.json, cli.quiet)
+        }
+        Commands::Slugify(args) => {
+            let work_dir = resolve_work_dir(cli)?;
+            commands::slugify::execute(args, &work_dir, cli.json, cli.quiet)
         }
     }
 }

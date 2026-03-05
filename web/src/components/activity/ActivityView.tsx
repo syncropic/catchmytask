@@ -20,6 +20,8 @@ interface ActivityEvent {
 export function ActivityView({ config }: Props) {
   const currentProject = useProjectStore((s) => s.currentProject)
   const openDetailPanel = useUIStore((s) => s.openDetailPanel)
+  const filterStatus = useUIStore((s) => s.filterStatus)
+  const filterTag = useUIStore((s) => s.filterTag)
   const [filter, setFilter] = useState<ActivityFilter>('all')
 
   const { data: items, isLoading } = useQuery({
@@ -31,7 +33,11 @@ export function ActivityView({ config }: Props) {
     return <div className="flex items-center justify-center h-full text-text-muted text-xs">Loading...</div>
   }
 
-  const allItems = items ?? []
+  const allItems = (items ?? []).filter((i) => {
+    if (filterStatus && i.status !== filterStatus) return false
+    if (filterTag && !i.tags.includes(filterTag)) return false
+    return true
+  })
 
   // Build activity timeline from item timestamps
   const events: ActivityEvent[] = []

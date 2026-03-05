@@ -95,6 +95,9 @@ pub enum Commands {
 
     /// Check system health and configuration
     Doctor(DoctorArgs),
+
+    /// Rename item files to include title slugs
+    Slugify(SlugifyArgs),
 }
 
 #[derive(Args, Debug)]
@@ -248,6 +251,10 @@ pub struct AddArgs {
     /// Markdown body content
     #[arg(long, short = 'b')]
     pub body: Option<String>,
+
+    /// Custom slug for the filename (auto-generated from title if omitted)
+    #[arg(long)]
+    pub slug: Option<String>,
 }
 
 #[derive(Args, Debug)]
@@ -526,6 +533,13 @@ pub struct DoctorArgs {
     /// Show per-project details
     #[arg(long, short = 'v')]
     pub verbose: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct SlugifyArgs {
+    /// Dry run — show what would be renamed without changing anything
+    #[arg(long, short = 'n')]
+    pub dry_run: bool,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
