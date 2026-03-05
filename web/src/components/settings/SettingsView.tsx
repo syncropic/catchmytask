@@ -61,7 +61,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `work-export-${new Date().toISOString().slice(0, 10)}.zip`
+    a.download = `cmt-export-${new Date().toISOString().slice(0, 10)}.zip`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -341,7 +341,7 @@ export function SettingsView({ config }: { config: ProjectConfig | null }) {
         </h2>
         <div className="bg-bg-tertiary rounded p-3 space-y-1 text-xs text-text-muted">
           <p>
-            <span className="text-text-secondary">CatchMyTask</span> v0.1.1
+            <span className="text-text-secondary">CatchMyTask</span> v0.2.0
           </p>
           <p>
             A next-generation work management system for humans and AI agents.

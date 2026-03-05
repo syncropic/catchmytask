@@ -5,7 +5,7 @@ import * as configStore from './storage/config-store'
 export const localApi = {
   health: async () => ({
     status: 'ok',
-    version: '0.1.1',
+    version: '0.2.0',
     work_dir: 'browser://local',
   }),
 
