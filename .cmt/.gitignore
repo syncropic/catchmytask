@@ -1,0 +1,4 @@
+config.local.yml
+.index.db
+.index.db-wal
+.index.db-shm
