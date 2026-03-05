@@ -1,4 +1,5 @@
 import { useDraggable } from '@dnd-kit/core'
+import { useRef } from 'react'
 import { useUIStore } from '@/stores/ui'
 import type { WorkItem } from '@/types'
 
@@ -21,6 +22,8 @@ export function BoardCard({ item, isDragging }: Props) {
     id: item.id,
   })
 
+  const pointerStart = useRef<{ x: number; y: number } | null>(null)
+
   const style = transform
     ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
     : undefined
@@ -34,7 +37,13 @@ export function BoardCard({ item, isDragging }: Props) {
       style={style}
       {...attributes}
       {...listeners}
-      onClick={() => openDetailPanel(item.id)}
+      onPointerDown={(e) => { pointerStart.current = { x: e.clientX, y: e.clientY }; listeners?.onPointerDown?.(e) }}
+      onClick={(e) => {
+        if (!pointerStart.current) return openDetailPanel(item.id)
+        const dx = e.clientX - pointerStart.current.x
+        const dy = e.clientY - pointerStart.current.y
+        if (Math.abs(dx) < 5 && Math.abs(dy) < 5) openDetailPanel(item.id)
+      }}
       className={`bg-bg-secondary border border-border-default rounded-md px-3 py-2 cursor-pointer transition-all hover:border-border-default hover:bg-bg-hover ${
         isDragging ? 'opacity-80 shadow-lg ring-1 ring-accent/50' : ''
       } ${isAgent ? 'border-l-2 border-l-agent' : ''}`}
