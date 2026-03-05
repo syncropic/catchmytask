@@ -1,22 +1,52 @@
+import { useState, useEffect } from 'react'
 import { Navigation } from '@/sections/Navigation'
 import { Footer } from '@/sections/Footer'
 
+const SECTIONS = [
+  ['overview', 'Overview'],
+  ['commands', 'Commands'],
+  ['state-machine', 'State Machine'],
+  ['file-format', 'File Format'],
+  ['agent-quickstart', 'Agent Quickstart'],
+  ['configuration', 'Configuration'],
+  ['workflow', 'Multi-Context Workflow'],
+  ['doctor', 'Doctor'],
+] as const
+
 function TOC() {
-  const sections = [
-    ['overview', 'Overview'],
-    ['commands', 'Commands'],
-    ['state-machine', 'State Machine'],
-    ['file-format', 'File Format'],
-    ['agent-quickstart', 'Agent Quickstart'],
-    ['configuration', 'Configuration'],
-  ]
+  const [active, setActive] = useState('overview')
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActive(entry.target.id)
+          }
+        }
+      },
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
+    )
+
+    for (const [id] of SECTIONS) {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    }
+
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <nav className="flex flex-wrap gap-3 text-xs">
-      {sections.map(([id, label]) => (
+    <nav className="space-y-1">
+      {SECTIONS.map(([id, label]) => (
         <a
           key={id}
           href={`#${id}`}
-          className="px-3 py-1.5 bg-bg-tertiary border border-border-default rounded hover:border-accent/50 hover:text-accent-text text-text-secondary transition-colors"
+          className={`block px-3 py-1.5 rounded text-xs transition-colors ${
+            active === id
+              ? 'bg-accent/15 text-accent-text font-medium border-l-2 border-accent'
+              : 'text-text-secondary hover:text-accent-text hover:bg-bg-hover'
+          }`}
         >
           {label}
         </a>
@@ -83,6 +113,7 @@ const COMMANDS = [
   { name: 'delete', description: 'Delete work items', flags: '-f, --force', example: 'cmt delete CMT-1 -f' },
   { name: 'log', description: 'Show item event history', flags: '-n, --actor', example: 'cmt log CMT-1' },
   { name: 'check', description: 'Validate project integrity', flags: '--fix', example: 'cmt check' },
+  { name: 'doctor', description: 'Check system health', flags: '-v, --json', example: 'cmt doctor -v' },
   { name: 'reindex', description: 'Rebuild SQLite index', flags: '--force', example: 'cmt reindex --force' },
   { name: 'config', description: 'View/modify configuration', flags: 'show, get, set', example: 'cmt config set defaults.priority high' },
   { name: 'completions', description: 'Generate shell completions', flags: 'bash, zsh, fish', example: 'cmt completions bash' },
@@ -161,10 +192,10 @@ function StateMachine() {
               ['blocked', '', 'active, cancelled'],
               ['done', 'terminal', '—'],
               ['cancelled', 'terminal', '—'],
-            ].map(([state, type, transitions]) => (
+            ].map(([state, type_, transitions]) => (
               <tr key={state} className="hover:bg-bg-hover transition-colors">
                 <td className="px-3 py-2 font-mono text-accent-text">{state}</td>
-                <td className="px-3 py-2 text-text-muted">{type}</td>
+                <td className="px-3 py-2 text-text-muted">{type_}</td>
                 <td className="px-3 py-2 text-text-secondary">{transitions}</td>
               </tr>
             ))}
@@ -315,25 +346,215 @@ cmt config set defaults.priority high`}
   )
 }
 
+function Workflow() {
+  return (
+    <div className="space-y-4">
+      <SectionHeading id="workflow">Multi-Context Workflow</SectionHeading>
+      <p className="text-sm text-text-secondary leading-relaxed">
+        CatchMyTask shines when you're juggling multiple roles — a day job, your own company,
+        personal projects — switching contexts multiple times a day with agents running in parallel.
+      </p>
+
+      <h3 className="text-sm font-semibold text-text-primary pt-2">Architecture: One Project Per Context</h3>
+      <p className="text-sm text-text-secondary leading-relaxed">
+        Each repo gets its own <code className="text-accent-text">.cmt/</code> directory. A global inbox at{' '}
+        <code className="text-accent-text">~/.cmt</code> captures thoughts from anywhere.
+      </p>
+      <CodeBlock>
+{`# Global inbox for quick captures
+cd ~ && cmt init --prefix INBOX
+
+# Per-project tracking
+cd ~/projects/acme-workflows && cmt init --prefix ACME
+cd ~/projects/my-saas-app && cmt init --prefix SAAS
+cd ~/projects/personal-site && cmt init --prefix ME
+
+# Register everything
+cmt projects add ~/projects/acme-workflows
+cmt projects add ~/projects/my-saas-app
+cmt projects add ~`}
+      </CodeBlock>
+
+      <h3 className="text-sm font-semibold text-text-primary pt-2">Daily Rhythm</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {[
+          ['Morning: Orient', 'cmt projects\ncmt list -s active', 'Scan what\'s hot across projects. Pick your focus.'],
+          ['During: Capture', 'cmt add "idea" --dir ~/.cmt', 'Dump thoughts to inbox. Sort later. Never lose context.'],
+          ['Evening: Sweep', 'cmt archive --done\ncmt list --dir ~/.cmt', 'Archive completed work. Sort inbox. Update blocked items.'],
+        ].map(([title, code, desc]) => (
+          <div key={title} className="bg-bg-secondary border border-border-default rounded-lg p-3 space-y-2">
+            <h4 className="text-xs font-semibold text-accent-text">{title}</h4>
+            <pre className="text-xs font-mono text-code leading-relaxed">{code}</pre>
+            <p className="text-xs text-text-muted">{desc}</p>
+          </div>
+        ))}
+      </div>
+
+      <h3 className="text-sm font-semibold text-text-primary pt-2">Context Switching</h3>
+      <p className="text-sm text-text-secondary leading-relaxed">
+        Before switching away, leave a breadcrumb. Before switching in, check what's active.
+      </p>
+      <CodeBlock>
+{`# Leave a breadcrumb before switching
+cmt edit ACME-12 --append "## Paused\\nStopped at: migration script. Next: test with staging."
+
+# Switch context — orient immediately
+cd ~/projects/my-saas-app
+cmt list -s active          # What was I doing?
+cmt list -s ready -p high   # What should I pick up?`}
+      </CodeBlock>
+
+      <h3 className="text-sm font-semibold text-text-primary pt-2">Agent Delegation Patterns</h3>
+      <div className="overflow-x-auto border border-border-default rounded-lg">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-bg-tertiary text-text-secondary text-left">
+              <th className="px-3 py-2 font-semibold">Pattern</th>
+              <th className="px-3 py-2 font-semibold">How</th>
+              <th className="px-3 py-2 font-semibold hidden md:table-cell">When</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-default">
+            {[
+              ['One agent per project', 'Each tab opens a different repo', 'Independent workstreams'],
+              ['Multiple agents, same project', 'Assign items to agent-1, agent-2, etc.', 'Parallel tasks in one codebase'],
+              ['Research + Execute', 'One agent researches (--complex), you review, another executes', 'Uncertain tasks needing exploration'],
+            ].map(([pattern, how, when]) => (
+              <tr key={pattern} className="hover:bg-bg-hover transition-colors">
+                <td className="px-3 py-2 font-medium text-text-primary">{pattern}</td>
+                <td className="px-3 py-2 text-text-secondary">{how}</td>
+                <td className="px-3 py-2 text-text-muted hidden md:table-cell">{when}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 className="text-sm font-semibold text-text-primary pt-2">Tag Namespaces</h3>
+      <p className="text-sm text-text-secondary leading-relaxed">
+        Tags let you slice across projects:
+      </p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        {[
+          ['scope:', 'frontend, backend, infra'],
+          ['role:', 'dayjob, founder, personal'],
+          ['energy:', 'deep, routine, quick'],
+          ['waiting:', 'review, deploy, response'],
+        ].map(([ns, examples]) => (
+          <div key={ns} className="bg-bg-secondary border border-border-default rounded-lg p-2">
+            <div className="text-xs font-mono text-accent-text">{ns}</div>
+            <div className="text-xs text-text-muted">{examples}</div>
+          </div>
+        ))}
+      </div>
+
+      <h3 className="text-sm font-semibold text-text-primary pt-2">Shell Aliases</h3>
+      <CodeBlock>
+{`alias qi='cmt add --dir ~/.cmt'    # Quick inbox capture
+alias wa='cmt list -s active'       # What's active
+alias wr='cmt list -s ready'        # What's ready
+alias morning='cmt projects'        # Morning dashboard`}
+      </CodeBlock>
+
+      <p className="text-sm text-text-secondary">
+        Full guide:{' '}
+        <a href="https://github.com/syncropic/catchmytask/blob/main/docs/guides/multi-context-workflow.md" className="text-accent-text hover:underline">
+          docs/guides/multi-context-workflow.md
+        </a>
+      </p>
+    </div>
+  )
+}
+
+function Doctor() {
+  return (
+    <div className="space-y-4">
+      <SectionHeading id="doctor">Doctor</SectionHeading>
+      <p className="text-sm text-text-secondary leading-relaxed">
+        The <code className="text-accent-text">cmt doctor</code> command validates your entire system setup —
+        binary, global inbox, project registry, indexes, agent integrations, and shell aliases.
+      </p>
+      <CodeBlock>
+{`$ cmt doctor
+  [ok]  cmt binary: cmt 0.2.0 (in PATH)
+  [ok]  global inbox: ~/.cmt with INBOX prefix
+  [ok]  project registry: 6 projects registered, 6 ok, 0 stale
+  [ok]  current project index: SQLite index valid, 12 item files
+  [ok]  claude code skill: Installed and up to date
+  [ok]  shell aliases: qi, wa, morning aliases configured
+
+  All 6 checks passed`}
+      </CodeBlock>
+      <div className="overflow-x-auto border border-border-default rounded-lg">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-bg-tertiary text-text-secondary text-left">
+              <th className="px-3 py-2 font-semibold">Flag</th>
+              <th className="px-3 py-2 font-semibold">Effect</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-default">
+            {[
+              ['-v, --verbose', 'Show per-project details'],
+              ['--json', 'Structured output for agents'],
+            ].map(([flag, effect]) => (
+              <tr key={flag} className="hover:bg-bg-hover transition-colors">
+                <td className="px-3 py-2 font-mono text-accent-text">{flag}</td>
+                <td className="px-3 py-2 text-text-secondary">{effect}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 export function DocsPage() {
   return (
     <div className="min-h-screen bg-bg-primary">
       <Navigation />
-      <main className="max-w-5xl mx-auto px-6 pt-20 pb-16 space-y-6">
-        <div className="space-y-3">
-          <h1 className="text-3xl md:text-4xl font-bold text-text-primary">Documentation</h1>
-          <p className="text-sm text-text-secondary">
-            Comprehensive reference for CatchMyTask — the file-first work management CLI.
-          </p>
-        </div>
-        <TOC />
-        <Overview />
-        <Commands />
-        <StateMachine />
-        <FileFormat />
-        <AgentQuickstart />
-        <Configuration />
-      </main>
+      <div className="max-w-7xl mx-auto px-6 pt-20 pb-16 flex gap-8">
+        {/* Sticky TOC sidebar — hidden on mobile */}
+        <aside className="hidden lg:block w-48 shrink-0">
+          <div className="sticky top-20 space-y-3">
+            <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider px-3">
+              On this page
+            </h3>
+            <TOC />
+          </div>
+        </aside>
+
+        {/* Main content */}
+        <main className="min-w-0 flex-1 max-w-4xl space-y-6">
+          <div className="space-y-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-text-primary">Documentation</h1>
+            <p className="text-sm text-text-secondary">
+              Comprehensive reference for CatchMyTask — the file-first work management CLI.
+            </p>
+          </div>
+          {/* Mobile TOC — horizontal pills */}
+          <nav className="flex flex-wrap gap-2 lg:hidden text-xs">
+            {SECTIONS.map(([id, label]) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                className="px-3 py-1.5 bg-bg-tertiary border border-border-default rounded hover:border-accent/50 hover:text-accent-text text-text-secondary transition-colors"
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+          <Overview />
+          <Commands />
+          <StateMachine />
+          <FileFormat />
+          <AgentQuickstart />
+          <Configuration />
+          <Workflow />
+          <Doctor />
+        </main>
+      </div>
       <Footer />
     </div>
   )

@@ -37,6 +37,7 @@ Work management for humans and AI agents. Items are Markdown files in `.cmt/item
 | `archive`  | `cmt archive --done`                | Archive completed/cancelled items        |
 | `log`      | `cmt log ID`                        | Show event history for an item           |
 | `check`    | `cmt check`                         | Validate items and find issues           |
+| `doctor`   | `cmt doctor -v`                     | Check system health and configuration    |
 | `reindex`  | `cmt reindex --force`               | Rebuild SQLite index                     |
 | `serve`    | `cmt serve`                         | Start web UI on port 3170                |
 | `projects` | `cmt projects`                      | Manage global project registry           |

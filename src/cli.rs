@@ -92,6 +92,9 @@ pub enum Commands {
 
     /// Manage the global project registry
     Projects(ProjectsArgs),
+
+    /// Check system health and configuration
+    Doctor(DoctorArgs),
 }
 
 #[derive(Args, Debug)]
@@ -516,6 +519,13 @@ pub struct LogArgs {
     /// Output format
     #[arg(long, short = 'f', default_value = "table")]
     pub format: OutputFormat,
+}
+
+#[derive(Args, Debug)]
+pub struct DoctorArgs {
+    /// Show per-project details
+    #[arg(long, short = 'v')]
+    pub verbose: bool,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]

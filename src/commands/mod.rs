@@ -17,3 +17,4 @@ pub mod help_agent;
 pub mod setup;
 pub mod serve;
 pub mod projects;
+pub mod doctor;

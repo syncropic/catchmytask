@@ -131,6 +131,10 @@ fn run(cli: &Cli) -> error::Result<()> {
             let work_dir = resolve_work_dir(cli).ok();
             commands::projects::execute(args, work_dir.as_deref(), cli.json, cli.quiet)
         }
+        Commands::Doctor(args) => {
+            let work_dir = resolve_work_dir(cli).ok();
+            commands::doctor::execute(args, work_dir.as_deref(), cli.json, cli.quiet)
+        }
     }
 }
 
