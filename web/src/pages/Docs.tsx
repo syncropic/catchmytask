@@ -400,21 +400,57 @@ function WebUI() {
 
       <h3 className="text-sm font-semibold text-text-primary pt-2">Connected Mode</h3>
       <p className="text-sm text-text-secondary leading-relaxed">
-        To connect the UI to your local <code className="text-accent-text">.cmt/</code> directory:
+        To connect the UI to your local <code className="text-accent-text">.cmt/</code> files, start the backend server:
       </p>
       <CodeBlock>
-{`# Start the backend server
+{`# Start the backend server (default port 3170)
 cmt serve --open
 
 # Or with a custom port
-cmt serve --port 8080
-
-# The UI opens automatically and syncs with your .cmt/ files`}
+cmt serve --port 8080`}
       </CodeBlock>
-      <p className="text-sm text-text-secondary">
-        In the app, go to <strong className="text-text-primary">Settings → Connection Mode → Remote Server</strong> and
-        enter <code className="text-accent-text">http://localhost:3170</code>. Click Test to verify.
-      </p>
+
+      <div className="bg-bg-secondary border border-border-default rounded-lg p-4 space-y-3">
+        <h4 className="text-xs font-semibold text-text-primary">Auto-Detection</h4>
+        <p className="text-xs text-text-secondary leading-relaxed">
+          The web UI automatically detects a running <code className="text-accent-text">cmt serve</code> instance — no manual
+          configuration needed. This works both when visiting <code className="text-accent-text">localhost:3170</code> directly
+          and from <a href="/app" className="text-accent-text hover:underline">catchmytask.com/app</a>.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          {[
+            ['From localhost', 'The UI probes /api/health on the same origin. If cmt serve is running, it connects automatically.'],
+            ['From catchmytask.com', 'The UI probes http://127.0.0.1:3170 as a fallback. If your local server responds, it connects to it.'],
+          ].map(([title, desc]) => (
+            <div key={title} className="bg-bg-primary border border-border-default rounded p-2 space-y-1">
+              <div className="font-semibold text-accent-text">{title}</div>
+              <div className="text-text-muted">{desc}</div>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-text-muted leading-relaxed">
+          If no backend is detected, the UI falls back to local-only mode (IndexedDB).
+          You can also manually set the connection in <strong className="text-text-secondary">Settings → Connection</strong>.
+        </p>
+      </div>
+
+      <div className="bg-bg-secondary border border-border-default rounded-lg p-4 space-y-2">
+        <h4 className="text-xs font-semibold text-text-primary">Privacy & Data Flow</h4>
+        <div className="text-xs text-text-secondary leading-relaxed space-y-1">
+          <p>
+            <strong className="text-text-primary">Local-only mode:</strong> All data lives in your browser's IndexedDB.
+            Nothing is sent to any server — not even catchmytask.com.
+          </p>
+          <p>
+            <strong className="text-text-primary">Connected mode:</strong> The UI talks directly to <code className="text-accent-text">cmt serve</code> running
+            on <em>your machine</em>. Data flows between your browser and localhost only.
+            The catchmytask.com domain serves static HTML/JS/CSS — it never sees your work items.
+          </p>
+          <p>
+            Your connection preference is saved in localStorage and persists across sessions.
+          </p>
+        </div>
+      </div>
 
       <h3 className="text-sm font-semibold text-text-primary pt-2">Keyboard Shortcuts</h3>
       <div className="overflow-x-auto border border-border-default rounded-lg">
