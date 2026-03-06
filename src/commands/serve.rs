@@ -749,6 +749,56 @@ async fn search_items(
 
 // ── Artifact handlers ───────────────────────────────────────────────────────
 
+#[derive(Serialize)]
+struct ProjectArtifactEntry {
+    item_id: String,
+    item_title: String,
+    #[serde(flatten)]
+    artifact: crate::artifacts::Artifact,
+}
+
+#[derive(Serialize)]
+struct ProjectArtifactsResponse {
+    artifacts: Vec<ProjectArtifactEntry>,
+    total: usize,
+}
+
+async fn list_all_artifacts(
+    State(state): State<Arc<AppState>>,
+    Query(pq): Query<ItemPathQuery>,
+) -> Result<Json<ProjectArtifactsResponse>, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let files = storage::scan_item_files(work_dir).map_err(ApiError::from)?;
+
+    let mut all_artifacts: Vec<ProjectArtifactEntry> = Vec::new();
+    for file in &files {
+        let content = std::fs::read_to_string(file)
+            .map_err(WorkError::from)
+            .map_err(ApiError::from)?;
+        let (item, _body) = match parser::parse_file(&content) {
+            Ok(r) => r,
+            Err(_) => continue,
+        };
+        let artifact_list = crate::artifacts::discover(file, &item.extra);
+        if artifact_list.artifacts.is_empty() {
+            continue;
+        }
+        for a in artifact_list.artifacts {
+            all_artifacts.push(ProjectArtifactEntry {
+                item_id: item.id.to_string(),
+                item_title: item.title.clone(),
+                artifact: a,
+            });
+        }
+    }
+
+    let total = all_artifacts.len();
+    Ok(Json(ProjectArtifactsResponse {
+        artifacts: all_artifacts,
+        total,
+    }))
+}
+
 async fn list_artifacts(
     State(state): State<Arc<AppState>>,
     AxumPath(id): AxumPath<String>,
@@ -1006,6 +1056,7 @@ pub fn execute(args: &ServeArgs, work_dir: &Path) -> crate::error::Result<()> {
             .route("/api/items/{id}", delete(delete_item))
             .route("/api/items/{id}/status", post(change_status))
             .route("/api/search", get(search_items))
+            .route("/api/artifacts", get(list_all_artifacts))
             .route("/api/items/{id}/artifacts", get(list_artifacts))
             .route("/api/items/{id}/artifacts/{*path}", get(serve_artifact))
             .with_state(state.clone());

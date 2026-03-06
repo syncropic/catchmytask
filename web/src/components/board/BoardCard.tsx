@@ -73,7 +73,7 @@ export function BoardCard({ item, isDragging }: Props) {
           )}
           {item.artifact_count != null && item.artifact_count > 0 && (
             <span className="text-[10px] text-text-muted" title={`${item.artifact_count} artifact${item.artifact_count > 1 ? 's' : ''}`}>
-              📎{item.artifact_count}
+              ⎘{item.artifact_count}
             </span>
           )}
           {item.assignee && (

@@ -3,6 +3,7 @@ import { BoardView } from '@/components/board/BoardView'
 import { ListView } from '@/components/list/ListView'
 import { DashboardView } from '@/components/dashboard/DashboardView'
 import { ActivityView } from '@/components/activity/ActivityView'
+import { ArtifactsBrowser } from '@/components/artifacts/ArtifactsBrowser'
 import { SettingsView } from '@/components/settings/SettingsView'
 import type { ProjectConfig } from '@/types'
 
@@ -13,15 +14,16 @@ interface Props {
 export function MainContent({ config }: Props) {
   const activeView = useUIStore((s) => s.activeView)
 
-  const needsMaxWidth = activeView !== 'board'
+  const fullWidth = activeView === 'board' || activeView === 'artifacts'
 
   return (
     <main className="flex-1 min-w-0 overflow-auto bg-bg-primary">
-      <div className={needsMaxWidth ? 'max-w-6xl mx-auto w-full h-full' : 'h-full'}>
+      <div className={fullWidth ? 'h-full' : 'max-w-6xl mx-auto w-full h-full'}>
         {activeView === 'board' && <BoardView config={config} />}
         {activeView === 'list' && <ListView config={config} />}
         {activeView === 'dashboard' && <DashboardView config={config} />}
         {activeView === 'activity' && <ActivityView config={config} />}
+        {activeView === 'artifacts' && <ArtifactsBrowser />}
         {activeView === 'settings' && <SettingsView config={config} />}
       </div>
     </main>

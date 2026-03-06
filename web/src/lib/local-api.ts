@@ -64,6 +64,8 @@ export const localApi = {
     artifactUrl: (_id: string, path: string) => path,
   },
 
+  artifacts: async () => ({ artifacts: [], total: 0 }),
+
   search: async (q: string, _params?: Record<string, string>): Promise<WorkItem[]> => {
     return itemStore.searchItemsQuery(q)
   },

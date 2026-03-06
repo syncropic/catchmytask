@@ -1,4 +1,4 @@
-import type { WorkItem, ProjectConfig, ProjectsResponse, CreateItemRequest, EditItemRequest, StatusChangeRequest, ArtifactList } from '@/types'
+import type { WorkItem, ProjectConfig, ProjectsResponse, CreateItemRequest, EditItemRequest, StatusChangeRequest, ArtifactList, ProjectArtifactsResponse } from '@/types'
 import { useConnectionStore } from '@/stores/connection'
 import { useProjectStore } from '@/stores/project'
 import { localApi } from './local-api'
@@ -64,6 +64,7 @@ function createRemoteApi(baseUrl: string) {
         return `${BASE}/items/${encodeURIComponent(id)}/artifacts/${artifactPath}${qs}`
       },
     },
+    artifacts: () => request<ProjectArtifactsResponse>(appendProject('/artifacts')),
     search: (q: string, params?: Record<string, string>) => {
       const project = useProjectStore.getState().currentProject
       const allParams: Record<string, string> = { q, ...params }
@@ -101,5 +102,6 @@ export const api = {
     artifactUrl: (...args: Parameters<ApiInterface['items']['artifactUrl']>) =>
       getActiveApi().items.artifactUrl(...args),
   },
+  artifacts: (...args: Parameters<ApiInterface['artifacts']>) => getActiveApi().artifacts(...args),
   search: (...args: Parameters<ApiInterface['search']>) => getActiveApi().search(...args),
 }

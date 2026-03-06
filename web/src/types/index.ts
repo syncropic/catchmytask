@@ -113,7 +113,27 @@ export interface ProjectsResponse {
   default_project: string
 }
 
-export type View = 'board' | 'list' | 'dashboard' | 'activity' | 'settings'
+export type View = 'board' | 'list' | 'dashboard' | 'activity' | 'artifacts' | 'settings'
+
+export interface ProjectArtifactEntry {
+  item_id: string
+  item_title: string
+  name: string
+  path: string
+  source: 'contained' | 'ref_local' | 'ref_remote'
+  category: string | null
+  label: string | null
+  size: number | null
+  mime: string | null
+  modified: string | null
+  lines: number | null
+  is_text: boolean
+}
+
+export interface ProjectArtifactsResponse {
+  artifacts: ProjectArtifactEntry[]
+  total: number
+}
 
 export type Priority = 'critical' | 'high' | 'medium' | 'low' | 'none'
 
