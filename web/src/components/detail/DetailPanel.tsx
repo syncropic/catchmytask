@@ -61,7 +61,8 @@ hljs.registerLanguage('diff', diff)
 import { useUIStore } from '@/stores/ui'
 import { useProjectStore } from '@/stores/project'
 import type { ProjectConfig, Artifact } from '@/types'
-import { DataTable, DataTableLoading, TooLargeBanner, isSpreadsheetFile, isTabularTextFile, isTabularJSON, parseTextData, useSpreadsheetData } from '@/components/shared/DataTable'
+import { DataTable, SpreadsheetViewer } from '@/components/shared/DataTable'
+import { isSpreadsheetFile, isTabularTextFile, isTabularJSON, parseTextData } from '@/lib/data-parsers'
 
 interface Props {
   config?: ProjectConfig | null
@@ -879,6 +880,7 @@ const CODE_EXTENSIONS = new Set([
   'ini', 'conf', 'dockerfile', 'diff', 'patch',
 ])
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mdComponents: Record<string, React.ComponentType<any>> = {
   h1: ({ children }) => <h2 className="text-[13px] font-semibold text-text-primary mt-3 mb-1.5 first:mt-0">{children}</h2>,
   h2: ({ children }) => <h3 className="text-xs font-semibold text-text-primary mt-2.5 mb-1 first:mt-0">{children}</h3>,
@@ -1011,11 +1013,3 @@ function CodeViewer({ content, language, truncated, fullContent }: { content: st
   )
 }
 
-function SpreadsheetViewer({ url, name, size }: { url: string; name: string; size: number | null }) {
-  const { data, loading, tooLarge } = useSpreadsheetData(url, name, size)
-
-  if (tooLarge) return <TooLargeBanner name={name} size={size} url={url} />
-  if (loading) return <DataTableLoading />
-  if (!data) return null
-  return <DataTable data={data} name={name} />
-}
