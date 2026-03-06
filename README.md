@@ -95,8 +95,8 @@ CatchMyTask includes a browser-based UI at [catchmytask.com/app](https://catchmy
 - **List View** — Sortable table with inline status, priority, and artifact indicators
 - **Dashboard** — Summary stats, distributions, overdue items, recent activity
 - **Activity Feed** — Timeline of all events grouped by day
-- **Artifact Browser** — Project-wide file browser with search, filtering by item/type/source, list/grid views, and inline preview for images, text, and PDF
-- **Detail Panel** — Click any item to edit fields, view/browse artifacts, and edit Markdown body
+- **Artifact Browser** — Project-wide file browser with search, filtering by item/type/source, list/grid views, and rich inline previews: rendered Markdown, syntax-highlighted code (20+ languages), sortable data tables (CSV, JSON, JSONL, XLSX/XLS), images, and PDF
+- **Detail Panel** — Click any item to edit fields, view/browse artifacts with inline preview, copy-to-clipboard, and edit Markdown body
 - **Dark/Light Mode** — Toggle via header, persists to localStorage
 
 Works in two modes: **local-only** (IndexedDB, no server) or **connected** to `cmt serve` (auto-detected on port 3170).

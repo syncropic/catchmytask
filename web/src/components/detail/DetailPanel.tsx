@@ -2,10 +2,66 @@ import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import hljs from 'highlight.js/lib/core'
+import 'highlight.js/styles/github-dark.css'
+import sql from 'highlight.js/lib/languages/sql'
+import javascript from 'highlight.js/lib/languages/javascript'
+import typescript from 'highlight.js/lib/languages/typescript'
+import python from 'highlight.js/lib/languages/python'
+import rust from 'highlight.js/lib/languages/rust'
+import go from 'highlight.js/lib/languages/go'
+import bashLang from 'highlight.js/lib/languages/bash'
+import jsonLang from 'highlight.js/lib/languages/json'
+import yaml from 'highlight.js/lib/languages/yaml'
+import xml from 'highlight.js/lib/languages/xml'
+import css from 'highlight.js/lib/languages/css'
+import markdownLang from 'highlight.js/lib/languages/markdown'
+import java from 'highlight.js/lib/languages/java'
+import cpp from 'highlight.js/lib/languages/cpp'
+import ruby from 'highlight.js/lib/languages/ruby'
+import shell from 'highlight.js/lib/languages/shell'
+import dockerfile from 'highlight.js/lib/languages/dockerfile'
+import ini from 'highlight.js/lib/languages/ini'
+import diff from 'highlight.js/lib/languages/diff'
 import { api } from '@/lib/api'
+
+hljs.registerLanguage('sql', sql)
+hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('js', javascript)
+hljs.registerLanguage('typescript', typescript)
+hljs.registerLanguage('ts', typescript)
+hljs.registerLanguage('tsx', typescript)
+hljs.registerLanguage('jsx', javascript)
+hljs.registerLanguage('python', python)
+hljs.registerLanguage('py', python)
+hljs.registerLanguage('rust', rust)
+hljs.registerLanguage('rs', rust)
+hljs.registerLanguage('go', go)
+hljs.registerLanguage('bash', bashLang)
+hljs.registerLanguage('sh', bashLang)
+hljs.registerLanguage('json', jsonLang)
+hljs.registerLanguage('yaml', yaml)
+hljs.registerLanguage('yml', yaml)
+hljs.registerLanguage('xml', xml)
+hljs.registerLanguage('html', xml)
+hljs.registerLanguage('css', css)
+hljs.registerLanguage('markdown', markdownLang)
+hljs.registerLanguage('java', java)
+hljs.registerLanguage('cpp', cpp)
+hljs.registerLanguage('c', cpp)
+hljs.registerLanguage('ruby', ruby)
+hljs.registerLanguage('rb', ruby)
+hljs.registerLanguage('shell', shell)
+hljs.registerLanguage('dockerfile', dockerfile)
+hljs.registerLanguage('ini', ini)
+hljs.registerLanguage('toml', ini)
+hljs.registerLanguage('conf', ini)
+hljs.registerLanguage('diff', diff)
 import { useUIStore } from '@/stores/ui'
 import { useProjectStore } from '@/stores/project'
 import type { ProjectConfig, Artifact } from '@/types'
+import { DataTable, DataTableLoading, TooLargeBanner, isSpreadsheetFile, isTabularTextFile, isTabularJSON, parseTextData, useSpreadsheetData } from '@/components/shared/DataTable'
 
 interface Props {
   config?: ProjectConfig | null
@@ -732,6 +788,7 @@ function ArtifactViewer({
   const isImage = artifact.mime?.startsWith('image/')
   const isText = artifact.is_text
   const isPdf = artifact.mime === 'application/pdf'
+  const isSpreadsheet = isSpreadsheetFile(artifact.name)
 
   return (
     <div className="px-4 pb-3">
@@ -763,7 +820,7 @@ function ArtifactViewer({
         </div>
       )}
 
-      {isText && !isImage && <TextViewer url={url} />}
+      {isText && !isImage && <TextViewer url={url} name={artifact.name} />}
 
       {isPdf && (
         <embed
@@ -773,9 +830,13 @@ function ArtifactViewer({
         />
       )}
 
-      {!isImage && !isText && !isPdf && (
+      {isSpreadsheet && (
+        <SpreadsheetViewer url={url} name={artifact.name} size={artifact.size} />
+      )}
+
+      {!isImage && !isText && !isPdf && !isSpreadsheet && (
         <div className="bg-bg-tertiary rounded border border-border-default p-4 text-center text-xs text-text-muted">
-          <div className="text-2xl mb-2">📦</div>
+          <div className="text-2xl mb-2">&#x1F4E6;</div>
           <div>{artifact.mime ?? 'Unknown type'}</div>
           <div className="mt-1">{formatSize(artifact.size)}</div>
           <a
@@ -791,7 +852,59 @@ function ArtifactViewer({
   )
 }
 
-function TextViewer({ url }: { url: string }) {
+function CopyButton({ text, className = '' }: { text: string; className?: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`text-[10px] px-1.5 py-0.5 rounded border border-border-default bg-bg-tertiary text-text-muted hover:text-text-secondary hover:bg-bg-secondary transition-all ${className}`}
+      title="Copy to clipboard"
+    >
+      {copied ? 'Copied!' : 'Copy'}
+    </button>
+  )
+}
+
+const CODE_EXTENSIONS = new Set([
+  'sql', 'js', 'jsx', 'ts', 'tsx', 'py', 'rs', 'go', 'java', 'c', 'cpp', 'h', 'rb',
+  'sh', 'bash', 'zsh', 'fish', 'json', 'yaml', 'yml', 'xml', 'html', 'css', 'toml',
+  'ini', 'conf', 'dockerfile', 'diff', 'patch',
+])
+
+const mdComponents: Record<string, React.ComponentType<any>> = {
+  h1: ({ children }) => <h2 className="text-[13px] font-semibold text-text-primary mt-3 mb-1.5 first:mt-0">{children}</h2>,
+  h2: ({ children }) => <h3 className="text-xs font-semibold text-text-primary mt-2.5 mb-1 first:mt-0">{children}</h3>,
+  h3: ({ children }) => <h4 className="text-xs font-medium text-text-primary mt-2 mb-1 first:mt-0">{children}</h4>,
+  p: ({ children }) => <p className="text-xs leading-[1.65] text-text-secondary my-1.5 first:mt-0 last:mb-0">{children}</p>,
+  ul: ({ children }) => <ul className="text-xs text-text-secondary my-1.5 pl-4 space-y-0.5 list-disc marker:text-text-muted/60">{children}</ul>,
+  ol: ({ children }) => <ol className="text-xs text-text-secondary my-1.5 pl-4 space-y-0.5 list-decimal marker:text-text-muted/60">{children}</ol>,
+  li: ({ children }) => <li className="leading-[1.65]">{children}</li>,
+  code: ({ children, className }) => {
+    const isBlock = typeof className === 'string' && className.startsWith('language-')
+    if (isBlock) return <code className="text-[11px] font-mono leading-[1.6] text-text-secondary">{children}</code>
+    return <code className="text-[11px] font-mono bg-bg-tertiary/80 text-text-primary px-1 py-[1px] rounded">{children}</code>
+  },
+  pre: ({ children }) => (
+    <pre className="text-[11px] bg-bg-tertiary rounded-md border border-border-subtle px-3 py-2 my-2 overflow-x-auto">{children}</pre>
+  ),
+  a: ({ href, children }) => (
+    <a href={href} onClick={(e) => e.stopPropagation()} target="_blank" rel="noopener noreferrer" className="text-accent-text hover:text-accent-hover underline">{children}</a>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-2 border-text-muted/25 pl-3 my-2 text-text-muted italic [&>p]:text-text-muted">{children}</blockquote>
+  ),
+  strong: ({ children }) => <strong className="font-semibold text-text-primary">{children}</strong>,
+}
+
+function TextViewer({ url, name }: { url: string; name: string }) {
   const [content, setContent] = useState<string | null>(null)
   const [error, setError] = useState(false)
 
@@ -821,9 +934,88 @@ function TextViewer({ url }: { url: string }) {
     )
   }
 
+  const text = content.slice(0, 10000)
+  const truncated = content.length > 10000
+  const ext = name.split('.').pop()?.toLowerCase() ?? ''
+  const isMarkdown = /\.(md|markdown|mdx)$/i.test(name)
+  const isCode = CODE_EXTENSIONS.has(ext)
+
+  // Structured data: CSV, TSV, JSON (array of objects), JSONL
+  if (isTabularTextFile(name) || isTabularJSON(name, content)) {
+    const tableData = parseTextData(name, content)
+    if (tableData && tableData.columns.length > 0) {
+      return <DataTable data={tableData} name={name} copyText={content} />
+    }
+  }
+
+  if (isMarkdown) {
+    return (
+      <div className="relative rounded border border-border-default bg-bg-secondary p-3 overflow-auto max-h-[400px] group/md">
+        <CopyButton text={content} className="absolute top-2 right-2 opacity-0 group-hover/md:opacity-100" />
+        <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={mdComponents}>
+          {text}
+        </Markdown>
+        {truncated && <p className="text-[10px] text-text-muted mt-2 italic">... content truncated</p>}
+      </div>
+    )
+  }
+
+  if (isCode) {
+    return <CodeViewer content={text} language={ext} truncated={truncated} fullContent={content} />
+  }
+
   return (
-    <pre className="bg-bg-tertiary rounded border border-border-default p-3 text-[11px] text-text-secondary font-mono overflow-auto max-h-[400px] leading-relaxed whitespace-pre-wrap break-words">
-      {content}
-    </pre>
+    <div className="relative group/plain">
+      <CopyButton text={content} className="absolute top-2 right-2 opacity-0 group-hover/plain:opacity-100" />
+      <pre className="bg-bg-tertiary rounded border border-border-default p-3 text-[11px] text-text-secondary font-mono overflow-auto max-h-[400px] leading-relaxed whitespace-pre-wrap break-words">
+        {text}
+        {truncated && '\n\n... truncated'}
+      </pre>
+    </div>
   )
+}
+
+function CodeViewer({ content, language, truncated, fullContent }: { content: string; language: string; truncated: boolean; fullContent?: string }) {
+  const codeRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (codeRef.current) {
+      codeRef.current.removeAttribute('data-highlighted')
+      try {
+        hljs.highlightElement(codeRef.current)
+      } catch {
+        // Language not registered
+      }
+    }
+  }, [content, language])
+
+  return (
+    <div className="rounded border border-border-default overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-1 bg-bg-tertiary border-b border-border-default">
+        <span className="text-[10px] text-text-muted uppercase tracking-wide">{language}</span>
+        <div className="flex items-center gap-2">
+          <CopyButton text={fullContent ?? content} />
+          <span className="text-[10px] text-text-muted">{content.split('\n').length} lines</span>
+        </div>
+      </div>
+      <pre className="overflow-auto max-h-[400px] p-0 m-0">
+        <code
+          ref={codeRef}
+          className={`language-${language} !text-[11px] !leading-[1.6] !p-3 block`}
+        >
+          {content}
+        </code>
+      </pre>
+      {truncated && <div className="text-[10px] text-text-muted px-3 py-1 border-t border-border-default italic">... content truncated</div>}
+    </div>
+  )
+}
+
+function SpreadsheetViewer({ url, name, size }: { url: string; name: string; size: number | null }) {
+  const { data, loading, tooLarge } = useSpreadsheetData(url, name, size)
+
+  if (tooLarge) return <TooLargeBanner name={name} size={size} url={url} />
+  if (loading) return <DataTableLoading />
+  if (!data) return null
+  return <DataTable data={data} name={name} />
 }

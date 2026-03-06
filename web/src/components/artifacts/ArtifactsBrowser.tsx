@@ -1,9 +1,71 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import hljs from 'highlight.js/lib/core'
+import 'highlight.js/styles/github-dark.css'
+// Register languages selectively to keep bundle small
+import sql from 'highlight.js/lib/languages/sql'
+import javascript from 'highlight.js/lib/languages/javascript'
+import typescript from 'highlight.js/lib/languages/typescript'
+import python from 'highlight.js/lib/languages/python'
+import rust from 'highlight.js/lib/languages/rust'
+import go from 'highlight.js/lib/languages/go'
+import bash from 'highlight.js/lib/languages/bash'
+import json from 'highlight.js/lib/languages/json'
+import yaml from 'highlight.js/lib/languages/yaml'
+import xml from 'highlight.js/lib/languages/xml'
+import css from 'highlight.js/lib/languages/css'
+import markdown from 'highlight.js/lib/languages/markdown'
+import java from 'highlight.js/lib/languages/java'
+import cpp from 'highlight.js/lib/languages/cpp'
+import ruby from 'highlight.js/lib/languages/ruby'
+import shell from 'highlight.js/lib/languages/shell'
+import dockerfile from 'highlight.js/lib/languages/dockerfile'
+import ini from 'highlight.js/lib/languages/ini'
+import diff from 'highlight.js/lib/languages/diff'
 import { api } from '@/lib/api'
 import { useProjectStore } from '@/stores/project'
 import { useUIStore } from '@/stores/ui'
 import type { ProjectArtifactEntry } from '@/types'
+
+hljs.registerLanguage('sql', sql)
+hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('js', javascript)
+hljs.registerLanguage('typescript', typescript)
+hljs.registerLanguage('ts', typescript)
+hljs.registerLanguage('tsx', typescript)
+hljs.registerLanguage('jsx', javascript)
+hljs.registerLanguage('python', python)
+hljs.registerLanguage('py', python)
+hljs.registerLanguage('rust', rust)
+hljs.registerLanguage('rs', rust)
+hljs.registerLanguage('go', go)
+hljs.registerLanguage('bash', bash)
+hljs.registerLanguage('sh', bash)
+hljs.registerLanguage('zsh', bash)
+hljs.registerLanguage('json', json)
+hljs.registerLanguage('yaml', yaml)
+hljs.registerLanguage('yml', yaml)
+hljs.registerLanguage('xml', xml)
+hljs.registerLanguage('html', xml)
+hljs.registerLanguage('css', css)
+hljs.registerLanguage('markdown', markdown)
+hljs.registerLanguage('md', markdown)
+hljs.registerLanguage('java', java)
+hljs.registerLanguage('cpp', cpp)
+hljs.registerLanguage('c', cpp)
+hljs.registerLanguage('h', cpp)
+hljs.registerLanguage('ruby', ruby)
+hljs.registerLanguage('rb', ruby)
+hljs.registerLanguage('shell', shell)
+hljs.registerLanguage('dockerfile', dockerfile)
+hljs.registerLanguage('ini', ini)
+hljs.registerLanguage('conf', ini)
+hljs.registerLanguage('toml', ini)
+hljs.registerLanguage('diff', diff)
+hljs.registerLanguage('patch', diff)
 
 type GroupBy = 'item' | 'type' | 'source'
 type ViewMode = 'list' | 'grid'
@@ -584,7 +646,7 @@ function ArtifactPreviewDrawer({
           )}
 
           {artifact.is_text && !isImage && !isPdf && (
-            <TextPreview url={url} />
+            <TextPreview url={url} name={artifact.name} />
           )}
 
           {!artifact.is_text && !isImage && !isPdf && (
@@ -654,7 +716,64 @@ function DetailRow({ label, children }: { label: string; children: React.ReactNo
   )
 }
 
-function TextPreview({ url }: { url: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const markdownComponents: Record<string, React.ComponentType<any>> = {
+  h1: ({ children }) => <h2 className="text-[13px] font-semibold text-text-primary mt-3 mb-1.5 first:mt-0">{children}</h2>,
+  h2: ({ children }) => <h3 className="text-xs font-semibold text-text-primary mt-2.5 mb-1 first:mt-0">{children}</h3>,
+  h3: ({ children }) => <h4 className="text-xs font-medium text-text-primary mt-2 mb-1 first:mt-0">{children}</h4>,
+  p: ({ children }) => <p className="text-xs leading-[1.65] text-text-secondary my-1.5 first:mt-0 last:mb-0">{children}</p>,
+  ul: ({ children }) => <ul className="text-xs text-text-secondary my-1.5 pl-4 space-y-0.5 list-disc marker:text-text-muted/60">{children}</ul>,
+  ol: ({ children }) => <ol className="text-xs text-text-secondary my-1.5 pl-4 space-y-0.5 list-decimal marker:text-text-muted/60">{children}</ol>,
+  li: ({ children, ...props }) => {
+    const isTask = typeof props.className === 'string' && props.className.includes('task-list-item')
+    return (
+      <li className={`leading-[1.65] ${isTask ? 'list-none -ml-4 flex items-start gap-1.5' : ''}`}>
+        {children}
+      </li>
+    )
+  },
+  input: ({ checked }) => (
+    <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded border flex-shrink-0 mt-[3px] ${checked ? 'bg-accent border-accent' : 'border-text-muted/40 bg-transparent'}`}>
+      {checked && <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+    </span>
+  ),
+  code: ({ children, className }) => {
+    const isBlock = typeof className === 'string' && className.startsWith('language-')
+    if (isBlock) {
+      return <code className="text-[11px] font-mono leading-[1.6] text-text-secondary">{children}</code>
+    }
+    return <code className="text-[11px] font-mono bg-bg-tertiary/80 text-text-primary px-1 py-[1px] rounded">{children}</code>
+  },
+  pre: ({ children }) => (
+    <pre className="text-[11px] bg-bg-tertiary rounded-md border border-border-subtle px-3 py-2 my-2 overflow-x-auto">{children}</pre>
+  ),
+  a: ({ href, children }) => (
+    <a href={href} onClick={(e) => e.stopPropagation()} target="_blank" rel="noopener noreferrer" className="text-accent-text hover:text-accent-hover underline decoration-accent/30 hover:decoration-accent-hover/50 transition-colors">{children}</a>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-2 border-text-muted/25 pl-3 my-2 text-text-muted italic [&>p]:text-text-muted">{children}</blockquote>
+  ),
+  hr: () => <hr className="border-none h-px bg-border-subtle my-3" />,
+  table: ({ children }) => (
+    <div className="overflow-x-auto my-2 rounded-md border border-border-subtle">
+      <table className="w-full text-xs border-collapse">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead className="bg-bg-tertiary">{children}</thead>,
+  th: ({ children }) => <th className="text-left text-[11px] font-medium text-text-primary px-2.5 py-1.5 border-b border-border-subtle">{children}</th>,
+  td: ({ children }) => <td className="text-text-secondary px-2.5 py-1.5 border-b border-border-subtle/50">{children}</td>,
+  strong: ({ children }) => <strong className="font-semibold text-text-primary">{children}</strong>,
+  em: ({ children }) => <em className="italic text-text-secondary">{children}</em>,
+  del: ({ children }) => <del className="text-text-muted line-through">{children}</del>,
+}
+
+const CODE_EXTENSIONS = new Set([
+  'sql', 'js', 'jsx', 'ts', 'tsx', 'py', 'rs', 'go', 'java', 'c', 'cpp', 'h', 'rb',
+  'sh', 'bash', 'zsh', 'fish', 'json', 'yaml', 'yml', 'xml', 'html', 'css', 'toml',
+  'ini', 'conf', 'dockerfile', 'diff', 'patch',
+])
+
+function TextPreview({ url, name }: { url: string; name: string }) {
   const { data: text, isLoading } = useQuery({
     queryKey: ['artifact-text', url],
     queryFn: async () => {
@@ -666,10 +785,64 @@ function TextPreview({ url }: { url: string }) {
 
   if (isLoading) return <div className="text-[11px] text-text-muted py-2">Loading...</div>
 
+  const content = (text ?? '').slice(0, 10000)
+  const truncated = (text ?? '').length > 10000
+  const ext = name.split('.').pop()?.toLowerCase() ?? ''
+  const isMarkdown = /\.(md|markdown|mdx)$/i.test(name)
+  const isCode = CODE_EXTENSIONS.has(ext)
+
+  if (isMarkdown) {
+    return (
+      <div className="rounded border border-border-default bg-bg-secondary p-3 overflow-auto max-h-[500px] mb-3">
+        <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
+          {content}
+        </Markdown>
+        {truncated && <p className="text-[10px] text-text-muted mt-2 italic">... content truncated</p>}
+      </div>
+    )
+  }
+
+  if (isCode) {
+    return <CodePreview content={content} language={ext} truncated={truncated} />
+  }
+
   return (
-    <pre className="text-[11px] font-mono text-text-secondary bg-bg-tertiary rounded border border-border-default p-2 overflow-x-auto max-h-64 mb-3 whitespace-pre-wrap break-words">
-      {(text ?? '').slice(0, 5000)}
-      {(text ?? '').length > 5000 && '\n\n... truncated'}
+    <pre className="text-[11px] font-mono text-text-secondary bg-bg-tertiary rounded border border-border-default p-2 overflow-x-auto max-h-[400px] mb-3 whitespace-pre-wrap break-words">
+      {content}
+      {truncated && '\n\n... truncated'}
     </pre>
+  )
+}
+
+function CodePreview({ content, language, truncated }: { content: string; language: string; truncated: boolean }) {
+  const codeRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (codeRef.current) {
+      codeRef.current.removeAttribute('data-highlighted')
+      try {
+        hljs.highlightElement(codeRef.current)
+      } catch {
+        // Language not registered — show as plain text
+      }
+    }
+  }, [content, language])
+
+  return (
+    <div className="rounded border border-border-default overflow-hidden mb-3">
+      <div className="flex items-center justify-between px-3 py-1 bg-bg-tertiary border-b border-border-default">
+        <span className="text-[10px] text-text-muted uppercase tracking-wide">{language}</span>
+        <span className="text-[10px] text-text-muted">{content.split('\n').length} lines</span>
+      </div>
+      <pre className="overflow-auto max-h-[400px] p-0 m-0">
+        <code
+          ref={codeRef}
+          className={`language-${language} !text-[11px] !leading-[1.6] !p-3 block`}
+        >
+          {content}
+        </code>
+      </pre>
+      {truncated && <div className="text-[10px] text-text-muted px-3 py-1 border-t border-border-default italic">... content truncated</div>}
+    </div>
   )
 }
