@@ -134,7 +134,7 @@ pub fn execute(
     // Generate slug for filename
     let item_slug = match &args.slug {
         Some(s) => {
-            slug::validate_slug(s).map_err(|e| WorkError::ValidationError(e))?;
+            slug::validate_slug(s).map_err(WorkError::ValidationError)?;
             s.clone()
         }
         None => slug::slugify(&args.title, 50),

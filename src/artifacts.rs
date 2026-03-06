@@ -179,12 +179,12 @@ pub fn discover(
         for ref_val in refs {
             if let serde_yml::Value::Mapping(map) = ref_val {
                 let label = map
-                    .get(&serde_yml::Value::String("label".into()))
+                    .get(serde_yml::Value::String("label".into()))
                     .and_then(|v| v.as_str())
                     .map(|s| s.to_string());
 
                 if let Some(url) = map
-                    .get(&serde_yml::Value::String("url".into()))
+                    .get(serde_yml::Value::String("url".into()))
                     .and_then(|v| v.as_str())
                 {
                     artifacts.push(Artifact {
@@ -200,7 +200,7 @@ pub fn discover(
                         is_text: false,
                     });
                 } else if let Some(path_str) = map
-                    .get(&serde_yml::Value::String("path".into()))
+                    .get(serde_yml::Value::String("path".into()))
                     .and_then(|v| v.as_str())
                 {
                     // Check if this path matches a contained artifact (enrichment)

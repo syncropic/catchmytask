@@ -39,9 +39,21 @@ export function BoardView({ config }: Props) {
     },
   })
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  )
+
   const stateMachine = config?.state_machines?.default
   if (!stateMachine) {
     return <div className="flex items-center justify-center h-full text-text-muted">Loading...</div>
+  }
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-full text-text-muted">Loading items...</div>
+  }
+
+  if (!items || items.length === 0) {
+    return <EmptyBoard />
   }
 
   // Order states: initial first, then non-terminal, then terminal
@@ -80,18 +92,6 @@ export function BoardView({ config }: Props) {
     if (!item || item.status === targetStatus) return
 
     statusMutation.mutate({ id: itemId, status: targetStatus })
-  }
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
-  )
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-full text-text-muted">Loading items...</div>
-  }
-
-  if (!items || items.length === 0) {
-    return <EmptyBoard />
   }
 
   return (
