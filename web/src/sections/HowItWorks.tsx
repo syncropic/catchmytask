@@ -23,6 +23,11 @@ status: active
 priority: high
 assignee: alice
 tags: [security, backend]
+depends_on: [CMT-0039]
+parent: CMT-0010
+refs:
+  - path: docs/auth-spec.md
+    label: Auth specification
 created: 2026-02-15T10:30:00Z
 ---
 
@@ -33,6 +38,11 @@ Implement JWT-based authentication.
 - [ ] Users can log in with email/password
 - [ ] Tokens expire after 24 hours`}
             </pre>
+            <p className="text-xs text-text-muted leading-relaxed mt-2">
+              Items can be <strong className="text-text-secondary">simple</strong> (single .md file) or{' '}
+              <strong className="text-text-secondary">complex</strong> (folder with item.md + artifacts like evidence, queries, and handover files).
+              Use <code className="text-accent-text">refs</code> to link external files as artifacts.
+            </p>
           </div>
 
           {/* CLI examples */}
