@@ -73,6 +73,34 @@ Users are getting timeout errors on the login page.
 
 Everything is a file. Read them, edit them, `grep` them, `git log` them.
 
+Items can be **simple** (a single `.md` file) or **complex** (a folder with `item.md` + artifacts):
+
+```
+.cmt/items/
+  CMT-1-fix-login-bug.md              # simple item
+  CMT-2-security-audit/               # complex item (folder)
+    item.md                            # the work item
+    evidence/screenshot.png            # contained artifacts
+    queries/audit.sql
+    handover/AI-HANDOVER.md
+```
+
+Artifacts are any supporting files — evidence, queries, logs, screenshots — browsable via the web UI's Artifact Browser or the CLI.
+
+## Web UI
+
+CatchMyTask includes a browser-based UI at [catchmytask.com/app](https://catchmytask.com/app):
+
+- **Board View** — Kanban with drag-and-drop between status columns
+- **List View** — Sortable table with inline status, priority, and artifact indicators
+- **Dashboard** — Summary stats, distributions, overdue items, recent activity
+- **Activity Feed** — Timeline of all events grouped by day
+- **Artifact Browser** — Project-wide file browser with search, filtering by item/type/source, list/grid views, and inline preview for images, text, and PDF
+- **Detail Panel** — Click any item to edit fields, view/browse artifacts, and edit Markdown body
+- **Dark/Light Mode** — Toggle via header, persists to localStorage
+
+Works in two modes: **local-only** (IndexedDB, no server) or **connected** to `cmt serve` (auto-detected on port 3170).
+
 ## Commands
 
 | Command | Description | Example |
@@ -93,6 +121,7 @@ Everything is a file. Read them, edit them, `grep` them, `git log` them.
 | `config` | View/modify configuration | `cmt config set defaults.priority high` |
 | `completions` | Generate shell completions | `cmt completions bash` |
 | `setup` | Configure agent integrations | `cmt setup --claude-code` |
+| `serve` | Start the web UI server | `cmt serve --open` |
 | `help-agent` | Agent-optimized help (JSON) | `cmt help-agent --json` |
 
 All commands support `--json` for machine-readable output and `--quiet` to suppress non-essential messages.
@@ -194,11 +223,12 @@ Custom state machines can be defined per item type in `config.yml`.
 .cmt/
   config.yml          # Project configuration
   config.local.yml    # Local overrides (gitignored)
-  items/              # Active work items (PREFIX-N.md)
+  items/              # Active work items (simple .md or complex folders)
   archive/            # Completed/cancelled items
   templates/          # Work item templates
   ABOUT.md            # Auto-generated project summary
   CONVENTIONS.md      # Auto-generated conventions
+  .index.db           # SQLite index (gitignored)
 ```
 
 The CLI uses a SQLite index (`.cmt/.index.db`, gitignored) for fast search and queries. The Markdown files are always the source of truth — run `cmt reindex` to rebuild if needed.

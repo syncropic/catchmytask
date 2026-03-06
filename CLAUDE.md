@@ -108,6 +108,7 @@ Implement JWT-based authentication for the API.
 |---|---|
 | `docs/research/01-industry-landscape.md` | Comprehensive industry survey (80+ sources) |
 | `docs/research/02-first-principles.md` | Philosophical/architectural foundations |
+| `docs/design/artifacts.md` | Artifact system design (discovery, API, CLI, web UI) |
 
 ## Technology Decisions (Resolved)
 
@@ -117,6 +118,8 @@ Implement JWT-based authentication for the API.
 - **Index/query layer**: SQLite (`.cmt/.index.db`, gitignored). `cmt reindex --force` to rebuild
 - **Agent integration**: CLI + `--json` with progressive discovery (not MCP). `cmt setup` installs platform-specific integrations (Claude Code skill, etc.). See `docs/design/agent-discoverability.md`
 - **State machine**: YAML-defined in `config.yml`, validated at runtime. See `docs/specs/02-state-machine.md`
+- **Artifacts**: Filesystem-based discovery. Complex items = folders with `item.md` + artifacts. Simple items reference via `refs` frontmatter. See `docs/design/artifacts.md`
+- **Web UI**: React + Vite, embedded in release binary. Dual-mode: local-only (IndexedDB) or connected (`cmt serve`). Includes board, list, dashboard, activity, and artifact browser views
 
 ## Technology Decisions (Pending)
 

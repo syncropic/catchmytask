@@ -260,11 +260,25 @@ Implement JWT-based authentication.
   config.yml        # Configuration
   config.local.yml  # Local overrides (gitignored)
   items/            # Active work items
+    CMT-1-simple.md       # Simple item
+    CMT-2-complex/        # Complex item (folder)
+      item.md             # The work item
+      evidence/           # Contained artifacts
+      queries/
+      handover/
   archive/          # Completed/cancelled
   templates/        # Item templates
   ABOUT.md          # Auto-generated summary
   CONVENTIONS.md    # Auto-generated conventions`}
             </CodeBlock>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-text-primary">Artifacts</h3>
+            <p className="text-xs text-text-muted leading-relaxed">
+              Complex items can contain artifacts — evidence, queries, logs, screenshots — in subdirectories alongside <code className="text-accent-text">item.md</code>.
+              Simple items can reference external files via the <code className="text-accent-text">refs</code> frontmatter field.
+              All artifacts are browsable in the web UI's Artifact Browser.
+            </p>
           </div>
         </div>
       </div>
@@ -388,7 +402,8 @@ function WebUI() {
           ['List View', 'Table view with inline status dropdowns, priority badges, and sidebar filtering by status and tags.'],
           ['Dashboard', 'Summary stats, status/priority distribution, overdue items, recent activity at a glance.'],
           ['Activity Feed', 'Timeline of all events (created, started, completed, blocked) grouped by day.'],
-          ['Detail Panel', 'Click any item to edit title, status, priority, type, assignee, due date, tags, and Markdown body.'],
+          ['Detail Panel', 'Click any item to edit title, status, priority, type, assignee, due date, tags, and Markdown body. Artifacts shown in a collapsible section.'],
+          ['Artifact Browser', 'Project-wide file browser with left sidebar (filter by item, type, source), sortable list/grid views, search, and right drawer with inline preview for images, text, and PDF.'],
           ['Search', 'Ctrl/Cmd+K opens a command palette with full-text search across all items.'],
           ['Dark/Light Mode', 'Toggle via the theme button in the header. Persists to localStorage.'],
           ['Export/Import', 'Export your data as a .cmt zip, import into another browser or restore from backup.'],

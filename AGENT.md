@@ -33,6 +33,11 @@ cmt done PROJ-0001 --json
 `.cmt/config.yml` (config) · `.cmt/items/*.md` (active items) · `.cmt/archive/*.md` (done/cancelled)
 `.cmt/ABOUT.md` (project summary) · `.cmt/CONVENTIONS.md` (conventions) · `.cmt/templates/` (templates)
 
+## Item Formats
+
+- **Simple**: `.cmt/items/CMT-1-title.md` — single Markdown file
+- **Complex**: `.cmt/items/CMT-2-title/item.md` — folder with artifacts (evidence, queries, handover files)
+
 ## Default State Machine
 
 ```
