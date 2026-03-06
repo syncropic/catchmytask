@@ -56,6 +56,12 @@ export const localApi = {
     delete: async (id: string): Promise<void> => {
       return itemStore.deleteItem(id)
     },
+
+    artifacts: async (_id: string) => {
+      return { item_id: _id, is_complex: false, truncated: false, artifacts: [] }
+    },
+
+    artifactUrl: (_id: string, path: string) => path,
   },
 
   search: async (q: string, _params?: Record<string, string>): Promise<WorkItem[]> => {

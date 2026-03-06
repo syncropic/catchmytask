@@ -1,4 +1,4 @@
-import type { WorkItem, ProjectConfig, ProjectsResponse, CreateItemRequest, EditItemRequest, StatusChangeRequest } from '@/types'
+import type { WorkItem, ProjectConfig, ProjectsResponse, CreateItemRequest, EditItemRequest, StatusChangeRequest, ArtifactList } from '@/types'
 import { useConnectionStore } from '@/stores/connection'
 import { useProjectStore } from '@/stores/project'
 import { localApi } from './local-api'
@@ -56,6 +56,13 @@ function createRemoteApi(baseUrl: string) {
         }),
       delete: (id: string) =>
         request<void>(appendProject(`/items/${encodeURIComponent(id)}`), { method: 'DELETE' }),
+      artifacts: (id: string) =>
+        request<ArtifactList>(appendProject(`/items/${encodeURIComponent(id)}/artifacts`)),
+      artifactUrl: (id: string, artifactPath: string) => {
+        const project = useProjectStore.getState().currentProject
+        const qs = project ? `?project=${encodeURIComponent(project)}` : ''
+        return `${BASE}/items/${encodeURIComponent(id)}/artifacts/${artifactPath}${qs}`
+      },
     },
     search: (q: string, params?: Record<string, string>) => {
       const project = useProjectStore.getState().currentProject
@@ -89,6 +96,10 @@ export const api = {
     changeStatus: (...args: Parameters<ApiInterface['items']['changeStatus']>) =>
       getActiveApi().items.changeStatus(...args),
     delete: (...args: Parameters<ApiInterface['items']['delete']>) => getActiveApi().items.delete(...args),
+    artifacts: (...args: Parameters<ApiInterface['items']['artifacts']>) =>
+      getActiveApi().items.artifacts(...args),
+    artifactUrl: (...args: Parameters<ApiInterface['items']['artifactUrl']>) =>
+      getActiveApi().items.artifactUrl(...args),
   },
   search: (...args: Parameters<ApiInterface['search']>) => getActiveApi().search(...args),
 }

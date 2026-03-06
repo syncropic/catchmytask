@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { api } from '@/lib/api'
 import { useUIStore } from '@/stores/ui'
 import { useProjectStore } from '@/stores/project'
-import type { ProjectConfig } from '@/types'
+import type { ProjectConfig, Artifact } from '@/types'
 
 interface Props {
   config?: ProjectConfig | null
@@ -164,6 +164,9 @@ export function DetailPanel({ config }: Props) {
 
             {item.parent && <ReadonlyField label="Parent" value={item.parent} />}
           </div>
+
+          {/* Artifacts */}
+          <ArtifactSection itemId={item.id} />
 
           {/* Editable body */}
           <EditableBody
@@ -526,4 +529,301 @@ function formatDate(iso: string): string {
   } catch {
     return iso
   }
+}
+
+// ── Artifacts ─────────────────────────────────────────────────────────────────
+
+function ArtifactSection({ itemId }: { itemId: string }) {
+  const currentProject = useProjectStore((s) => s.currentProject)
+  const [expanded, setExpanded] = useState(false)
+  const [viewingArtifact, setViewingArtifact] = useState<Artifact | null>(null)
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
+  const [filter, setFilter] = useState('')
+
+  const { data } = useQuery({
+    queryKey: ['artifacts', itemId, currentProject],
+    queryFn: () => api.items.artifacts(itemId),
+    staleTime: 30_000,
+  })
+
+  const allArtifacts = data?.artifacts ?? []
+  if (allArtifacts.length === 0) return null
+
+  // Filter
+  const artifacts = filter
+    ? allArtifacts.filter((a) => {
+        const q = filter.toLowerCase()
+        return (
+          a.name.toLowerCase().includes(q) ||
+          (a.label?.toLowerCase().includes(q)) ||
+          (a.mime?.toLowerCase().includes(q)) ||
+          (a.category?.toLowerCase().includes(q))
+        )
+      })
+    : allArtifacts
+
+  // Group by category
+  const groups = new Map<string, Artifact[]>()
+  for (const a of artifacts) {
+    const key = a.category ?? ''
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(a)
+  }
+
+  function toggleCategory(cat: string) {
+    setCollapsedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(cat)) next.delete(cat)
+      else next.add(cat)
+      return next
+    })
+  }
+
+  const showFilter = allArtifacts.length > 6
+
+  return (
+    <div className="border-t border-border-subtle">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-2 px-4 py-2 text-[11px] text-text-muted uppercase tracking-wider font-medium hover:bg-bg-hover transition-colors"
+      >
+        <span className="text-[9px]">{expanded ? '▾' : '▸'}</span>
+        Artifacts
+        <span className="text-text-muted/60 font-normal normal-case tracking-normal">{allArtifacts.length}</span>
+      </button>
+
+      {expanded && !viewingArtifact && (
+        <div className="px-3 pb-2">
+          {showFilter && (
+            <input
+              type="text"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Filter artifacts..."
+              className="w-full bg-bg-tertiary border border-border-default rounded px-2 py-1 text-[11px] text-text-secondary outline-none mb-1.5 placeholder:text-text-muted/50"
+            />
+          )}
+
+          <div className="text-[11px] font-mono">
+            {[...groups.entries()].map(([category, items]) => {
+              const isCollapsed = collapsedCategories.has(category || '__root')
+              return (
+                <div key={category || '__root'}>
+                  {category && (
+                    <button
+                      onClick={() => toggleCategory(category)}
+                      className="flex items-center gap-1 text-text-muted hover:text-text-secondary py-0.5 w-full text-left transition-colors"
+                    >
+                      <span className="text-[8px] w-3 text-center">{isCollapsed ? '▸' : '▾'}</span>
+                      <span className="text-accent-text/70">{category}/</span>
+                      <span className="text-text-muted/50 text-[10px] ml-1">{items.length}</span>
+                    </button>
+                  )}
+                  {!isCollapsed && items.map((a) => (
+                    <ArtifactFileRow
+                      key={a.path}
+                      artifact={a}
+                      indent={!!category}
+                      onView={() => setViewingArtifact(a)}
+                    />
+                  ))}
+                </div>
+              )
+            })}
+          </div>
+
+          {filter && artifacts.length === 0 && (
+            <div className="text-[10px] text-text-muted text-center py-2">No matches</div>
+          )}
+          {data?.truncated && (
+            <div className="text-[10px] text-text-muted text-center py-1 mt-1 border-t border-border-subtle">
+              Showing first 100 artifacts
+            </div>
+          )}
+        </div>
+      )}
+
+      {expanded && viewingArtifact && (
+        <ArtifactViewer
+          artifact={viewingArtifact}
+          itemId={itemId}
+          onBack={() => setViewingArtifact(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+function extToColor(mime: string | null): string {
+  if (!mime) return 'text-text-muted'
+  if (mime.startsWith('image/')) return 'text-green-400'
+  if (mime === 'application/pdf') return 'text-red-400'
+  if (mime === 'application/json' || mime === 'text/yaml') return 'text-yellow-400'
+  if (mime.startsWith('text/x-sql')) return 'text-blue-400'
+  if (mime.startsWith('text/markdown')) return 'text-purple-400'
+  if (mime.startsWith('text/')) return 'text-text-secondary'
+  return 'text-text-muted'
+}
+
+function formatSize(bytes: number | null): string {
+  if (bytes == null) return ''
+  if (bytes < 1024) return `${bytes}B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}K`
+  return `${(bytes / (1024 * 1024)).toFixed(1)}M`
+}
+
+function ArtifactFileRow({
+  artifact,
+  indent,
+  onView,
+}: {
+  artifact: Artifact
+  indent: boolean
+  onView: () => void
+}) {
+  const ext = artifact.name.includes('.') ? artifact.name.split('.').pop() ?? '' : ''
+  const color = extToColor(artifact.mime)
+  const isRemote = artifact.source === 'ref_remote'
+
+  function handleClick() {
+    if (isRemote) {
+      window.open(artifact.path, '_blank', 'noopener,noreferrer')
+    } else {
+      onView()
+    }
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`w-full flex items-center gap-1 py-[3px] hover:bg-bg-hover rounded px-1 text-left transition-colors group ${indent ? 'ml-3' : ''}`}
+    >
+      {isRemote ? (
+        <span className="text-[10px] text-blue-400 w-3 text-center flex-shrink-0">↗</span>
+      ) : (
+        <span className={`text-[10px] ${color} w-3 text-center flex-shrink-0`}>●</span>
+      )}
+      <span className="text-text-secondary truncate flex-1 min-w-0 text-[11px]">
+        {artifact.label ?? artifact.name}
+      </span>
+      {ext && !isRemote && (
+        <span className={`text-[9px] ${color} opacity-60 flex-shrink-0 uppercase`}>{ext}</span>
+      )}
+      <span className="text-[9px] text-text-muted/50 flex-shrink-0 w-8 text-right">
+        {formatSize(artifact.size)}
+      </span>
+    </button>
+  )
+}
+
+function ArtifactViewer({
+  artifact,
+  itemId,
+  onBack,
+}: {
+  artifact: Artifact
+  itemId: string
+  onBack: () => void
+}) {
+  const url = artifact.source === 'ref_remote'
+    ? artifact.path
+    : api.items.artifactUrl(itemId, artifact.path)
+
+  const isImage = artifact.mime?.startsWith('image/')
+  const isText = artifact.is_text
+  const isPdf = artifact.mime === 'application/pdf'
+
+  return (
+    <div className="px-4 pb-3">
+      <div className="flex items-center gap-2 mb-2">
+        <button
+          onClick={onBack}
+          className="text-[10px] text-text-muted hover:text-text-secondary transition-colors"
+        >
+          ← back
+        </button>
+        <span className="text-xs text-text-secondary truncate flex-1">{artifact.name}</span>
+        <a
+          href={url}
+          download={artifact.name}
+          onClick={(e) => e.stopPropagation()}
+          className="text-[10px] text-text-muted hover:text-text-secondary transition-colors"
+        >
+          download
+        </a>
+      </div>
+
+      {isImage && (
+        <div className="bg-bg-tertiary rounded border border-border-default p-2 flex items-center justify-center">
+          <img
+            src={url}
+            alt={artifact.label ?? artifact.name}
+            className="max-w-full max-h-[400px] object-contain rounded"
+          />
+        </div>
+      )}
+
+      {isText && !isImage && <TextViewer url={url} />}
+
+      {isPdf && (
+        <embed
+          src={url}
+          type="application/pdf"
+          className="w-full h-[400px] rounded border border-border-default"
+        />
+      )}
+
+      {!isImage && !isText && !isPdf && (
+        <div className="bg-bg-tertiary rounded border border-border-default p-4 text-center text-xs text-text-muted">
+          <div className="text-2xl mb-2">📦</div>
+          <div>{artifact.mime ?? 'Unknown type'}</div>
+          <div className="mt-1">{formatSize(artifact.size)}</div>
+          <a
+            href={url}
+            download={artifact.name}
+            className="inline-block mt-3 bg-accent hover:bg-accent-hover text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+          >
+            Download
+          </a>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TextViewer({ url }: { url: string }) {
+  const [content, setContent] = useState<string | null>(null)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    fetch(url)
+      .then((r) => {
+        if (!r.ok) throw new Error('Failed to load')
+        return r.text()
+      })
+      .then(setContent)
+      .catch(() => setError(true))
+  }, [url])
+
+  if (error) {
+    return (
+      <div className="bg-bg-tertiary rounded border border-border-default p-3 text-xs text-red-400">
+        Failed to load artifact content.
+      </div>
+    )
+  }
+
+  if (content === null) {
+    return (
+      <div className="bg-bg-tertiary rounded border border-border-default p-3 text-xs text-text-muted">
+        Loading...
+      </div>
+    )
+  }
+
+  return (
+    <pre className="bg-bg-tertiary rounded border border-border-default p-3 text-[11px] text-text-secondary font-mono overflow-auto max-h-[400px] leading-relaxed whitespace-pre-wrap break-words">
+      {content}
+    </pre>
+  )
 }

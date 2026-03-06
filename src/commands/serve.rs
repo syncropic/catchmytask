@@ -160,6 +160,8 @@ struct ItemResponse {
     blocked_reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     body: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    artifact_count: Option<u32>,
 }
 
 impl ItemResponse {
@@ -181,7 +183,16 @@ impl ItemResponse {
             updated_at: item.updated_at.clone(),
             blocked_reason: item.blocked_reason.clone(),
             body,
+            artifact_count: None,
         }
+    }
+
+    fn from_item_with_path(item: &WorkItem, body: Option<String>, item_path: &Path) -> Self {
+        let (count, _preview) = crate::artifacts::count_artifacts(item_path);
+        let artifact_count = if count > 0 { Some(count) } else { None };
+        let mut resp = Self::from_item(item, body);
+        resp.artifact_count = artifact_count;
+        resp
     }
 }
 
@@ -400,13 +411,13 @@ async fn list_items(
     let work_dir = state.resolve_work_dir(params.project.as_deref())?;
     let files = storage::scan_item_files(work_dir).map_err(ApiError::from)?;
 
-    let mut items: Vec<(WorkItem, String)> = Vec::new();
+    let mut items: Vec<(WorkItem, String, PathBuf)> = Vec::new();
     for file in &files {
         let content = std::fs::read_to_string(file)
             .map_err(WorkError::from)
             .map_err(ApiError::from)?;
         match parser::parse_file(&content) {
-            Ok((item, body)) => items.push((item, body)),
+            Ok((item, body)) => items.push((item, body, file.clone())),
             Err(_) => continue,
         }
     }
@@ -414,16 +425,16 @@ async fn list_items(
     // Apply filters
     if let Some(ref status_filter) = params.status {
         let statuses: Vec<&str> = status_filter.split(',').collect();
-        items.retain(|(item, _)| statuses.contains(&item.status.as_str()));
+        items.retain(|(item, _, _)| statuses.contains(&item.status.as_str()));
     }
     if let Some(ref type_filter) = params.r#type {
-        items.retain(|(item, _)| item.r#type.as_deref() == Some(type_filter.as_str()));
+        items.retain(|(item, _, _)| item.r#type.as_deref() == Some(type_filter.as_str()));
     }
     if let Some(ref priority_filter) = params.priority {
-        items.retain(|(item, _)| item.priority.as_deref() == Some(priority_filter.as_str()));
+        items.retain(|(item, _, _)| item.priority.as_deref() == Some(priority_filter.as_str()));
     }
     if let Some(ref assignee_filter) = params.assignee {
-        items.retain(|(item, _)| {
+        items.retain(|(item, _, _)| {
             item.assignee
                 .as_ref()
                 .is_some_and(|a| a.as_vec().contains(&assignee_filter.as_str()))
@@ -431,20 +442,20 @@ async fn list_items(
     }
     if let Some(ref tag_filter) = params.tag {
         let tags: Vec<&str> = tag_filter.split(',').collect();
-        items.retain(|(item, _)| tags.iter().all(|t| item.tags.iter().any(|it| it == t)));
+        items.retain(|(item, _, _)| tags.iter().all(|t| item.tags.iter().any(|it| it == t)));
     }
     if let Some(ref parent_filter) = params.parent {
-        items.retain(|(item, _)| item.parent.as_deref() == Some(parent_filter.as_str()));
+        items.retain(|(item, _, _)| item.parent.as_deref() == Some(parent_filter.as_str()));
     }
 
     // Sort
     let sort_field = params.sort.as_deref().unwrap_or("priority");
     match sort_field {
-        "priority" => items.sort_by(|(a, _), (b, _)| a.priority_enum().cmp(&b.priority_enum())),
-        "created" => items.sort_by(|(a, _), (b, _)| b.created_at.cmp(&a.created_at)),
-        "status" => items.sort_by(|(a, _), (b, _)| a.status.cmp(&b.status)),
-        "title" => items.sort_by(|(a, _), (b, _)| a.title.cmp(&b.title)),
-        "due" => items.sort_by(|(a, _), (b, _)| a.due.cmp(&b.due)),
+        "priority" => items.sort_by(|(a, _, _), (b, _, _)| a.priority_enum().cmp(&b.priority_enum())),
+        "created" => items.sort_by(|(a, _, _), (b, _, _)| b.created_at.cmp(&a.created_at)),
+        "status" => items.sort_by(|(a, _, _), (b, _, _)| a.status.cmp(&b.status)),
+        "title" => items.sort_by(|(a, _, _), (b, _, _)| a.title.cmp(&b.title)),
+        "due" => items.sort_by(|(a, _, _), (b, _, _)| a.due.cmp(&b.due)),
         _ => {}
     }
 
@@ -455,7 +466,7 @@ async fn list_items(
 
     let response: Vec<ItemResponse> = items
         .iter()
-        .map(|(item, _)| ItemResponse::from_item(item, None))
+        .map(|(item, _, path)| ItemResponse::from_item_with_path(item, None, path))
         .collect();
 
     Ok(Json(response))
@@ -467,8 +478,8 @@ async fn get_item(
     Query(pq): Query<ItemPathQuery>,
 ) -> Result<Json<ItemResponse>, ApiError> {
     let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
-    let (item, body, _) = storage::read_item(work_dir, &id).map_err(ApiError::from)?;
-    Ok(Json(ItemResponse::from_item(&item, Some(body))))
+    let (item, body, path) = storage::read_item(work_dir, &id).map_err(ApiError::from)?;
+    Ok(Json(ItemResponse::from_item_with_path(&item, Some(body), &path)))
 }
 
 async fn create_item(
@@ -726,6 +737,7 @@ async fn search_items(
                 body: row.get(13)?,
                 depends_on: Vec::new(),
                 tags: Vec::new(),
+                artifact_count: None,
             })
         })
         .map_err(WorkError::from)
@@ -733,6 +745,93 @@ async fn search_items(
 
     let results: Vec<ItemResponse> = rows.filter_map(|r| r.ok()).collect();
     Ok(Json(results))
+}
+
+// ── Artifact handlers ───────────────────────────────────────────────────────
+
+async fn list_artifacts(
+    State(state): State<Arc<AppState>>,
+    AxumPath(id): AxumPath<String>,
+    Query(pq): Query<ItemPathQuery>,
+) -> Result<Json<crate::artifacts::ArtifactList>, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let (item, _body, item_path) = storage::read_item(work_dir, &id).map_err(ApiError::from)?;
+    let artifact_list = crate::artifacts::discover(&item_path, &item.extra);
+    Ok(Json(artifact_list))
+}
+
+async fn serve_artifact(
+    State(state): State<Arc<AppState>>,
+    AxumPath((id, artifact_path)): AxumPath<(String, String)>,
+    Query(pq): Query<ItemPathQuery>,
+) -> Result<Response, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let item_path = storage::resolve_item_path(work_dir, &id).map_err(ApiError::from)?;
+
+    // Determine the item directory
+    let item_dir = if item_path.file_name().is_some_and(|n| n == "item.md") {
+        item_path.parent().unwrap_or(&item_path)
+    } else {
+        // Simple item — no artifacts directory
+        return Err(ApiError {
+            status: StatusCode::NOT_FOUND,
+            message: "Simple items do not have contained artifacts".to_string(),
+        });
+    };
+
+    let resolved = crate::artifacts::validate_artifact_path(item_dir, &artifact_path)
+        .map_err(ApiError::from)?;
+
+    if !resolved.is_file() {
+        return Err(ApiError {
+            status: StatusCode::NOT_FOUND,
+            message: format!("Artifact not found: {}", artifact_path),
+        });
+    }
+
+    let metadata = std::fs::metadata(&resolved)
+        .map_err(WorkError::from)
+        .map_err(ApiError::from)?;
+
+    let mime = crate::artifacts::detect_mime(&resolved);
+    let etag = crate::artifacts::compute_etag(&metadata);
+    let size = metadata.len();
+
+    let body = tokio::fs::read(&resolved)
+        .await
+        .map_err(|e| ApiError {
+            status: StatusCode::INTERNAL_SERVER_ERROR,
+            message: format!("Failed to read artifact: {}", e),
+        })?;
+
+    Ok((
+        StatusCode::OK,
+        [
+            (axum::http::header::CONTENT_TYPE, mime.to_string()),
+            (axum::http::header::CONTENT_LENGTH, size.to_string()),
+            (
+                axum::http::header::CONTENT_DISPOSITION,
+                format!(
+                    "inline; filename=\"{}\"",
+                    resolved
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("artifact")
+                ),
+            ),
+            (
+                axum::http::header::CACHE_CONTROL,
+                "private, max-age=60".to_string(),
+            ),
+            (axum::http::header::ETAG, etag),
+            (
+                axum::http::HeaderName::from_static("x-content-type-options"),
+                "nosniff".to_string(),
+            ),
+        ],
+        body,
+    )
+        .into_response())
 }
 
 // ── WebSocket handler ───────────────────────────────────────────────────────
@@ -907,6 +1006,8 @@ pub fn execute(args: &ServeArgs, work_dir: &Path) -> crate::error::Result<()> {
             .route("/api/items/{id}", delete(delete_item))
             .route("/api/items/{id}/status", post(change_status))
             .route("/api/search", get(search_items))
+            .route("/api/items/{id}/artifacts", get(list_artifacts))
+            .route("/api/items/{id}/artifacts/{*path}", get(serve_artifact))
             .with_state(state.clone());
 
         let ws_router = Router::new()

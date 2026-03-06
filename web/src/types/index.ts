@@ -15,6 +15,27 @@ export interface WorkItem {
   updated_at?: string
   blocked_reason?: string
   body?: string
+  artifact_count?: number
+}
+
+export interface Artifact {
+  name: string
+  path: string
+  source: 'contained' | 'ref_local' | 'ref_remote'
+  category: string | null
+  label: string | null
+  size: number | null
+  mime: string | null
+  modified: string | null
+  lines: number | null
+  is_text: boolean
+}
+
+export interface ArtifactList {
+  item_id: string
+  is_complex: boolean
+  truncated: boolean
+  artifacts: Artifact[]
 }
 
 export interface StateInfo {

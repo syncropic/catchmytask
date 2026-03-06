@@ -57,8 +57,8 @@ export function BoardCard({ item, isDragging }: Props) {
       {/* Title */}
       <div className="text-xs text-text-primary leading-snug">{item.title}</div>
 
-      {/* Footer: tags + assignee */}
-      {(item.tags.length > 0 || item.assignee) && (
+      {/* Footer: tags + artifacts + assignee */}
+      {(item.tags.length > 0 || item.assignee || item.artifact_count) && (
         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
           {item.tags.slice(0, 3).map((tag) => (
             <span
@@ -70,6 +70,11 @@ export function BoardCard({ item, isDragging }: Props) {
           ))}
           {item.tags.length > 3 && (
             <span className="text-[10px] text-text-muted">+{item.tags.length - 3}</span>
+          )}
+          {item.artifact_count != null && item.artifact_count > 0 && (
+            <span className="text-[10px] text-text-muted" title={`${item.artifact_count} artifact${item.artifact_count > 1 ? 's' : ''}`}>
+              📎{item.artifact_count}
+            </span>
           )}
           {item.assignee && (
             <span className={`text-[10px] ml-auto ${isAgent ? 'text-agent' : 'text-text-muted'}`}>

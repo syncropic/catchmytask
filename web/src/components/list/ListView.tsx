@@ -140,7 +140,12 @@ export function ListView({ config }: Props) {
               className="border-b border-border-subtle hover:bg-bg-hover cursor-pointer transition-colors"
             >
               <td className="px-3 py-2 font-mono text-text-muted">{item.id}</td>
-              <td className="px-3 py-2 text-text-primary">{item.title}</td>
+              <td className="px-3 py-2 text-text-primary">
+                {item.title}
+                {item.artifact_count != null && item.artifact_count > 0 && (
+                  <span className="ml-2 text-[10px] text-text-muted" title={`${item.artifact_count} artifact${item.artifact_count > 1 ? 's' : ''}`}>📎{item.artifact_count}</span>
+                )}
+              </td>
               <td className="px-3 py-2">
                 <StatusDropdown
                   value={item.status}

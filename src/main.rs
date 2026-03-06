@@ -1,6 +1,7 @@
 use clap::Parser;
 use std::process;
 
+mod artifacts;
 mod cli;
 mod config;
 mod error;
