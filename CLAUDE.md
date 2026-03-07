@@ -108,6 +108,9 @@ Implement JWT-based authentication for the API.
 |---|---|
 | `docs/research/01-industry-landscape.md` | Comprehensive industry survey (80+ sources) |
 | `docs/research/02-first-principles.md` | Philosophical/architectural foundations |
+| `docs/research/03-enterprise-and-open-core.md` | Enterprise requirements, open-core models, AI agent governance |
+| `docs/research/04-strategy-and-roadmap.md` | Strategic assessment, roadmap, business case, market sizing |
+| `docs/research/competitive-landscape-2026.md` | Competitor analysis with pricing, revenue, positioning |
 | `docs/design/artifacts.md` | Artifact system design (discovery, API, CLI, web UI) |
 
 ## Technology Decisions (Resolved)
