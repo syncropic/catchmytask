@@ -12,6 +12,16 @@ use crate::cli::OutputFormat;
 pub fn execute(args: &ListArgs, work_dir: &Path, json_global: bool, quiet: bool) -> Result<()> {
     let config = Config::load(work_dir)?;
 
+    // If --view is specified, merge view filters into a new ListArgs
+    let merged_args;
+    let args = if let Some(ref view_name) = args.view {
+        let view = cmt_core::views::load_view(work_dir, view_name)?;
+        merged_args = merge_view_filters(args, &view.filters);
+        &merged_args
+    } else {
+        args
+    };
+
     // Try index first, fall back to file scan
     let mut items = load_items(work_dir, &config, args)?;
 
@@ -461,6 +471,49 @@ struct IndexRow {
 }
 
 // Extension trait for PriorityValue to get rank
+/// Merge view filters into ListArgs. Explicit CLI flags take precedence over view filters.
+fn merge_view_filters(args: &ListArgs, filters: &cmt_core::views::ViewFilters) -> ListArgs {
+    ListArgs {
+        status: args.status.clone().or_else(|| filters.status.clone()),
+        r#type: args.r#type.clone().or_else(|| filters.r#type.clone()),
+        priority: args.priority.or_else(|| {
+            filters.priority.as_deref().and_then(|p| match p {
+                "critical" => Some(crate::cli::PriorityValue::Critical),
+                "high" => Some(crate::cli::PriorityValue::High),
+                "medium" => Some(crate::cli::PriorityValue::Medium),
+                "low" => Some(crate::cli::PriorityValue::Low),
+                "none" => Some(crate::cli::PriorityValue::None),
+                _ => None,
+            })
+        }),
+        assignee: args.assignee.clone().or_else(|| filters.assignee.clone()),
+        tag: if args.tag.is_empty() {
+            filters.tag.as_ref().map(|t| vec![t.clone()]).unwrap_or_default()
+        } else {
+            args.tag.clone()
+        },
+        sort: if args.sort != "priority" {
+            args.sort.clone()
+        } else {
+            filters.sort.clone().unwrap_or_else(|| "priority".to_string())
+        },
+        limit: args.limit.or(filters.limit),
+        // Pass through all other flags as-is
+        parent: args.parent.clone(),
+        no_parent: args.no_parent,
+        overdue: args.overdue,
+        due_before: args.due_before.clone(),
+        blocked: args.blocked,
+        tag_ns: args.tag_ns.clone(),
+        id: args.id.clone(),
+        reverse: args.reverse,
+        format: args.format,
+        fields: args.fields.clone(),
+        all: args.all,
+        view: None, // Prevent recursion
+    }
+}
+
 impl crate::cli::PriorityValue {
     fn to_rank(pv: &crate::cli::PriorityValue) -> u8 {
         match pv {

@@ -29,6 +29,7 @@ pub fn execute(args: &InitArgs, json: bool, quiet: bool) -> Result<()> {
         ensure_dir(&work_dir.join("items"))?;
         ensure_dir(&work_dir.join("archive"))?;
         ensure_dir(&work_dir.join("templates"))?;
+        ensure_dir(&work_dir.join("views"))?;
         write_gitignore(work_dir)?;
 
         // Create default templates (won't overwrite existing ones)
@@ -48,6 +49,7 @@ pub fn execute(args: &InitArgs, json: bool, quiet: bool) -> Result<()> {
         ensure_dir(&work_dir.join("items"))?;
         ensure_dir(&work_dir.join("archive"))?;
         ensure_dir(&work_dir.join("templates"))?;
+        ensure_dir(&work_dir.join("views"))?;
         write_gitignore(work_dir)?;
 
         // Create default templates

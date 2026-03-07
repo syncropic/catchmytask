@@ -20,3 +20,5 @@ pub mod projects;
 pub mod doctor;
 pub mod slugify;
 pub mod comment;
+pub mod view;
+pub mod bulk;

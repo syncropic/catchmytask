@@ -131,6 +131,14 @@ fn run(cli: &Cli) -> cmt_core::error::Result<()> {
             let work_dir = resolve_work_dir(cli)?;
             commands::comment::execute(args, &work_dir, cli.json, cli.quiet, actor.as_deref())
         }
+        Commands::View(args) => {
+            let work_dir = resolve_work_dir(cli)?;
+            commands::view::execute(args, &work_dir, cli.json, cli.quiet)
+        }
+        Commands::Bulk(args) => {
+            let work_dir = resolve_work_dir(cli)?;
+            commands::bulk::execute(&args.command, &work_dir, cli.json, cli.quiet, actor.as_deref())
+        }
     }
 }
 

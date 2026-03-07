@@ -230,6 +230,17 @@ struct ListParams {
     parent: Option<String>,
     sort: Option<String>,
     limit: Option<u32>,
+    page: Option<u32>,
+    per_page: Option<u32>,
+}
+
+#[derive(Serialize)]
+struct PaginatedResponse<T: Serialize> {
+    items: Vec<T>,
+    total: usize,
+    page: u32,
+    per_page: u32,
+    has_more: bool,
 }
 
 #[derive(Deserialize)]
@@ -296,12 +307,29 @@ struct SearchParams {
     q: String,
     status: Option<String>,
     limit: Option<u32>,
+    page: Option<u32>,
+    per_page: Option<u32>,
 }
 
 /// Item path params: item id + optional project query
 #[derive(Deserialize)]
 struct ItemPathQuery {
     project: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct BulkStatusRequest {
+    filter: std::collections::HashMap<String, String>,
+    target: String,
+    #[serde(default)]
+    force: bool,
+}
+
+#[derive(Deserialize)]
+struct BulkDoneRequest {
+    filter: std::collections::HashMap<String, String>,
+    #[serde(default)]
+    force: bool,
 }
 
 #[derive(Deserialize)]
@@ -416,7 +444,7 @@ async fn get_config(
 async fn list_items(
     State(state): State<Arc<AppState>>,
     Query(params): Query<ListParams>,
-) -> Result<Json<Vec<ItemResponse>>, ApiError> {
+) -> Result<Json<PaginatedResponse<ItemResponse>>, ApiError> {
     let work_dir = state.resolve_work_dir(params.project.as_deref())?;
     let files = storage::scan_item_files(work_dir).map_err(ApiError::from)?;
 
@@ -468,17 +496,33 @@ async fn list_items(
         _ => {}
     }
 
-    // Limit
+    // Legacy limit (applied before pagination if no page param)
     if let Some(limit) = params.limit {
         items.truncate(limit as usize);
     }
 
-    let response: Vec<ItemResponse> = items
+    // Pagination
+    let total = items.len();
+    let page = params.page.unwrap_or(1).max(1);
+    let per_page = params.per_page.unwrap_or(50).clamp(1, 200);
+    let offset = ((page - 1) as usize) * (per_page as usize);
+
+    let paged_items: Vec<ItemResponse> = items
         .iter()
+        .skip(offset)
+        .take(per_page as usize)
         .map(|(item, _, path)| ItemResponse::from_item_with_path(item, None, path))
         .collect();
 
-    Ok(Json(response))
+    let has_more = offset + paged_items.len() < total;
+
+    Ok(Json(PaginatedResponse {
+        items: paged_items,
+        total,
+        page,
+        per_page,
+        has_more,
+    }))
 }
 
 async fn get_item(
@@ -699,13 +743,18 @@ async fn delete_item(
 async fn search_items(
     State(state): State<Arc<AppState>>,
     Query(params): Query<SearchParams>,
-) -> Result<Json<Vec<ItemResponse>>, ApiError> {
+) -> Result<Json<PaginatedResponse<ItemResponse>>, ApiError> {
     let work_dir = state.resolve_work_dir(params.project.as_deref())?;
     let index = state.open_index_for(work_dir)?;
-    let limit = params.limit.unwrap_or(20);
 
-    // Use FTS5 search
-    let mut sql = String::from(
+    // Build the base query with optional status filter
+    let mut count_sql = String::from(
+        "SELECT COUNT(*)
+         FROM items_fts f
+         JOIN items i ON i.id = f.id
+         WHERE items_fts MATCH ?1",
+    );
+    let mut search_sql = String::from(
         "SELECT i.id, i.title, i.status, i.type, i.priority, i.assignee,
                 i.parent, i.due, i.created_at, i.started_at, i.completed_at,
                 i.updated_at, i.blocked_reason, i.body_text
@@ -715,16 +764,37 @@ async fn search_items(
     );
 
     if let Some(ref status) = params.status {
-        sql.push_str(&format!(
+        let clause = format!(
             " AND i.status = '{}'",
             status.replace('\'', "''")
-        ));
+        );
+        count_sql.push_str(&clause);
+        search_sql.push_str(&clause);
     }
-    sql.push_str(&format!(" LIMIT {}", limit));
+
+    // Apply legacy limit if set
+    let legacy_limit = params.limit.unwrap_or(200);
+
+    // Pagination
+    let page = params.page.unwrap_or(1).max(1);
+    let per_page = params.per_page.unwrap_or(20).clamp(1, 200);
+    let offset = ((page - 1) as usize) * (per_page as usize);
+
+    // Get total count
+    let total: usize = index
+        .conn
+        .query_row(&count_sql, [&params.q], |row| row.get(0))
+        .map_err(WorkError::from)
+        .map_err(ApiError::from)?;
+
+    // Clamp total by legacy limit
+    let effective_total = total.min(legacy_limit as usize);
+
+    search_sql.push_str(&format!(" LIMIT {} OFFSET {}", per_page, offset));
 
     let mut stmt = index
         .conn
-        .prepare(&sql)
+        .prepare(&search_sql)
         .map_err(WorkError::from)
         .map_err(ApiError::from)?;
     let rows = stmt
@@ -753,7 +823,15 @@ async fn search_items(
         .map_err(ApiError::from)?;
 
     let results: Vec<ItemResponse> = rows.filter_map(|r| r.ok()).collect();
-    Ok(Json(results))
+    let has_more = offset + results.len() < effective_total;
+
+    Ok(Json(PaginatedResponse {
+        items: results,
+        total: effective_total,
+        page,
+        per_page,
+        has_more,
+    }))
 }
 
 // ── Comment handlers ────────────────────────────────────────────────────────
@@ -949,6 +1027,290 @@ async fn serve_artifact(
         .into_response())
 }
 
+// ── View handlers ────────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct CreateViewRequest {
+    name: String,
+    #[serde(default)]
+    description: Option<String>,
+    #[serde(default)]
+    filters: cmt_core::views::ViewFilters,
+}
+
+async fn api_list_views(
+    State(state): State<Arc<AppState>>,
+    Query(pq): Query<ProjectQuery>,
+) -> Result<Json<Vec<cmt_core::views::SavedView>>, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let views = cmt_core::views::list_views(work_dir).map_err(ApiError::from)?;
+    Ok(Json(views))
+}
+
+async fn api_create_view(
+    State(state): State<Arc<AppState>>,
+    Query(pq): Query<ProjectQuery>,
+    Json(req): Json<CreateViewRequest>,
+) -> Result<(StatusCode, Json<cmt_core::views::SavedView>), ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let view = cmt_core::views::SavedView {
+        name: req.name,
+        description: req.description,
+        filters: req.filters,
+    };
+    cmt_core::views::save_view(work_dir, &view).map_err(ApiError::from)?;
+    Ok((StatusCode::CREATED, Json(view)))
+}
+
+async fn api_delete_view(
+    State(state): State<Arc<AppState>>,
+    AxumPath(name): AxumPath<String>,
+    Query(pq): Query<ProjectQuery>,
+) -> Result<StatusCode, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    cmt_core::views::delete_view(work_dir, &name).map_err(ApiError::from)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+#[derive(Deserialize, Default)]
+struct ViewItemsParams {
+    project: Option<String>,
+    page: Option<u32>,
+    per_page: Option<u32>,
+}
+
+async fn api_view_items(
+    State(state): State<Arc<AppState>>,
+    AxumPath(name): AxumPath<String>,
+    Query(pq): Query<ViewItemsParams>,
+) -> Result<Json<PaginatedResponse<ItemResponse>>, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let view = cmt_core::views::load_view(work_dir, &name).map_err(ApiError::from)?;
+
+    // Build a ListParams from the view filters, overriding with query params
+    let params = ListParams {
+        project: pq.project,
+        status: view.filters.status,
+        r#type: view.filters.r#type,
+        priority: view.filters.priority,
+        assignee: view.filters.assignee,
+        tag: view.filters.tag,
+        parent: None,
+        sort: view.filters.sort,
+        limit: view.filters.limit,
+        page: pq.page,
+        per_page: pq.per_page,
+    };
+
+    // Reuse list_items logic
+    list_items(State(state), Query(params)).await
+}
+
+// ── Bulk handlers ────────────────────────────────────────────────────────────
+
+fn matches_bulk_filter(item: &WorkItem, filters: &std::collections::HashMap<String, String>) -> bool {
+    for (key, value) in filters {
+        match key.as_str() {
+            "status" => {
+                if item.status != *value { return false; }
+            }
+            "type" => {
+                if item.r#type.as_deref() != Some(value.as_str()) { return false; }
+            }
+            "priority" => {
+                if item.priority.as_deref() != Some(value.as_str()) { return false; }
+            }
+            "assignee" => {
+                let matches = item.assignee.as_ref()
+                    .is_some_and(|a| a.as_vec().contains(&value.as_str()));
+                if !matches { return false; }
+            }
+            "tag" => {
+                if !item.tags.contains(value) { return false; }
+            }
+            _ => {}
+        }
+    }
+    true
+}
+
+async fn bulk_status(
+    State(state): State<Arc<AppState>>,
+    Query(pq): Query<ProjectQuery>,
+    Json(req): Json<BulkStatusRequest>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let config = state.load_config_for(work_dir)?;
+    let files = storage::scan_item_files(work_dir).map_err(ApiError::from)?;
+
+    let mut results = Vec::new();
+    let mut succeeded = 0u32;
+    let mut failed = 0u32;
+
+    for file in &files {
+        let content = match std::fs::read_to_string(file) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+        let (mut item, body) = match parser::parse_file(&content) {
+            Ok(r) => r,
+            Err(_) => continue,
+        };
+
+        if !matches_bulk_filter(&item, &req.filter) {
+            continue;
+        }
+
+        let id = item.id.raw.clone();
+        let old_status = item.status.clone();
+
+        match state_machine::validate_transition(
+            &config, item.r#type.as_deref(), &item.status, &req.target, req.force,
+        ) {
+            Ok(result) => {
+                let now = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+                item.status = req.target.clone();
+                item.updated_at = Some(now.clone());
+                if result.set_started_at && item.started_at.is_none() {
+                    item.started_at = Some(now.clone());
+                }
+                if result.set_completed_at {
+                    item.completed_at = Some(now.clone());
+                }
+                if result.clear_completed_at {
+                    item.completed_at = None;
+                }
+                if result.clear_blocked_reason {
+                    item.blocked_reason = None;
+                }
+
+                match storage::write_item(file, &item, &body) {
+                    Ok(()) => {
+                        if let Ok(index) = cmt_core::index::Index::open(work_dir) {
+                            let file_str = file.to_string_lossy().to_string();
+                            let archived = file_str.contains("/archive/");
+                            cmt_core::index::warn_on_err(
+                                index.upsert_item(&item, &body, &file_str, archived), "upsert",
+                            );
+                        }
+                        succeeded += 1;
+                        results.push(serde_json::json!({
+                            "id": id, "from": old_status, "to": req.target, "success": true,
+                        }));
+                    }
+                    Err(e) => {
+                        failed += 1;
+                        results.push(serde_json::json!({
+                            "id": id, "success": false, "error": e.to_string(),
+                        }));
+                    }
+                }
+            }
+            Err(e) => {
+                failed += 1;
+                results.push(serde_json::json!({
+                    "id": id, "success": false, "error": e.to_string(),
+                }));
+            }
+        }
+    }
+
+    let processed = succeeded + failed;
+    Ok(Json(serde_json::json!({
+        "processed": processed,
+        "succeeded": succeeded,
+        "failed": failed,
+        "results": results,
+    })))
+}
+
+async fn bulk_done(
+    State(state): State<Arc<AppState>>,
+    Query(pq): Query<ProjectQuery>,
+    Json(req): Json<BulkDoneRequest>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let config = state.load_config_for(work_dir)?;
+    let files = storage::scan_item_files(work_dir).map_err(ApiError::from)?;
+
+    let mut results = Vec::new();
+    let mut succeeded = 0u32;
+    let mut failed = 0u32;
+
+    for file in &files {
+        let content = match std::fs::read_to_string(file) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+        let (mut item, body) = match parser::parse_file(&content) {
+            Ok(r) => r,
+            Err(_) => continue,
+        };
+
+        if !matches_bulk_filter(&item, &req.filter) {
+            continue;
+        }
+
+        let id = item.id.raw.clone();
+        let old_status = item.status.clone();
+
+        match state_machine::validate_transition(
+            &config, item.r#type.as_deref(), &item.status, "done", req.force,
+        ) {
+            Ok(result) => {
+                let now = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+                item.status = "done".to_string();
+                item.updated_at = Some(now.clone());
+                if result.set_completed_at {
+                    item.completed_at = Some(now.clone());
+                }
+                if result.set_started_at && item.started_at.is_none() {
+                    item.started_at = Some(now.clone());
+                }
+                if result.clear_blocked_reason {
+                    item.blocked_reason = None;
+                }
+
+                match storage::write_item(file, &item, &body) {
+                    Ok(()) => {
+                        if let Ok(index) = cmt_core::index::Index::open(work_dir) {
+                            let file_str = file.to_string_lossy().to_string();
+                            let archived = file_str.contains("/archive/");
+                            cmt_core::index::warn_on_err(
+                                index.upsert_item(&item, &body, &file_str, archived), "upsert",
+                            );
+                        }
+                        succeeded += 1;
+                        results.push(serde_json::json!({
+                            "id": id, "from": old_status, "to": "done", "success": true,
+                        }));
+                    }
+                    Err(e) => {
+                        failed += 1;
+                        results.push(serde_json::json!({
+                            "id": id, "success": false, "error": e.to_string(),
+                        }));
+                    }
+                }
+            }
+            Err(e) => {
+                failed += 1;
+                results.push(serde_json::json!({
+                    "id": id, "success": false, "error": e.to_string(),
+                }));
+            }
+        }
+    }
+
+    let processed = succeeded + failed;
+    Ok(Json(serde_json::json!({
+        "processed": processed,
+        "succeeded": succeeded,
+        "failed": failed,
+        "results": results,
+    })))
+}
+
 // ── WebSocket handler ───────────────────────────────────────────────────────
 
 async fn ws_handler(
@@ -1126,6 +1488,12 @@ pub fn execute(args: &ServeArgs, work_dir: &Path) -> cmt_core::error::Result<()>
             .route("/api/artifacts", get(list_all_artifacts))
             .route("/api/items/{id}/artifacts", get(list_artifacts))
             .route("/api/items/{id}/artifacts/{*path}", get(serve_artifact))
+            .route("/api/views", get(api_list_views))
+            .route("/api/views", post(api_create_view))
+            .route("/api/views/{name}", delete(api_delete_view))
+            .route("/api/views/{name}/items", get(api_view_items))
+            .route("/api/bulk/status", post(bulk_status))
+            .route("/api/bulk/done", post(bulk_done))
             .with_state(state.clone());
 
         let ws_router = Router::new()

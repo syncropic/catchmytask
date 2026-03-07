@@ -18,7 +18,10 @@ pub fn execute(
     let mut first_error: Option<WorkError> = None;
     let mut files_changed = Vec::new();
 
-    for id in &args.ids {
+    // Expand range syntax (e.g., CMT-3..CMT-9)
+    let expanded_ids = expand_ids(&args.ids);
+
+    for id in &expanded_ids {
         match process_done(&config, work_dir, id, args.force, actor) {
             Ok((old_status, path)) => {
                 results.push(serde_json::json!({
@@ -53,7 +56,7 @@ pub fn execute(
     // Git auto-commit for all changes
     if !files_changed.is_empty() {
         let file_refs: Vec<&str> = files_changed.iter().map(|s| s.as_str()).collect();
-        let ids_str = args.ids.join(", ");
+        let ids_str = expanded_ids.join(", ");
         cmt_core::git::auto_commit(&config, work_dir, &file_refs, &format!("done {} - mark items complete", ids_str))?;
     }
 
@@ -118,4 +121,17 @@ fn process_done(
 
     let path_str = path.to_string_lossy().to_string();
     Ok((old_status, path_str))
+}
+
+/// Expand IDs, resolving any range syntax like "CMT-3..CMT-9".
+fn expand_ids(ids: &[String]) -> Vec<String> {
+    let mut expanded = Vec::new();
+    for id in ids {
+        if let Some(range_ids) = super::bulk::expand_range(id) {
+            expanded.extend(range_ids);
+        } else {
+            expanded.push(id.clone());
+        }
+    }
+    expanded
 }

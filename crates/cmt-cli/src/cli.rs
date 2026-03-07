@@ -101,6 +101,12 @@ pub enum Commands {
 
     /// Add or list comments on a work item
     Comment(CommentArgs),
+
+    /// Manage saved views (named filter sets)
+    View(ViewArgs),
+
+    /// Bulk operations on multiple work items
+    Bulk(BulkArgs),
 }
 
 #[derive(Args, Debug)]
@@ -333,6 +339,10 @@ pub struct ListArgs {
     /// Maximum items to show
     #[arg(long, short = 'l')]
     pub limit: Option<u32>,
+
+    /// Apply a saved view (load filters from .cmt/views/<name>.yml)
+    #[arg(long)]
+    pub view: Option<String>,
 }
 
 #[derive(Args, Debug)]
@@ -560,6 +570,133 @@ pub struct CommentArgs {
     /// Reply to a specific comment ID (e.g., c1)
     #[arg(long)]
     pub reply_to: Option<String>,
+}
+
+#[derive(Args, Debug)]
+pub struct ViewArgs {
+    #[command(subcommand)]
+    pub command: ViewCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum ViewCommand {
+    /// List saved views
+    List,
+    /// Save a named view
+    Save(SaveViewArgs),
+    /// Execute a saved view (show matching items)
+    Show {
+        /// View name
+        name: String,
+    },
+    /// Delete a saved view
+    Delete {
+        /// View name
+        name: String,
+    },
+}
+
+#[derive(Args, Debug)]
+pub struct SaveViewArgs {
+    /// View name
+    pub name: String,
+
+    /// Description of this view
+    #[arg(long, short = 'd')]
+    pub description: Option<String>,
+
+    /// Filter by status
+    #[arg(long, short = 's')]
+    pub status: Option<String>,
+
+    /// Filter by type
+    #[arg(long, short = 't')]
+    pub r#type: Option<String>,
+
+    /// Filter by priority
+    #[arg(long, short = 'p')]
+    pub priority: Option<String>,
+
+    /// Filter by assignee
+    #[arg(long, short = 'a')]
+    pub assignee: Option<String>,
+
+    /// Filter by tag
+    #[arg(long)]
+    pub tag: Option<String>,
+
+    /// Sort field
+    #[arg(long)]
+    pub sort: Option<String>,
+
+    /// Maximum items
+    #[arg(long, short = 'l')]
+    pub limit: Option<u32>,
+}
+
+#[derive(Args, Debug)]
+pub struct BulkArgs {
+    #[command(subcommand)]
+    pub command: BulkCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum BulkCommand {
+    /// Change status of matching items
+    Status(BulkStatusArgs),
+    /// Mark matching items as done
+    Done(BulkDoneArgs),
+    /// Edit fields on matching items
+    Edit(BulkEditArgs),
+    /// Delete matching items
+    Delete(BulkDeleteArgs),
+}
+
+#[derive(Args, Debug)]
+pub struct BulkStatusArgs {
+    /// Target status
+    pub target: String,
+
+    /// Filter expression (e.g., "status=active,priority=high")
+    #[arg(long, short)]
+    pub filter: String,
+
+    /// Force transition even if not allowed
+    #[arg(long)]
+    pub force: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct BulkDoneArgs {
+    /// Filter expression (e.g., "status=active,assignee=agent-1")
+    #[arg(long, short)]
+    pub filter: String,
+
+    /// Force transition even if not allowed
+    #[arg(long)]
+    pub force: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct BulkEditArgs {
+    /// Filter expression (e.g., "tag=sprint-3")
+    #[arg(long, short)]
+    pub filter: String,
+
+    /// Set field value (repeatable, key=value)
+    #[arg(long, action = clap::ArgAction::Append)]
+    pub set: Vec<String>,
+}
+
+#[derive(Args, Debug)]
+pub struct BulkDeleteArgs {
+    /// Filter expression (e.g., "status=cancelled")
+    #[arg(long, short)]
+    pub filter: String,
+
+    /// Force deletion (required for bulk delete)
+    #[arg(long)]
+    pub force: bool,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]

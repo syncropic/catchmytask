@@ -1972,3 +1972,143 @@ fn test_comment_no_message_no_list() {
         .failure()
         .stderr(predicate::str::contains("Message is required"));
 }
+
+// ============ cmt view ============
+
+#[test]
+fn test_view_save_and_list() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    // Save a view
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["view", "save", "active-high", "--status", "active", "--priority", "high", "-d", "Active high-priority items"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("Saved view 'active-high'"));
+
+    // Verify the YAML file was created
+    assert!(tmp.path().join(".cmt/views/active-high.yml").exists());
+
+    // List views
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["view", "list"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("active-high"));
+}
+
+#[test]
+fn test_view_show_executes_filters() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    // Add items with different statuses
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Active item", "-p", "high"])
+        .assert()
+        .success();
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Another item", "-p", "low"])
+        .assert()
+        .success();
+
+    // Save a view that filters for high priority
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["view", "save", "high-pri", "--priority", "high"])
+        .assert()
+        .success();
+
+    // Execute the view
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["view", "show", "high-pri"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("View: high-pri"));
+}
+
+#[test]
+fn test_view_delete() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    // Save then delete
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["view", "save", "temp-view", "--status", "active"])
+        .assert()
+        .success();
+    assert!(tmp.path().join(".cmt/views/temp-view.yml").exists());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["view", "delete", "temp-view"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("Deleted view 'temp-view'"));
+    assert!(!tmp.path().join(".cmt/views/temp-view.yml").exists());
+}
+
+#[test]
+fn test_view_delete_nonexistent() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["view", "delete", "nope"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("not found"));
+}
+
+#[test]
+fn test_list_with_view_flag() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    // Add items
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Task one", "-p", "high"])
+        .assert()
+        .success();
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Task two", "-p", "low"])
+        .assert()
+        .success();
+
+    // Save a view
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["view", "save", "high-only", "--priority", "high"])
+        .assert()
+        .success();
+
+    // Use --view flag on list
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["list", "--view", "high-only"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("1 items"));
+}
+
+#[test]
+fn test_init_creates_views_dir() {
+    let tmp = TempDir::new().unwrap();
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["init"])
+        .assert()
+        .success();
+
+    assert!(tmp.path().join(".cmt/views").is_dir());
+}
