@@ -14,6 +14,7 @@ import { MainContent } from '@/components/layout/MainContent'
 import { DetailPanel } from '@/components/detail/DetailPanel'
 import { CreateDrawer } from '@/components/shared/CreateDrawer'
 import { CommandPalette } from '@/components/shared/CommandPalette'
+import { CommandBar } from '@/components/commandbar/CommandBar'
 import { OnboardingDrawer } from '@/components/shared/OnboardingDrawer'
 
 export function AppPage() {
@@ -121,6 +122,7 @@ export function AppPage() {
           {createDrawerOpen && <CreateDrawer config={config ?? null} />}
         </div>
 
+        <CommandBar />
         <StatusBar config={config ?? null} />
       </div>
 
