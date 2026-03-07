@@ -50,9 +50,9 @@ export function CommandPalette() {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-50" onClick={toggleCommandPalette} />
+      <div className="fixed inset-0 bg-black/50 z-50" onClick={toggleCommandPalette} aria-hidden="true" />
 
-      <div className="fixed top-[15%] left-1/2 -translate-x-1/2 w-[560px] max-h-[60vh] bg-bg-secondary border border-border-default rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
+      <div role="dialog" aria-modal="true" aria-label="Command palette" className="fixed top-[15%] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[560px] max-h-[60vh] bg-bg-secondary border border-border-default rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden">
         <div className="px-4 py-3 border-b border-border-default">
           <input
             ref={inputRef}
@@ -60,6 +60,7 @@ export function CommandPalette() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search items, views, commands..."
+            aria-label="Search items, views, commands"
             className="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
           />
         </div>

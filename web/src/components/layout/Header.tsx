@@ -30,11 +30,12 @@ export function Header({ config, projects }: Props) {
   }
 
   return (
-    <header className="h-10 flex-shrink-0 bg-bg-secondary border-b border-border-default flex items-center px-3 gap-3">
+    <header className="h-10 flex-shrink-0 bg-bg-secondary border-b border-border-default flex items-center px-3 gap-3" aria-label="App header">
       <button
         onClick={toggleSidebar}
         className="text-text-muted hover:text-text-primary transition-colors"
         title="Toggle sidebar (Ctrl+B)"
+        aria-label="Toggle sidebar"
       >
         &#9776;
       </button>
@@ -46,6 +47,7 @@ export function Header({ config, projects }: Props) {
         <select
           value={currentProject ?? projects.default_project}
           onChange={(e) => handleProjectSwitch(e.target.value)}
+          aria-label="Switch project"
           className="bg-bg-tertiary border border-border-default rounded px-2 py-0.5 text-xs text-text-secondary cursor-pointer hover:border-text-muted transition-colors outline-none"
         >
           {projects.projects.map((p) => (
@@ -70,6 +72,7 @@ export function Header({ config, projects }: Props) {
       <button
         onClick={toggleCommandPalette}
         className="flex items-center gap-2 text-text-muted hover:text-text-secondary bg-bg-tertiary px-3 py-1 rounded border border-border-default text-xs transition-colors"
+        aria-label="Search (Ctrl+K)"
       >
         Search...
         <kbd className="text-text-muted">&#8984;K</kbd>
@@ -83,6 +86,7 @@ export function Header({ config, projects }: Props) {
         }}
         className="text-text-muted hover:text-text-primary transition-colors"
         title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       >
         {theme === 'dark' ? '☀' : '☾'}
       </button>
@@ -90,6 +94,7 @@ export function Header({ config, projects }: Props) {
       <button
         onClick={openCreateDrawer}
         className="bg-accent hover:bg-accent-hover text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+        aria-label="Create new item (Ctrl+N)"
       >
         + New
       </button>

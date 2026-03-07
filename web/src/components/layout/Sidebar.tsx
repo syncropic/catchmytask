@@ -49,7 +49,7 @@ export function Sidebar({ config }: Props) {
   const totalItems = items?.length ?? 0
 
   return (
-    <aside className="w-full h-full bg-bg-secondary border-r border-border-default overflow-y-auto py-3 px-2">
+    <aside className="w-full h-full bg-bg-secondary border-r border-border-default overflow-y-auto py-3 px-2" aria-label="Filters">
       {/* Status filters */}
       <div className="mb-4">
         <h3 className="text-text-muted text-[11px] uppercase tracking-wider font-medium px-2 mb-1.5">

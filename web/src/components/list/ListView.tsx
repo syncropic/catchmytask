@@ -102,26 +102,26 @@ export function ListView({ config }: Props) {
     )
   }
 
-  const columns: { key: SortKey; label: string; width: string }[] = [
+  const columns: { key: SortKey; label: string; width: string; hideOnMobile?: boolean }[] = [
     { key: 'id', label: 'ID', width: 'w-24' },
     { key: 'title', label: 'Title', width: '' },
     { key: 'status', label: 'Status', width: 'w-24' },
-    { key: 'priority', label: 'Priority', width: 'w-20' },
-    { key: 'assignee', label: 'Assignee', width: 'w-24' },
-    { key: 'due', label: 'Due', width: 'w-24' },
-    { key: 'updated', label: 'Updated', width: 'w-28' },
+    { key: 'priority', label: 'Priority', width: 'w-20', hideOnMobile: true },
+    { key: 'assignee', label: 'Assignee', width: 'w-24', hideOnMobile: true },
+    { key: 'due', label: 'Due', width: 'w-24', hideOnMobile: true },
+    { key: 'updated', label: 'Updated', width: 'w-28', hideOnMobile: true },
   ]
 
   return (
     <div className="h-full overflow-auto">
-      <table className="w-full text-xs">
+      <table className="w-full text-xs" aria-label="Work items">
         <thead className="sticky top-0 bg-bg-primary z-10">
           <tr className="border-b border-border-default text-text-muted text-left">
             {columns.map((col) => (
               <th
                 key={col.key}
                 onClick={() => handleSort(col.key)}
-                className={`px-3 py-2 font-medium cursor-pointer select-none hover:text-text-secondary transition-colors ${col.width}`}
+                className={`px-3 py-2 font-medium cursor-pointer select-none hover:text-text-secondary transition-colors ${col.width} ${col.hideOnMobile ? 'hidden md:table-cell' : ''}`}
               >
                 {col.label}
                 {sortKey === col.key && (
@@ -129,7 +129,7 @@ export function ListView({ config }: Props) {
                 )}
               </th>
             ))}
-            <th className="px-3 py-2 w-32 font-medium">Tags</th>
+            <th className="px-3 py-2 w-32 font-medium hidden md:table-cell">Tags</th>
           </tr>
         </thead>
         <tbody>
@@ -153,13 +153,13 @@ export function ListView({ config }: Props) {
                   onChange={(status) => statusMutation.mutate({ id: item.id, status })}
                 />
               </td>
-              <td className="px-3 py-2">
+              <td className="px-3 py-2 hidden md:table-cell">
                 <PriorityBadge priority={item.priority} />
               </td>
-              <td className="px-3 py-2 text-text-muted">{item.assignee ?? '—'}</td>
-              <td className="px-3 py-2 text-text-muted">{item.due ?? '—'}</td>
-              <td className="px-3 py-2 text-text-muted">{relativeTime(item.updated_at ?? item.created_at)}</td>
-              <td className="px-3 py-2">
+              <td className="px-3 py-2 text-text-muted hidden md:table-cell">{item.assignee ?? '—'}</td>
+              <td className="px-3 py-2 text-text-muted hidden md:table-cell">{item.due ?? '—'}</td>
+              <td className="px-3 py-2 text-text-muted hidden md:table-cell">{relativeTime(item.updated_at ?? item.created_at)}</td>
+              <td className="px-3 py-2 hidden md:table-cell">
                 <div className="flex gap-1 flex-wrap">
                   {item.tags.slice(0, 2).map((tag) => (
                     <span key={tag} className="text-[10px] text-text-muted bg-bg-tertiary px-1.5 py-0.5 rounded">
@@ -193,6 +193,7 @@ function StatusDropdown({
       value={value}
       onClick={(e) => e.stopPropagation()}
       onChange={(e) => onChange(e.target.value)}
+      aria-label="Change status"
       className="bg-transparent border border-border-default rounded px-1.5 py-0.5 text-xs text-text-secondary cursor-pointer hover:border-text-muted transition-colors outline-none"
     >
       {states.map((state) => (

@@ -44,13 +44,14 @@ export function CreateDrawer({ config }: Props) {
   }
 
   return (
-    <aside className="w-96 flex-shrink-0 bg-bg-secondary border-l border-border-default flex flex-col overflow-hidden">
+    <aside className="w-96 flex-shrink-0 bg-bg-secondary border-l border-border-default flex flex-col overflow-hidden" role="dialog" aria-label="Create new work item">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-default">
         <h2 className="text-sm font-medium text-text-primary">New Work Item</h2>
         <button
           onClick={closeCreateDrawer}
           className="text-text-muted hover:text-text-primary transition-colors"
+          aria-label="Close"
         >
           &#10005;
         </button>

@@ -112,13 +112,14 @@ export function DetailPanel({ config }: Props) {
   const states = stateMachine ? Object.keys(stateMachine.states) : []
 
   return (
-    <aside className="w-full h-full bg-bg-secondary border-l border-border-default flex flex-col overflow-hidden">
+    <aside className="w-full h-full bg-bg-secondary border-l border-border-default flex flex-col overflow-hidden" aria-label="Item details">
       {/* Panel header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-default">
         <span className="font-mono text-xs text-text-muted">{selectedItemId}</span>
         <button
           onClick={closeDetailPanel}
           className="text-text-muted hover:text-text-primary transition-colors"
+          aria-label="Close detail panel"
         >
           &#10005;
         </button>

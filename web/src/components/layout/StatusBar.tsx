@@ -26,7 +26,7 @@ export function StatusBar({ config }: Props) {
   const version = health?.version ?? '...'
 
   return (
-    <footer className="h-7 flex-shrink-0 bg-bg-secondary border-t border-border-default flex items-center px-3 text-[11px] text-text-muted gap-4">
+    <footer className="h-7 flex-shrink-0 bg-bg-secondary border-t border-border-default flex items-center px-3 text-[11px] text-text-muted gap-4" aria-label="Status bar">
       <span>
         <span className="inline-block w-2 h-2 rounded-full bg-status-active mr-1" />
         {config?.project.name ?? '...'}

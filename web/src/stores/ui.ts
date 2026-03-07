@@ -30,7 +30,7 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  sidebarOpen: true,
+  sidebarOpen: window.innerWidth >= 768,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
 
   activeView: 'list',

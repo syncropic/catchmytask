@@ -19,11 +19,13 @@ export function ActivityRail() {
   const setActiveView = useUIStore((s) => s.setActiveView)
 
   return (
-    <div className="w-12 flex-shrink-0 bg-bg-secondary border-r border-border-default flex flex-col items-center py-2 gap-1">
+    <nav aria-label="Views" className="w-12 flex-shrink-0 bg-bg-secondary border-r border-border-default flex flex-col items-center py-2 gap-1">
       {VIEW_ITEMS.map(({ view, icon, label }) => (
         <button
           key={view}
           onClick={() => setActiveView(view)}
+          aria-label={label}
+          aria-current={activeView === view ? 'page' : undefined}
           title={label}
           className={`w-10 h-10 flex items-center justify-center rounded text-lg transition-colors ${
             activeView === view
@@ -41,6 +43,8 @@ export function ActivityRail() {
         <button
           key={view}
           onClick={() => setActiveView(view)}
+          aria-label={label}
+          aria-current={activeView === view ? 'page' : undefined}
           title={label}
           className={`w-10 h-10 flex items-center justify-center rounded text-lg transition-colors ${
             activeView === view
@@ -51,6 +55,6 @@ export function ActivityRail() {
           {icon}
         </button>
       ))}
-    </div>
+    </nav>
   )
 }
