@@ -7,6 +7,8 @@ export function Footer() {
         </span>
 
         <div className="flex items-center gap-4 text-xs text-text-muted">
+          <a href="/pricing" className="hover:text-text-secondary transition-colors">Pricing</a>
+          <span>&middot;</span>
           <a href="/docs" className="hover:text-text-secondary transition-colors">Docs</a>
           <span>&middot;</span>
           <a href="https://github.com/syncropic/catchmytask" className="hover:text-text-secondary transition-colors">MIT License</a>
