@@ -1,7 +1,7 @@
 const FEATURES = [
   {
-    title: '16 CLI Commands',
-    description: 'add, list, show, edit, done, block, search, reindex, serve, and more.',
+    title: '21 CLI Commands',
+    description: 'add, list, show, edit, done, status, search, archive, serve, doctor, and more.',
   },
   {
     title: 'Configurable State Machines',

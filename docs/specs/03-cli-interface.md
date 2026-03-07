@@ -31,9 +31,9 @@ manipulation (both are first-class; the CLI is the convenient, validated path).
 
 ### References
 
-- Research: `docs/research/06-first-principles.md` Section IX (Progressive Disclosure)
-- Research: `docs/research/01-task-platform-analysis.md` Section 5 (CLI Interface)
-- Research: `docs/research/00-synthesis.md` Section "7. CLI as Primary Interface"
+- Research: `docs/research/02-first-principles.md` Section IX (Progressive Disclosure)
+- Research: `docs/research/01-industry-landscape.md` Section 5 (CLI Interface)
+- Research: `docs/research/02-first-principles.md` Section "7. CLI as Primary Interface"
 - Design principles: Progressive Capability, Actor Agnosticism, Files as Foundation
 
 ---
@@ -2096,7 +2096,7 @@ When the config changes and existing items have a status not recognized by the n
 | State machine definitions, transitions, and timestamp side effects | [Spec 02: State Machine](02-state-machine.md) |
 | Config file format, defaults, directory layout, and `cmt init` details | [Spec 04: Config Format](04-config-format.md) |
 | SQLite index schema, FTS5, and `id_counters` table | [Spec 05: SQLite Index](05-sqlite-index.md) |
-| Existing CLI design and lessons learned | `docs/research/01-task-platform-analysis.md` Section 5 |
-| Progressive capability and progressive disclosure | `docs/research/06-first-principles.md` Section IX |
-| Actor agnosticism and multi-actor design | `docs/research/06-first-principles.md` Section III |
-| Synthesis of architectural decisions | `docs/research/00-synthesis.md` |
+| Existing CLI design and lessons learned | `docs/research/01-industry-landscape.md` Section 5 |
+| Progressive capability and progressive disclosure | `docs/research/02-first-principles.md` Section IX |
+| Actor agnosticism and multi-actor design | `docs/research/02-first-principles.md` Section III |
+| Synthesis of architectural decisions | `docs/research/02-first-principles.md` |

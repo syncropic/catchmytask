@@ -25,9 +25,9 @@ The state machine is determined by the item's `type` field and the project confi
 
 ### References
 
-- Research: `docs/research/06-first-principles.md` Section IV (State and Transitions)
-- Research: `docs/research/01-task-platform-analysis.md` Section 6 (State Management and Lifecycle)
-- Research: `docs/research/00-synthesis.md` Section "5. State Machine"
+- Research: `docs/research/02-first-principles.md` Section IV (State and Transitions)
+- Research: `docs/research/01-industry-landscape.md` Section 6 (State Management and Lifecycle)
+- Research: `docs/research/02-first-principles.md` Section "5. State Machine"
 - Design principles: Events Over State, Convention Over Configuration, Progressive Capability
 
 ---

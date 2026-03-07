@@ -19,7 +19,7 @@ A work management system for humans and AI agents.
 curl -fsSL https://get.syncropic.com/cmt | sh
 
 # Install a specific version
-curl -fsSL https://get.syncropic.com/cmt | VERSION=v0.1.0 sh
+curl -fsSL https://get.syncropic.com/cmt | VERSION=v0.2.2 sh
 
 # Install to /usr/local/bin instead of ~/.local/bin
 curl -fsSL https://get.syncropic.com/cmt | sh -s -- --global
@@ -125,6 +125,9 @@ Works in two modes: **local-only** (IndexedDB, no server) or **connected** to `c
 | `setup` | Configure agent integrations | `cmt setup --claude-code` |
 | `serve` | Start the web UI server | `cmt serve --open` |
 | `help-agent` | Agent-optimized help (JSON) | `cmt help-agent --json` |
+| `projects` | Manage project registry | `cmt projects list` |
+| `doctor` | Check system health | `cmt doctor -v` |
+| `slugify` | Rename files with title slugs | `cmt slugify --dry-run` |
 
 All commands support `--json` for machine-readable output and `--quiet` to suppress non-essential messages.
 
@@ -177,7 +180,7 @@ cmt help-agent add --json
 cmt help-agent --conventions --json
 
 # Tier 3: Full reference
-# See SKILL.md in the repo root
+# See integrations/claude-code/SKILL.md
 ```
 
 Discovery files are auto-generated in `.cmt/`:

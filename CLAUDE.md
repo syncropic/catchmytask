@@ -14,10 +14,10 @@ include autonomous AI agents that work for hours/days alongside humans.
 
 **Phase: Implemented & Production-Hardened**
 
-The CLI is fully implemented in Rust with 16 commands, configurable state machines, SQLite
+The CLI is fully implemented in Rust with 21 commands, configurable state machines, SQLite
 indexing, layered configuration, a progressive agent discoverability system, and a `cmt setup`
 command for installing agent platform integrations (Claude Code skills, etc.). The codebase
-has 50 unit tests and 92 integration tests. Research documents live in `docs/research/`,
+has 70 unit tests and 92 integration tests (162 total). Research documents live in `docs/research/`,
 formal specifications in `docs/specs/`, and architecture decisions in `docs/design/`.
 
 ## Vision

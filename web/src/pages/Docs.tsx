@@ -316,7 +316,7 @@ cmt done CMT-1 --json`}
               ['Tier 0', 'cmt help-agent --json', 'Capabilities overview'],
               ['Tier 1', 'cmt help-agent <cmd> --json', 'Per-command details'],
               ['Tier 2', 'cmt help-agent --conventions --json', 'Project conventions'],
-              ['Tier 3', 'SKILL.md in repo root', 'Full reference'],
+              ['Tier 3', 'integrations/claude-code/SKILL.md', 'Full reference'],
             ].map(([tier, cmd, desc]) => (
               <div key={tier} className="px-3 py-2 flex flex-col gap-0.5">
                 <span className="text-text-primary font-semibold">{tier}</span>
@@ -485,6 +485,7 @@ cmt serve --port 8080`}
             {[
               ['Ctrl/Cmd + J', 'Toggle Command Bar (expand / collapse)'],
               ['Ctrl/Cmd + K', 'Open command palette / search'],
+              ['Ctrl/Cmd + N', 'Create new work item'],
               ['Ctrl/Cmd + B', 'Toggle sidebar'],
               ['Tab', 'Autocomplete command name (in Command Bar)'],
               ['Up / Down', 'Navigate command history (in Command Bar)'],
@@ -723,7 +724,7 @@ function Doctor() {
       </p>
       <CodeBlock>
 {`$ cmt doctor
-  [ok]  cmt binary: cmt 0.2.0 (in PATH)
+  [ok]  cmt binary: cmt 0.2.2 (in PATH)
   [ok]  global inbox: ~/.cmt with INBOX prefix
   [ok]  project registry: 6 projects registered, 6 ok, 0 stale
   [ok]  current project index: SQLite index valid, 12 item files

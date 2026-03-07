@@ -25,6 +25,7 @@ export interface CommandContext {
   selectedItem: string | null
   onNavigate: (id: string) => void
   getHistory: () => string[]
+  prefix: string
 }
 
 // ── Executor ─────────────────────────────────────────────────────────────────
@@ -41,7 +42,7 @@ export async function executeCommand(
       case 'done': return await execDone(cmd, ctx)
       case 'status': return await execStatus(cmd, ctx)
       case 'edit': return await execEdit(cmd, ctx)
-      case 'delete': case 'rm': return await execDelete(cmd)
+      case 'delete': case 'rm': return await execDelete(cmd, ctx)
       case 'search': return await execSearch(cmd)
       case 'config': return await execConfig()
       case 'help': return execHelp(cmd)
@@ -145,7 +146,7 @@ function execShow(cmd: ParsedCommand, ctx: CommandContext): CommandOutput {
 
 async function execDone(cmd: ParsedCommand, ctx: CommandContext): Promise<CommandOutput> {
   const ids = cmd.args.length > 0
-    ? cmd.args.map(a => normalizeId(a))
+    ? cmd.args.map(a => normalizeId(a, ctx.prefix))
     : ctx.selectedItem
       ? [ctx.selectedItem]
       : []
@@ -230,7 +231,7 @@ async function execEdit(cmd: ParsedCommand, ctx: CommandContext): Promise<Comman
   return { type: 'item-created', item: updated } // reuse item-created renderer
 }
 
-async function execDelete(cmd: ParsedCommand): Promise<CommandOutput> {
+async function execDelete(cmd: ParsedCommand, ctx: CommandContext): Promise<CommandOutput> {
   if (cmd.args.length === 0) {
     return { type: 'error', message: 'Item ID(s) required. Usage: delete CMT-3' }
   }
@@ -244,7 +245,7 @@ async function execDelete(cmd: ParsedCommand): Promise<CommandOutput> {
 
   const deleted: string[] = []
   for (const raw of cmd.args) {
-    const id = normalizeId(raw)
+    const id = normalizeId(raw, ctx.prefix)
     await api.items.delete(id)
     deleted.push(id)
   }
@@ -281,16 +282,14 @@ function execHelp(cmd: ParsedCommand): CommandOutput {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function normalizeId(input: string): string {
-  // Accept "3" → look up prefix from context, or just "CMT-3"
-  // Accept "CMT-3" as-is
+function normalizeId(input: string, prefix: string): string {
   if (/^\d+$/.test(input)) {
-    return `CMT-${input}` // TODO: use project prefix from config
+    return `${prefix}-${input}`
   }
   return input.toUpperCase()
 }
 
 function resolveId(arg: string | undefined, ctx: CommandContext): string | null {
-  if (arg) return normalizeId(arg)
+  if (arg) return normalizeId(arg, ctx.prefix)
   return ctx.selectedItem
 }

@@ -26,7 +26,7 @@ cmt done PROJ-0001 --json
 | 0 | `cmt help-agent --json` | First encounter |
 | 1 | `cmt help-agent <cmd> --json` | Per-command details |
 | 2 | `cmt help-agent --conventions --json` | Project conventions |
-| 3 | Read `SKILL.md` in repo root | Full reference |
+| 3 | Read `integrations/claude-code/SKILL.md` | Full reference |
 
 ## Key Files
 

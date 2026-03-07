@@ -16,6 +16,7 @@ import { CreateDrawer } from '@/components/shared/CreateDrawer'
 import { CommandPalette } from '@/components/shared/CommandPalette'
 import { CommandBar } from '@/components/commandbar/CommandBar'
 import { OnboardingDrawer } from '@/components/shared/OnboardingDrawer'
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 
 export function AppPage() {
   useWebSocket()
@@ -74,6 +75,10 @@ export function AppPage() {
         e.preventDefault()
         useUIStore.getState().toggleSidebar()
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault()
+        useUIStore.getState().openCreateDrawer()
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
@@ -94,43 +99,49 @@ export function AppPage() {
   }
 
   return (
-    <div className="flex h-full">
-      <ActivityRail />
+    <ErrorBoundary>
+      <div className="flex h-full">
+        <ActivityRail />
 
-      <div className="flex flex-col flex-1 min-w-0">
-        <Header config={config ?? null} projects={projectsData ?? null} />
+        <div className="flex flex-col flex-1 min-w-0">
+          <Header config={config ?? null} projects={projectsData ?? null} />
 
-        <div className="flex flex-1 min-h-0">
-          {sidebarOpen && (
-            <>
-              <div style={{ width: sidebarWidth }} className="flex-shrink-0">
-                <Sidebar config={config ?? null} />
-              </div>
-              <ResizeHandle onResize={setSidebarWidth} min={160} max={400} currentWidth={sidebarWidth} side="left" />
-            </>
-          )}
+          <div className="flex flex-1 min-h-0">
+            {sidebarOpen && (
+              <>
+                <div style={{ width: sidebarWidth }} className="flex-shrink-0">
+                  <Sidebar config={config ?? null} />
+                </div>
+                <ResizeHandle onResize={setSidebarWidth} min={160} max={400} currentWidth={sidebarWidth} side="left" />
+              </>
+            )}
 
-          <div className="flex flex-col flex-1 min-w-0">
-            <MainContent config={config ?? null} />
-            {activeView !== 'terminal' && <CommandBar />}
+            <div className="flex flex-col flex-1 min-w-0">
+              <ErrorBoundary>
+                <MainContent config={config ?? null} />
+              </ErrorBoundary>
+              {activeView !== 'terminal' && <CommandBar />}
+            </div>
+
+            {detailPanelOpen && (
+              <>
+                <ResizeHandle onResize={setDetailWidth} min={280} max={600} currentWidth={detailWidth} side="right" />
+                <div style={{ width: detailWidth }} className="flex-shrink-0">
+                  <ErrorBoundary>
+                    <DetailPanel config={config ?? null} />
+                  </ErrorBoundary>
+                </div>
+              </>
+            )}
+            {createDrawerOpen && <CreateDrawer config={config ?? null} />}
           </div>
 
-          {detailPanelOpen && (
-            <>
-              <ResizeHandle onResize={setDetailWidth} min={280} max={600} currentWidth={detailWidth} side="right" />
-              <div style={{ width: detailWidth }} className="flex-shrink-0">
-                <DetailPanel config={config ?? null} />
-              </div>
-            </>
-          )}
-          {createDrawerOpen && <CreateDrawer config={config ?? null} />}
+          <StatusBar config={config ?? null} />
         </div>
 
-        <StatusBar config={config ?? null} />
+        {commandPaletteOpen && <CommandPalette />}
       </div>
-
-      {commandPaletteOpen && <CommandPalette />}
-    </div>
+    </ErrorBoundary>
   )
 }
 

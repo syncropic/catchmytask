@@ -25,8 +25,8 @@ human-readable (open it in any text editor) and machine-parsable (structured YAM
 
 ### References
 
-- Research: `docs/research/06-first-principles.md` Section I (The Work Item as Atom)
-- Research: `docs/research/01-task-platform-analysis.md` (data model, schema drift lessons)
+- Research: `docs/research/02-first-principles.md` Section I (The Work Item as Atom)
+- Research: `docs/research/01-industry-landscape.md` (data model, schema drift lessons)
 - Design principles: Atoms and Composition, Files as Foundation, Progressive Capability
 
 ---

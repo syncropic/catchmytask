@@ -38,9 +38,9 @@ transparently rebuild it.
 
 ### References
 
-- Research: `docs/research/02-data-platform-analysis.md` Section 11.1 (YAML+SQLite dual-write)
-- Research: `docs/research/00-synthesis.md` Section "1. Storage: YAML Frontmatter Files + SQLite Index"
-- Research: `docs/research/01-task-platform-analysis.md` (O(n) scanning pain point)
+- Research: `docs/research/01-industry-landscape.md` Section 11.1 (YAML+SQLite dual-write)
+- Research: `docs/research/02-first-principles.md` Section "1. Storage: YAML Frontmatter Files + SQLite Index"
+- Research: `docs/research/01-industry-landscape.md` (O(n) scanning pain point)
 - Design principles: Files as Foundation, Progressive Capability, Timelessness Over Trendiness
 
 ---
@@ -1834,6 +1834,6 @@ Since the index is derived from files, no data is ever lost.
 | Status field semantics, state machine validation | [Spec 02: State Machine](02-state-machine.md) |
 | CLI commands that trigger index operations | Spec 03: CLI Interface |
 | Config format including `id.prefixes` and `project.prefix` | [Spec 04: Config Format](04-config-format.md) |
-| YAML+SQLite dual-write pattern (origin) | `docs/research/02-data-platform-analysis.md` Section 11.1 |
-| O(n) scanning problem motivating the index | `docs/research/01-task-platform-analysis.md` |
-| Architectural decision for storage layer | `docs/research/00-synthesis.md` Section 1 |
+| YAML+SQLite dual-write pattern (origin) | `docs/research/01-industry-landscape.md` Section 11.1 |
+| O(n) scanning problem motivating the index | `docs/research/01-industry-landscape.md` |
+| Architectural decision for storage layer | `docs/research/02-first-principles.md` Section 1 |

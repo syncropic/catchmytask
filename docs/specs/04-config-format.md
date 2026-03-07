@@ -34,9 +34,9 @@ Configuration) from the first-principles research.
 
 ### References
 
-- Research: `docs/research/06-first-principles.md` Section IX (Progressive Disclosure)
-- Research: `docs/research/02-data-platform-analysis.md` Section 7 (Configuration Management)
-- Research: `docs/research/00-synthesis.md` (Architectural Decisions)
+- Research: `docs/research/02-first-principles.md` Section IX (Progressive Disclosure)
+- Research: `docs/research/01-industry-landscape.md` Section 7 (Configuration Management)
+- Research: `docs/research/02-first-principles.md` (Architectural Decisions)
 - Design principles: Progressive Capability, Convention Over Configuration, Files as Foundation
 
 ---
@@ -1347,7 +1347,7 @@ this as a pain point, flatten can be added to specific sections in a future vers
 | State machine specification and transition rules | [Spec 02: State Machine](02-state-machine.md) |
 | CLI commands including `cmt init` and `cmt config` | [Spec 03: CLI Interface](03-cli-interface.md) |
 | SQLite index schema including `id_counters` table | [Spec 05: SQLite Index](05-sqlite-index.md) |
-| Progressive capability design principle | `docs/research/06-first-principles.md` Section IX |
-| YAML-as-source-of-truth + SQLite index pattern | `docs/research/02-data-platform-analysis.md` Section 11.1 |
-| Configuration management patterns (three-tier) | `docs/research/02-data-platform-analysis.md` Section 7 |
-| Architectural decisions synthesis | `docs/research/00-synthesis.md` |
+| Progressive capability design principle | `docs/research/02-first-principles.md` Section IX |
+| YAML-as-source-of-truth + SQLite index pattern | `docs/research/01-industry-landscape.md` Section 11.1 |
+| Configuration management patterns (three-tier) | `docs/research/01-industry-landscape.md` Section 7 |
+| Architectural decisions synthesis | `docs/research/02-first-principles.md` |

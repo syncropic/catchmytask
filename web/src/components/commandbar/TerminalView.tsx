@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { parseCommand, COMMANDS } from '@/lib/command-parser'
 import { executeCommand, type CommandOutput, type CommandContext } from '@/lib/command-executor'
 import { useUIStore } from '@/stores/ui'
+import { api } from '@/lib/api'
 import { CommandOutputView } from './CommandOutput'
 
 const HISTORY_KEY = 'cmt-command-history'
@@ -19,6 +20,7 @@ export function TerminalView() {
   const idCounter = useRef(0)
   const queryClient = useQueryClient()
 
+  const { data: config } = useQuery({ queryKey: ['config'], queryFn: api.config })
   const selectedItem = useUIStore((s) => s.selectedItemId)
   const openDetailPanel = useUIStore((s) => s.openDetailPanel)
 
@@ -100,6 +102,7 @@ export function TerminalView() {
         openDetailPanel(id)
       },
       getHistory,
+      prefix: config?.project?.prefix ?? 'CMT',
     }
 
     setRunning(true)
