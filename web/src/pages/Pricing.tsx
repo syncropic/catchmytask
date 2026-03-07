@@ -87,7 +87,16 @@ interface Feature {
   isHeader?: boolean
 }
 
-const COMPARISON_CATEGORIES = [
+type CellVal = boolean | 'soon'
+
+interface ComparisonFeature {
+  name: string
+  community: CellVal
+  team: CellVal
+  enterprise: CellVal
+}
+
+const COMPARISON_CATEGORIES: { category: string; features: ComparisonFeature[] }[] = [
   {
     category: 'Core Work Management',
     features: [
