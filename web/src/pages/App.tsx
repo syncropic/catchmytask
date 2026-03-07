@@ -49,6 +49,7 @@ export function AppPage() {
     placeholderData: keepPreviousData,
   })
 
+  const activeView = useUIStore((s) => s.activeView)
   const sidebarOpen = useUIStore((s) => s.sidebarOpen)
   const detailPanelOpen = useUIStore((s) => s.detailPanelOpen)
   const createDrawerOpen = useUIStore((s) => s.createDrawerOpen)
@@ -109,7 +110,10 @@ export function AppPage() {
             </>
           )}
 
-          <MainContent config={config ?? null} />
+          <div className="flex flex-col flex-1 min-w-0">
+            <MainContent config={config ?? null} />
+            {activeView !== 'terminal' && <CommandBar />}
+          </div>
 
           {detailPanelOpen && (
             <>
@@ -122,7 +126,6 @@ export function AppPage() {
           {createDrawerOpen && <CreateDrawer config={config ?? null} />}
         </div>
 
-        <CommandBar />
         <StatusBar config={config ?? null} />
       </div>
 

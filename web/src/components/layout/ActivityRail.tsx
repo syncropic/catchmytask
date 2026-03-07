@@ -7,6 +7,7 @@ const VIEW_ITEMS: { view: View; icon: string; label: string }[] = [
   { view: 'board', icon: '▦', label: 'Board' },
   { view: 'dashboard', icon: '▣', label: 'Dashboard' },
   { view: 'artifacts', icon: '⎘', label: 'Artifacts' },
+  { view: 'terminal', icon: '⌘', label: 'Terminal' },
 ]
 
 const BOTTOM_ITEMS: { view: View; icon: string; label: string }[] = [

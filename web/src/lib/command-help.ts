@@ -43,6 +43,11 @@ const helpData: Record<string, HelpEntry> = {
       { flag: '--type=<type>', description: 'Filter by type' },
     ],
   },
+  ls: {
+    usage: 'ls [flags]',
+    description: 'List work items (alias for list)',
+    examples: ['ls', 'ls --status=active'],
+  },
   show: {
     usage: 'show <id>',
     description: 'Open an item in the detail panel',
@@ -92,6 +97,14 @@ const helpData: Record<string, HelpEntry> = {
     usage: 'delete <id...>',
     description: 'Delete work items (requires confirmation)',
     examples: ['delete CMT-3', 'delete CMT-3 CMT-4 --force'],
+    flags: [
+      { flag: '--force', description: 'Skip confirmation prompt' },
+    ],
+  },
+  rm: {
+    usage: 'rm <id...>',
+    description: 'Delete work items (alias for delete)',
+    examples: ['rm CMT-3', 'rm CMT-3 --force'],
     flags: [
       { flag: '--force', description: 'Skip confirmation prompt' },
     ],

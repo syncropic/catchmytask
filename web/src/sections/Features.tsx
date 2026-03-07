@@ -21,7 +21,11 @@ const FEATURES = [
   },
   {
     title: 'Web UI',
-    description: 'Board, list, dashboard, and activity views. Real-time updates via WebSocket.',
+    description: 'Board, list, dashboard, activity, and terminal views. Real-time updates via WebSocket.',
+  },
+  {
+    title: 'Command Bar & Terminal',
+    description: 'Embedded CLI in the browser (Ctrl+J). Full cmt command parity with rich output, autocomplete, and history.',
   },
   {
     title: 'Browser-Native Mode',

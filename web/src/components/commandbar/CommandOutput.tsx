@@ -3,7 +3,7 @@ import type { HelpEntry } from '@/lib/command-help'
 import { useUIStore } from '@/stores/ui'
 import type { WorkItem } from '@/types'
 
-export function CommandOutputView({ output }: { output: CommandOutput }) {
+export function CommandOutputView({ output, onHistorySelect }: { output: CommandOutput; onHistorySelect?: (cmd: string) => void }) {
   switch (output.type) {
     case 'items': return <ItemsOutput items={output.items} total={output.meta?.total} />
     case 'item-created': return <ItemCreatedOutput item={output.item} />
@@ -16,7 +16,7 @@ export function CommandOutputView({ output }: { output: CommandOutput }) {
     case 'config': return <ConfigOutput config={output.config} />
     case 'text': return <TextOutput content={output.content} />
     case 'navigate': return <NavigateOutput id={output.id} />
-    case 'history': return <HistoryOutput commands={output.commands} />
+    case 'history': return <HistoryOutput commands={output.commands} onSelect={onHistorySelect} />
     default: return null
   }
 }
@@ -243,18 +243,23 @@ function NavigateOutput({ id }: { id: string }) {
   )
 }
 
-function HistoryOutput({ commands }: { commands: string[] }) {
+function HistoryOutput({ commands, onSelect }: { commands: string[]; onSelect?: (cmd: string) => void }) {
   if (commands.length === 0) {
     return <div className="text-[11px] font-mono text-text-muted px-2">No command history</div>
   }
   return (
     <div className="px-2 space-y-0.5">
       {commands.slice(0, 20).map((cmd, i) => (
-        <div key={i} className="text-[10px] font-mono text-text-muted">
+        <button
+          key={i}
+          onClick={() => onSelect?.(cmd)}
+          className="w-full text-left text-[10px] font-mono text-text-muted hover:bg-bg-tertiary hover:text-text-secondary rounded px-1 py-0.5 transition-colors"
+        >
           <span className="text-text-muted/50 w-4 inline-block text-right mr-2">{i + 1}</span>
           {cmd}
-        </div>
+        </button>
       ))}
+      <div className="text-[9px] text-text-muted/50 mt-1">Click to insert or use !N (e.g. !3)</div>
     </div>
   )
 }

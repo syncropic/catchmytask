@@ -19,6 +19,7 @@ export type CommandOutput =
   | { type: 'navigate'; id: string }
   | { type: 'clear' }
   | { type: 'history'; commands: string[] }
+  | { type: 'recall'; command: string }
 
 export interface CommandContext {
   selectedItem: string | null
@@ -45,7 +46,18 @@ export async function executeCommand(
       case 'config': return await execConfig()
       case 'help': return execHelp(cmd)
       case 'clear': return { type: 'clear' }
-      case 'history': return { type: 'history', commands: ctx.getHistory() }
+      case 'history': {
+        const n = cmd.args[0]
+        if (n && /^\d+$/.test(n)) {
+          const history = ctx.getHistory()
+          const idx = parseInt(n, 10) - 1
+          if (idx >= 0 && idx < history.length) {
+            return { type: 'recall', command: history[idx] }
+          }
+          return { type: 'error', message: `!${n}: event not found. History has ${history.length} entries.` }
+        }
+        return { type: 'history', commands: ctx.getHistory() }
+      }
       default:
         return {
           type: 'error',
@@ -146,9 +158,7 @@ async function execDone(cmd: ParsedCommand, ctx: CommandContext): Promise<Comman
 
   for (const id of ids) {
     try {
-      // Get current status first
-      const items = await api.items.list()
-      const item = items.find(i => i.id === id)
+      const item = await api.items.get(id).catch(() => null)
       const from = item?.status ?? 'unknown'
 
       await api.items.changeStatus(id, { status: 'done', force: true })
@@ -172,8 +182,7 @@ async function execStatus(cmd: ParsedCommand, ctx: CommandContext): Promise<Comm
     return { type: 'error', message: 'Usage: status <id> <new-status>' }
   }
 
-  const items = await api.items.list()
-  const item = items.find(i => i.id === id)
+  const item = await api.items.get(id).catch(() => null)
   const from = item?.status ?? 'unknown'
 
   await api.items.changeStatus(id, {

@@ -89,8 +89,8 @@ function tokenize(input: string): string[] {
 
 /** Known commands for autocomplete */
 export const COMMANDS = [
-  'add', 'list', 'show', 'open', 'done', 'status', 'edit',
-  'delete', 'search', 'config', 'help', 'clear', 'history',
+  'add', 'list', 'ls', 'show', 'open', 'done', 'status', 'edit',
+  'delete', 'rm', 'search', 'config', 'help', 'clear', 'history',
 ] as const
 
 export type CommandVerb = (typeof COMMANDS)[number]

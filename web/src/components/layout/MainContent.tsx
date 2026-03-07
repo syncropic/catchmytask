@@ -5,6 +5,7 @@ import { DashboardView } from '@/components/dashboard/DashboardView'
 import { ActivityView } from '@/components/activity/ActivityView'
 import { ArtifactsBrowser } from '@/components/artifacts/ArtifactsBrowser'
 import { SettingsView } from '@/components/settings/SettingsView'
+import { TerminalView } from '@/components/commandbar/TerminalView'
 import type { ProjectConfig } from '@/types'
 
 interface Props {
@@ -14,7 +15,7 @@ interface Props {
 export function MainContent({ config }: Props) {
   const activeView = useUIStore((s) => s.activeView)
 
-  const fullWidth = activeView === 'board' || activeView === 'artifacts'
+  const fullWidth = activeView === 'board' || activeView === 'artifacts' || activeView === 'terminal'
 
   return (
     <main className="flex-1 min-w-0 overflow-auto bg-bg-primary">
@@ -24,6 +25,7 @@ export function MainContent({ config }: Props) {
         {activeView === 'dashboard' && <DashboardView config={config} />}
         {activeView === 'activity' && <ActivityView config={config} />}
         {activeView === 'artifacts' && <ArtifactsBrowser />}
+        {activeView === 'terminal' && <TerminalView />}
         {activeView === 'settings' && <SettingsView config={config} />}
       </div>
     </main>

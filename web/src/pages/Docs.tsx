@@ -10,6 +10,7 @@ const SECTIONS = [
   ['agent-quickstart', 'Agent Quickstart'],
   ['configuration', 'Configuration'],
   ['web-ui', 'Web UI'],
+  ['command-bar', 'Command Bar & Terminal'],
   ['workflow', 'Multi-Context Workflow'],
   ['doctor', 'Doctor'],
 ] as const
@@ -404,6 +405,8 @@ function WebUI() {
           ['Activity Feed', 'Timeline of all events (created, started, completed, blocked) grouped by day.'],
           ['Detail Panel', 'Click any item to edit title, status, priority, type, assignee, due date, tags, and Markdown body. Artifacts shown in a collapsible section.'],
           ['Artifact Browser', 'Project-wide file browser with left sidebar (filter by item, type, source), sortable list/grid views, search, and right drawer with inline preview for images, text, and PDF.'],
+          ['Command Bar', 'Ctrl+J opens an embedded CLI at the bottom of the main content. Run any cmt command with rich interactive output, autocomplete, and history.'],
+          ['Terminal View', 'Full-screen command-line interface from the activity rail. Same commands as the Command Bar but fills the entire main area.'],
           ['Search', 'Ctrl/Cmd+K opens a command palette with full-text search across all items.'],
           ['Dark/Light Mode', 'Toggle via the theme button in the header. Persists to localStorage.'],
           ['Export/Import', 'Export your data as a .cmt zip, import into another browser or restore from backup.'],
@@ -480,9 +483,12 @@ cmt serve --port 8080`}
           </thead>
           <tbody className="divide-y divide-border-default">
             {[
+              ['Ctrl/Cmd + J', 'Toggle Command Bar (expand / collapse)'],
               ['Ctrl/Cmd + K', 'Open command palette / search'],
               ['Ctrl/Cmd + B', 'Toggle sidebar'],
-              ['Escape', 'Close panel / drawer / palette'],
+              ['Tab', 'Autocomplete command name (in Command Bar)'],
+              ['Up / Down', 'Navigate command history (in Command Bar)'],
+              ['Escape', 'Close panel / drawer / palette / clear input'],
             ].map(([key, action]) => (
               <tr key={key} className="hover:bg-bg-hover transition-colors">
                 <td className="px-3 py-2 font-mono text-accent-text">{key}</td>
@@ -491,6 +497,97 @@ cmt serve --port 8080`}
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  )
+}
+
+function CommandBarDocs() {
+  return (
+    <div className="space-y-4">
+      <SectionHeading id="command-bar">Command Bar &amp; Terminal</SectionHeading>
+      <p className="text-sm text-text-secondary leading-relaxed">
+        The Command Bar brings CLI power directly into the browser. Press{' '}
+        <code className="text-accent-text">Ctrl+J</code> to open it at the bottom of the main content area, or
+        click the <code className="text-accent-text">Terminal</code> icon in the activity rail for a full-screen experience.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-text-primary">Supported Commands</h3>
+          <div className="bg-bg-secondary border border-border-default rounded-lg divide-y divide-border-default text-xs">
+            {[
+              ['add', 'Create a work item with flags'],
+              ['list / ls', 'List items with filters'],
+              ['show / open', 'Open item in detail panel'],
+              ['done', 'Mark items complete'],
+              ['status', 'Change item status'],
+              ['edit', 'Edit item fields'],
+              ['delete / rm', 'Delete items (requires --force)'],
+              ['search', 'Full-text search'],
+              ['config', 'Show project configuration'],
+              ['history', 'Show command history'],
+              ['help', 'Show help for all or specific commands'],
+              ['clear', 'Clear output'],
+            ].map(([cmd, desc]) => (
+              <div key={cmd} className="px-3 py-1.5 flex gap-3">
+                <span className="font-mono text-accent-text min-w-[100px]">{cmd}</span>
+                <span className="text-text-muted">{desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-text-primary">Key Features</h3>
+            <div className="bg-bg-secondary border border-border-default rounded-lg p-3 space-y-2 text-xs text-text-secondary">
+              <p><strong className="text-text-primary">Copy-paste parity:</strong> The <code className="text-accent-text">cmt</code> prefix
+                is optional. Paste commands from your terminal and they just work.</p>
+              <p><strong className="text-text-primary">Context awareness:</strong> Commands like <code className="text-accent-text">done</code>,{' '}
+                <code className="text-accent-text">edit</code>, and <code className="text-accent-text">show</code> use
+                the currently selected item when no ID is given.</p>
+              <p><strong className="text-text-primary">Rich output:</strong> Item lists are clickable (opens detail panel).
+                Status changes show before/after. Errors include suggestions.</p>
+              <p><strong className="text-text-primary">Autocomplete:</strong> Tab-complete command names. Arrow keys navigate suggestions.</p>
+              <p><strong className="text-text-primary">History recall:</strong> Up/Down arrows cycle through history. Type{' '}
+                <code className="text-accent-text">history</code> to see numbered entries, then type the number to recall it.</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-text-primary">Examples</h3>
+            <CodeBlock>
+{`> add "Fix login timeout" --priority=high --tag=backend
++ CMT-5  Fix login timeout  inbox  high
+
+> list --status=active
+CMT-3  Implement auth       active  high
+CMT-4  Update docs          active  medium
+2 items
+
+> done CMT-3 CMT-4
+~ CMT-3  active > done
+~ CMT-4  active > done
+
+> history
+  1  done CMT-3 CMT-4
+  2  list --status=active
+  3  add "Fix login timeout" --priority=high
+
+> 2
+list --status=active    (inserted, press Enter to run)`}
+            </CodeBlock>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-bg-secondary border border-border-default rounded-lg p-4 space-y-2">
+        <h3 className="text-sm font-semibold text-text-primary">Terminal View</h3>
+        <p className="text-xs text-text-secondary leading-relaxed">
+          For extended command sessions, click the <strong className="text-text-primary">Terminal</strong> icon
+          in the activity rail (or navigate to the Terminal tab). This gives you the same command
+          capabilities in a full-height view — ideal for bulk operations, reviewing long output,
+          or working primarily through commands rather than the GUI.
+        </p>
       </div>
     </div>
   )
@@ -702,6 +799,7 @@ export function DocsPage() {
           <AgentQuickstart />
           <Configuration />
           <WebUI />
+          <CommandBarDocs />
           <Workflow />
           <Doctor />
         </main>

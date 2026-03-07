@@ -113,7 +113,7 @@ export interface ProjectsResponse {
   default_project: string
 }
 
-export type View = 'board' | 'list' | 'dashboard' | 'activity' | 'artifacts' | 'settings'
+export type View = 'board' | 'list' | 'dashboard' | 'activity' | 'artifacts' | 'terminal' | 'settings'
 
 export interface ProjectArtifactEntry {
   item_id: string

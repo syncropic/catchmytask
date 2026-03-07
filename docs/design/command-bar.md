@@ -1,8 +1,8 @@
 ---
 design: "03"
 title: Command Bar — Embedded CLI for the Web UI
-status: draft
-version: 0.1.0
+status: implemented
+version: 1.0.0
 created: 2026-03-06
 references:
   - docs/specs/03-cli-interface.md
@@ -233,28 +233,35 @@ This ensures the GUI always reflects Command Bar actions instantly.
 
 ## 4. Implementation Plan
 
-### Phase 1: Core Command Bar (this implementation)
+### Phase 1: Core Command Bar (IMPLEMENTED)
 
 Components:
-- `CommandBar.tsx` — main UI: input, output area, resize handle
+- `CommandBar.tsx` — bottom bar UI: input, output area, Ctrl+J toggle
+- `TerminalView.tsx` — full-screen terminal accessible from activity rail
+- `CommandOutput.tsx` — renders typed output as interactive React components
 - `command-parser.ts` — thin parser: verb + args + flags extraction
 - `command-executor.ts` — maps parsed commands to API calls, returns typed output
 - `command-help.ts` — built-in help text for each command
-- `CommandOutput.tsx` — renders typed output as React components
 
 Commands:
-- `add`, `list`, `done`, `status`, `edit`, `delete`, `search`
+- `add`, `list`/`ls`, `done`, `status`, `edit`, `delete`/`rm`, `search`
 - `show` / `open` (navigation)
 - `config`, `help`, `clear`, `history`
 
 Features:
-- ⌘J toggle, collapsed/expanded/maximized states
-- Command history (↑/↓, localStorage persistence)
-- Context awareness (selected item, active filters)
-- Rich interactive output (clickable items, success/error cards)
-- Autocomplete for commands, IDs, flag values
-- `cmt` prefix optional
+- Ctrl+J toggle (collapsed/expanded cycle)
+- Full-screen Terminal View from activity rail
+- Command history (↑/↓, localStorage persistence, `history N` and `!N` recall)
+- Bare number input recalls history entry (type `3` after `history` to insert entry #3)
+- Clickable history entries
+- Context awareness (selected item shown as hint, used when no ID given)
+- Rich interactive output (clickable items, success/error cards, status badges)
+- Autocomplete for command names (Tab/Enter to accept, ↑/↓ to navigate)
+- `cmt` prefix optional (copy-paste parity with terminal CLI)
+- Loading indicator (animated `...` prompt) during API calls
 - Cache invalidation for all mutations
+- Command Bar scoped to main content area (doesn't extend into sidebars)
+- Bottom CommandBar hidden when Terminal View is active
 
 ### Phase 2: Bulk Operations & Polish
 
