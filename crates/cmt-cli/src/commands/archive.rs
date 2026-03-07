@@ -1,9 +1,9 @@
 use std::path::Path;
 
 use crate::cli::ArchiveArgs;
-use crate::config::Config;
-use crate::error::{Result, WorkError};
-use crate::storage;
+use cmt_core::config::Config;
+use cmt_core::error::{Result, WorkError};
+use cmt_core::storage;
 
 pub fn execute(
     args: &ArchiveArgs,
@@ -35,7 +35,7 @@ pub fn execute(
                 Ok(c) => c,
                 Err(_) => continue,
             };
-            let (item, _) = match crate::parser::parse_file(&content) {
+            let (item, _) = match cmt_core::parser::parse_file(&content) {
                 Ok(r) => r,
                 Err(_) => continue,
             };
@@ -134,12 +134,12 @@ pub fn execute(
         };
 
         // Update index
-        if let Ok(index) = crate::index::Index::open(work_dir) {
+        if let Ok(index) = cmt_core::index::Index::open(work_dir) {
             let content = std::fs::read_to_string(&to_path)?;
-            let (item, body) = crate::parser::parse_file(&content)?;
+            let (item, body) = cmt_core::parser::parse_file(&content)?;
             let file_str = to_path.to_string_lossy().to_string();
-            crate::index::warn_on_err(index.upsert_item(&item, &body, &file_str, true), "upsert");
-            crate::index::warn_on_err(index.record_event(id, actor, "archive", None), "event");
+            cmt_core::index::warn_on_err(index.upsert_item(&item, &body, &file_str, true), "upsert");
+            cmt_core::index::warn_on_err(index.record_event(id, actor, "archive", None), "event");
         }
 
         if !quiet {
@@ -157,7 +157,7 @@ pub fn execute(
     // Git auto-commit
     if !args.dry_run && !files_changed.is_empty() {
         let file_refs: Vec<&str> = files_changed.iter().map(|s| s.as_str()).collect();
-        crate::git::auto_commit(
+        cmt_core::git::auto_commit(
             &config,
             work_dir,
             &file_refs,

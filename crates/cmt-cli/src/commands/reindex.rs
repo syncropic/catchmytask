@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use crate::cli::ReindexArgs;
-use crate::error::Result;
-use crate::index::Index;
+use cmt_core::error::Result;
+use cmt_core::index::Index;
 
 pub fn execute(args: &ReindexArgs, work_dir: &Path, json: bool, quiet: bool) -> Result<()> {
     let start = std::time::Instant::now();

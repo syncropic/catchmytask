@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use crate::cli::LogArgs;
-use crate::error::Result;
-use crate::storage;
+use cmt_core::error::Result;
+use cmt_core::storage;
 use crate::cli::OutputFormat;
 
 pub fn execute(args: &LogArgs, work_dir: &Path, json: bool) -> Result<()> {
@@ -11,7 +11,7 @@ pub fn execute(args: &LogArgs, work_dir: &Path, json: bool) -> Result<()> {
     let canonical_id = &item.id.raw;
 
     // Try events table first
-    if let Ok(index) = crate::index::Index::open(work_dir) {
+    if let Ok(index) = cmt_core::index::Index::open(work_dir) {
         let mut stmt = index.conn.prepare(
             "SELECT timestamp, actor, action, detail FROM events
              WHERE item_id = ?1

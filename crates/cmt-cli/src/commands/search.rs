@@ -1,12 +1,12 @@
 use std::path::Path;
 
 use crate::cli::SearchArgs;
-use crate::error::Result;
+use cmt_core::error::Result;
 use crate::cli::OutputFormat;
 
 pub fn execute(args: &SearchArgs, work_dir: &Path, json_global: bool) -> Result<()> {
-    let index = crate::index::Index::open(work_dir)?;
-    crate::index::warn_on_err(index.incremental_sync(), "sync");
+    let index = cmt_core::index::Index::open(work_dir)?;
+    cmt_core::index::warn_on_err(index.incremental_sync(), "sync");
 
     // Build query
     let mut conditions = vec!["items_fts MATCH ?1".to_string()];
@@ -48,7 +48,7 @@ pub fn execute(args: &SearchArgs, work_dir: &Path, json_global: bool) -> Result<
             // FTS5 syntax errors give unhelpful messages; provide guidance
             let msg = e.to_string();
             if msg.contains("fts5") || msg.contains("syntax") {
-                return Err(crate::error::WorkError::General(format!(
+                return Err(cmt_core::error::WorkError::General(format!(
                     "Search query '{}' contains special characters that FTS5 cannot parse. \
                      Try quoting your search or removing special characters like +, -, *, :, (, ).",
                     args.query

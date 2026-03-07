@@ -1,10 +1,10 @@
 use std::path::{Path, PathBuf};
 
 use crate::cli::DoctorArgs;
-use crate::error::Result;
-use crate::registry::Registry;
+use cmt_core::error::Result;
+use cmt_core::registry::Registry;
 
-const CLAUDE_CODE_SKILL: &str = include_str!("../../integrations/claude-code/SKILL.md");
+const CLAUDE_CODE_SKILL: &str = include_str!("../../../../integrations/claude-code/SKILL.md");
 
 #[derive(Debug)]
 enum Status {
@@ -260,7 +260,7 @@ fn check_index(work_dir: Option<&Path>) -> CheckResult {
     }
 
     // Try opening the index
-    match crate::index::Index::open(dir) {
+    match cmt_core::index::Index::open(dir) {
         Ok(_) => {
             let items_dir = dir.join("items");
             let file_count = if items_dir.exists() {

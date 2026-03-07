@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use crate::cli::ConfigCommand;
-use crate::config::Config;
-use crate::error::{Result, WorkError};
+use cmt_core::config::Config;
+use cmt_core::error::{Result, WorkError};
 
 pub fn execute(cmd: &ConfigCommand, work_dir: &Path, json: bool) -> Result<()> {
     match cmd {
@@ -103,12 +103,12 @@ fn set_config(work_dir: &Path, key: &str, value: &str) -> Result<()> {
     )))?;
 
     let output = serde_yml::to_string(&yaml_value)?;
-    crate::storage::atomic_write(&config_path, &output)?;
+    cmt_core::storage::atomic_write(&config_path, &output)?;
 
     // Regenerate discovery files (non-fatal)
     if let Ok(config) = Config::load(work_dir) {
-        let _ = crate::discovery::generate_about_file(work_dir, &config);
-        let _ = crate::discovery::generate_conventions_file(work_dir, &config);
+        let _ = cmt_core::discovery::generate_about_file(work_dir, &config);
+        let _ = cmt_core::discovery::generate_conventions_file(work_dir, &config);
     }
 
     eprintln!("Set {} = {}", key, value);

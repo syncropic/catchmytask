@@ -1,10 +1,10 @@
 use std::path::Path;
 
 use crate::cli::CheckArgs;
-use crate::config::Config;
-use crate::error::Result;
-use crate::storage;
-use crate::parser;
+use cmt_core::config::Config;
+use cmt_core::error::Result;
+use cmt_core::storage;
+use cmt_core::parser;
 
 pub fn execute(args: &CheckArgs, work_dir: &Path, json: bool) -> Result<()> {
     let config = Config::load(work_dir)?;
@@ -137,7 +137,7 @@ pub fn execute(args: &CheckArgs, work_dir: &Path, json: bool) -> Result<()> {
 
         // V-13: depends_on format
         for dep in &item.depends_on {
-            if crate::model::WorkItemId::parse(dep).is_err() {
+            if cmt_core::model::WorkItemId::parse(dep).is_err() {
                 warnings.push(CheckIssue {
                     id: Some(id.clone()),
                     file: file.to_string_lossy().to_string(),
@@ -255,7 +255,7 @@ pub fn execute(args: &CheckArgs, work_dir: &Path, json: bool) -> Result<()> {
         }
 
         // Reindex
-        if let Ok(index) = crate::index::Index::open(work_dir) {
+        if let Ok(index) = cmt_core::index::Index::open(work_dir) {
             match index.full_reindex() {
                 Ok(_) => {
                     if !json {
@@ -304,7 +304,7 @@ pub fn execute(args: &CheckArgs, work_dir: &Path, json: bool) -> Result<()> {
     }
 
     if !errors.is_empty() {
-        Err(crate::error::WorkError::ValidationError(format!(
+        Err(cmt_core::error::WorkError::ValidationError(format!(
             "{} validation errors found", errors.len()
         )))
     } else {

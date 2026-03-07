@@ -1,10 +1,10 @@
 use std::path::Path;
 
 use crate::cli::DoneArgs;
-use crate::config::Config;
-use crate::error::{Result, WorkError};
-use crate::state_machine;
-use crate::storage;
+use cmt_core::config::Config;
+use cmt_core::error::{Result, WorkError};
+use cmt_core::state_machine;
+use cmt_core::storage;
 
 pub fn execute(
     args: &DoneArgs,
@@ -54,7 +54,7 @@ pub fn execute(
     if !files_changed.is_empty() {
         let file_refs: Vec<&str> = files_changed.iter().map(|s| s.as_str()).collect();
         let ids_str = args.ids.join(", ");
-        crate::git::auto_commit(&config, work_dir, &file_refs, &format!("done {} - mark items complete", ids_str))?;
+        cmt_core::git::auto_commit(&config, work_dir, &file_refs, &format!("done {} - mark items complete", ids_str))?;
     }
 
     if json {
@@ -104,11 +104,11 @@ fn process_done(
     storage::write_item(&path, &item, &body)?;
 
     // Update index
-    if let Ok(index) = crate::index::Index::open(work_dir) {
+    if let Ok(index) = cmt_core::index::Index::open(work_dir) {
         let file_str = path.to_string_lossy().to_string();
         let archived = file_str.contains("/archive/");
-        crate::index::warn_on_err(index.upsert_item(&item, &body, &file_str, archived), "upsert");
-        crate::index::warn_on_err(index.record_event(
+        cmt_core::index::warn_on_err(index.upsert_item(&item, &body, &file_str, archived), "upsert");
+        cmt_core::index::warn_on_err(index.record_event(
             &item.id.raw,
             actor,
             "transition",

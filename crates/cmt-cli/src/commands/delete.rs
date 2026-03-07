@@ -1,9 +1,9 @@
 use std::path::Path;
 
 use crate::cli::DeleteArgs;
-use crate::config::Config;
-use crate::error::Result;
-use crate::storage;
+use cmt_core::config::Config;
+use cmt_core::error::Result;
+use cmt_core::storage;
 
 pub fn execute(
     args: &DeleteArgs,
@@ -58,12 +58,12 @@ pub fn execute(
                 }
 
                 // Remove from index (use canonical raw ID for consistency)
-                let canonical_id = crate::model::WorkItemId::parse(id)
+                let canonical_id = cmt_core::model::WorkItemId::parse(id)
                     .map(|parsed| format!("{}-{}", parsed.prefix, parsed.number))
                     .unwrap_or_else(|_| id.to_string());
-                if let Ok(index) = crate::index::Index::open(work_dir) {
-                    crate::index::warn_on_err(index.remove_item(&canonical_id), "remove");
-                    crate::index::warn_on_err(index.record_event(&canonical_id, actor, "delete", None), "event");
+                if let Ok(index) = cmt_core::index::Index::open(work_dir) {
+                    cmt_core::index::warn_on_err(index.remove_item(&canonical_id), "remove");
+                    cmt_core::index::warn_on_err(index.record_event(&canonical_id, actor, "delete", None), "event");
                 }
 
                 if !quiet && !json {
@@ -92,7 +92,7 @@ pub fn execute(
     if !files_changed.is_empty() {
         let ids_str = args.ids.join(", ");
         let file_refs: Vec<&str> = files_changed.iter().map(|s| s.as_str()).collect();
-        crate::git::auto_commit(&config, work_dir, &file_refs, &format!("delete {}", ids_str))?;
+        cmt_core::git::auto_commit(&config, work_dir, &file_refs, &format!("delete {}", ids_str))?;
     }
 
     if json {

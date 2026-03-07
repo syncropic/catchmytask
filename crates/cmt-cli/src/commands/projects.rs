@@ -1,10 +1,10 @@
 use std::path::Path;
 
 use crate::cli::{ProjectsArgs, ProjectsCommand};
-use crate::config::Config;
-use crate::error::{Result, WorkError};
-use crate::registry::{ProjectEntry, Registry};
-use crate::storage;
+use cmt_core::config::Config;
+use cmt_core::error::{Result, WorkError};
+use cmt_core::registry::{ProjectEntry, Registry};
+use cmt_core::storage;
 
 pub fn execute(
     args: &ProjectsArgs,

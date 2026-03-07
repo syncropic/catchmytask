@@ -1,9 +1,9 @@
 use std::path::Path;
 
 use crate::cli::SlugifyArgs;
-use crate::error::Result;
-use crate::slug;
-use crate::storage;
+use cmt_core::error::Result;
+use cmt_core::slug;
+use cmt_core::storage;
 
 pub fn execute(args: &SlugifyArgs, work_dir: &Path, json: bool, _quiet: bool) -> Result<()> {
     let files = storage::scan_item_files(work_dir)?;
@@ -12,7 +12,7 @@ pub fn execute(args: &SlugifyArgs, work_dir: &Path, json: bool, _quiet: bool) ->
     for file in &files {
         // Read and parse the item to get its title
         let content = std::fs::read_to_string(file)?;
-        let (item, _body) = match crate::parser::parse_file(&content) {
+        let (item, _body) = match cmt_core::parser::parse_file(&content) {
             Ok(r) => r,
             Err(_) => continue,
         };

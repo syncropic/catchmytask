@@ -1,12 +1,12 @@
 use std::path::Path;
 
 use crate::cli::ListArgs;
-use crate::config::Config;
-use crate::error::Result;
-use crate::format;
-use crate::model::{Priority, WorkItem};
-use crate::storage;
-use crate::parser;
+use cmt_core::config::Config;
+use cmt_core::error::Result;
+use cmt_core::format;
+use cmt_core::model::{Priority, WorkItem};
+use cmt_core::storage;
+use cmt_core::parser;
 use crate::cli::OutputFormat;
 
 pub fn execute(args: &ListArgs, work_dir: &Path, json_global: bool, quiet: bool) -> Result<()> {
@@ -62,8 +62,8 @@ pub fn execute(args: &ListArgs, work_dir: &Path, json_global: bool, quiet: bool)
 
 fn load_items(work_dir: &Path, config: &Config, args: &ListArgs) -> Result<Vec<WorkItem>> {
     // Try to use index
-    if let Ok(index) = crate::index::Index::open(work_dir) {
-        crate::index::warn_on_err(index.incremental_sync(), "sync");
+    if let Ok(index) = cmt_core::index::Index::open(work_dir) {
+        cmt_core::index::warn_on_err(index.incremental_sync(), "sync");
         return load_from_index(&index, config, args);
     }
 
@@ -72,7 +72,7 @@ fn load_items(work_dir: &Path, config: &Config, args: &ListArgs) -> Result<Vec<W
 }
 
 fn load_from_index(
-    index: &crate::index::Index,
+    index: &cmt_core::index::Index,
     config: &Config,
     args: &ListArgs,
 ) -> Result<Vec<WorkItem>> {
@@ -189,16 +189,16 @@ fn load_from_index(
     let mut items = Vec::new();
     for row_result in rows {
         let row = row_result?;
-        if let Ok(id) = crate::model::WorkItemId::parse(&row.id) {
+        if let Ok(id) = cmt_core::model::WorkItemId::parse(&row.id) {
             let assignee = row.assignee.map(|a| {
                 if a.starts_with('[') {
                     if let Ok(v) = serde_json::from_str::<Vec<String>>(&a) {
-                        crate::model::Assignee::Multiple(v)
+                        cmt_core::model::Assignee::Multiple(v)
                     } else {
-                        crate::model::Assignee::Single(a)
+                        cmt_core::model::Assignee::Single(a)
                     }
                 } else {
-                    crate::model::Assignee::Single(a)
+                    cmt_core::model::Assignee::Single(a)
                 }
             });
 

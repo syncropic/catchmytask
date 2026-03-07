@@ -1,9 +1,9 @@
 use std::path::{Path, PathBuf};
 
 use crate::cli::SetupArgs;
-use crate::error::{Result, WorkError};
+use cmt_core::error::{Result, WorkError};
 
-const CLAUDE_CODE_SKILL: &str = include_str!("../../integrations/claude-code/SKILL.md");
+const CLAUDE_CODE_SKILL: &str = include_str!("../../../../integrations/claude-code/SKILL.md");
 
 #[derive(Debug)]
 struct Integration {
@@ -62,11 +62,11 @@ fn install(home: &Path, integration: &Integration) -> Result<Action> {
         if existing == integration.content {
             return Ok(Action::AlreadyUpToDate);
         }
-        crate::storage::atomic_write(&path, integration.content)?;
+        cmt_core::storage::atomic_write(&path, integration.content)?;
         return Ok(Action::Updated);
     }
 
-    crate::storage::atomic_write(&path, integration.content)?;
+    cmt_core::storage::atomic_write(&path, integration.content)?;
     Ok(Action::Created)
 }
 

@@ -14,17 +14,17 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast;
 
 /// Embedded frontend assets (built from web/dist/)
-static FRONTEND_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/web/dist");
+static FRONTEND_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/../../web/dist");
 
 use crate::cli::ServeArgs;
-use crate::config::Config;
-use crate::error::WorkError;
-use crate::index::Index;
-use crate::model::WorkItem;
-use crate::parser;
-use crate::registry::Registry;
-use crate::state_machine;
-use crate::storage;
+use cmt_core::config::Config;
+use cmt_core::error::WorkError;
+use cmt_core::index::Index;
+use cmt_core::model::WorkItem;
+use cmt_core::parser;
+use cmt_core::registry::Registry;
+use cmt_core::state_machine;
+use cmt_core::storage;
 
 /// Shared application state for all handlers.
 struct AppState {
@@ -188,7 +188,7 @@ impl ItemResponse {
     }
 
     fn from_item_with_path(item: &WorkItem, body: Option<String>, item_path: &Path) -> Self {
-        let (count, _preview) = crate::artifacts::count_artifacts(item_path);
+        let (count, _preview) = cmt_core::artifacts::count_artifacts(item_path);
         let artifact_count = if count > 0 { Some(count) } else { None };
         let mut resp = Self::from_item(item, body);
         resp.artifact_count = artifact_count;
@@ -495,7 +495,7 @@ async fn create_item(
     let prefix = config.resolve_prefix(Some(item_type));
     let next_num = index.next_id(prefix).map_err(ApiError::from)?;
     let id_raw = format!("{}-{}", prefix, next_num);
-    let id = crate::model::WorkItemId::parse(&id_raw).map_err(ApiError::from)?;
+    let id = cmt_core::model::WorkItemId::parse(&id_raw).map_err(ApiError::from)?;
 
     let now = chrono::Utc::now().to_rfc3339();
     let status = req
@@ -505,7 +505,7 @@ async fn create_item(
         .priority
         .or_else(|| Some(config.defaults.priority.clone()));
 
-    let assignee = req.assignee.map(crate::model::Assignee::Single);
+    let assignee = req.assignee.map(cmt_core::model::Assignee::Single);
 
     let item = WorkItem {
         id,
@@ -535,7 +535,7 @@ async fn create_item(
 
     // Update index
     let file_str = file_path.to_string_lossy().to_string();
-    crate::index::warn_on_err(index.upsert_item(&item, &body, &file_str, false), "upsert");
+    cmt_core::index::warn_on_err(index.upsert_item(&item, &body, &file_str, false), "upsert");
 
     Ok((
         StatusCode::CREATED,
@@ -563,7 +563,7 @@ async fn edit_item(
         item.assignee = if assignee.is_empty() {
             None
         } else {
-            Some(crate::model::Assignee::Single(assignee))
+            Some(cmt_core::model::Assignee::Single(assignee))
         };
     }
     if let Some(parent) = req.parent {
@@ -608,7 +608,7 @@ async fn edit_item(
     // Update index
     let index = state.open_index_for(work_dir)?;
     let file_str = path.to_string_lossy().to_string();
-    crate::index::warn_on_err(index.upsert_item(&item, &body, &file_str, false), "upsert");
+    cmt_core::index::warn_on_err(index.upsert_item(&item, &body, &file_str, false), "upsert");
 
     Ok(Json(ItemResponse::from_item(&item, Some(body))))
 }
@@ -664,7 +664,7 @@ async fn change_status(
     // Update index
     let index = state.open_index_for(work_dir)?;
     let file_str = path.to_string_lossy().to_string();
-    crate::index::warn_on_err(index.upsert_item(&item, &body, &file_str, false), "upsert");
+    cmt_core::index::warn_on_err(index.upsert_item(&item, &body, &file_str, false), "upsert");
 
     Ok(Json(ItemResponse::from_item(&item, Some(body))))
 }
@@ -682,7 +682,7 @@ async fn delete_item(
 
     // Remove from index
     let index = state.open_index_for(work_dir)?;
-    crate::index::warn_on_err(index.remove_item(&id), "remove");
+    cmt_core::index::warn_on_err(index.remove_item(&id), "remove");
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -754,7 +754,7 @@ struct ProjectArtifactEntry {
     item_id: String,
     item_title: String,
     #[serde(flatten)]
-    artifact: crate::artifacts::Artifact,
+    artifact: cmt_core::artifacts::Artifact,
 }
 
 #[derive(Serialize)]
@@ -779,7 +779,7 @@ async fn list_all_artifacts(
             Ok(r) => r,
             Err(_) => continue,
         };
-        let artifact_list = crate::artifacts::discover(file, &item.extra);
+        let artifact_list = cmt_core::artifacts::discover(file, &item.extra);
         if artifact_list.artifacts.is_empty() {
             continue;
         }
@@ -803,10 +803,10 @@ async fn list_artifacts(
     State(state): State<Arc<AppState>>,
     AxumPath(id): AxumPath<String>,
     Query(pq): Query<ItemPathQuery>,
-) -> Result<Json<crate::artifacts::ArtifactList>, ApiError> {
+) -> Result<Json<cmt_core::artifacts::ArtifactList>, ApiError> {
     let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
     let (item, _body, item_path) = storage::read_item(work_dir, &id).map_err(ApiError::from)?;
-    let artifact_list = crate::artifacts::discover(&item_path, &item.extra);
+    let artifact_list = cmt_core::artifacts::discover(&item_path, &item.extra);
     Ok(Json(artifact_list))
 }
 
@@ -829,7 +829,7 @@ async fn serve_artifact(
         });
     };
 
-    let resolved = crate::artifacts::validate_artifact_path(item_dir, &artifact_path)
+    let resolved = cmt_core::artifacts::validate_artifact_path(item_dir, &artifact_path)
         .map_err(ApiError::from)?;
 
     if !resolved.is_file() {
@@ -843,8 +843,8 @@ async fn serve_artifact(
         .map_err(WorkError::from)
         .map_err(ApiError::from)?;
 
-    let mime = crate::artifacts::detect_mime(&resolved);
-    let etag = crate::artifacts::compute_etag(&metadata);
+    let mime = cmt_core::artifacts::detect_mime(&resolved);
+    let etag = cmt_core::artifacts::compute_etag(&metadata);
     let size = metadata.len();
 
     let body = tokio::fs::read(&resolved)
@@ -994,7 +994,7 @@ async fn serve_embedded(uri: axum::http::Uri) -> Response {
 
 // ── Server entry point ──────────────────────────────────────────────────────
 
-pub fn execute(args: &ServeArgs, work_dir: &Path) -> crate::error::Result<()> {
+pub fn execute(args: &ServeArgs, work_dir: &Path) -> cmt_core::error::Result<()> {
     // Build project map: start with CWD project, then add registry entries
     let mut projects: HashMap<String, PathBuf> = HashMap::new();
 

@@ -1,10 +1,10 @@
 use std::path::Path;
 
 use crate::cli::EditArgs;
-use crate::config::Config;
-use crate::error::{Result, WorkError};
-use crate::model::Assignee;
-use crate::storage;
+use cmt_core::config::Config;
+use cmt_core::error::{Result, WorkError};
+use cmt_core::model::Assignee;
+use cmt_core::storage;
 
 pub fn execute(
     args: &EditArgs,
@@ -41,11 +41,11 @@ pub fn execute(
 
         // Re-read and validate
         let content = std::fs::read_to_string(&path)?;
-        let (new_item, new_body) = crate::parser::parse_file(&content)?;
+        let (new_item, new_body) = cmt_core::parser::parse_file(&content)?;
 
         // If status changed, validate transition
         if new_item.status != item.status {
-            crate::state_machine::validate_transition(
+            cmt_core::state_machine::validate_transition(
                 &config,
                 new_item.r#type.as_deref(),
                 &item.status,
@@ -55,11 +55,11 @@ pub fn execute(
         }
 
         // Update index
-        if let Ok(index) = crate::index::Index::open(work_dir) {
+        if let Ok(index) = cmt_core::index::Index::open(work_dir) {
             let file_str = path.to_string_lossy().to_string();
             let archived = file_str.contains("/archive/");
-            crate::index::warn_on_err(index.upsert_item(&new_item, &new_body, &file_str, archived), "upsert");
-            crate::index::warn_on_err(index.record_event(&new_item.id.raw, actor, "edit", None), "event");
+            cmt_core::index::warn_on_err(index.upsert_item(&new_item, &new_body, &file_str, archived), "upsert");
+            cmt_core::index::warn_on_err(index.record_event(&new_item.id.raw, actor, "edit", None), "event");
         }
 
         if !quiet {
@@ -114,7 +114,7 @@ pub fn execute(
 
     // If status changed via --set, validate transition
     if item.status != old_status {
-        let result = crate::state_machine::validate_transition(
+        let result = cmt_core::state_machine::validate_transition(
             &config,
             item.r#type.as_deref(),
             &old_status,
@@ -160,10 +160,10 @@ pub fn execute(
             std::fs::create_dir_all(dir.join("queries"))?;
             std::fs::create_dir_all(dir.join("handover"))?;
 
-            if let Ok(index) = crate::index::Index::open(work_dir) {
+            if let Ok(index) = cmt_core::index::Index::open(work_dir) {
                 let file_str = new_path.to_string_lossy().to_string();
-                crate::index::warn_on_err(index.upsert_item(&item, &body, &file_str, false), "upsert");
-                crate::index::warn_on_err(index.record_event(&item.id.raw, actor, "edit", Some(&serde_json::json!({"action": "convert_to_complex"}))), "event");
+                cmt_core::index::warn_on_err(index.upsert_item(&item, &body, &file_str, false), "upsert");
+                cmt_core::index::warn_on_err(index.record_event(&item.id.raw, actor, "edit", Some(&serde_json::json!({"action": "convert_to_complex"}))), "event");
             }
 
             if !quiet {
@@ -177,19 +177,19 @@ pub fn execute(
     storage::write_item(&path, &item, &body)?;
 
     // Update index
-    if let Ok(index) = crate::index::Index::open(work_dir) {
+    if let Ok(index) = cmt_core::index::Index::open(work_dir) {
         let file_str = path.to_string_lossy().to_string();
         let archived = file_str.contains("/archive/");
-        crate::index::warn_on_err(index.upsert_item(&item, &body, &file_str, archived), "upsert");
-        crate::index::warn_on_err(index.record_event(&item.id.raw, actor, "edit", None), "event");
+        cmt_core::index::warn_on_err(index.upsert_item(&item, &body, &file_str, archived), "upsert");
+        cmt_core::index::warn_on_err(index.record_event(&item.id.raw, actor, "edit", None), "event");
     }
 
     // Git auto-commit
     let file_str = path.to_string_lossy().to_string();
-    crate::git::auto_commit(&config, work_dir, &[&file_str], &format!("edit {} - {}", item.id.raw, item.title))?;
+    cmt_core::git::auto_commit(&config, work_dir, &[&file_str], &format!("edit {} - {}", item.id.raw, item.title))?;
 
     if json {
-        let json_val = crate::format::item_to_json(&item, Some(&body));
+        let json_val = cmt_core::format::item_to_json(&item, Some(&body));
         println!("{}", serde_json::to_string_pretty(&json_val)?);
     } else if !quiet {
         eprintln!("Updated {}", item.id.raw);
@@ -198,7 +198,7 @@ pub fn execute(
     Ok(())
 }
 
-fn apply_set_field(item: &mut crate::model::WorkItem, key: &str, value: &str) -> Result<()> {
+fn apply_set_field(item: &mut cmt_core::model::WorkItem, key: &str, value: &str) -> Result<()> {
     match key {
         "title" => item.title = value.to_string(),
         "status" => item.status = value.to_string(),

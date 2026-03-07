@@ -1,24 +1,11 @@
 use clap::Parser;
 use std::process;
 
-mod artifacts;
 mod cli;
-mod config;
-mod error;
-mod model;
-mod parser;
-mod slug;
-mod storage;
-mod state_machine;
-mod index;
-mod format;
-mod git;
-mod discovery;
-mod registry;
 mod commands;
 
 use cli::{Cli, Commands};
-use error::WorkError;
+use cmt_core::error::WorkError;
 
 fn main() {
     let cli = Cli::parse();
@@ -28,16 +15,15 @@ fn main() {
         || std::env::var("NO_COLOR").is_ok()
         || !is_terminal::is_terminal(std::io::stdout());
 
-    format::set_color_enabled(!no_color);
+    cmt_core::format::set_color_enabled(!no_color);
 
     let result = run(&cli);
 
     match result {
-        Ok(()) => process::exit(error::EXIT_SUCCESS),
+        Ok(()) => process::exit(cmt_core::error::EXIT_SUCCESS),
         Err(e) => {
             let code = e.exit_code();
             if cli.json {
-                // Structured JSON error on stdout for agents
                 let err = serde_json::json!({
                     "error": e.to_string(),
                     "code": code,
@@ -57,7 +43,7 @@ fn resolve_actor(cli: &Cli) -> Option<String> {
         .or_else(|| std::env::var("USER").ok())
 }
 
-fn run(cli: &Cli) -> error::Result<()> {
+fn run(cli: &Cli) -> cmt_core::error::Result<()> {
     let actor = resolve_actor(cli);
     match &cli.command {
         Commands::Init(args) => {
@@ -144,8 +130,7 @@ fn run(cli: &Cli) -> error::Result<()> {
     }
 }
 
-fn resolve_work_dir(cli: &Cli) -> error::Result<std::path::PathBuf> {
-    // 1. --dir flag
+fn resolve_work_dir(cli: &Cli) -> cmt_core::error::Result<std::path::PathBuf> {
     if let Some(ref dir) = cli.dir {
         if dir.exists() {
             return Ok(dir.clone());
@@ -156,8 +141,6 @@ fn resolve_work_dir(cli: &Cli) -> error::Result<std::path::PathBuf> {
         )));
     }
 
-    // 2. CMT_DIR env (already handled by clap env attribute, but if not parsed as dir)
-    // 3. Upward search
     let cwd = std::env::current_dir()?;
-    config::discover_work_dir(&cwd).ok_or(WorkError::WorkDirNotFound)
+    cmt_core::config::discover_work_dir(&cwd).ok_or(WorkError::WorkDirNotFound)
 }

@@ -227,38 +227,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
 
 [[package]]
-name = "catchmytask"
-version = "0.2.2"
-dependencies = [
- "assert_cmd",
- "axum",
- "chrono",
- "clap",
- "clap_complete",
- "futures-util",
- "include_dir",
- "is-terminal",
- "mime_guess",
- "notify",
- "open",
- "owo-colors",
- "predicates",
- "regex",
- "rusqlite",
- "serde",
- "serde_json",
- "serde_yml",
- "sha2",
- "tabled",
- "tempfile",
- "thiserror",
- "tokio",
- "tokio-tungstenite 0.26.2",
- "tower",
- "tower-http",
-]
-
-[[package]]
 name = "cc"
 version = "1.2.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -336,6 +304,53 @@ name = "clap_lex"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a822ea5bc7590f9d40f1ba12c0dc3c2760f3482c6984db1573ad11031420831"
+
+[[package]]
+name = "cmt-cli"
+version = "0.2.2"
+dependencies = [
+ "assert_cmd",
+ "axum",
+ "chrono",
+ "clap",
+ "clap_complete",
+ "cmt-core",
+ "futures-util",
+ "include_dir",
+ "is-terminal",
+ "mime_guess",
+ "notify",
+ "open",
+ "predicates",
+ "regex",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "serde_yml",
+ "tempfile",
+ "tokio",
+ "tokio-tungstenite 0.26.2",
+ "tower",
+ "tower-http",
+]
+
+[[package]]
+name = "cmt-core"
+version = "0.2.2"
+dependencies = [
+ "chrono",
+ "mime_guess",
+ "owo-colors",
+ "regex",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "serde_yml",
+ "sha2",
+ "tabled",
+ "tempfile",
+ "thiserror",
+]
 
 [[package]]
 name = "colorchoice"

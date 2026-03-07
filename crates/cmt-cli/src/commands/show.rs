@@ -1,10 +1,10 @@
 use std::path::Path;
 
 use crate::cli::ShowArgs;
-use crate::config::Config;
-use crate::error::Result;
-use crate::format;
-use crate::storage;
+use cmt_core::config::Config;
+use cmt_core::error::Result;
+use cmt_core::format;
+use cmt_core::storage;
 
 pub fn execute(args: &ShowArgs, work_dir: &Path, json: bool) -> Result<()> {
     let config = Config::load(work_dir)?;
@@ -89,7 +89,7 @@ pub fn execute(args: &ShowArgs, work_dir: &Path, json: bool) -> Result<()> {
 
     // Show children if requested
     if args.children {
-        if let Ok(index) = crate::index::Index::open(work_dir) {
+        if let Ok(index) = cmt_core::index::Index::open(work_dir) {
             let mut stmt = index.conn.prepare(
                 "SELECT id, status, title FROM items WHERE parent = ?1 ORDER BY created_at"
             )?;

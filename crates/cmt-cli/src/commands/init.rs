@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use crate::cli::InitArgs;
-use crate::config::{Config, resolve_global_config_dir};
-use crate::error::{Result, WorkError};
+use cmt_core::config::{Config, resolve_global_config_dir};
+use cmt_core::error::{Result, WorkError};
 
 pub fn execute(args: &InitArgs, json: bool, quiet: bool) -> Result<()> {
     if args.global {
@@ -53,8 +53,8 @@ pub fn execute(args: &InitArgs, json: bool, quiet: bool) -> Result<()> {
 
     // Generate discovery files (non-fatal if they fail)
     if let Ok(config) = Config::load(work_dir) {
-        let _ = crate::discovery::generate_about_file(work_dir, &config);
-        let _ = crate::discovery::generate_conventions_file(work_dir, &config);
+        let _ = cmt_core::discovery::generate_about_file(work_dir, &config);
+        let _ = cmt_core::discovery::generate_conventions_file(work_dir, &config);
     }
 
     let abs_work_dir = std::fs::canonicalize(work_dir)?;
@@ -63,8 +63,8 @@ pub fn execute(args: &InitArgs, json: bool, quiet: bool) -> Result<()> {
     let name = resolve_name(args);
     let skip_registry = abs_work_dir.starts_with("/tmp");
     if !skip_registry {
-    if let Ok(mut registry) = crate::registry::Registry::load() {
-        let entry = crate::registry::ProjectEntry {
+    if let Ok(mut registry) = cmt_core::registry::Registry::load() {
+        let entry = cmt_core::registry::ProjectEntry {
             name: name.clone(),
             path: abs_work_dir.clone(),
             prefix: args.prefix.clone(),
@@ -73,7 +73,7 @@ pub fn execute(args: &InitArgs, json: bool, quiet: bool) -> Result<()> {
         if registry.save().is_ok() && is_new && !quiet && !json {
             eprintln!(
                 "Registered project in {}",
-                crate::registry::Registry::registry_path().display()
+                cmt_core::registry::Registry::registry_path().display()
             );
         }
     }
@@ -113,7 +113,7 @@ fn ensure_dir(path: &Path) -> Result<()> {
 
 fn write_gitignore(work_dir: &Path) -> Result<()> {
     let content = "config.local.yml\n.index.db\n.index.db-wal\n.index.db-shm\n";
-    crate::storage::atomic_write(&work_dir.join(".gitignore"), content)?;
+    cmt_core::storage::atomic_write(&work_dir.join(".gitignore"), content)?;
     Ok(())
 }
 
@@ -139,7 +139,7 @@ defaults:
 git:
   auto_commit: false
 ";
-    crate::storage::atomic_write(&config_path, content)?;
+    cmt_core::storage::atomic_write(&config_path, content)?;
 
     if json {
         println!(

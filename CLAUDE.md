@@ -113,8 +113,32 @@ Implement JWT-based authentication for the API.
 | `docs/research/competitive-landscape-2026.md` | Competitor analysis with pricing, revenue, positioning |
 | `docs/design/artifacts.md` | Artifact system design (discovery, API, CLI, web UI) |
 
+### Codebase Structure (Cargo Workspace)
+
+```
+catchmytask/
+  Cargo.toml              # Virtual workspace
+  crates/
+    cmt-core/             # Core library: model, storage, parser, index, config,
+                          #   state_machine, format, artifacts, git, slug, registry,
+                          #   discovery, error (MIT)
+    cmt-cli/              # CLI binary + commands + serve (MIT)
+      src/
+        main.rs           # Entry point
+        cli.rs            # clap arg definitions
+        commands/          # 21 command implementations
+  web/                    # React/TypeScript web UI
+  integrations/           # Agent platform integrations (Claude Code skill)
+  docs/                   # Research, specs, design docs
+  tests/                  # (in crates/cmt-cli/tests/)
+```
+
+The workspace split enables future enterprise extensions via a separate `cmt-ee` crate
+in a private repo, without modifying the open-source core.
+
 ## Technology Decisions (Resolved)
 
+- **Crate structure**: Cargo workspace with `cmt-core` (library) and `cmt-cli` (binary). Enterprise extensions go in a separate private repo.
 - **Implementation language**: Rust — single binary, cold start <10ms, cross-platform
 - **Storage format**: Markdown + YAML frontmatter. Schema in `docs/specs/01-work-item-schema.md`
 - **ID format**: PREFIX-NNN with auto-increment via file scan. Accepts both `CMT-1` and `CMT-0001`

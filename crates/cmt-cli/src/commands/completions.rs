@@ -1,5 +1,5 @@
 use crate::cli::{Cli, CompletionsArgs};
-use crate::error::Result;
+use cmt_core::error::Result;
 
 pub fn execute(args: &CompletionsArgs) -> Result<()> {
     use clap::CommandFactory;

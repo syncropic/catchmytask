@@ -3,8 +3,8 @@ use std::path::Path;
 use clap::CommandFactory;
 
 use crate::cli::{Cli, HelpAgentArgs};
-use crate::config::Config;
-use crate::error::{Result, WorkError};
+use cmt_core::config::Config;
+use cmt_core::error::{Result, WorkError};
 
 pub fn execute(args: &HelpAgentArgs, work_dir: Option<&Path>, json: bool) -> Result<()> {
     // Reject conflicting combinations
@@ -410,7 +410,7 @@ fn output_conventions(work_dir: Option<&Path>, json: bool) -> Result<()> {
 
     // Use workflow ordering (BFS from initial states) for consistent output
     let states: Vec<String> = default_machine
-        .map(crate::discovery::workflow_ordered_states)
+        .map(cmt_core::discovery::workflow_ordered_states)
         .unwrap_or_default();
 
     let initial_states: Vec<String> = default_machine

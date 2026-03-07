@@ -1,13 +1,13 @@
 use std::path::Path;
 
 use crate::cli::AddArgs;
-use crate::config::Config;
-use crate::error::{Result, WorkError};
-use crate::format;
-use crate::index::Index;
-use crate::model::{Assignee, WorkItem, WorkItemId};
-use crate::slug;
-use crate::storage;
+use cmt_core::config::Config;
+use cmt_core::error::{Result, WorkError};
+use cmt_core::format;
+use cmt_core::index::Index;
+use cmt_core::model::{Assignee, WorkItem, WorkItemId};
+use cmt_core::slug;
+use cmt_core::storage;
 
 pub fn execute(
     args: &AddArgs,
@@ -88,7 +88,7 @@ pub fn execute(
         let template_path = work_dir.join("templates").join(format!("{}.md", template_name));
         if template_path.exists() {
             let content = std::fs::read_to_string(&template_path)?;
-            if let Ok((_, template_body)) = crate::parser::parse_file(&content) {
+            if let Ok((_, template_body)) = cmt_core::parser::parse_file(&content) {
                 body = template_body;
             } else {
                 // Template without frontmatter - use as body directly
@@ -158,8 +158,8 @@ pub fn execute(
     // Update index
     if let Ok(index) = Index::open(work_dir) {
         let rel_path = file_path.to_string_lossy().to_string();
-        crate::index::warn_on_err(index.upsert_item(&item, &body, &rel_path, false), "upsert");
-        crate::index::warn_on_err(index.record_event(
+        cmt_core::index::warn_on_err(index.upsert_item(&item, &body, &rel_path, false), "upsert");
+        cmt_core::index::warn_on_err(index.record_event(
             &id_str,
             actor,
             "created",
@@ -169,7 +169,7 @@ pub fn execute(
 
     // Git auto-commit
     let file_str = file_path.to_string_lossy().to_string();
-    crate::git::auto_commit(&config, work_dir, &[&file_str], &format!("add {} - {}", id_str, item.title))?;
+    cmt_core::git::auto_commit(&config, work_dir, &[&file_str], &format!("add {} - {}", id_str, item.title))?;
 
     // Output
     if json {
