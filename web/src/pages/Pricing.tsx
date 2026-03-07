@@ -1,17 +1,13 @@
-import { useState } from 'react'
 import { Navigation } from '@/sections/Navigation'
 import { Footer } from '@/sections/Footer'
-
-type Interval = 'monthly' | 'annual'
 
 const TIERS = [
   {
     name: 'Community',
     tagline: 'For individuals and open-source projects',
-    price: { monthly: 0, annual: 0 },
+    price: 0,
     cta: 'Get Started Free',
     ctaHref: '/app',
-    highlight: false,
     features: [
       { name: '21 CLI commands', available: true },
       { name: 'Unlimited work items', available: true },
@@ -36,7 +32,6 @@ const TIERS = [
     price: null,
     cta: 'Coming Soon',
     ctaHref: null,
-    highlight: true,
     features: [
       { name: 'Everything in Community, plus:', available: true, isHeader: true },
       { name: 'API authentication (JWT + API keys)', available: true, comingSoon: true },
@@ -60,7 +55,6 @@ const TIERS = [
     price: null,
     cta: 'Contact Sales',
     ctaHref: 'mailto:sales@syncropic.com',
-    highlight: false,
     features: [
       { name: 'Everything in Team, plus:', available: true, isHeader: true },
       { name: 'SSO (SAML 2.0, OIDC)', available: true, comingSoon: true },
@@ -235,25 +229,13 @@ function FeatureRow({ feature, isLast }: { feature: Feature; isLast: boolean }) 
   )
 }
 
-function TierCard({ tier, interval }: { tier: typeof TIERS[number]; interval: Interval }) {
-  const price = tier.price ? (interval === 'annual' ? tier.price.annual : tier.price.monthly) : null
-  const isFree = price === 0
+function TierCard({ tier }: { tier: typeof TIERS[number] }) {
+  const isFree = tier.price === 0
 
   return (
-    <div
-      className={`flex flex-col rounded-xl border p-6 transition-colors ${
-        tier.highlight
-          ? 'border-accent bg-accent/5 ring-1 ring-accent/20'
-          : 'border-border-default bg-bg-secondary'
-      }`}
-    >
+    <div className="flex flex-col rounded-xl border border-border-default bg-bg-secondary p-6 transition-colors">
       {/* Header */}
       <div className="space-y-2 mb-6">
-        {tier.highlight && (
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-accent-text bg-accent/10 px-2 py-0.5 rounded-full">
-            Most Popular
-          </span>
-        )}
         <h3 className="text-lg font-bold text-text-primary">{tier.name}</h3>
         <p className="text-xs text-text-muted leading-relaxed">{tier.tagline}</p>
       </div>
@@ -265,20 +247,10 @@ function TierCard({ tier, interval }: { tier: typeof TIERS[number]; interval: In
             <span className="text-3xl font-bold text-text-primary">Free</span>
             <span className="text-xs text-text-muted">forever</span>
           </div>
-        ) : price != null ? (
-          <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-bold text-text-primary">${price}</span>
-            <span className="text-xs text-text-muted">/ user / month</span>
-          </div>
         ) : (
           <div className="flex items-baseline gap-1">
             <span className="text-2xl font-bold text-text-muted">Coming Soon</span>
           </div>
-        )}
-        {price != null && !isFree && interval === 'annual' && (
-          <p className="text-[10px] text-text-muted mt-1">
-            Billed annually (${price * 12}/user/year)
-          </p>
         )}
       </div>
 
@@ -286,11 +258,7 @@ function TierCard({ tier, interval }: { tier: typeof TIERS[number]; interval: In
       {tier.ctaHref ? (
         <a
           href={tier.ctaHref}
-          className={`block text-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors mb-6 ${
-            tier.highlight
-              ? 'bg-accent text-white hover:bg-accent-hover'
-              : 'bg-bg-tertiary border border-border-default text-text-secondary hover:bg-bg-hover'
-          }`}
+          className="block text-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors mb-6 bg-accent text-white hover:bg-accent-hover"
         >
           {tier.cta}
         </a>
@@ -369,8 +337,6 @@ function FAQ() {
 }
 
 export function PricingPage() {
-  const [interval, setInterval] = useState<Interval>('annual')
-
   return (
     <div className="min-h-screen bg-bg-primary">
       <Navigation />
@@ -385,31 +351,6 @@ export function PricingPage() {
             Start free with the full open-source CLI and web UI.
             Upgrade when your team needs collaboration, integrations, or enterprise governance.
           </p>
-
-          {/* Interval toggle */}
-          <div className="flex items-center justify-center gap-2 pt-4">
-            <button
-              onClick={() => setInterval('monthly')}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                interval === 'monthly'
-                  ? 'bg-bg-tertiary text-text-primary border border-border-default'
-                  : 'text-text-muted hover:text-text-secondary'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setInterval('annual')}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                interval === 'annual'
-                  ? 'bg-bg-tertiary text-text-primary border border-border-default'
-                  : 'text-text-muted hover:text-text-secondary'
-              }`}
-            >
-              Annual
-              <span className="ml-1.5 text-green-400 text-[10px]">Save 15%</span>
-            </button>
-          </div>
         </div>
       </section>
 
@@ -417,7 +358,7 @@ export function PricingPage() {
       <section className="px-6 pb-20">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
           {TIERS.map((tier) => (
-            <TierCard key={tier.name} tier={tier} interval={interval} />
+            <TierCard key={tier.name} tier={tier} />
           ))}
         </div>
       </section>
