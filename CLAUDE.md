@@ -119,7 +119,7 @@ Implement JWT-based authentication for the API.
 - **Agent integration**: CLI + `--json` with progressive discovery (not MCP). `cmt setup` installs platform-specific integrations (Claude Code skill, etc.). See `docs/design/agent-discoverability.md`
 - **State machine**: YAML-defined in `config.yml`, validated at runtime. See `docs/specs/02-state-machine.md`
 - **Artifacts**: Filesystem-based discovery. Complex items = folders with `item.md` + artifacts. Simple items reference via `refs` frontmatter. See `docs/design/artifacts.md`
-- **Web UI**: React + Vite, embedded in release binary. Dual-mode: local-only (IndexedDB) or connected (`cmt serve`). Includes board, list, dashboard, activity, and artifact browser views
+- **Web UI**: React + Vite, embedded in release binary. Dual-mode: local-only (IndexedDB) or connected (`cmt serve`). Views: board, list, dashboard, activity, artifact browser, terminal, settings. Features: command bar (Ctrl+J), command palette (Ctrl+K), dark/light mode, ARIA accessibility, mobile responsive layout
 
 ## Technology Decisions (Pending)
 

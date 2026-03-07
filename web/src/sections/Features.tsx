@@ -21,7 +21,7 @@ const FEATURES = [
   },
   {
     title: 'Web UI',
-    description: 'Board, list, dashboard, activity, and terminal views. Real-time updates via WebSocket.',
+    description: 'Board, list, dashboard, activity, artifact browser, terminal, and settings views. Real-time updates via WebSocket.',
   },
   {
     title: 'Command Bar & Terminal',
@@ -38,6 +38,10 @@ const FEATURES = [
   {
     title: 'Multi-Project',
     description: 'Manage multiple projects from a single CLI or web interface.',
+  },
+  {
+    title: 'Accessible & Responsive',
+    description: 'ARIA labels, keyboard navigation, and mobile-friendly layout. Works on any screen size.',
   },
 ]
 

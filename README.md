@@ -100,6 +100,7 @@ CatchMyTask includes a browser-based UI at [catchmytask.com/app](https://catchmy
 - **Command Bar** — Embedded CLI at the bottom of the main content area (Ctrl+J). Supports all `cmt` commands with rich interactive output, autocomplete, command history (Up/Down), context-aware item selection, and `cmt` prefix optional for copy-paste parity with the terminal CLI
 - **Terminal View** — Full-screen command-line interface accessible from the activity rail. Same power as the Command Bar but fills the main content area for extended command sessions
 - **Dark/Light Mode** — Toggle via header, persists to localStorage
+- **Accessible & Responsive** — ARIA labels throughout, keyboard navigation, mobile-friendly layout with adaptive columns and sidebar
 
 Works in two modes: **local-only** (IndexedDB, no server) or **connected** to `cmt serve` (auto-detected on port 3170).
 

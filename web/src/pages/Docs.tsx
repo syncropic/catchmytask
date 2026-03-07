@@ -410,6 +410,7 @@ function WebUI() {
           ['Search', 'Ctrl/Cmd+K opens a command palette with full-text search across all items.'],
           ['Dark/Light Mode', 'Toggle via the theme button in the header. Persists to localStorage.'],
           ['Export/Import', 'Export your data as a .cmt zip, import into another browser or restore from backup.'],
+          ['Accessible & Responsive', 'ARIA labels throughout, keyboard navigation, responsive layout with mobile-friendly table columns and adaptive sidebar.'],
         ].map(([title, desc]) => (
           <div key={title} className="border border-border-default rounded-lg p-3 space-y-1">
             <h4 className="text-xs font-semibold text-text-primary">{title}</h4>
