@@ -1311,6 +1311,71 @@ async fn bulk_done(
     })))
 }
 
+// ── Webhook management API ──────────────────────────────────────────────────
+
+async fn api_list_webhooks(
+    State(state): State<Arc<AppState>>,
+    Query(pq): Query<ProjectQuery>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let hooks = cmt_core::webhooks::load_webhooks(work_dir).map_err(ApiError::from)?;
+    Ok(Json(serde_json::json!({ "webhooks": hooks })))
+}
+
+#[derive(Deserialize)]
+struct AddWebhookRequest {
+    url: String,
+    events: Vec<String>,
+    #[serde(default)]
+    secret: Option<String>,
+}
+
+async fn api_add_webhook(
+    State(state): State<Arc<AppState>>,
+    Query(pq): Query<ProjectQuery>,
+    Json(req): Json<AddWebhookRequest>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    cmt_core::webhooks::validate_events(&req.events).map_err(ApiError::from)?;
+
+    let mut hooks = cmt_core::webhooks::load_webhooks(work_dir).map_err(ApiError::from)?;
+    let id = cmt_core::webhooks::next_webhook_id(&hooks);
+
+    let new_hook = cmt_core::webhooks::WebhookConfig {
+        id: id.clone(),
+        url: req.url,
+        events: req.events,
+        secret: req.secret,
+        active: true,
+    };
+
+    hooks.push(new_hook.clone());
+    cmt_core::webhooks::save_webhooks(work_dir, &hooks).map_err(ApiError::from)?;
+
+    Ok(Json(serde_json::json!(new_hook)))
+}
+
+async fn api_delete_webhook(
+    State(state): State<Arc<AppState>>,
+    Query(pq): Query<ProjectQuery>,
+    AxumPath(id): AxumPath<String>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let mut hooks = cmt_core::webhooks::load_webhooks(work_dir).map_err(ApiError::from)?;
+    let before = hooks.len();
+    hooks.retain(|h| h.id != id);
+
+    if hooks.len() == before {
+        return Err(ApiError {
+            status: StatusCode::NOT_FOUND,
+            message: format!("Webhook '{}' not found", id),
+        });
+    }
+
+    cmt_core::webhooks::save_webhooks(work_dir, &hooks).map_err(ApiError::from)?;
+    Ok(Json(serde_json::json!({ "removed": id })))
+}
+
 // ── WebSocket handler ───────────────────────────────────────────────────────
 
 async fn ws_handler(
@@ -1494,6 +1559,9 @@ pub fn execute(args: &ServeArgs, work_dir: &Path) -> cmt_core::error::Result<()>
             .route("/api/views/{name}/items", get(api_view_items))
             .route("/api/bulk/status", post(bulk_status))
             .route("/api/bulk/done", post(bulk_done))
+            .route("/api/webhooks", get(api_list_webhooks))
+            .route("/api/webhooks", post(api_add_webhook))
+            .route("/api/webhooks/{id}", delete(api_delete_webhook))
             .with_state(state.clone());
 
         let ws_router = Router::new()

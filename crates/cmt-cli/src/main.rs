@@ -3,6 +3,8 @@ use std::process;
 
 mod cli;
 mod commands;
+mod mcp;
+mod webhooks;
 
 use cli::{Cli, Commands};
 use cmt_core::error::WorkError;
@@ -138,6 +140,14 @@ fn run(cli: &Cli) -> cmt_core::error::Result<()> {
         Commands::Bulk(args) => {
             let work_dir = resolve_work_dir(cli)?;
             commands::bulk::execute(&args.command, &work_dir, cli.json, cli.quiet, actor.as_deref())
+        }
+        Commands::Webhook(cmd) => {
+            let work_dir = resolve_work_dir(cli)?;
+            commands::webhook::execute(cmd, &work_dir, cli.json, cli.quiet)
+        }
+        Commands::Mcp(_args) => {
+            let work_dir = resolve_work_dir(cli)?;
+            mcp::server::run_stdio(&work_dir)
         }
     }
 }

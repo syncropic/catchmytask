@@ -190,6 +190,16 @@ pub fn execute(
     let file_str = file_path.to_string_lossy().to_string();
     cmt_core::git::auto_commit(&config, work_dir, &[&file_str], &format!("add {} - {}", id_str, item.title))?;
 
+    // Fire webhooks
+    crate::webhooks::fire_webhooks(
+        work_dir,
+        "item.created",
+        &id_str,
+        &item.title,
+        actor,
+        Some(serde_json::json!({"type": item.r#type, "status": item.status, "priority": item.priority})),
+    );
+
     // Output
     if json {
         let mut json_val = format::item_to_json(&item, None);

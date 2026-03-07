@@ -188,6 +188,16 @@ pub fn execute(
     let file_str = path.to_string_lossy().to_string();
     cmt_core::git::auto_commit(&config, work_dir, &[&file_str], &format!("edit {} - {}", item.id.raw, item.title))?;
 
+    // Fire webhooks
+    crate::webhooks::fire_webhooks(
+        work_dir,
+        "item.updated",
+        &item.id.raw,
+        &item.title,
+        actor,
+        None,
+    );
+
     if json {
         let json_val = cmt_core::format::item_to_json(&item, Some(&body));
         println!("{}", serde_json::to_string_pretty(&json_val)?);

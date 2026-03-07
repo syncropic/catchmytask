@@ -154,6 +154,22 @@ pub fn execute(
         }));
     }
 
+    // Fire webhooks for each archived item
+    if !args.dry_run {
+        for result in &results {
+            if let Some(id) = result["id"].as_str() {
+                crate::webhooks::fire_webhooks(
+                    work_dir,
+                    "item.archived",
+                    id,
+                    id,
+                    actor,
+                    Some(serde_json::json!({"status": result["status"]})),
+                );
+            }
+        }
+    }
+
     // Git auto-commit
     if !args.dry_run && !files_changed.is_empty() {
         let file_refs: Vec<&str> = files_changed.iter().map(|s| s.as_str()).collect();

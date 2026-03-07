@@ -117,6 +117,16 @@ pub fn execute(
         &format!("comment on {} by {}", item.id.raw, author),
     )?;
 
+    // Fire webhooks
+    crate::webhooks::fire_webhooks(
+        work_dir,
+        "item.commented",
+        &item.id.raw,
+        &item.title,
+        actor,
+        Some(serde_json::json!({"comment_id": comment_id, "message": message})),
+    );
+
     if json {
         let json_val = serde_json::json!({
             "item_id": item.id.raw,

@@ -92,6 +92,16 @@ pub fn execute(
         &format!("transition {} {} -> {}", item.id.raw, old_status, args.new_status),
     )?;
 
+    // Fire webhooks
+    crate::webhooks::fire_webhooks(
+        work_dir,
+        "item.status_changed",
+        &item.id.raw,
+        &item.title,
+        actor,
+        Some(serde_json::json!({"from": old_status, "to": args.new_status})),
+    );
+
     // Output
     if json {
         let mut timestamps_set = Vec::new();

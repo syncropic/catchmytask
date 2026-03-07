@@ -22,3 +22,4 @@ pub mod slugify;
 pub mod comment;
 pub mod view;
 pub mod bulk;
+pub mod webhook;

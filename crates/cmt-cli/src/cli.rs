@@ -107,6 +107,18 @@ pub enum Commands {
 
     /// Bulk operations on multiple work items
     Bulk(BulkArgs),
+
+    /// Manage outbound webhooks
+    #[command(subcommand)]
+    Webhook(WebhookCommand),
+
+    /// Start MCP server (stdio transport for AI agents)
+    Mcp(McpArgs),
+}
+
+#[derive(Args, Debug)]
+pub struct McpArgs {
+    // Currently no args needed -- stdio is the only transport
 }
 
 #[derive(Args, Debug)]
@@ -726,4 +738,37 @@ pub enum OutputFormat {
     Simple,
     Json,
     Csv,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum WebhookCommand {
+    /// List configured webhooks
+    List,
+    /// Add a new webhook
+    Add(WebhookAddArgs),
+    /// Remove a webhook by ID
+    Remove {
+        /// Webhook ID to remove (e.g., wh-001)
+        id: String,
+    },
+    /// Send a test payload to a webhook
+    Test {
+        /// Webhook ID to test (e.g., wh-001)
+        id: String,
+    },
+}
+
+#[derive(Args, Debug)]
+pub struct WebhookAddArgs {
+    /// URL to POST webhook payloads to
+    #[arg(long)]
+    pub url: String,
+
+    /// Comma-separated list of events (e.g., item.created,item.done)
+    #[arg(long)]
+    pub events: String,
+
+    /// HMAC-SHA256 secret for signing payloads
+    #[arg(long)]
+    pub secret: Option<String>,
 }

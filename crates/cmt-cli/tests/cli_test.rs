@@ -2112,3 +2112,698 @@ fn test_init_creates_views_dir() {
 
     assert!(tmp.path().join(".cmt/views").is_dir());
 }
+
+// ============ cmt bulk ============
+
+#[test]
+fn test_bulk_status_changes_matching_items() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    // Create 3 items (all start in "open" status)
+    work_cmd().current_dir(tmp.path()).args(["add", "Item one"]).assert().success();
+    work_cmd().current_dir(tmp.path()).args(["add", "Item two"]).assert().success();
+    work_cmd().current_dir(tmp.path()).args(["add", "Item three"]).assert().success();
+
+    // Move all open items to ready
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["bulk", "status", "ready", "--filter", "status=inbox"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("3 succeeded"));
+
+    // Verify all are now ready
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["list", "--status", "ready", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    let items = json.as_array().unwrap();
+    assert_eq!(items.len(), 3);
+}
+
+#[test]
+fn test_bulk_status_json_output() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd().current_dir(tmp.path()).args(["add", "Item one"]).assert().success();
+    work_cmd().current_dir(tmp.path()).args(["add", "Item two"]).assert().success();
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["bulk", "status", "ready", "--filter", "status=inbox", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["processed"], 2);
+    assert_eq!(json["succeeded"], 2);
+    assert_eq!(json["failed"], 0);
+    let results = json["results"].as_array().unwrap();
+    assert_eq!(results.len(), 2);
+    assert!(results[0]["success"].as_bool().unwrap());
+}
+
+#[test]
+fn test_bulk_done_with_filter() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    // Create items and move them to active
+    work_cmd().current_dir(tmp.path()).args(["add", "Agent task 1", "-a", "agent-1"]).assert().success();
+    work_cmd().current_dir(tmp.path()).args(["add", "Agent task 2", "-a", "agent-1"]).assert().success();
+    work_cmd().current_dir(tmp.path()).args(["add", "Human task", "-a", "human-1"]).assert().success();
+
+    // Move to ready then active
+    for id in &["CMT-1", "CMT-2", "CMT-3"] {
+        work_cmd().current_dir(tmp.path()).args(["status", id, "ready"]).assert().success();
+        work_cmd().current_dir(tmp.path()).args(["status", id, "active"]).assert().success();
+    }
+
+    // Bulk done only agent-1 items
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["bulk", "done", "--filter", "assignee=agent-1", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["succeeded"], 2);
+
+    // Verify human task is still active
+    let show_output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["show", "CMT-3", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let show_json: serde_json::Value = serde_json::from_slice(&show_output).unwrap();
+    assert_eq!(show_json["status"], "active");
+}
+
+#[test]
+fn test_bulk_edit_set_priority() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd().current_dir(tmp.path()).args(["add", "Item 1", "--tag", "sprint-3"]).assert().success();
+    work_cmd().current_dir(tmp.path()).args(["add", "Item 2", "--tag", "sprint-3"]).assert().success();
+    work_cmd().current_dir(tmp.path()).args(["add", "Item 3", "--tag", "sprint-4"]).assert().success();
+
+    // Bulk edit: set priority=high for sprint-3 items
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["bulk", "edit", "--filter", "tag=sprint-3", "--set", "priority=high", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["succeeded"], 2);
+
+    // Verify the sprint-4 item was not changed
+    let show = work_cmd()
+        .current_dir(tmp.path())
+        .args(["show", "CMT-3", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let show_json: serde_json::Value = serde_json::from_slice(&show).unwrap();
+    assert_ne!(show_json["priority"], "high");
+}
+
+#[test]
+fn test_bulk_delete_requires_force() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd().current_dir(tmp.path()).args(["add", "Item 1"]).assert().success();
+
+    // Without --force should fail
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["bulk", "delete", "--filter", "status=inbox"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("--force"));
+}
+
+#[test]
+fn test_bulk_delete_with_force() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd().current_dir(tmp.path()).args(["add", "Item 1"]).assert().success();
+    work_cmd().current_dir(tmp.path()).args(["add", "Item 2"]).assert().success();
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["bulk", "delete", "--filter", "status=inbox", "--force", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["succeeded"], 2);
+}
+
+#[test]
+fn test_bulk_filter_no_matches() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd().current_dir(tmp.path()).args(["add", "Item 1"]).assert().success();
+
+    // Filter that matches nothing
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["bulk", "status", "ready", "--filter", "status=nonexistent", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["processed"], 0);
+    assert_eq!(json["succeeded"], 0);
+    assert_eq!(json["failed"], 0);
+    let results = json["results"].as_array().unwrap();
+    assert!(results.is_empty());
+}
+
+// ============ cmt done range syntax ============
+
+#[test]
+fn test_done_range_syntax() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    // Create 3 items and move them to active
+    for title in &["Task A", "Task B", "Task C"] {
+        work_cmd().current_dir(tmp.path()).args(["add", title]).assert().success();
+    }
+    for id in &["CMT-1", "CMT-2", "CMT-3"] {
+        work_cmd().current_dir(tmp.path()).args(["status", id, "ready"]).assert().success();
+        work_cmd().current_dir(tmp.path()).args(["status", id, "active"]).assert().success();
+    }
+
+    // Use range syntax to mark CMT-1..CMT-3 done
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["done", "CMT-1..CMT-3"])
+        .assert()
+        .success();
+
+    // Verify all are done
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["list", "--status", "done", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    let items = json.as_array().unwrap();
+    assert_eq!(items.len(), 3);
+}
+
+// ── Webhook command tests ──────────────────────────────────────────────────
+
+#[test]
+fn webhook_list_empty() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["webhook", "list"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("No webhooks configured"));
+}
+
+#[test]
+fn webhook_list_empty_json() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["webhook", "list", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    let arr = json.as_array().unwrap();
+    assert!(arr.is_empty());
+}
+
+#[test]
+fn webhook_add_and_list() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    // Add a webhook
+    work_cmd()
+        .current_dir(tmp.path())
+        .args([
+            "webhook", "add",
+            "--url", "https://example.com/hook",
+            "--events", "item.created,item.done",
+        ])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("Added webhook wh-001"));
+
+    // List webhooks
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["webhook", "list", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    let arr = json.as_array().unwrap();
+    assert_eq!(arr.len(), 1);
+    assert_eq!(arr[0]["id"], "wh-001");
+    assert_eq!(arr[0]["url"], "https://example.com/hook");
+    assert_eq!(arr[0]["active"], true);
+}
+
+#[test]
+fn webhook_add_with_secret() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args([
+            "webhook", "add",
+            "--url", "https://example.com/hook",
+            "--events", "item.created",
+            "--secret", "my-secret",
+            "--json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["id"], "wh-001");
+    assert_eq!(json["secret"], "my-secret");
+}
+
+#[test]
+fn webhook_add_invalid_event() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args([
+            "webhook", "add",
+            "--url", "https://example.com/hook",
+            "--events", "invalid.event",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Unknown webhook event"));
+}
+
+#[test]
+fn webhook_remove() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    // Add two webhooks
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["webhook", "add", "--url", "https://example.com/a", "--events", "item.created"])
+        .assert()
+        .success();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["webhook", "add", "--url", "https://example.com/b", "--events", "item.done"])
+        .assert()
+        .success();
+
+    // Remove first
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["webhook", "remove", "wh-001"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("Removed webhook wh-001"));
+
+    // Verify only one remains
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["webhook", "list", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    let arr = json.as_array().unwrap();
+    assert_eq!(arr.len(), 1);
+    assert_eq!(arr[0]["id"], "wh-002");
+}
+
+#[test]
+fn webhook_remove_nonexistent() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["webhook", "remove", "wh-999"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Webhook 'wh-999' not found"));
+}
+
+#[test]
+fn webhook_auto_increment_ids() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    // Add three webhooks
+    for _ in 0..3 {
+        work_cmd()
+            .current_dir(tmp.path())
+            .args(["webhook", "add", "--url", "https://example.com", "--events", "item.created"])
+            .assert()
+            .success();
+    }
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["webhook", "list", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    let arr = json.as_array().unwrap();
+    assert_eq!(arr.len(), 3);
+    assert_eq!(arr[0]["id"], "wh-001");
+    assert_eq!(arr[1]["id"], "wh-002");
+    assert_eq!(arr[2]["id"], "wh-003");
+}
+
+#[test]
+fn webhook_config_persists_in_file() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args([
+            "webhook", "add",
+            "--url", "https://example.com/hook",
+            "--events", "item.created,item.done",
+            "--secret", "s3cret",
+        ])
+        .assert()
+        .success();
+
+    // Verify the webhooks.yml file exists and has correct content
+    let webhooks_path = tmp.path().join(".cmt").join("webhooks.yml");
+    assert!(webhooks_path.exists());
+
+    let content = std::fs::read_to_string(&webhooks_path).unwrap();
+    assert!(content.contains("wh-001"));
+    assert!(content.contains("https://example.com/hook"));
+    assert!(content.contains("item.created"));
+    assert!(content.contains("item.done"));
+    assert!(content.contains("s3cret"));
+}
+
+// ---------------------------------------------------------------------------
+// MCP server integration tests
+// ---------------------------------------------------------------------------
+
+use std::io::{BufRead, BufReader, Write};
+use std::process::{Command as StdCommand, Stdio};
+
+/// Send a JSON-RPC request to the MCP server and read one line response.
+fn mcp_request(
+    stdin: &mut std::process::ChildStdin,
+    stdout: &mut BufReader<std::process::ChildStdout>,
+    request: &serde_json::Value,
+) -> serde_json::Value {
+    let line = serde_json::to_string(request).unwrap();
+    writeln!(stdin, "{}", line).unwrap();
+    stdin.flush().unwrap();
+
+    let mut response_line = String::new();
+    stdout.read_line(&mut response_line).unwrap();
+    serde_json::from_str(response_line.trim()).unwrap()
+}
+
+#[test]
+fn test_mcp_initialize() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let mut child = StdCommand::new(assert_cmd::cargo::cargo_bin("cmt"))
+        .current_dir(tmp.path())
+        .args(["mcp"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let stdin = child.stdin.as_mut().unwrap();
+    let stdout_handle = child.stdout.take().unwrap();
+    let mut reader = BufReader::new(stdout_handle);
+
+    let response = mcp_request(
+        stdin,
+        &mut reader,
+        &serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "test", "version": "1.0"}
+            }
+        }),
+    );
+
+    assert_eq!(response["jsonrpc"], "2.0");
+    assert_eq!(response["id"], 1);
+    assert_eq!(response["result"]["protocolVersion"], "2024-11-05");
+    assert_eq!(response["result"]["serverInfo"]["name"], "catchmytask");
+
+    drop(child.stdin.take());
+    child.wait().unwrap();
+}
+
+#[test]
+fn test_mcp_tools_list() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let mut child = StdCommand::new(assert_cmd::cargo::cargo_bin("cmt"))
+        .current_dir(tmp.path())
+        .args(["mcp"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let stdin = child.stdin.as_mut().unwrap();
+    let stdout_handle = child.stdout.take().unwrap();
+    let mut reader = BufReader::new(stdout_handle);
+
+    let response = mcp_request(
+        stdin,
+        &mut reader,
+        &serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "tools/list",
+            "params": {}
+        }),
+    );
+
+    assert_eq!(response["jsonrpc"], "2.0");
+    let tools = response["result"]["tools"].as_array().unwrap();
+    assert!(tools.len() >= 8, "Expected at least 8 tools, got {}", tools.len());
+
+    // Check that expected tools are present
+    let tool_names: Vec<&str> = tools.iter()
+        .filter_map(|t| t["name"].as_str())
+        .collect();
+    assert!(tool_names.contains(&"cmt_list"));
+    assert!(tool_names.contains(&"cmt_add"));
+    assert!(tool_names.contains(&"cmt_show"));
+    assert!(tool_names.contains(&"cmt_search"));
+
+    drop(child.stdin.take());
+    child.wait().unwrap();
+}
+
+#[test]
+fn test_mcp_add_and_list() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let mut child = StdCommand::new(assert_cmd::cargo::cargo_bin("cmt"))
+        .current_dir(tmp.path())
+        .args(["mcp"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let stdin = child.stdin.as_mut().unwrap();
+    let stdout_handle = child.stdout.take().unwrap();
+    let mut reader = BufReader::new(stdout_handle);
+
+    // Initialize first
+    mcp_request(
+        stdin,
+        &mut reader,
+        &serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0"}}
+        }),
+    );
+
+    // Add an item via MCP
+    let add_response = mcp_request(
+        stdin,
+        &mut reader,
+        &serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/call",
+            "params": {
+                "name": "cmt_add",
+                "arguments": {
+                    "title": "MCP test task",
+                    "priority": "high"
+                }
+            }
+        }),
+    );
+
+    assert_eq!(add_response["jsonrpc"], "2.0");
+    assert_eq!(add_response["id"], 2);
+    // Result should have content with the created item
+    let content = add_response["result"]["content"][0]["text"].as_str().unwrap();
+    let created_item: serde_json::Value = serde_json::from_str(content).unwrap();
+    assert_eq!(created_item["title"], "MCP test task");
+    assert_eq!(created_item["priority"], "high");
+    assert!(created_item["id"].as_str().unwrap().starts_with("CMT-"));
+
+    // List items via MCP
+    let list_response = mcp_request(
+        stdin,
+        &mut reader,
+        &serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/call",
+            "params": {
+                "name": "cmt_list",
+                "arguments": {}
+            }
+        }),
+    );
+
+    assert_eq!(list_response["jsonrpc"], "2.0");
+    let list_content = list_response["result"]["content"][0]["text"].as_str().unwrap();
+    let items: serde_json::Value = serde_json::from_str(list_content).unwrap();
+    let items_arr = items.as_array().unwrap();
+    assert_eq!(items_arr.len(), 1);
+    assert_eq!(items_arr[0]["title"], "MCP test task");
+
+    drop(child.stdin.take());
+    child.wait().unwrap();
+}
+
+#[test]
+fn test_mcp_unknown_method() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let mut child = StdCommand::new(assert_cmd::cargo::cargo_bin("cmt"))
+        .current_dir(tmp.path())
+        .args(["mcp"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let stdin = child.stdin.as_mut().unwrap();
+    let stdout_handle = child.stdout.take().unwrap();
+    let mut reader = BufReader::new(stdout_handle);
+
+    let response = mcp_request(
+        stdin,
+        &mut reader,
+        &serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "nonexistent/method",
+            "params": {}
+        }),
+    );
+
+    assert_eq!(response["jsonrpc"], "2.0");
+    assert!(response["error"].is_object());
+    assert_eq!(response["error"]["code"], -32601);
+
+    drop(child.stdin.take());
+    child.wait().unwrap();
+}

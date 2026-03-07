@@ -88,6 +88,22 @@ pub fn execute(
         }
     }
 
+    // Fire webhooks for each successfully deleted item
+    for result in &results {
+        if result["deleted"].as_bool() == Some(true) {
+            if let Some(id) = result["id"].as_str() {
+                crate::webhooks::fire_webhooks(
+                    work_dir,
+                    "item.deleted",
+                    id,
+                    id,
+                    actor,
+                    None,
+                );
+            }
+        }
+    }
+
     // Git auto-commit
     if !files_changed.is_empty() {
         let ids_str = args.ids.join(", ");

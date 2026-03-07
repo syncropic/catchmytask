@@ -53,6 +53,22 @@ pub fn execute(
         }
     }
 
+    // Fire webhooks for each successfully done item
+    for result in &results {
+        if result["success"].as_bool() == Some(true) {
+            if let Some(id) = result["id"].as_str() {
+                crate::webhooks::fire_webhooks(
+                    work_dir,
+                    "item.done",
+                    id,
+                    id, // title not readily available here; use id
+                    actor,
+                    Some(serde_json::json!({"from": result["from"]})),
+                );
+            }
+        }
+    }
+
     // Git auto-commit for all changes
     if !files_changed.is_empty() {
         let file_refs: Vec<&str> = files_changed.iter().map(|s| s.as_str()).collect();
