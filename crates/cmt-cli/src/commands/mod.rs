@@ -19,3 +19,4 @@ pub mod serve;
 pub mod projects;
 pub mod doctor;
 pub mod slugify;
+pub mod comment;

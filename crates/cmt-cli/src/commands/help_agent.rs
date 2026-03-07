@@ -442,6 +442,9 @@ fn output_conventions(work_dir: Option<&Path>, json: bool) -> Result<()> {
         })
         .unwrap_or_default();
 
+    // List available templates
+    let templates = cmt_core::template::list_templates(work_dir);
+
     if json {
         let output = serde_json::json!({
             "prefix": config.project.prefix,
@@ -458,6 +461,7 @@ fn output_conventions(work_dir: Option<&Path>, json: bool) -> Result<()> {
                 serde_json::json!({"from": f, "to": t})
             }).collect::<Vec<_>>(),
             "tag_namespaces": config.tags.namespaces,
+            "templates": templates,
             "git": {
                 "auto_commit": config.git.auto_commit,
                 "commit_prefix": config.git.commit_prefix,
@@ -491,6 +495,11 @@ fn output_conventions(work_dir: Option<&Path>, json: bool) -> Result<()> {
         println!();
         println!("Tag namespaces: {}", config.tags.namespaces.join(", "));
         println!();
+        if !templates.is_empty() {
+            println!("Templates: {}", templates.join(", "));
+            println!("  Usage: cmt add \"title\" --template <name>");
+            println!();
+        }
         println!(
             "Git: auto_commit={}, commit_prefix={}",
             config.git.auto_commit, config.git.commit_prefix

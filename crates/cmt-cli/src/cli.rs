@@ -98,6 +98,9 @@ pub enum Commands {
 
     /// Rename item files to include title slugs
     Slugify(SlugifyArgs),
+
+    /// Add or list comments on a work item
+    Comment(CommentArgs),
 }
 
 #[derive(Args, Debug)]
@@ -540,6 +543,23 @@ pub struct SlugifyArgs {
     /// Dry run — show what would be renamed without changing anything
     #[arg(long, short = 'n')]
     pub dry_run: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct CommentArgs {
+    /// Work item ID
+    pub id: String,
+
+    /// Comment message (omit with --list to list comments)
+    pub message: Option<String>,
+
+    /// List existing comments
+    #[arg(long, short = 'l')]
+    pub list: bool,
+
+    /// Reply to a specific comment ID (e.g., c1)
+    #[arg(long)]
+    pub reply_to: Option<String>,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]

@@ -304,6 +304,15 @@ struct ItemPathQuery {
     project: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct AddCommentRequest {
+    message: String,
+    #[serde(default)]
+    reply_to: Option<String>,
+    #[serde(default)]
+    author: Option<String>,
+}
+
 // ── Handlers ────────────────────────────────────────────────────────────────
 
 async fn health(State(state): State<Arc<AppState>>) -> Result<Json<HealthResponse>, ApiError> {
@@ -747,6 +756,62 @@ async fn search_items(
     Ok(Json(results))
 }
 
+// ── Comment handlers ────────────────────────────────────────────────────────
+
+async fn list_comments(
+    State(state): State<Arc<AppState>>,
+    AxumPath(id): AxumPath<String>,
+    Query(pq): Query<ItemPathQuery>,
+) -> Result<Json<Vec<cmt_core::comments::Comment>>, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let (_item, body, _path) = storage::read_item(work_dir, &id).map_err(ApiError::from)?;
+    let comments = cmt_core::comments::parse_comments(&body);
+    Ok(Json(comments))
+}
+
+async fn add_comment(
+    State(state): State<Arc<AppState>>,
+    AxumPath(id): AxumPath<String>,
+    Query(pq): Query<ItemPathQuery>,
+    Json(req): Json<AddCommentRequest>,
+) -> Result<(StatusCode, Json<cmt_core::comments::Comment>), ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let (item, body, path) = storage::read_item(work_dir, &id).map_err(ApiError::from)?;
+
+    let comment_id = cmt_core::comments::next_comment_id(&body);
+    let author = req.author.unwrap_or_else(|| "api".to_string());
+    let date = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+
+    // Validate reply_to
+    if let Some(ref reply_id) = req.reply_to {
+        let existing = cmt_core::comments::parse_comments(&body);
+        if !existing.iter().any(|c| c.id == *reply_id) {
+            return Err(ApiError {
+                status: StatusCode::BAD_REQUEST,
+                message: format!("Comment '{}' not found on {}", reply_id, id),
+            });
+        }
+    }
+
+    let comment = cmt_core::comments::Comment {
+        id: comment_id,
+        author,
+        date,
+        body: req.message,
+        reply_to: req.reply_to,
+    };
+
+    let new_body = cmt_core::comments::append_comment(&body, &comment);
+    storage::write_item(&path, &item, &new_body).map_err(ApiError::from)?;
+
+    // Update index
+    let index = state.open_index_for(work_dir)?;
+    let file_str = path.to_string_lossy().to_string();
+    cmt_core::index::warn_on_err(index.upsert_item(&item, &new_body, &file_str, false), "upsert");
+
+    Ok((StatusCode::CREATED, Json(comment)))
+}
+
 // ── Artifact handlers ───────────────────────────────────────────────────────
 
 #[derive(Serialize)]
@@ -1055,6 +1120,8 @@ pub fn execute(args: &ServeArgs, work_dir: &Path) -> cmt_core::error::Result<()>
             .route("/api/items/{id}", patch(edit_item))
             .route("/api/items/{id}", delete(delete_item))
             .route("/api/items/{id}/status", post(change_status))
+            .route("/api/items/{id}/comments", get(list_comments))
+            .route("/api/items/{id}/comments", post(add_comment))
             .route("/api/search", get(search_items))
             .route("/api/artifacts", get(list_all_artifacts))
             .route("/api/items/{id}/artifacts", get(list_artifacts))

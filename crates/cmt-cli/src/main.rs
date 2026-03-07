@@ -127,6 +127,10 @@ fn run(cli: &Cli) -> cmt_core::error::Result<()> {
             let work_dir = resolve_work_dir(cli)?;
             commands::slugify::execute(args, &work_dir, cli.json, cli.quiet)
         }
+        Commands::Comment(args) => {
+            let work_dir = resolve_work_dir(cli)?;
+            commands::comment::execute(args, &work_dir, cli.json, cli.quiet, actor.as_deref())
+        }
     }
 }
 

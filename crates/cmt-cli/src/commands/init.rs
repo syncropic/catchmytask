@@ -31,6 +31,9 @@ pub fn execute(args: &InitArgs, json: bool, quiet: bool) -> Result<()> {
         ensure_dir(&work_dir.join("templates"))?;
         write_gitignore(work_dir)?;
 
+        // Create default templates (won't overwrite existing ones)
+        let _ = cmt_core::template::write_default_templates(work_dir);
+
         // Only overwrite config if --name or --prefix explicitly provided
         // We detect this by checking if either was explicitly set
         // (prefix has a default of "CMT", so we check if name was provided
@@ -46,6 +49,9 @@ pub fn execute(args: &InitArgs, json: bool, quiet: bool) -> Result<()> {
         ensure_dir(&work_dir.join("archive"))?;
         ensure_dir(&work_dir.join("templates"))?;
         write_gitignore(work_dir)?;
+
+        // Create default templates
+        cmt_core::template::write_default_templates(work_dir)?;
 
         let name = resolve_name(args);
         Config::write_minimal(work_dir, &name, &args.prefix)?;

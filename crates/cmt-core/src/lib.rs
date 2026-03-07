@@ -1,4 +1,5 @@
 pub mod artifacts;
+pub mod comments;
 pub mod config;
 pub mod discovery;
 pub mod error;
@@ -11,3 +12,4 @@ pub mod registry;
 pub mod slug;
 pub mod state_machine;
 pub mod storage;
+pub mod template;

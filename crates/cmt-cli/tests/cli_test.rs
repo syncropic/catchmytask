@@ -1349,6 +1349,246 @@ fn test_conventions_json_state_ordering() {
     assert!(active_idx < cancelled_idx, "active should be before cancelled, got {:?}", states);
 }
 
+// ============ template enhancements ============
+
+#[test]
+fn test_init_creates_default_templates() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    assert!(tmp.path().join(".cmt/templates/bug.md").exists());
+    assert!(tmp.path().join(".cmt/templates/feature.md").exists());
+    assert!(tmp.path().join(".cmt/templates/task.md").exists());
+
+    let bug = std::fs::read_to_string(tmp.path().join(".cmt/templates/bug.md")).unwrap();
+    assert!(bug.contains("type: bug"));
+    assert!(bug.contains("priority: high"));
+    assert!(bug.contains("## Steps to Reproduce"));
+}
+
+#[test]
+fn test_add_template_applies_frontmatter_defaults() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Login fails", "--template", "bug", "--json"])
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(json["type"], "bug");
+    assert_eq!(json["priority"], "high");
+
+    let tags = json["tags"].as_array().unwrap();
+    assert!(tags.iter().any(|t| t.as_str() == Some("bug")));
+}
+
+#[test]
+fn test_add_template_cli_overrides_defaults() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Login fails", "--template", "bug", "--priority", "critical", "--json"])
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(json["type"], "bug");
+    assert_eq!(json["priority"], "critical");
+}
+
+#[test]
+fn test_add_template_cli_overrides_type() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Login fails", "--template", "bug", "-t", "incident", "--json"])
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(json["type"], "incident");
+}
+
+#[test]
+fn test_add_template_body_applied() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Login fails", "--template", "bug"])
+        .assert()
+        .success();
+
+    let item_file = find_item_file(tmp.path(), "CMT-1", "items");
+    let content = std::fs::read_to_string(&item_file).unwrap();
+    assert!(content.contains("## Steps to Reproduce"));
+    assert!(content.contains("## Expected Behavior"));
+    assert!(content.contains("## Actual Behavior"));
+}
+
+#[test]
+fn test_add_template_body_overridden_by_cli() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Login fails", "--template", "bug", "--body", "Custom body"])
+        .assert()
+        .success();
+
+    let item_file = find_item_file(tmp.path(), "CMT-1", "items");
+    let content = std::fs::read_to_string(&item_file).unwrap();
+    assert!(content.contains("Custom body"));
+    assert!(!content.contains("## Steps to Reproduce"));
+}
+
+#[test]
+fn test_add_template_variable_substitution() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let template_content = "---\ntype: task\n---\n\nCreated on {{date}} by {{actor}} for {{id}}.\n";
+    std::fs::write(tmp.path().join(".cmt/templates/vartest.md"), template_content).unwrap();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .env("CMT_ACTOR", "test-agent")
+        .args(["add", "Variable test", "--template", "vartest"])
+        .assert()
+        .success();
+
+    let item_file = find_item_file(tmp.path(), "CMT-1", "items");
+    let content = std::fs::read_to_string(&item_file).unwrap();
+
+    assert!(content.contains("by test-agent"));
+    assert!(content.contains("for CMT-0001"));
+    assert!(!content.contains("{{date}}"));
+    assert!(!content.contains("{{actor}}"));
+    assert!(!content.contains("{{id}}"));
+}
+
+#[test]
+fn test_add_template_feature() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Dark mode", "--template", "feature", "--json"])
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(json["type"], "feature");
+    assert_eq!(json["priority"], "medium");
+}
+
+#[test]
+fn test_help_agent_conventions_includes_templates() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["help-agent", "--conventions", "--json"])
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+
+    let templates = json["templates"].as_array().unwrap();
+    let names: Vec<&str> = templates.iter().map(|v| v.as_str().unwrap()).collect();
+    assert!(names.contains(&"bug"));
+    assert!(names.contains(&"feature"));
+    assert!(names.contains(&"task"));
+}
+
+#[test]
+fn test_help_agent_conventions_human_includes_templates() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["help-agent", "--conventions"])
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    assert!(stdout.contains("Templates:"));
+    assert!(stdout.contains("bug"));
+}
+
+#[test]
+fn test_init_force_does_not_overwrite_custom_templates() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    std::fs::write(tmp.path().join(".cmt/templates/bug.md"), "custom bug").unwrap();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["init", "--force"])
+        .assert()
+        .success();
+
+    let content = std::fs::read_to_string(tmp.path().join(".cmt/templates/bug.md")).unwrap();
+    assert_eq!(content, "custom bug");
+}
+
+#[test]
+fn test_add_template_with_assignee_default() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let template_content = "---\ntype: task\nassignee: default-user\ntags: [review]\n---\n\n## Review\n";
+    std::fs::write(tmp.path().join(".cmt/templates/review.md"), template_content).unwrap();
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Review PR", "--template", "review", "--json"])
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(json["assignee"], "default-user");
+    let tags = json["tags"].as_array().unwrap();
+    assert!(tags.iter().any(|t| t.as_str() == Some("review")));
+}
+
+#[test]
+fn test_add_template_cli_tags_override() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Login fails", "--template", "bug", "--tag", "team:backend", "--json"])
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    let tags = json["tags"].as_array().unwrap();
+    assert!(tags.iter().any(|t| t.as_str() == Some("team:backend")));
+    assert!(!tags.iter().any(|t| t.as_str() == Some("bug")));
+}
+
 // ============ security edge cases ============
 
 #[test]
@@ -1551,4 +1791,184 @@ fn test_setup_no_flags_shows_list() {
         .assert()
         .success()
         .stdout(predicate::str::contains("claude-code"));
+}
+
+// ============ cmt comment ============
+
+#[test]
+fn test_comment_add() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Test item for comments"])
+        .assert()
+        .success();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["comment", "CMT-1", "This is a comment", "--actor", "alice"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("Added comment c1 to CMT-1"));
+}
+
+#[test]
+fn test_comment_list() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Test item"])
+        .assert()
+        .success();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["comment", "CMT-1", "First comment", "--actor", "alice"])
+        .assert()
+        .success();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["comment", "CMT-1", "--list"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("[c1]"))
+        .stdout(predicate::str::contains("@alice"))
+        .stdout(predicate::str::contains("First comment"));
+}
+
+#[test]
+fn test_comment_reply_to() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Test item"])
+        .assert()
+        .success();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["comment", "CMT-1", "First", "--actor", "alice"])
+        .assert()
+        .success();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["comment", "CMT-1", "Reply here", "--reply-to", "c1", "--actor", "bob"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("Added comment c2 to CMT-1"));
+
+    // Verify reply shows in list
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["comment", "CMT-1", "--list"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("(reply to c1)"));
+}
+
+#[test]
+fn test_comment_list_json() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Test item"])
+        .assert()
+        .success();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["comment", "CMT-1", "JSON test comment", "--actor", "agent-1"])
+        .assert()
+        .success();
+
+    let output = work_cmd()
+        .current_dir(tmp.path())
+        .args(["comment", "CMT-1", "--list", "--json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: serde_json::Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["item_id"], "CMT-1");
+    let comments = json["comments"].as_array().unwrap();
+    assert_eq!(comments.len(), 1);
+    assert_eq!(comments[0]["id"], "c1");
+    assert_eq!(comments[0]["author"], "agent-1");
+    assert_eq!(comments[0]["body"], "JSON test comment");
+}
+
+#[test]
+fn test_comment_persists_in_file() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Test item"])
+        .assert()
+        .success();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["comment", "CMT-1", "Persistent comment", "--actor", "alice"])
+        .assert()
+        .success();
+
+    // Read the file directly and verify comment is there
+    let file_path = find_item_file(tmp.path(), "CMT-1", "items");
+    let content = std::fs::read_to_string(&file_path).unwrap();
+    assert!(content.contains("## Comments"));
+    assert!(content.contains("comment:c1"));
+    assert!(content.contains("author:alice"));
+    assert!(content.contains("Persistent comment"));
+}
+
+#[test]
+fn test_comment_invalid_reply_to() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Test item"])
+        .assert()
+        .success();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["comment", "CMT-1", "Reply", "--reply-to", "c99", "--actor", "bob"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Comment 'c99' not found"));
+}
+
+#[test]
+fn test_comment_no_message_no_list() {
+    let tmp = TempDir::new().unwrap();
+    init_work_dir(tmp.path());
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["add", "Test item"])
+        .assert()
+        .success();
+
+    work_cmd()
+        .current_dir(tmp.path())
+        .args(["comment", "CMT-1"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Message is required"));
 }

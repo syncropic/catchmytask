@@ -140,7 +140,19 @@ impl Index {
             CREATE INDEX IF NOT EXISTS idx_item_relations_related ON item_relations(related_id);
             CREATE INDEX IF NOT EXISTS idx_events_item_id ON events(item_id);
             CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp);
-            CREATE INDEX IF NOT EXISTS idx_events_actor ON events(actor);"
+            CREATE INDEX IF NOT EXISTS idx_events_actor ON events(actor);
+
+            CREATE TABLE IF NOT EXISTS comments (
+                id         TEXT NOT NULL,
+                item_id    TEXT NOT NULL,
+                author     TEXT NOT NULL,
+                body       TEXT NOT NULL,
+                reply_to   TEXT,
+                created_at TEXT NOT NULL,
+                PRIMARY KEY (item_id, id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_comments_item_id ON comments(item_id);
+            CREATE INDEX IF NOT EXISTS idx_comments_author ON comments(author);"
         )?;
 
         // Create FTS5 table (regular mode, not external content)
@@ -301,6 +313,17 @@ impl Index {
                 )?;
             }
 
+            // Update comments
+            self.conn.execute("DELETE FROM comments WHERE item_id = ?1", [id_str])?;
+            let parsed_comments = crate::comments::parse_comments(body);
+            for c in &parsed_comments {
+                self.conn.execute(
+                    "INSERT OR IGNORE INTO comments (id, item_id, author, body, reply_to, created_at)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                    rusqlite::params![c.id, id_str, c.author, c.body, c.reply_to, c.date],
+                )?;
+            }
+
             // Update FTS
             self.sync_fts_for_item(id_str)?;
 
@@ -352,9 +375,31 @@ impl Index {
         Ok(())
     }
 
+    /// Get comments for a work item from the index.
+    pub fn get_comments(&self, item_id: &str) -> Result<Vec<crate::comments::Comment>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, author, body, reply_to, created_at FROM comments WHERE item_id = ?1 ORDER BY id"
+        )?;
+        let rows = stmt.query_map([item_id], |row| {
+            Ok(crate::comments::Comment {
+                id: row.get(0)?,
+                author: row.get(1)?,
+                body: row.get(2)?,
+                reply_to: row.get(3)?,
+                date: row.get(4)?,
+            })
+        })?;
+        let mut comments = Vec::new();
+        for row in rows {
+            comments.push(row?);
+        }
+        Ok(comments)
+    }
+
     /// Remove an item from the index.
     pub fn remove_item(&self, id: &str) -> Result<()> {
         self.conn.execute("DELETE FROM items_fts WHERE id = ?1", [id])?;
+        self.conn.execute("DELETE FROM comments WHERE item_id = ?1", [id])?;
         self.conn.execute("DELETE FROM items WHERE id = ?1", [id])?;
         Ok(())
     }
@@ -366,6 +411,7 @@ impl Index {
         // Clear everything
         self.conn.execute_batch(
             "DELETE FROM items_fts;
+             DELETE FROM comments;
              DELETE FROM item_tags;
              DELETE FROM item_deps;
              DELETE FROM item_relations;
