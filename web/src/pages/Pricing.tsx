@@ -33,7 +33,7 @@ const TIERS = [
   {
     name: 'Team',
     tagline: 'For teams with humans and AI agents working together',
-    price: { monthly: 12, annual: 10 },
+    price: null,
     cta: 'Coming Soon',
     ctaHref: null,
     highlight: true,
@@ -57,7 +57,7 @@ const TIERS = [
   {
     name: 'Enterprise',
     tagline: 'For organizations governing AI agents at scale',
-    price: { monthly: 32, annual: 27 },
+    price: null,
     cta: 'Contact Sales',
     ctaHref: 'mailto:sales@syncropic.com',
     highlight: false,
@@ -227,7 +227,7 @@ function FeatureRow({ feature, isLast }: { feature: Feature; isLast: boolean }) 
 }
 
 function TierCard({ tier, interval }: { tier: typeof TIERS[number]; interval: Interval }) {
-  const price = interval === 'annual' ? tier.price.annual : tier.price.monthly
+  const price = tier.price ? (interval === 'annual' ? tier.price.annual : tier.price.monthly) : null
   const isFree = price === 0
 
   return (
@@ -256,13 +256,17 @@ function TierCard({ tier, interval }: { tier: typeof TIERS[number]; interval: In
             <span className="text-3xl font-bold text-text-primary">Free</span>
             <span className="text-xs text-text-muted">forever</span>
           </div>
-        ) : (
+        ) : price != null ? (
           <div className="flex items-baseline gap-1">
             <span className="text-3xl font-bold text-text-primary">${price}</span>
             <span className="text-xs text-text-muted">/ user / month</span>
           </div>
+        ) : (
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-bold text-text-muted">Coming Soon</span>
+          </div>
         )}
-        {!isFree && interval === 'annual' && (
+        {price != null && !isFree && interval === 'annual' && (
           <p className="text-[10px] text-text-muted mt-1">
             Billed annually (${price * 12}/user/year)
           </p>
