@@ -135,6 +135,37 @@ export interface ProjectArtifactsResponse {
   total: number
 }
 
+// ── Context (cxl integration) ──────────────────────────────────────────────
+
+export interface ContextSource {
+  node: string
+  tier: string
+  tokens: number
+  is_seed: boolean
+}
+
+export interface ContextCursor {
+  id: string
+  task: string | null
+  window_items: number
+  actor: string | null
+  dial: number
+}
+
+export interface ContextConcept {
+  id: string
+  description: string
+}
+
+export interface ContextResponse {
+  available: boolean
+  cursor: ContextCursor | null
+  sources: ContextSource[]
+  concepts: ContextConcept[]
+  tokens_used: number
+  items_loaded: number
+}
+
 export type Priority = 'critical' | 'high' | 'medium' | 'low' | 'none'
 
 export const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'medium', 'low', 'none']

@@ -906,6 +906,42 @@ struct ProjectArtifactsResponse {
     total: usize,
 }
 
+// ── Context (cxl integration) ──────────────────────────────────────────────
+
+#[derive(Serialize)]
+struct ContextSource {
+    node: String,
+    tier: String,
+    tokens: u64,
+    is_seed: bool,
+}
+
+#[derive(Serialize)]
+struct ContextCursor {
+    id: String,
+    task: Option<String>,
+    window_items: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    actor: Option<String>,
+    dial: f64,
+}
+
+#[derive(Serialize)]
+struct ContextConcept {
+    id: String,
+    description: String,
+}
+
+#[derive(Serialize)]
+struct ContextResponse {
+    available: bool,
+    cursor: Option<ContextCursor>,
+    sources: Vec<ContextSource>,
+    concepts: Vec<ContextConcept>,
+    tokens_used: u64,
+    items_loaded: usize,
+}
+
 async fn list_all_artifacts(
     State(state): State<Arc<AppState>>,
     Query(pq): Query<ItemPathQuery>,
@@ -1025,6 +1061,121 @@ async fn serve_artifact(
         body,
     )
         .into_response())
+}
+
+// ── Context handlers (cxl integration) ───────────────────────────────────────
+
+/// Resolve the project root from a .cmt/ work directory (parent of .cmt/).
+fn project_root_from_work_dir(work_dir: &Path) -> PathBuf {
+    work_dir.parent().map(|p| p.to_path_buf()).unwrap_or_else(|| work_dir.to_path_buf())
+}
+
+/// Check if a .contextually/ directory exists alongside .cmt/.
+fn has_contextually(work_dir: &Path) -> bool {
+    project_root_from_work_dir(work_dir).join(".contextually").exists()
+}
+
+/// Shell out to `cxl` and return parsed JSON. Returns None if cxl is not available.
+async fn run_cxl(project_root: &Path, args: &[&str]) -> Option<serde_json::Value> {
+    let output = tokio::process::Command::new("cxl")
+        .args(args)
+        .arg("--json")
+        .current_dir(project_root)
+        .output()
+        .await
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    serde_json::from_str(&stdout).ok()
+}
+
+async fn get_item_context(
+    State(state): State<Arc<AppState>>,
+    AxumPath(id): AxumPath<String>,
+    Query(pq): Query<ItemPathQuery>,
+) -> Result<Json<ContextResponse>, ApiError> {
+    let work_dir = state.resolve_work_dir(pq.project.as_deref())?;
+    let project_root = project_root_from_work_dir(work_dir);
+
+    // If no .contextually/ directory, return unavailable
+    if !has_contextually(work_dir) {
+        return Ok(Json(ContextResponse {
+            available: false,
+            cursor: None,
+            sources: Vec::new(),
+            concepts: Vec::new(),
+            tokens_used: 0,
+            items_loaded: 0,
+        }));
+    }
+
+    // Find cursor linked to this task
+    let cursors_json = run_cxl(&project_root, &["cursor", "list"]).await;
+    let linked_cursor = cursors_json.as_ref().and_then(|v| {
+        v.as_array()?.iter().find(|c| {
+            c["task"].as_str() == Some(&id)
+        }).cloned()
+    });
+
+    let cursor = linked_cursor.as_ref().map(|c| ContextCursor {
+        id: c["id"].as_str().unwrap_or("").to_string(),
+        task: c["task"].as_str().map(|s| s.to_string()),
+        window_items: c["window_items"].as_u64().unwrap_or(0) as usize,
+        actor: c["actor"].as_str().map(|s| s.to_string()),
+        dial: c["dial"].as_f64().unwrap_or(0.5),
+    });
+
+    // If there's a linked cursor, get full details for sources
+    let mut sources = Vec::new();
+    let mut tokens_used = 0u64;
+    let mut items_loaded = 0usize;
+
+    if let Some(ref cur) = cursor {
+        if let Some(detail) = run_cxl(&project_root, &["cursor", "show", &cur.id]).await {
+            if let Some(window) = detail["cursor"]["window"].as_array() {
+                for item in window {
+                    let node = item["node"].as_str().unwrap_or("").to_string();
+                    let tier = item["tier"].as_str().unwrap_or("T0").to_string();
+                    let tokens = item["tokens"].as_u64().unwrap_or(0);
+                    let relevance = item["relevance"].as_f64().unwrap_or(0.0);
+                    sources.push(ContextSource {
+                        node,
+                        tier,
+                        tokens,
+                        is_seed: relevance >= 0.8,
+                    });
+                    tokens_used += tokens;
+                }
+                items_loaded = sources.len();
+            }
+        }
+    }
+
+    // Get concepts from the graph
+    let mut concepts = Vec::new();
+    if let Some(concept_list) = run_cxl(&project_root, &["concept", "list"]).await {
+        if let Some(arr) = concept_list.as_array() {
+            for c in arr {
+                concepts.push(ContextConcept {
+                    id: c["id"].as_str().unwrap_or("").to_string(),
+                    description: c["description"].as_str().unwrap_or("").to_string(),
+                });
+            }
+        }
+    }
+
+    Ok(Json(ContextResponse {
+        available: true,
+        cursor,
+        sources,
+        concepts,
+        tokens_used,
+        items_loaded,
+    }))
 }
 
 // ── View handlers ────────────────────────────────────────────────────────────
@@ -1553,6 +1704,7 @@ pub fn execute(args: &ServeArgs, work_dir: &Path) -> cmt_core::error::Result<()>
             .route("/api/artifacts", get(list_all_artifacts))
             .route("/api/items/{id}/artifacts", get(list_artifacts))
             .route("/api/items/{id}/artifacts/{*path}", get(serve_artifact))
+            .route("/api/items/{id}/context", get(get_item_context))
             .route("/api/views", get(api_list_views))
             .route("/api/views", post(api_create_view))
             .route("/api/views/{name}", delete(api_delete_view))

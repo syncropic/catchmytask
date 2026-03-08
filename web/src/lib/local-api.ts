@@ -62,6 +62,10 @@ export const localApi = {
     },
 
     artifactUrl: (_id: string, path: string) => path,
+
+    context: async (_id: string) => ({
+      available: false, cursor: null, sources: [], concepts: [], tokens_used: 0, items_loaded: 0,
+    }),
   },
 
   artifacts: async () => ({ artifacts: [], total: 0 }),

@@ -1,4 +1,4 @@
-import type { WorkItem, ProjectConfig, ProjectsResponse, CreateItemRequest, EditItemRequest, StatusChangeRequest, ArtifactList, ProjectArtifactsResponse } from '@/types'
+import type { WorkItem, ProjectConfig, ProjectsResponse, CreateItemRequest, EditItemRequest, StatusChangeRequest, ArtifactList, ProjectArtifactsResponse, ContextResponse } from '@/types'
 import { useConnectionStore } from '@/stores/connection'
 import { useProjectStore } from '@/stores/project'
 import { localApi } from './local-api'
@@ -33,12 +33,13 @@ function createRemoteApi(baseUrl: string) {
     projects: () => request<ProjectsResponse>('/projects'),
     config: () => request<ProjectConfig>(appendProject('/config')),
     items: {
-      list: (params?: Record<string, string>) => {
+      list: async (params?: Record<string, string>) => {
         const project = useProjectStore.getState().currentProject
         const allParams: Record<string, string> = { ...params }
         if (project) allParams.project = project
         const qs = Object.keys(allParams).length ? '?' + new URLSearchParams(allParams).toString() : ''
-        return request<WorkItem[]>(`/items${qs}`)
+        const res = await request<{ items: WorkItem[] }>(`/items${qs}`)
+        return res.items
       },
       get: (id: string) =>
         request<WorkItem>(appendProject(`/items/${encodeURIComponent(id)}`)),
@@ -63,14 +64,17 @@ function createRemoteApi(baseUrl: string) {
         const qs = project ? `?project=${encodeURIComponent(project)}` : ''
         return `${BASE}/items/${encodeURIComponent(id)}/artifacts/${artifactPath}${qs}`
       },
+      context: (id: string) =>
+        request<ContextResponse>(appendProject(`/items/${encodeURIComponent(id)}/context`)),
     },
     artifacts: () => request<ProjectArtifactsResponse>(appendProject('/artifacts')),
-    search: (q: string, params?: Record<string, string>) => {
+    search: async (q: string, params?: Record<string, string>) => {
       const project = useProjectStore.getState().currentProject
       const allParams: Record<string, string> = { q, ...params }
       if (project) allParams.project = project
       const qs = new URLSearchParams(allParams).toString()
-      return request<WorkItem[]>(`/search?${qs}`)
+      const res = await request<{ items: WorkItem[] }>(`/search?${qs}`)
+      return res.items
     },
   }
 }
@@ -101,6 +105,8 @@ export const api = {
       getActiveApi().items.artifacts(...args),
     artifactUrl: (...args: Parameters<ApiInterface['items']['artifactUrl']>) =>
       getActiveApi().items.artifactUrl(...args),
+    context: (...args: Parameters<ApiInterface['items']['context']>) =>
+      getActiveApi().items.context(...args),
   },
   artifacts: (...args: Parameters<ApiInterface['artifacts']>) => getActiveApi().artifacts(...args),
   search: (...args: Parameters<ApiInterface['search']>) => getActiveApi().search(...args),

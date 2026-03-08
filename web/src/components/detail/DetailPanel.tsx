@@ -60,7 +60,7 @@ hljs.registerLanguage('conf', ini)
 hljs.registerLanguage('diff', diff)
 import { useUIStore } from '@/stores/ui'
 import { useProjectStore } from '@/stores/project'
-import type { ProjectConfig, Artifact } from '@/types'
+import type { ProjectConfig, Artifact, ContextSource, ContextConcept } from '@/types'
 import { DataTable, SpreadsheetViewer } from '@/components/shared/DataTable'
 import { isSpreadsheetFile, isTabularTextFile, isTabularJSON, parseTextData } from '@/lib/data-parsers'
 
@@ -225,6 +225,9 @@ export function DetailPanel({ config }: Props) {
 
           {/* Artifacts */}
           <ArtifactSection itemId={item.id} />
+
+          {/* Context (cxl integration) */}
+          <ContextSection itemId={item.id} />
 
           {/* Editable body */}
           <EditableBody
@@ -587,6 +590,179 @@ function formatDate(iso: string): string {
   } catch {
     return iso
   }
+}
+
+// ── Context (cxl) ─────────────────────────────────────────────────────────────
+
+function tierColor(tier: string): string {
+  if (tier === 'T3') return 'text-green-400'
+  if (tier === 'T1') return 'text-yellow-400'
+  return 'text-text-muted'
+}
+
+function shortNode(node: string): string {
+  // Show last 2 path components for readability
+  const parts = node.replace(/^\//, '').split('/')
+  if (parts.length <= 2) return node
+  return '…/' + parts.slice(-2).join('/')
+}
+
+function repoFromPath(node: string): string | null {
+  const match = node.match(/\/repositories\/([^/]+)\//)
+  return match ? match[1] : null
+}
+
+function formatTokens(tokens: number): string {
+  if (tokens < 1000) return `${tokens}`
+  return `${(tokens / 1000).toFixed(1)}K`
+}
+
+function ContextSection({ itemId }: { itemId: string }) {
+  const currentProject = useProjectStore((s) => s.currentProject)
+  const [expanded, setExpanded] = useState(false)
+  const [showAllSources, setShowAllSources] = useState(false)
+
+  const { data } = useQuery({
+    queryKey: ['context', itemId, currentProject],
+    queryFn: () => api.items.context(itemId),
+    staleTime: 60_000,
+  })
+
+  // Don't render if cxl is not available or no cursor linked
+  if (!data?.available || !data?.cursor) return null
+
+  const cursor = data.cursor
+  const sources = data.sources
+  const concepts = data.concepts
+
+  // Sort sources by relevance (is_seed first, then by tokens descending)
+  const sortedSources = [...sources].sort((a, b) => {
+    if (a.is_seed !== b.is_seed) return a.is_seed ? -1 : 1
+    return b.tokens - a.tokens
+  })
+
+  const displaySources = showAllSources ? sortedSources : sortedSources.slice(0, 8)
+
+  // Group sources by repo
+  const repos = new Set<string>()
+  for (const s of sources) {
+    const repo = repoFromPath(s.node)
+    if (repo) repos.add(repo)
+  }
+
+  return (
+    <div className="border-t border-border-subtle">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-2 px-4 py-2 text-[11px] text-text-muted uppercase tracking-wider font-medium hover:bg-bg-hover transition-colors"
+      >
+        <span className="text-[9px]">{expanded ? '▾' : '▸'}</span>
+        Context
+        <span className="text-text-muted/60 font-normal normal-case tracking-normal">
+          {sources.length} files
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="px-3 pb-3">
+          {/* Cursor summary */}
+          <div className="flex items-center gap-2 mb-2 text-[11px]">
+            <span className="bg-bg-tertiary px-1.5 py-0.5 rounded font-mono text-text-secondary">
+              {cursor.id}
+            </span>
+            <span className="text-text-muted">
+              {formatTokens(data.tokens_used)} tokens
+            </span>
+            {repos.size > 1 && (
+              <span className="text-text-muted">
+                {repos.size} repos
+              </span>
+            )}
+          </div>
+
+          {/* Sources list */}
+          <div className="mb-2">
+            <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+              Files by relevance
+            </div>
+            <div className="text-[11px] font-mono">
+              {displaySources.map((s) => (
+                <ContextSourceRow key={s.node} source={s} />
+              ))}
+            </div>
+            {sortedSources.length > 8 && !showAllSources && (
+              <button
+                onClick={() => setShowAllSources(true)}
+                className="text-[10px] text-text-muted hover:text-text-secondary mt-1 transition-colors"
+              >
+                +{sortedSources.length - 8} more files
+              </button>
+            )}
+            {showAllSources && sortedSources.length > 8 && (
+              <button
+                onClick={() => setShowAllSources(false)}
+                className="text-[10px] text-text-muted hover:text-text-secondary mt-1 transition-colors"
+              >
+                show less
+              </button>
+            )}
+          </div>
+
+          {/* Concepts */}
+          {concepts.length > 0 && (
+            <div>
+              <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                Concepts
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {concepts.map((c) => (
+                  <ConceptTag key={c.id} concept={c} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ContextSourceRow({ source }: { source: ContextSource }) {
+  const repo = repoFromPath(source.node)
+  return (
+    <div className="flex items-center gap-1 py-[2px]">
+      {source.is_seed ? (
+        <span className="text-[10px] text-amber-400 w-3 text-center flex-shrink-0">★</span>
+      ) : (
+        <span className={`text-[10px] ${tierColor(source.tier)} w-3 text-center flex-shrink-0`}>●</span>
+      )}
+      <span className="text-text-secondary truncate flex-1 min-w-0 text-[11px]" title={source.node}>
+        {shortNode(source.node)}
+      </span>
+      {repo && (
+        <span className="text-[9px] text-text-muted/50 flex-shrink-0">{repo}</span>
+      )}
+      <span className={`text-[9px] ${tierColor(source.tier)} opacity-60 flex-shrink-0 uppercase`}>
+        {source.tier}
+      </span>
+      <span className="text-[9px] text-text-muted/50 flex-shrink-0 w-8 text-right">
+        {formatTokens(source.tokens)}
+      </span>
+    </div>
+  )
+}
+
+function ConceptTag({ concept }: { concept: ContextConcept }) {
+  const name = concept.id.replace(/^concept:/, '')
+  return (
+    <span
+      className="text-[10px] bg-bg-tertiary px-1.5 py-0.5 rounded text-text-secondary inline-flex items-center gap-1 border border-border-subtle"
+      title={concept.description}
+    >
+      <span className="text-purple-400/70">◆</span>
+      {name}
+    </span>
+  )
 }
 
 // ── Artifacts ─────────────────────────────────────────────────────────────────
